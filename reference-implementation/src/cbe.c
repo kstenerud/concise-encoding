@@ -9,6 +9,7 @@ DEFINE_SAFE_STRUCT(safe_int64, int64_t);
 DEFINE_SAFE_STRUCT(safe_int128, __int128);
 DEFINE_SAFE_STRUCT(safe_float32, float);
 DEFINE_SAFE_STRUCT(safe_float64, double);
+DEFINE_SAFE_STRUCT(safe_float128, long double);
 
 #define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) if((BUFFER)->end - (BUFFER)->pos < (REQUIRED_BYTES)) return false
 
@@ -37,17 +38,20 @@ static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* buffer, DATA_TYPE value) 
 { \
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value)); \
     add_type_field(buffer, CBE_TYPE); \
+    /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
+    memset(buffer->pos, 0, sizeof(value)); \
     safe_ ## DEFINITION_TYPE* safe = (safe_##DEFINITION_TYPE*)buffer->pos; \
     safe->contents = value; \
     buffer->pos += sizeof(value); \
     return true; \
 }
-DEFINE_SCALAR_ADD_FUNCTION(int16_t,    int16, TYPE_INT_16)
-DEFINE_SCALAR_ADD_FUNCTION(int32_t,    int32, TYPE_INT_32)
-DEFINE_SCALAR_ADD_FUNCTION(int64_t,    int64, TYPE_INT_64)
-DEFINE_SCALAR_ADD_FUNCTION(__int128,  int128, TYPE_INT_128)
-DEFINE_SCALAR_ADD_FUNCTION(float,    float32, TYPE_FLOAT_32)
-DEFINE_SCALAR_ADD_FUNCTION(double,   float64, TYPE_FLOAT_64)
+DEFINE_SCALAR_ADD_FUNCTION(int16_t,        int16, TYPE_INT_16)
+DEFINE_SCALAR_ADD_FUNCTION(int32_t,        int32, TYPE_INT_32)
+DEFINE_SCALAR_ADD_FUNCTION(int64_t,        int64, TYPE_INT_64)
+DEFINE_SCALAR_ADD_FUNCTION(__int128,      int128, TYPE_INT_128)
+DEFINE_SCALAR_ADD_FUNCTION(float,        float32, TYPE_FLOAT_32)
+DEFINE_SCALAR_ADD_FUNCTION(double,       float64, TYPE_FLOAT_64)
+DEFINE_SCALAR_ADD_FUNCTION(long double, float128, TYPE_FLOAT_128)
 
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end)
 {
@@ -118,7 +122,11 @@ bool cbe_add_float64(cbe_buffer* buffer, double value)
 
 bool cbe_add_float128(cbe_buffer* buffer, long double value)
 {
-    return false;
+    if(FITS_IN_FLOAT_32(value)) return add_float32(buffer, value);
+    if(FITS_IN_FLOAT_64(value)) return add_float64(buffer, value);
+    uint8_t* ptr = buffer->pos;
+    bool result = add_float128(buffer, value);
+    return result;
 }
 
 bool cbe_add_date(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second)

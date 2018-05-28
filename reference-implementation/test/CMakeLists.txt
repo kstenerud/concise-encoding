@@ -31,6 +31,7 @@ add_executable(cbe_test
                    src/int128.cpp
                    src/float32.cpp
                    src/float64.cpp
+                   src/float128.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
