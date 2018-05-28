@@ -1,7 +1,7 @@
 Concise Binary Encoding
 =======================
 
-A machine-readable, compact representation of semi-structured hierarchical data.
+A general purpose, machine-readable, compact representation of semi-structured hierarchical data.
 
 Designed with the following points of focus:
 
@@ -13,8 +13,6 @@ Designed with the following points of focus:
   * Compact data in ways that don't affect reading directly of the wire
   * Balanced space and computation efficiency
   * Minimal complexity
-
-The encoding is binary, and packs in a manner that favors small integer data types because smaller values tend to occur more often in practice (especially 0).
 
 
 
@@ -46,9 +44,9 @@ Many common data types and structures are supported:
 Binary, stored in little endian byte order.
 
   * **Boolean**: Supports the values true and false.
-  * **Integer**: Always signed, in widths from 8 to 128 bits. Encoded in two's complement.
+  * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
-  * **Decimal**: IEEE 754 decimal, in widths of 64 and 128. Both BID and DPD are supported.
+  * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits. Both BID and DPD are supported.
   * **Date**: UTC-based date with precision to the second.
   * **Timestamp**: UTC-based date with precision to the millisecond or nanosecond.
 
@@ -59,7 +57,7 @@ Array types can hold multiple scalar values of the same type and size.
 
   * **Array**: Array of any scalar type
   * **Bytes**: Array of octets
-  * **String**: UTF-8 encoding without BOM
+  * **String**: Array of octets in UTF-8 encoding without BOM
 
 
 ### Container Types
@@ -207,7 +205,7 @@ Examples:
 
 Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
 
-Values from -100 to 100 are encoded in the type field, and may be read directly as 8-bit signed integers. Values outside of this range are stored in the payload.
+Values from -100 to 100 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
 
 Examples:
@@ -305,16 +303,16 @@ Example:
 
 Example:
 
-    [6a ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142 = Oct 26th, 1985 8:22:16.900142 GMT
+    [6a ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
 ### Array Type
 
-An array of scalar values. All elements must be of the same type and size.
+An array of scalar values. All elements MUST be of the same type AND width.
 
     [6e] [Element Type] [Length] [Element 0] ... [Element (Length-1)]
 
-The elements themselves do *NOT* contain a type field; only a payload. The type is specified in the `Element Type` field of the array. In this way, the elements of an array can be read directly off the buffer, accessible via type punning as a native array.
+The elements themselves do *NOT* contain a type field; only a payload. The type is specified in the `Element Type` field of the array. In this way, the elements of an array can be read directly off the buffer, accessible by type punning a portion of the buffer as an array of the native type.
 
 Note: Arrays cannot contain other arrays or containers or the EMPTY type.
 
@@ -325,7 +323,7 @@ Example:
 
 ### Bytes Type
 
-The bytes type is an array that is implicitly of type 8-bit integer. It has no element type field.
+The bytes type is an array that is implicitly of type 8-bit signed integer. It has no element type field.
 
 The generalized form is as follows:
 
@@ -336,12 +334,12 @@ There are also specialized forms for lengths 15 and under, where the length is e
 Examples:
 
     [82 00 00] = 2 byte array containing 0x00, 0x00.
-    [90 12 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff] = 18 byte array containing all 0xff values.
+    [90 12 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12] = 18 byte array containing values from 1 to 18.
 
 
 ### String Type
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the BYTE length, not the character length.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), not the character length.
 
 The generalized form is as follows:
 
@@ -364,18 +362,18 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    [6c 01 91 88 13 6b] = List containing the values (1, 5000)
+    [6c 01 91 88 13 6b] = List containing integers (1, 5000)
 
 
 ### Map Type
 
-A map associates one object (key) with another (value). Keys may be scalar or array types, and must not be EMPTY. Values may be of any type, including other containers.
+A map associates objects (keys) with other objects (values). Keys may be scalar or array types, and must not be EMPTY. Values may be of any type, including other containers.
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
     [6c] [key 1] [value 1] [key 2] [value 2] ... [6b]
 
-All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys.
+All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys in the same map.
 
 Example:
 
@@ -388,29 +386,19 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they will cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
 
-  * Dates must be valid. For example, February 30th, while technically encodable, is not allowed.
-  * Map keys may not be container types or the EMPTY type.
-  * Maps must not contain duplicate keys. This includes keys encoded in the same base type, but of different widths, that resolve to the same value (for example: 1000 encoded as int32, and 1000 encoded as int64).
-  * An array's content type must be a scalar type. Arrays of arrays or containers or EMPTY are not allowed.
-
-
-
-Compatibility Issues
---------------------
-
-Some languages may have limitations that can cause trouble with certain kinds of data structures. Please be aware of these when designing your schema:
-
-  * Containers containing EMPTY
-  * Maps with mixed key types
+  * Dates must be valid. For example: February 30th, while technically encodable, is not allowed.
+  * Map keys must not be container types or the EMPTY type.
+  * Maps must not contain duplicate keys. This includes keys that resolve to the same value.
+  * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY are not allowed.
 
 
 
 Smallest Possible Size
 ----------------------
 
-For maximum size efficiency, an encoder should strive to find the smallest width of a base type that encodes a value without data loss.
+Preservation of the original data width information is not considered important by default. Encoders are encouraged to find the smallest width of the same data type that stores a value without loss.
 
-Note that it is NOT an error to use a larger data type as a means to trade size for processing efficiency where warranted.
+For specialized applications, an encoder implementation may choose to preserve larger type widths as a tradeoff in processing cost vs data size. This must not be considered illegal by a decoder.
 
 
 
@@ -439,6 +427,6 @@ The 4-byte header is composed of the characters 'C', 'B', 'E', and then a versio
 For example, a file encoded in CBE format version 1 would begin with the header [43 42 45 01]
 
 
-### Encoded Data
+### Encoded Object
 
-The encoded data following the header must be a single object. You can store multiple objects by using a collection or array as the "single" object.
+The encoded data following the header must be a single top-level object. You can store multiple objects by using a collection or array as the "single" object.
