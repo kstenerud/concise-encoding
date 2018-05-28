@@ -21,7 +21,7 @@ DEFINE_SAFE_STRUCT(safe_float64, double);
 
 static inline void add_type_field(cbe_buffer* buffer, type_field type)
 {
-    *(buffer)->pos++ = (int8_t)(type);
+    *buffer->pos++ = (int8_t)type;
 }
 
 static inline bool add_small(cbe_buffer* buffer, int8_t value)
