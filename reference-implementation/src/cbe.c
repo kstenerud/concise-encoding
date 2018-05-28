@@ -14,6 +14,7 @@
 #define FITS_IN_INT_64(VALUE) ((VALUE) == (int64_t)(VALUE))
 
 DEFINE_SAFE_STRUCT(safe_int16, int16_t);
+DEFINE_SAFE_STRUCT(safe_int32, int32_t);
 
 
 static inline bool add_small(cbe_buffer* buffer, int8_t value)
@@ -28,6 +29,16 @@ static inline bool add_int16(cbe_buffer* buffer, int16_t value)
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
     ADD_TYPE(buffer, TYPE_INT_16);
     safe_int16* safe = (safe_int16*)buffer->pos;
+    safe->contents = value;
+    buffer->pos += sizeof(value);
+    return true;
+}
+
+static inline bool add_int32(cbe_buffer* buffer, int32_t value)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    ADD_TYPE(buffer, TYPE_INT_32);
+    safe_int32* safe = (safe_int32*)buffer->pos;
     safe->contents = value;
     buffer->pos += sizeof(value);
     return true;
@@ -67,7 +78,9 @@ bool cbe_add_int16(cbe_buffer* buffer, int16_t value)
 
 bool cbe_add_int32(cbe_buffer* buffer, int32_t value)
 {
-    return false;
+    if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
+    if(FITS_IN_INT_16(value)) return add_int16(buffer, value);
+    return add_int32(buffer, value);
 }
 
 bool cbe_add_int64(cbe_buffer* buffer, int64_t value)

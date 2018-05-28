@@ -26,6 +26,7 @@ add_executable(cbe_test
                    src/bool.cpp
                    src/int8.cpp
                    src/int16.cpp
+                   src/int32.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
