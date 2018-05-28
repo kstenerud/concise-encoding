@@ -1,0 +1,10 @@
+get_filename_component(CBE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${CBE_CMAKE_DIR})
+
+if(NOT TARGET CBE::CBE)
+    include("${CBE_CMAKE_DIR}/CBETargets.cmake")
+endif()
+
+set(CBE_LIBRARIES CBE::CBE)
