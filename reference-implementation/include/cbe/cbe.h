@@ -28,9 +28,9 @@ bool cbe_add_int128(cbe_buffer* buffer, __int128 value);
 bool cbe_add_float32(cbe_buffer* buffer, float value);
 bool cbe_add_float64(cbe_buffer* buffer, double value);
 bool cbe_add_float128(cbe_buffer* buffer, long double value);
-bool cbe_add_date(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second);
-bool cbe_add_timestamp(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int msec);
-bool cbe_add_timestamp_ns(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int nsec);
+bool cbe_add_date(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second);
+bool cbe_add_timestamp(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second, unsigned msec);
+bool cbe_add_timestamp_ns(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second, unsigned nsec);
 bool cbe_add_string(cbe_buffer* buffer, const char* const value);
 bool cbe_add_bytes(cbe_buffer* buffer, const uint8_t* const value, int length);
 // todo: arrays

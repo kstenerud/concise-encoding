@@ -3,6 +3,29 @@
 #include "cbe_internal.h"
 
 
+const uint64_t DATE_MULTIPLIER_YEAR   = 32676480UL;
+const uint64_t DATE_MULTIPLIER_MONTH  =  2723040UL;
+const uint64_t DATE_MULTIPLIER_DAY    =    87840UL;
+const uint64_t DATE_MULTIPLIER_HOUR   =     3660UL;
+const uint64_t DATE_MULTIPLIER_MINUTE =       61UL;
+const uint64_t DATE_MULTIPLIER_SECOND =        1UL;
+
+const uint64_t TS_MS_MULTIPLIER_YEAR   = 32676480000UL;
+const uint64_t TS_MS_MULTIPLIER_MONTH  =  2723040000UL;
+const uint64_t TS_MS_MULTIPLIER_DAY    =    87840000UL;
+const uint64_t TS_MS_MULTIPLIER_HOUR   =     3660000UL;
+const uint64_t TS_MS_MULTIPLIER_MINUTE =       61000UL;
+const uint64_t TS_MS_MULTIPLIER_SECOND =        1000UL;
+const uint64_t TS_MS_MULTIPLIER_MILLISECOND =      1UL;
+
+const uint64_t TS_NS_MULTIPLIER_YEAR   = 32676480000000UL;
+const uint64_t TS_NS_MULTIPLIER_MONTH  =  2723040000000UL;
+const uint64_t TS_NS_MULTIPLIER_DAY    =    87840000000UL;
+const uint64_t TS_NS_MULTIPLIER_HOUR   =     3660000000UL;
+const uint64_t TS_NS_MULTIPLIER_MINUTE =       61000000UL;
+const uint64_t TS_NS_MULTIPLIER_SECOND =        1000000UL;
+const uint64_t TS_NS_MULTIPLIER_NANOSECOND =          1UL;
+
 #define DEFINE_SAFE_STRUCT(NAME, TYPE) typedef struct __attribute__((__packed__)) {TYPE contents;} NAME
 DEFINE_SAFE_STRUCT(safe_int16, int16_t);
 DEFINE_SAFE_STRUCT(safe_int32, int32_t);
@@ -37,7 +60,7 @@ static inline bool add_small(cbe_buffer* buffer, int8_t value)
 #define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
 static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* buffer, DATA_TYPE value) \
 { \
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value)); \
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
     add_type_field(buffer, CBE_TYPE); \
     /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
     memset(buffer->pos, 0, sizeof(value)); \
@@ -53,6 +76,15 @@ DEFINE_SCALAR_ADD_FUNCTION(__int128,      int128, TYPE_INT_128)
 DEFINE_SCALAR_ADD_FUNCTION(float,        float32, TYPE_FLOAT_32)
 DEFINE_SCALAR_ADD_FUNCTION(double,       float64, TYPE_FLOAT_64)
 DEFINE_SCALAR_ADD_FUNCTION(long double, float128, TYPE_FLOAT_128)
+
+static bool add_lowbytes(cbe_buffer* buffer, uint8_t type, unsigned int byte_count, uint64_t data)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, byte_count + sizeof(type));
+    add_type_field(buffer, type);
+    memcpy(buffer->pos, (uint8_t*)&data, byte_count);
+    buffer->pos += byte_count;
+    return true;
+}
 
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end)
 {
@@ -128,19 +160,39 @@ bool cbe_add_float128(cbe_buffer* buffer, long double value)
     return add_float128(buffer, value);
 }
 
-bool cbe_add_date(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second)
+bool cbe_add_date(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
 {
-    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0;
+    return add_lowbytes(buffer, TYPE_DATE, 40/8, 
+                        year * DATE_MULTIPLIER_YEAR +
+                        (month-1) * DATE_MULTIPLIER_MONTH +
+                        (day-1) * DATE_MULTIPLIER_DAY +
+                        hour * DATE_MULTIPLIER_HOUR +
+                        minute * DATE_MULTIPLIER_MINUTE +
+                        second * DATE_MULTIPLIER_SECOND);
 }
 
-bool cbe_add_timestamp(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int msec)
+bool cbe_add_timestamp(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second, unsigned msec)
 {
-    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0 && msec == 0;
+    return add_lowbytes(buffer, TYPE_TIMESTAMP_MS, 48/8, 
+                        year * TS_MS_MULTIPLIER_YEAR +
+                        (month-1) * TS_MS_MULTIPLIER_MONTH +
+                        (day-1) * TS_MS_MULTIPLIER_DAY +
+                        hour * TS_MS_MULTIPLIER_HOUR +
+                        minute * TS_MS_MULTIPLIER_MINUTE +
+                        second * TS_MS_MULTIPLIER_SECOND +
+                        msec * TS_MS_MULTIPLIER_MILLISECOND);
 }
 
-bool cbe_add_timestamp_ns(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int nsec)
+bool cbe_add_timestamp_ns(cbe_buffer* buffer, unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second, unsigned nsec)
 {
-    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0 && nsec == 0;
+    return add_lowbytes(buffer, TYPE_TIMESTAMP_NS, 64/8, 
+                        year * TS_NS_MULTIPLIER_YEAR +
+                        (month-1) * TS_NS_MULTIPLIER_MONTH +
+                        (day-1) * TS_NS_MULTIPLIER_DAY +
+                        hour * TS_NS_MULTIPLIER_HOUR +
+                        minute * TS_NS_MULTIPLIER_MINUTE +
+                        second * TS_NS_MULTIPLIER_SECOND +
+                        nsec * TS_NS_MULTIPLIER_NANOSECOND);
 }
 
 bool cbe_add_string(cbe_buffer* buffer, const char* const value)
