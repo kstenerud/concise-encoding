@@ -41,6 +41,7 @@ inline void scalar_write_test(T value, std::vector<uint8_t>& expected_memory)
 
     cbe_buffer buffer = create_buffer(data, memory_size);
     bool success = store_value(&buffer, value);
+    fflush(stdout);
 
     std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
     EXPECT_TRUE(success);
