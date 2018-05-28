@@ -28,6 +28,7 @@ add_executable(cbe_test
                    src/int16.cpp
                    src/int32.cpp
                    src/int64.cpp
+                   src/int128.cpp
                    src/float32.cpp
                    src/float64.cpp
                )

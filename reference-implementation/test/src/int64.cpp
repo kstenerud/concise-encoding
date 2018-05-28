@@ -15,7 +15,6 @@ DEFINE_SCALAR_WRITE_TEST(Int64Test, add_8000,      (int64_t)     0x8000L, {TYPE_
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_n8001,     (int64_t)    -0x8001L, {TYPE_INT_32, 0xff, 0x7f, 0xff, 0xff})
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_7fffffff,  (int64_t) 0x7fffffffL, {TYPE_INT_32, 0xff, 0xff, 0xff, 0x7f})
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_n80000000, (int64_t)-0x80000000L, {TYPE_INT_32, 0x00, 0x00, 0x00, 0x80})
-
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_80000000,  (int64_t) 0x80000000L, {TYPE_INT_64, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00})
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_n80000001, (int64_t)-0x80000001L, {TYPE_INT_64, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff})
 DEFINE_SCALAR_WRITE_TEST(Int64Test, add_7fffffffffffffff,  (int64_t) 0x7fffffffffffffffL, {TYPE_INT_64, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f})

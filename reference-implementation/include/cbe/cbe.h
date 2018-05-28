@@ -8,11 +8,6 @@ extern "C" {
 #include <stdint.h>
 
 typedef struct {
-	int64_t hi;
-	uint64_t lo;
-} int128;
-
-typedef struct {
 	uint8_t* start;
 	uint8_t* end;
 	uint8_t* pos;
@@ -29,7 +24,7 @@ bool cbe_add_int8(cbe_buffer* buffer, int8_t value);
 bool cbe_add_int16(cbe_buffer* buffer, int16_t value);
 bool cbe_add_int32(cbe_buffer* buffer, int32_t value);
 bool cbe_add_int64(cbe_buffer* buffer, int64_t value);
-bool cbe_add_int128(cbe_buffer* buffer, int128 value);
+bool cbe_add_int128(cbe_buffer* buffer, __int128 value);
 bool cbe_add_float32(cbe_buffer* buffer, float value);
 bool cbe_add_float64(cbe_buffer* buffer, double value);
 bool cbe_add_float128(cbe_buffer* buffer, long double value);

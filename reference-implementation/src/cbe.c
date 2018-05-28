@@ -6,6 +6,7 @@
 DEFINE_SAFE_STRUCT(safe_int16, int16_t);
 DEFINE_SAFE_STRUCT(safe_int32, int32_t);
 DEFINE_SAFE_STRUCT(safe_int64, int64_t);
+DEFINE_SAFE_STRUCT(safe_int128, __int128);
 DEFINE_SAFE_STRUCT(safe_float32, float);
 DEFINE_SAFE_STRUCT(safe_float64, double);
 
@@ -41,11 +42,12 @@ static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* buffer, DATA_TYPE value) 
     buffer->pos += sizeof(value); \
     return true; \
 }
-DEFINE_SCALAR_ADD_FUNCTION(int16_t,   int16, TYPE_INT_16)
-DEFINE_SCALAR_ADD_FUNCTION(int32_t,   int32, TYPE_INT_32)
-DEFINE_SCALAR_ADD_FUNCTION(int64_t,   int64, TYPE_INT_64)
-DEFINE_SCALAR_ADD_FUNCTION(float,   float32, TYPE_FLOAT_32)
-DEFINE_SCALAR_ADD_FUNCTION(double,  float64, TYPE_FLOAT_64)
+DEFINE_SCALAR_ADD_FUNCTION(int16_t,    int16, TYPE_INT_16)
+DEFINE_SCALAR_ADD_FUNCTION(int32_t,    int32, TYPE_INT_32)
+DEFINE_SCALAR_ADD_FUNCTION(int64_t,    int64, TYPE_INT_64)
+DEFINE_SCALAR_ADD_FUNCTION(__int128,  int128, TYPE_INT_128)
+DEFINE_SCALAR_ADD_FUNCTION(float,    float32, TYPE_FLOAT_32)
+DEFINE_SCALAR_ADD_FUNCTION(double,   float64, TYPE_FLOAT_64)
 
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end)
 {
@@ -94,9 +96,13 @@ bool cbe_add_int64(cbe_buffer* buffer, int64_t value)
     return add_int64(buffer, value);
 }
 
-bool cbe_add_int128(cbe_buffer* buffer, int128 value)
+bool cbe_add_int128(cbe_buffer* buffer, __int128 value)
 {
-    return false;
+    if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
+    if(FITS_IN_INT_16(value)) return add_int16(buffer, value);
+    if(FITS_IN_INT_32(value)) return add_int32(buffer, value);
+    if(FITS_IN_INT_64(value)) return add_int64(buffer, value);
+    return add_int128(buffer, value);
 }
 
 bool cbe_add_float32(cbe_buffer* buffer, float value)
