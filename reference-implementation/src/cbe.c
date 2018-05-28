@@ -3,9 +3,13 @@
 
 
 #define DEFINE_SAFE_STRUCT(NAME, TYPE) typedef struct __attribute__((__packed__)) {TYPE contents;} NAME
+DEFINE_SAFE_STRUCT(safe_int16, int16_t);
+DEFINE_SAFE_STRUCT(safe_int32, int32_t);
+DEFINE_SAFE_STRUCT(safe_int64, int64_t);
+DEFINE_SAFE_STRUCT(safe_float32, float);
+DEFINE_SAFE_STRUCT(safe_float64, double);
 
 #define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) if((BUFFER)->end - (BUFFER)->pos < (REQUIRED_BYTES)) return false
-#define ADD_TYPE(BUFFER, VALUE) *(BUFFER)->pos++ = (int8_t)(VALUE)
 
 #define FITS_IN_INT_SMALL(VALUE) ((VALUE) >= -100 && (VALUE) <= 100)
 #define FITS_IN_INT_8(VALUE) ((VALUE) == (int8_t)(VALUE))
@@ -15,69 +19,33 @@
 #define FITS_IN_FLOAT_32(VALUE) ((VALUE) == (float)(VALUE))
 #define FITS_IN_FLOAT_64(VALUE) ((VALUE) == (double)(VALUE))
 
-DEFINE_SAFE_STRUCT(safe_int16, int16_t);
-DEFINE_SAFE_STRUCT(safe_int32, int32_t);
-DEFINE_SAFE_STRUCT(safe_int64, int64_t);
-DEFINE_SAFE_STRUCT(safe_float32, float);
-DEFINE_SAFE_STRUCT(safe_float64, double);
-
+static inline void add_type_field(cbe_buffer* buffer, type_field type)
+{
+    *(buffer)->pos++ = (int8_t)(type);
+}
 
 static inline bool add_small(cbe_buffer* buffer, int8_t value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, value);
+    add_type_field(buffer, value);
     return true;
 }
 
-static inline bool add_int16(cbe_buffer* buffer, int16_t value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, TYPE_INT_16);
-    safe_int16* safe = (safe_int16*)buffer->pos;
-    safe->contents = value;
-    buffer->pos += sizeof(value);
-    return true;
+#define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
+static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* buffer, DATA_TYPE value) \
+{ \
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value)); \
+    add_type_field(buffer, CBE_TYPE); \
+    safe_ ## DEFINITION_TYPE* safe = (safe_##DEFINITION_TYPE*)buffer->pos; \
+    safe->contents = value; \
+    buffer->pos += sizeof(value); \
+    return true; \
 }
-
-static inline bool add_int32(cbe_buffer* buffer, int32_t value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, TYPE_INT_32);
-    safe_int32* safe = (safe_int32*)buffer->pos;
-    safe->contents = value;
-    buffer->pos += sizeof(value);
-    return true;
-}
-
-static inline bool add_int64(cbe_buffer* buffer, int64_t value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, TYPE_INT_64);
-    safe_int64* safe = (safe_int64*)buffer->pos;
-    safe->contents = value;
-    buffer->pos += sizeof(value);
-    return true;
-}
-
-static inline bool add_float32(cbe_buffer* buffer, float value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, TYPE_FLOAT_32);
-    safe_float32* safe = (safe_float32*)buffer->pos;
-    safe->contents = value;
-    buffer->pos += sizeof(value);
-    return true;
-}
-
-static inline bool add_float64(cbe_buffer* buffer, double value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, TYPE_FLOAT_64);
-    safe_float64* safe = (safe_float64*)buffer->pos;
-    safe->contents = value;
-    buffer->pos += sizeof(value);
-    return true;
-}
+DEFINE_SCALAR_ADD_FUNCTION(int16_t,   int16, TYPE_INT_16)
+DEFINE_SCALAR_ADD_FUNCTION(int32_t,   int32, TYPE_INT_32)
+DEFINE_SCALAR_ADD_FUNCTION(int64_t,   int64, TYPE_INT_64)
+DEFINE_SCALAR_ADD_FUNCTION(float,   float32, TYPE_FLOAT_32)
+DEFINE_SCALAR_ADD_FUNCTION(double,  float64, TYPE_FLOAT_64)
 
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end)
 {
@@ -89,7 +57,7 @@ void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_
 bool cbe_add_boolean(cbe_buffer* buffer, bool value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    ADD_TYPE(buffer, value ? TYPE_TRUE : TYPE_FALSE);
+    add_type_field(buffer, value ? TYPE_TRUE : TYPE_FALSE);
     return true;
 }
 

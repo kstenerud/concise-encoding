@@ -17,23 +17,23 @@ static cbe_buffer create_buffer(uint8_t* memory, int size)
 template <typename T>
 inline bool store_value(cbe_buffer* buffer, T value) {return false;}
 
-#define DEFINE_STORE_VALUE(TYPE, FUNCTION) \
+#define DEFINE_STORE_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool store_value<TYPE>(cbe_buffer* buffer, TYPE value) \
+inline bool store_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
 { \
-    return FUNCTION(buffer, value); \
+    return FUNCTION_TO_CALL(buffer, value); \
 }
 
-DEFINE_STORE_VALUE(bool, cbe_add_boolean)
-DEFINE_STORE_VALUE(int8_t, cbe_add_int8)
-DEFINE_STORE_VALUE(int16_t, cbe_add_int16)
-DEFINE_STORE_VALUE(int32_t, cbe_add_int32)
-DEFINE_STORE_VALUE(int64_t, cbe_add_int64)
-DEFINE_STORE_VALUE(float, cbe_add_float32)
-DEFINE_STORE_VALUE(double, cbe_add_float64)
+DEFINE_STORE_VALUE_FUNCTION(bool,    cbe_add_boolean)
+DEFINE_STORE_VALUE_FUNCTION(int8_t,  cbe_add_int8)
+DEFINE_STORE_VALUE_FUNCTION(int16_t, cbe_add_int16)
+DEFINE_STORE_VALUE_FUNCTION(int32_t, cbe_add_int32)
+DEFINE_STORE_VALUE_FUNCTION(int64_t, cbe_add_int64)
+DEFINE_STORE_VALUE_FUNCTION(float,   cbe_add_float32)
+DEFINE_STORE_VALUE_FUNCTION(double,  cbe_add_float64)
 
 template<typename T>
-inline void scalar_write_test(T value, std::vector<uint8_t>& expected_memory)
+inline void expect_scalar_write(T value, std::vector<uint8_t>& expected_memory)
 {
 	int expected_size = expected_memory.size();
 	const int memory_size = 100;
@@ -56,5 +56,5 @@ TEST(TESTCASE, NAME) \
 { \
 	uint8_t expected[] = __VA_ARGS__; \
 	std::vector<uint8_t> vec(expected, expected + sizeof(expected) / sizeof(expected[0])); \
-	scalar_write_test(VALUE, vec); \
+	expect_scalar_write(VALUE, vec); \
 }
