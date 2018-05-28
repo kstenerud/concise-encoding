@@ -1,3 +1,4 @@
+#include <memory.h>
 #include "cbe/cbe.h"
 #include "cbe_internal.h"
 
@@ -11,14 +12,14 @@ DEFINE_SAFE_STRUCT(safe_float32, float);
 DEFINE_SAFE_STRUCT(safe_float64, double);
 DEFINE_SAFE_STRUCT(safe_float128, long double);
 
-#define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) if((BUFFER)->end - (BUFFER)->pos < (REQUIRED_BYTES)) return false
+#define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) if((size_t)((BUFFER)->end - (BUFFER)->pos) < (REQUIRED_BYTES)) return false
 
 #define FITS_IN_INT_SMALL(VALUE) ((VALUE) >= -100 && (VALUE) <= 100)
 #define FITS_IN_INT_8(VALUE) ((VALUE) == (int8_t)(VALUE))
 #define FITS_IN_INT_16(VALUE) ((VALUE) == (int16_t)(VALUE))
 #define FITS_IN_INT_32(VALUE) ((VALUE) == (int32_t)(VALUE))
 #define FITS_IN_INT_64(VALUE) ((VALUE) == (int64_t)(VALUE))
-#define FITS_IN_FLOAT_32(VALUE) ((VALUE) == (float)(VALUE))
+#define FITS_IN_FLOAT_32(VALUE) ((VALUE) == (double)(float)(VALUE))
 #define FITS_IN_FLOAT_64(VALUE) ((VALUE) == (double)(VALUE))
 
 static inline void add_type_field(cbe_buffer* buffer, type_field type)
@@ -124,49 +125,47 @@ bool cbe_add_float128(cbe_buffer* buffer, long double value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float32(buffer, value);
     if(FITS_IN_FLOAT_64(value)) return add_float64(buffer, value);
-    uint8_t* ptr = buffer->pos;
-    bool result = add_float128(buffer, value);
-    return result;
+    return add_float128(buffer, value);
 }
 
 bool cbe_add_date(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second)
 {
-    return false;
+    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0;
 }
 
 bool cbe_add_timestamp(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int msec)
 {
-    return false;
+    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0 && msec == 0;
 }
 
 bool cbe_add_timestamp_ns(cbe_buffer* buffer, int year, int month, int day, int hour, int minute, int second, int nsec)
 {
-    return false;
+    return buffer == NULL && year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0 && nsec == 0;
 }
 
 bool cbe_add_string(cbe_buffer* buffer, const char* const value)
 {
-    return false;
+    return buffer == NULL && value == NULL;
 }
 
 bool cbe_add_bytes(cbe_buffer* buffer, const uint8_t* const value, int length)
 {
-    return false;
+    return buffer == NULL && value == NULL && length == 0;
 }
 
 // todo: arrays
 
 bool cbe_start_list(cbe_buffer* buffer)
 {
-    return false;
+    return buffer == NULL;
 }
 
 bool cbe_start_map(cbe_buffer* buffer)
 {
-    return false;
+    return buffer == NULL;
 }
 
 bool cbe_end_container(cbe_buffer* buffer)
 {
-    return false;
+    return buffer == NULL;
 }

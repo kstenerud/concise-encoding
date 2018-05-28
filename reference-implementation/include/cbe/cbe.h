@@ -14,7 +14,7 @@ typedef struct {
 } cbe_buffer;
 
 
-const char* const cbe_version();
+const char* cbe_version();
 
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end);
 
