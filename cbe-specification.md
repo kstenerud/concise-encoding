@@ -220,7 +220,7 @@ Examples:
 
 ### Floating Point Type
 
-IEEE 754 binary floating point types, and can be 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
+IEEE 754 binary floating point types, at 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
 
 Examples:
 
