@@ -12,10 +12,14 @@
 #define FITS_IN_INT_16(VALUE) ((VALUE) == (int16_t)(VALUE))
 #define FITS_IN_INT_32(VALUE) ((VALUE) == (int32_t)(VALUE))
 #define FITS_IN_INT_64(VALUE) ((VALUE) == (int64_t)(VALUE))
+#define FITS_IN_FLOAT_32(VALUE) ((VALUE) == (float)(VALUE))
+#define FITS_IN_FLOAT_64(VALUE) ((VALUE) == (double)(VALUE))
 
 DEFINE_SAFE_STRUCT(safe_int16, int16_t);
 DEFINE_SAFE_STRUCT(safe_int32, int32_t);
 DEFINE_SAFE_STRUCT(safe_int64, int64_t);
+DEFINE_SAFE_STRUCT(safe_float32, float);
+DEFINE_SAFE_STRUCT(safe_float64, double);
 
 
 static inline bool add_small(cbe_buffer* buffer, int8_t value)
@@ -55,6 +59,26 @@ static inline bool add_int64(cbe_buffer* buffer, int64_t value)
     return true;
 }
 
+static inline bool add_float32(cbe_buffer* buffer, float value)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    ADD_TYPE(buffer, TYPE_FLOAT_32);
+    safe_float32* safe = (safe_float32*)buffer->pos;
+    safe->contents = value;
+    buffer->pos += sizeof(value);
+    return true;
+}
+
+static inline bool add_float64(cbe_buffer* buffer, double value)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    ADD_TYPE(buffer, TYPE_FLOAT_64);
+    safe_float64* safe = (safe_float64*)buffer->pos;
+    safe->contents = value;
+    buffer->pos += sizeof(value);
+    return true;
+}
+
 void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_end)
 {
     buffer->start = memory_start;
@@ -64,7 +88,7 @@ void cbe_init_buffer(cbe_buffer* buffer, uint8_t* memory_start, uint8_t* memory_
 
 bool cbe_add_boolean(cbe_buffer* buffer, bool value)
 {
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, 1);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
     ADD_TYPE(buffer, value ? TYPE_TRUE : TYPE_FALSE);
     return true;
 }
@@ -109,12 +133,13 @@ bool cbe_add_int128(cbe_buffer* buffer, int128 value)
 
 bool cbe_add_float32(cbe_buffer* buffer, float value)
 {
-    return false;
+    return add_float32(buffer, value);
 }
 
 bool cbe_add_float64(cbe_buffer* buffer, double value)
 {
-    return false;
+    if(FITS_IN_FLOAT_32(value)) return add_float32(buffer, value);
+    return add_float64(buffer, value);
 }
 
 bool cbe_add_float128(cbe_buffer* buffer, long double value)

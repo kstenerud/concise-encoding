@@ -29,6 +29,8 @@ DEFINE_STORE_VALUE(int8_t, cbe_add_int8)
 DEFINE_STORE_VALUE(int16_t, cbe_add_int16)
 DEFINE_STORE_VALUE(int32_t, cbe_add_int32)
 DEFINE_STORE_VALUE(int64_t, cbe_add_int64)
+DEFINE_STORE_VALUE(float, cbe_add_float32)
+DEFINE_STORE_VALUE(double, cbe_add_float64)
 
 template<typename T>
 inline void scalar_write_test(T value, std::vector<uint8_t>& expected_memory)
