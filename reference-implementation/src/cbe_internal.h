@@ -67,6 +67,15 @@ typedef enum
 } type_field;
 
 
+typedef enum
+{
+	LENGTH_8BIT_MIN = 0x00,
+	LENGTH_8BIT_MAX = 0xfc,
+	LENGTH_64BIT    = 0xfd,
+	LENGTH_32BIT    = 0xfe,
+	LENGTH_16BIT    = 0xff,
+} length_field;
+
 #ifdef __cplusplus 
 }
 #endif

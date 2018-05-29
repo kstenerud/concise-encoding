@@ -33,6 +33,7 @@ add_executable(cbe_test
                    src/float64.cpp
                    src/float128.cpp
                    src/date.cpp
+                   src/string.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
