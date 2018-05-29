@@ -38,7 +38,7 @@ DEFINE_SAFE_STRUCT(safe_float128, long double);
 
 #define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) if((size_t)((BUFFER)->end - (BUFFER)->pos) < (REQUIRED_BYTES)) return false
 
-#define FITS_IN_INT_SMALL(VALUE) ((VALUE) >= -100 && (VALUE) <= 100)
+#define FITS_IN_INT_SMALL(VALUE) ((VALUE) >= SMALLINT_MIN && (VALUE) <= SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE) ((VALUE) == (int8_t)(VALUE))
 #define FITS_IN_INT_16(VALUE) ((VALUE) == (int16_t)(VALUE))
 #define FITS_IN_INT_32(VALUE) ((VALUE) == (int32_t)(VALUE))
