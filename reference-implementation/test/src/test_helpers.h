@@ -38,6 +38,11 @@ inline bool store_value<std::string>(cbe_buffer* buffer, std::string value)
 {
     return cbe_add_string(buffer, value.c_str());
 }
+template <>
+inline bool store_value<std::vector<uint8_t>>(cbe_buffer* buffer, std::vector<uint8_t> value)
+{
+    return cbe_add_bytes(buffer, value.data(), value.size());
+}
 
 template<typename T>
 inline void expect_memory_after_write(T writeValue, std::vector<uint8_t> const& expected_memory)

@@ -148,6 +148,29 @@ void add_length_field(cbe_buffer* const buffer, const uint64_t length)
     add_primitive_int64(buffer, length);
 }
 
+static bool add_bytes_with_type(cbe_buffer* const buffer,
+                                const type_field short_type,
+                                const type_field long_type,
+                                const uint8_t* const bytes,
+                                const int byte_count)
+{
+    if(byte_count <= 15)
+    {
+        const uint8_t type = short_type + byte_count;
+        RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count);
+        add_type_field(buffer, type);
+    }
+    else
+    {
+        const uint8_t type = long_type;
+        RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count + compacted_length_size(byte_count));
+        add_type_field(buffer, type);
+        add_length_field(buffer, byte_count);
+    }
+    add_primitive_bytes(buffer, bytes, byte_count);
+    return true;
+}
+
 void cbe_init_buffer(cbe_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end)
 {
     buffer->start = memory_start;
@@ -279,27 +302,12 @@ bool cbe_add_timestamp_ns(cbe_buffer* buffer,
 
 bool cbe_add_string(cbe_buffer* const buffer, const char* const value)
 {
-    const unsigned byte_count = strlen(value);
-    if(byte_count <= 15)
-    {
-        const uint8_t type = TYPE_STRING_0 + byte_count;
-        RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count);
-        add_type_field(buffer, type);
-    }
-    else
-    {
-        const uint8_t type = TYPE_STRING;
-        RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count + compacted_length_size(byte_count));
-        add_type_field(buffer, type);
-        add_length_field(buffer, byte_count);
-    }
-    add_primitive_bytes(buffer, (const uint8_t*)value, byte_count);
-    return true;
+    return add_bytes_with_type(buffer, TYPE_STRING_0, TYPE_STRING, (const uint8_t*)value, strlen(value));
 }
 
-bool cbe_add_bytes(cbe_buffer* const buffer, const uint8_t* const value, int length)
+bool cbe_add_bytes(cbe_buffer* const buffer, const uint8_t* const value, const int byte_count)
 {
-    return buffer == NULL && value == NULL && length == 0;
+    return add_bytes_with_type(buffer, TYPE_BYTES_0, TYPE_BYTES, value, byte_count);
 }
 
 // todo: arrays

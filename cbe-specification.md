@@ -386,7 +386,7 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they will cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
 
-  * Dates must be valid. For example: February 30th, while technically encodable, is not allowed.
+  * Dates must be valid. For example: February 31st, while technically encodable, is not allowed.
   * Map keys must not be container types or the EMPTY type.
   * Maps must not contain duplicate keys. This includes keys that resolve to the same value.
   * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY are not allowed.
