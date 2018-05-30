@@ -46,6 +46,23 @@ DEFINE_SAFE_STRUCT(safe_float128, long double);
 #define FITS_IN_FLOAT_32(VALUE) ((VALUE) == (double)(float)(VALUE))
 #define FITS_IN_FLOAT_64(VALUE) ((VALUE) == (double)(VALUE))
 
+unsigned int compacted_length_size(const uint64_t length)
+{
+    if(length <= LENGTH_8BIT_MAX)
+    {
+        return 1;
+    }
+    if(length <= UINT16_MAX)
+    {
+        return 2;
+    }
+    if(length <= UINT32_MAX)
+    {
+        return 4;
+    }
+    return 8;
+}
+
 static inline void add_primitive_int8(cbe_buffer* const buffer, const int8_t value)
 {
     *buffer->pos++ = (uint8_t)value;
@@ -72,60 +89,12 @@ static inline void add_primitive_bytes(cbe_buffer* const buffer, const uint8_t* 
     buffer->pos += byte_count;
 }
 
-static inline void add_type_field(cbe_buffer* const buffer, const type_field type)
+static inline void add_primitive_type(cbe_buffer* const buffer, const type_field type)
 {
     add_primitive_int8(buffer, type);
 }
 
-static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    add_type_field(buffer, value);
-    return true;
-}
-
-#define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
-static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
-{ \
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
-    add_type_field(buffer, CBE_TYPE); \
-    add_primitive_ ## DEFINITION_TYPE(buffer, value); \
-    return true; \
-}
-DEFINE_SCALAR_ADD_FUNCTION(int16_t,        int16, TYPE_INT_16)
-DEFINE_SCALAR_ADD_FUNCTION(int32_t,        int32, TYPE_INT_32)
-DEFINE_SCALAR_ADD_FUNCTION(int64_t,        int64, TYPE_INT_64)
-DEFINE_SCALAR_ADD_FUNCTION(__int128,      int128, TYPE_INT_128)
-DEFINE_SCALAR_ADD_FUNCTION(float,        float32, TYPE_FLOAT_32)
-DEFINE_SCALAR_ADD_FUNCTION(double,       float64, TYPE_FLOAT_64)
-DEFINE_SCALAR_ADD_FUNCTION(long double, float128, TYPE_FLOAT_128)
-
-static bool add_lowbytes(cbe_buffer* const buffer, const uint8_t type, const unsigned int byte_count, const uint64_t data)
-{
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, byte_count + sizeof(type));
-    add_type_field(buffer, type);
-    add_primitive_bytes(buffer, (uint8_t*)&data, byte_count);
-    return true;
-}
-
-unsigned int compacted_length_size(const uint64_t length)
-{
-    if(length <= LENGTH_8BIT_MAX)
-    {
-        return 1;
-    }
-    if(length <= UINT16_MAX)
-    {
-        return 2;
-    }
-    if(length <= UINT32_MAX)
-    {
-        return 4;
-    }
-    return 8;
-}
-
-void add_length_field(cbe_buffer* const buffer, const uint64_t length)
+void add_primitive_length(cbe_buffer* const buffer, const uint64_t length)
 {
     if(length <= LENGTH_8BIT_MAX)
     {
@@ -148,6 +117,38 @@ void add_length_field(cbe_buffer* const buffer, const uint64_t length)
     add_primitive_int64(buffer, length);
 }
 
+
+static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    add_primitive_type(buffer, value);
+    return true;
+}
+
+#define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
+static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
+{ \
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
+    add_primitive_type(buffer, CBE_TYPE); \
+    add_primitive_ ## DEFINITION_TYPE(buffer, value); \
+    return true; \
+}
+DEFINE_SCALAR_ADD_FUNCTION(int16_t,        int16, TYPE_INT_16)
+DEFINE_SCALAR_ADD_FUNCTION(int32_t,        int32, TYPE_INT_32)
+DEFINE_SCALAR_ADD_FUNCTION(int64_t,        int64, TYPE_INT_64)
+DEFINE_SCALAR_ADD_FUNCTION(__int128,      int128, TYPE_INT_128)
+DEFINE_SCALAR_ADD_FUNCTION(float,        float32, TYPE_FLOAT_32)
+DEFINE_SCALAR_ADD_FUNCTION(double,       float64, TYPE_FLOAT_64)
+DEFINE_SCALAR_ADD_FUNCTION(long double, float128, TYPE_FLOAT_128)
+
+static bool add_lowbytes(cbe_buffer* const buffer, const uint8_t type, const unsigned int byte_count, const uint64_t data)
+{
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, byte_count + sizeof(type));
+    add_primitive_type(buffer, type);
+    add_primitive_bytes(buffer, (uint8_t*)&data, byte_count);
+    return true;
+}
+
 static bool add_bytes_with_type(cbe_buffer* const buffer,
                                 const type_field short_type,
                                 const type_field long_type,
@@ -158,14 +159,14 @@ static bool add_bytes_with_type(cbe_buffer* const buffer,
     {
         const uint8_t type = short_type + byte_count;
         RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count);
-        add_type_field(buffer, type);
+        add_primitive_type(buffer, type);
     }
     else
     {
         const uint8_t type = long_type;
         RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count + compacted_length_size(byte_count));
-        add_type_field(buffer, type);
-        add_length_field(buffer, byte_count);
+        add_primitive_type(buffer, type);
+        add_primitive_length(buffer, byte_count);
     }
     add_primitive_bytes(buffer, bytes, byte_count);
     return true;
@@ -181,7 +182,7 @@ void cbe_init_buffer(cbe_buffer* const buffer, uint8_t* const memory_start, uint
 bool cbe_add_boolean(cbe_buffer* const buffer, const bool value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    add_type_field(buffer, value ? TYPE_TRUE : TYPE_FALSE);
+    add_primitive_type(buffer, value ? TYPE_TRUE : TYPE_FALSE);
     return true;
 }
 
