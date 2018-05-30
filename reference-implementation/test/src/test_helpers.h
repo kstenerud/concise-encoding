@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <cbe/cbe.h>
@@ -44,8 +45,8 @@ inline bool store_value<std::vector<uint8_t>>(cbe_buffer* buffer, std::vector<ui
     return cbe_add_bytes(buffer, value.data(), value.size());
 }
 
-template<typename T>
-inline void expect_memory_after_write(T writeValue, std::vector<uint8_t> const& expected_memory)
+inline void expect_memory_after_store_function(std::function<bool(cbe_buffer* buffer)> store_function,
+                                                std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
     std::array<uint8_t, memory_size> memory;
@@ -55,13 +56,19 @@ inline void expect_memory_after_write(T writeValue, std::vector<uint8_t> const& 
     uint8_t* expected_pos = data + expected_size;
 
     cbe_buffer buffer = create_buffer(data, memory_size);
-    bool success = store_value(&buffer, writeValue);
+    bool success = store_function(&buffer);
     fflush(stdout);
 
     std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
     EXPECT_TRUE(success);
     EXPECT_EQ(expected_pos, buffer.pos);
     EXPECT_EQ(expected_memory, actual_memory);
+}
+
+template<typename T>
+inline void expect_memory_after_write(T writeValue, std::vector<uint8_t> const& expected_memory)
+{
+    expect_memory_after_store_function([&](cbe_buffer* buffer) {return store_value(buffer, writeValue);}, expected_memory);
 }
 
 #define DEFINE_SCALAR_WRITE_TEST(TESTCASE, NAME, VALUE, ...) \

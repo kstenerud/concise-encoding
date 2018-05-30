@@ -315,15 +315,24 @@ bool cbe_add_bytes(cbe_buffer* const buffer, const uint8_t* const value, const i
 
 bool cbe_start_list(cbe_buffer* const buffer)
 {
-    return buffer == NULL;
+    const uint8_t type = TYPE_LIST;
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) * 2);
+    add_primitive_type(buffer, type);
+    return true;
 }
 
 bool cbe_start_map(cbe_buffer* const buffer)
 {
-    return buffer == NULL;
+    const uint8_t type = TYPE_MAP;
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) * 2);
+    add_primitive_type(buffer, type);
+    return true;
 }
 
 bool cbe_end_container(cbe_buffer* const buffer)
 {
-    return buffer == NULL;
+    const uint8_t type = TYPE_END_CONTAINER;
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type));
+    add_primitive_type(buffer, type);
+    return true;
 }
