@@ -36,6 +36,7 @@ add_executable(cbe_test
                    src/string.cpp
                    src/bytes.cpp
                    src/list.cpp
+                   src/map.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
