@@ -37,6 +37,11 @@ bool cbe_start_list(cbe_buffer* buffer);
 bool cbe_start_map(cbe_buffer* buffer);
 bool cbe_end_container(cbe_buffer* buffer);
 
+// bool cbe_add_decimal64bid(cbe_buffer* buffer, ?? value);
+// bool cbe_add_decimal128bid(cbe_buffer* buffer, ?? value);
+// bool cbe_add_decimal64dpd(cbe_buffer* buffer, ?? value);
+// bool cbe_add_decimal128dpd(cbe_buffer* buffer, ?? value);
+
 // bool cbe_add_boolean_array(cbe_buffer* buffer, uint8_t* packed_values, int entity_count);
 bool cbe_add_int16_array(cbe_buffer* const buffer, const int16_t* const values, const int entity_count);
 bool cbe_add_int32_array(cbe_buffer* const buffer, const int32_t* const values, const int entity_count);

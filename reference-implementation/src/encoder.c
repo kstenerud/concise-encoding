@@ -1,5 +1,5 @@
 #include <memory.h>
-#include "cbe/cbe.h"
+#include "cbe/encoder.h"
 #include "cbe_internal.h"
 
 

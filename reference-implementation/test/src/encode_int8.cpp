@@ -1,4 +1,4 @@
-#include "test_helpers.h"
+#include "encode_test_helpers.h"
 
 DEFINE_SCALAR_WRITE_TEST(Int8Test, add_0,    (int8_t)   0, {0x00})
 DEFINE_SCALAR_WRITE_TEST(Int8Test, add_1,    (int8_t)   1, {0x01})

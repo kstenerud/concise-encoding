@@ -1,4 +1,4 @@
-#include "test_helpers.h"
+#include "encode_test_helpers.h"
 
 DEFINE_SCALAR_WRITE_TEST(Float128Test, add_0,   0.0L, {TYPE_FLOAT_32, 0x00, 0x00, 0x00, 0x00})
 DEFINE_SCALAR_WRITE_TEST(Float128Test, add_0_5, 0.5L, {TYPE_FLOAT_32, 0x00, 0x00, 0x00, 0x3f})

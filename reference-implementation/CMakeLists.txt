@@ -9,7 +9,8 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 # Create target and set properties
 
 add_library(cbe
-    src/cbe.c
+    src/decoder.c
+    src/encoder.c
 )
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing

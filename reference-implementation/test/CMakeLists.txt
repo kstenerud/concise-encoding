@@ -22,22 +22,22 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(cbe_test
                    src/main.cpp
-                   src/support.cpp
-                   src/bool.cpp
-                   src/int8.cpp
-                   src/int16.cpp
-                   src/int32.cpp
-                   src/int64.cpp
-                   src/int128.cpp
-                   src/float32.cpp
-                   src/float64.cpp
-                   src/float128.cpp
-                   src/date.cpp
-                   src/string.cpp
-                   src/bytes.cpp
-                   src/list.cpp
-                   src/map.cpp
-                   src/array.cpp
+                   src/encode_support.cpp
+                   src/encode_bool.cpp
+                   src/encode_int8.cpp
+                   src/encode_int16.cpp
+                   src/encode_int32.cpp
+                   src/encode_int64.cpp
+                   src/encode_int128.cpp
+                   src/encode_float32.cpp
+                   src/encode_float64.cpp
+                   src/encode_float128.cpp
+                   src/encode_date.cpp
+                   src/encode_string.cpp
+                   src/encode_bytes.cpp
+                   src/encode_list.cpp
+                   src/encode_map.cpp
+                   src/encode_array.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
