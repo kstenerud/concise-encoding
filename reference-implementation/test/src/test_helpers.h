@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <cbe/cbe.h>
 #include <cbe_internal.h>
+#include <cxxabi.h>
 
 static cbe_buffer create_buffer(uint8_t* memory, int size)
 {
@@ -16,7 +17,20 @@ static cbe_buffer create_buffer(uint8_t* memory, int size)
 }
 
 template <typename T>
-inline bool store_value(cbe_buffer* buffer, T value) {throw std::runtime_error("Unimplemented store_value handler called");}
+inline bool store_value(cbe_buffer* buffer, T value)
+{
+    int status;
+    std::string type_name = typeid(T).name();
+    char *demangled_name = abi::__cxa_demangle(type_name.c_str(), NULL, NULL, &status);
+    if(status == 0) {
+        type_name = demangled_name;
+        std::free(demangled_name);
+    }   
+
+    std::stringstream stream;
+    stream << "Unimplemented store_value handler called for " << type_name;
+    throw std::runtime_error(stream.str());
+}
 
 #define DEFINE_STORE_SCALAR_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
 template <> \
@@ -34,15 +48,19 @@ DEFINE_STORE_SCALAR_FUNCTION(float,       cbe_add_float32)
 DEFINE_STORE_SCALAR_FUNCTION(double,      cbe_add_float64)
 DEFINE_STORE_SCALAR_FUNCTION(long double, cbe_add_float128)
 
+#define DEFINE_STORE_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
+template <> \
+inline bool store_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<VECTOR_TYPE> value) \
+{ \
+    return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
+}
+DEFINE_STORE_VECTOR_FUNCTION(uint8_t, cbe_add_bytes)
+DEFINE_STORE_VECTOR_FUNCTION(int16_t, cbe_add_int16_array)
+
 template <>
 inline bool store_value<std::string>(cbe_buffer* buffer, std::string value)
 {
     return cbe_add_string(buffer, value.c_str());
-}
-template <>
-inline bool store_value<std::vector<uint8_t>>(cbe_buffer* buffer, std::vector<uint8_t> value)
-{
-    return cbe_add_bytes(buffer, value.data(), value.size());
 }
 
 inline void expect_memory_after_store_function(std::function<bool(cbe_buffer* buffer)> store_function,
