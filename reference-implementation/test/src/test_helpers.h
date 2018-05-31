@@ -56,6 +56,12 @@ inline bool store_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vecto
 }
 DEFINE_STORE_VECTOR_FUNCTION(uint8_t, cbe_add_bytes)
 DEFINE_STORE_VECTOR_FUNCTION(int16_t, cbe_add_int16_array)
+DEFINE_STORE_VECTOR_FUNCTION(int32_t, cbe_add_int32_array)
+DEFINE_STORE_VECTOR_FUNCTION(int64_t, cbe_add_int64_array)
+DEFINE_STORE_VECTOR_FUNCTION(__int128, cbe_add_int128_array)
+DEFINE_STORE_VECTOR_FUNCTION(float, cbe_add_float32_array)
+DEFINE_STORE_VECTOR_FUNCTION(double, cbe_add_float64_array)
+DEFINE_STORE_VECTOR_FUNCTION(long double, cbe_add_float128_array)
 
 template <>
 inline bool store_value<std::string>(cbe_buffer* buffer, std::string value)

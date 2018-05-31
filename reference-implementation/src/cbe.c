@@ -335,18 +335,58 @@ bool cbe_end_container(cbe_buffer* const buffer)
     return true;
 }
 
-bool cbe_add_int16_array(cbe_buffer* buffer, int16_t* values, int entity_count)
+static bool add_array(cbe_buffer* const buffer,
+                        const type_field entity_type,
+                        const uint8_t* const values,
+                        const int entity_count,
+                        const int entity_size)
 {
     const uint8_t type = TYPE_ARRAY;
-    const uint8_t entity_type = TYPE_INT_16;
+    const uint8_t encoded_entity_type = entity_type;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
                                     sizeof(type) +
-                                    sizeof(entity_type) +
+                                    sizeof(encoded_entity_type) +
                                     compacted_length_size(entity_count) +
-                                    entity_count * sizeof(*values));
+                                    entity_count * entity_size);
     add_primitive_type(buffer, type);
-    add_primitive_type(buffer, entity_type);
+    add_primitive_type(buffer, encoded_entity_type);
     add_primitive_length(buffer, entity_count);
-    add_primitive_bytes(buffer, (uint8_t*)values, entity_count * sizeof(*values));
+    add_primitive_bytes(buffer, values, entity_count * entity_size);
     return true;
+}
+
+
+bool cbe_add_int16_array(cbe_buffer* const buffer, const int16_t* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_INT_16, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_int32_array(cbe_buffer* const buffer, const int32_t* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_INT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_int64_array(cbe_buffer* const buffer, const int64_t* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_INT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_int128_array(cbe_buffer* const buffer, const __int128* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_INT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_float32_array(cbe_buffer* const buffer, const float* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_FLOAT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_float64_array(cbe_buffer* const buffer, const double* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_FLOAT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_float128_array(cbe_buffer* const buffer, const long double* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
