@@ -57,7 +57,7 @@ Array types can hold multiple scalar values of the same type and size.
 
   * **Array**: Array of any scalar type
   * **Bytes**: Array of octets
-  * **String**: Array of octets in UTF-8 encoding without BOM
+  * **String**: Array of UTF-8 encoded characters without BOM
 
 
 ### Container Types
@@ -94,8 +94,7 @@ All objects are composed of a type field and a possible payload.
 |  00  | Integer value 0    |                                                     |
 |  01  | Integer value 1    |                                                     |
 | ...  | ...                | ...                                                 |
-|  64  | Integer value 100  |                                                     |
-|  65  | Empty (no data)    |                                                     |
+|  65  | Integer value 101  |                                                     |
 |  66  | False              |                                                     |
 |  67  | True               |                                                     |
 |  68  | Date               | [40-bit data]                                       |
@@ -104,7 +103,7 @@ All objects are composed of a type field and a possible payload.
 |  6b  | End of Container   |                                                     |
 |  6c  | List               | [object] ... [end of container]                     |
 |  6d  | Map                | [key object, value object] ... [end of container]   |
-|  6e  | Array              | [element type] [length in elements] [element] ...   |
+|  6e  | Array              | [content type & element count] [element] ...        |
 |  6f  | String             | [length in octets] [octets]                         |
 |  70  | String (empty)     |                                                     |
 |  71  | String (1 byte)    | [1 octet of data]                                   |
@@ -146,11 +145,10 @@ All objects are composed of a type field and a possible payload.
 |  95  | Float              | [IEEE 754 binary32 floating point]                  |
 |  96  | Float              | [IEEE 754 binary64 floating point]                  |
 |  97  | Float              | [IEEE 754 binary128 floating point]                 |
-|  98  | Decimal            | [IEEE 754 decimal64, Binary Integer Decimal]        |
-|  99  | Decimal            | [IEEE 754 decimal128, Binary Integer Decimal]       |
-|  9a  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]        |
-|  9b  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]       |
-|  9c  | Integer value -100 |                                                     |
+|  98  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]        |
+|  99  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]       |
+|  9a  | Empty (no data)    |                                                     |
+|  9b  | Integer value -101 |                                                     |
 | ...  | ...                | ...                                                 |
 |  fe  | Integer value -2   |                                                     |
 |  ff  | Integer value -1   |                                                     |
@@ -159,27 +157,6 @@ All objects are composed of a type field and a possible payload.
 
 Types
 -----
-
-
-### Length Type
-
-A length is unsigned, and can only be used in array types to denote their length. It is encoded as follows:
-
-| Code | Type              | Payload                                             |
-| ---- | ----------------- | --------------------------------------------------- |
-|  00  | Integer value 0   |                                                     |
-|  01  | Integer value 1   |                                                     |
-| ...  | ...               | ...                                                 |
-|  fc  | Integer value 252 |                                                     |
-|  fd  | Integer           | (64-bit unsigned integer)                           |
-|  fe  | Integer           | (32-bit unsigned integer)                           |
-|  ff  | Integer           | (16-bit unsigned integer)                           |
-
-Examples:
-
-    [f0] = Length 240
-    [ff ff 00] = length 255
-    [fe a0 86 01 00] = Length 100000
 
 
 ### Empty Type
@@ -308,17 +285,63 @@ Example:
 
 ### Array Type
 
-An array of scalar values. All elements MUST be of the same type AND width.
+An array of scalar values. All elements are of the same type and width.
 
-    [6e] [Element Type] [Length] [Element 0] ... [Element (Length-1)]
+    [6e] [Content Type & Length] [Element 0] ... [Element (Length-1)]
 
-The elements themselves do *NOT* contain a type field; only a payload. The type is specified in the `Element Type` field of the array. In this way, the elements of an array can be read directly off the buffer, accessible by type punning a portion of the buffer as an array of the native type.
+The elements themselves do *NOT* contain a type field; only a payload. The type is specified in the `Content Type` field of the array. In this way, the elements of an array can be natively read off the buffer.
 
-Note: Arrays cannot contain other arrays or containers or the EMPTY type.
+#### Content Type & Length Field
 
-Example:
+##### Upper 4 Bits
 
-    [6e 91 03 18 fc 00 00 e8 03] = array of 16-bit integers, containing -1000, 0, 1000.
+| Code | Type                                                |
+| ---- | --------------------------------------------------- |
+|   0  | Boolean                                             |
+|   1  | [16-bit two's complement signed integer]            |
+|   2  | [32-bit two's complement signed integer]            |
+|   3  | [64-bit two's complement signed integer]            |
+|   4  | [128-bit two's complement signed integer]           |
+|   5  | [IEEE 754 binary32 floating point]                  |
+|   6  | [IEEE 754 binary64 floating point]                  |
+|   7  | [IEEE 754 binary128 floating point]                 |
+|   8  | [IEEE 754 decimal64, Densely Packed Decimal]        |
+|   9  | [IEEE 754 decimal128, Densely Packed Decimal]       |
+|   a  | Date                                                |
+|   b  | Timestamp with milliseconds                         |
+|   c  | Timestamp with nanoseconds                          |
+|   d  | Reserved                                            |
+|   e  | Reserved                                            |
+|   f  | Reserved                                            |
+
+##### Lower 4 Bits
+
+| Code | Meaning       | Payload                   |
+| ---- | ------------- | ------------------------- |
+|   0  | Length 0      |                           |
+|   1  | Length 1      |                           |
+|   2  | Length 2      |                           |
+|   3  | Length 3      |                           |
+|   4  | Length 4      |                           |
+|   5  | Length 5      |                           |
+|   6  | Length 6      |                           |
+|   7  | Length 7      |                           |
+|   8  | Length 8      |                           |
+|   9  | Length 9      |                           |
+|   a  | Length 10     |                           |
+|   b  | Length 11     |                           |
+|   c  | 64-bit Length | [16-bit unsigned integer] |
+|   d  | 32-bit Length | [16-bit unsigned integer] |
+|   e  | 16-bit Length | [16-bit unsigned integer] |
+|   f  | 8-bit Length  | [8-bit unsigned integer]  |
+
+Note: Length represents the number of array entries, not the byte count.
+
+Examples:
+
+    [6e 50] Array of 32-bit floats, length 0.
+    [6e 13 18 fc 00 00 e8 03] Array of 16-bit integers, length 2, contents (-1000, 0, 1000).
+    [6e 6e e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
 
 
 ### Bytes Type
