@@ -46,7 +46,7 @@ Binary, stored in little endian byte order.
   * **Boolean**: Supports the values true and false.
   * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
-  * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits. Both BID and DPD are supported.
+  * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits. DPD encoding.
   * **Date**: UTC-based date with precision to the second.
   * **Timestamp**: UTC-based date with precision to the millisecond or nanosecond.
 
@@ -209,11 +209,9 @@ Examples:
 
 IEEE 754 decimal64 and decimal128 types, used in financial applications where emulation of decimal rounding is necessary. They can be 64 or 128 bits wide, and can be read directly off the buffer in little endian byte order.
 
-Both binary integer decimal (BID) and densely packed decimal (DPD) are supported, as neither has yet displaced the other.
-
 Example:
 
-    [9a D0 03 00 00 00 00 30 A2] = -7.50 as a 64-bit densely packed decimal
+    [9a D0 03 00 00 00 00 30 A2] = -7.50
 
 
 ### Date Type

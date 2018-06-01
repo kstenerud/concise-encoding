@@ -6,6 +6,11 @@ A C implementation to demonstrate a simple CBE codec.
 Note: This is still a work-in-progress.
 
 
+Notes
+-----
+
+Assumes densely packed decimal encoding for C decimal types (decimal32, decimal64, decimal128). This is the default for gcc and other compilers using decNumber.
+
 
 Requirements
 ------------

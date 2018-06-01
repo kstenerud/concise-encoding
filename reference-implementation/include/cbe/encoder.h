@@ -1,5 +1,5 @@
-#ifndef cbe_H
-#define cbe_H
+#ifndef cbe_encoder_H
+#define cbe_encoder_H
 #ifdef __cplusplus 
 extern "C" {
 #endif
@@ -36,13 +36,9 @@ bool cbe_add_bytes(cbe_buffer* buffer, const uint8_t* const value, int length);
 bool cbe_start_list(cbe_buffer* buffer);
 bool cbe_start_map(cbe_buffer* buffer);
 bool cbe_end_container(cbe_buffer* buffer);
-
-// bool cbe_add_decimal64bid(cbe_buffer* buffer, ?? value);
-// bool cbe_add_decimal128bid(cbe_buffer* buffer, ?? value);
-// bool cbe_add_decimal64dpd(cbe_buffer* buffer, ?? value);
-// bool cbe_add_decimal128dpd(cbe_buffer* buffer, ?? value);
-
-// bool cbe_add_boolean_array(cbe_buffer* buffer, uint8_t* packed_values, int entity_count);
+bool cbe_add_decimal64(cbe_buffer* buffer, _Decimal64 value);
+bool cbe_add_decimal128(cbe_buffer* buffer, _Decimal128 value);
+bool cbe_add_boolean_array(cbe_buffer* buffer, uint8_t* packed_values, int entity_count);
 bool cbe_add_int16_array(cbe_buffer* const buffer, const int16_t* const values, const int entity_count);
 bool cbe_add_int32_array(cbe_buffer* const buffer, const int32_t* const values, const int entity_count);
 bool cbe_add_int64_array(cbe_buffer* const buffer, const int64_t* const values, const int entity_count);
@@ -55,4 +51,4 @@ bool cbe_add_float128_array(cbe_buffer* const buffer, const long double* const v
 #ifdef __cplusplus 
 }
 #endif
-#endif // cbe_H
+#endif // cbe_encoder_H

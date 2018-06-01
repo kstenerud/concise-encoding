@@ -1,5 +1,5 @@
-#ifndef dbe_decoder_H
-#define dbe_decoder_H
+#ifndef cbe_decoder_H
+#define cbe_decoder_H
 #ifdef __cplusplus 
 extern "C" {
 #endif
@@ -26,10 +26,8 @@ typedef struct {
 	void (*on_float_32)(float value);
 	void (*on_float_64)(double value);
 	void (*on_float_128)(long double value);
-	// void (*on_decimal_64_dpd)(??? value);
-	// void (*on_decimal_128_dpd)(??? value);
-	// void (*on_decimal_64_bid)(??? value);
-	// void (*on_decimal_128_bid)(??? value);
+	void (*on_decimal_64)(_Decimal64 value);
+	void (*on_decimal_128)(_Decimal128 value); 
 	void (*on_array_int_16)(int16_t* start, int16_t* end);
 	void (*on_array_int_32)(int32_t* start, int32_t* end);
 	void (*on_array_int_64)(int64_t* start, int64_t* end);
@@ -48,4 +46,4 @@ void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start
 #ifdef __cplusplus 
 }
 #endif
-#endif // dbe_decoder_H
+#endif // cbe_decoder_H

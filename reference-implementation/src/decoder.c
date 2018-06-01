@@ -168,17 +168,11 @@ void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start
 			case TYPE_FLOAT_128:
 				callbacks->on_float_128(0);
 		        break;
-			case TYPE_DECIMAL_BID_64:
-				// callbacks->on_decimal_64_bid(0);
+			case TYPE_DECIMAL_64:
+				callbacks->on_decimal_64(0);
 		        break;
-			case TYPE_DECIMAL_BID_128:
-				// callbacks->on_decimal_128_bid(0);
-		        break;
-			case TYPE_DECIMAL_DPD_64:
-				// callbacks->on_decimal_64_dpd(0);
-		        break;
-			case TYPE_DECIMAL_DPD_128:
-				// callbacks->on_decimal_128_dpd(0);
+			case TYPE_DECIMAL_128:
+				callbacks->on_decimal_128(0);
 		        break;
 		    default:
 		    	callbacks->on_int_8(type);

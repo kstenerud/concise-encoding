@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <gtest/gtest.h>
-#include <cbe/encoder.h>
 #include "encode_test_helpers.h"
 
 TEST(SupportTest, create_buffer)
