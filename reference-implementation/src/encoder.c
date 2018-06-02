@@ -288,50 +288,50 @@ bool cbe_add_date(cbe_buffer* const buffer,
                   const unsigned second)
 {
     return add_lowbytes(buffer, TYPE_DATE, 40/8, 
-                        year * DATE_MULTIPLIER_YEAR +
+                        year      * DATE_MULTIPLIER_YEAR +
                         (month-1) * DATE_MULTIPLIER_MONTH +
-                        (day-1) * DATE_MULTIPLIER_DAY +
-                        hour * DATE_MULTIPLIER_HOUR +
-                        minute * DATE_MULTIPLIER_MINUTE +
-                        second * DATE_MULTIPLIER_SECOND);
+                        (day-1)   * DATE_MULTIPLIER_DAY +
+                        hour      * DATE_MULTIPLIER_HOUR +
+                        minute    * DATE_MULTIPLIER_MINUTE +
+                        second    * DATE_MULTIPLIER_SECOND);
 }
 
-bool cbe_add_timestamp(cbe_buffer* const buffer,
-                       const unsigned year,
-                       const unsigned month,
-                       const unsigned day,
-                       const unsigned hour,
-                       const unsigned minute,
-                       const unsigned second,
-                       const unsigned msec)
-{
-    return add_lowbytes(buffer, TYPE_TIMESTAMP_MS, 48/8, 
-                        year * TS_MS_MULTIPLIER_YEAR +
-                        (month-1) * TS_MS_MULTIPLIER_MONTH +
-                        (day-1) * TS_MS_MULTIPLIER_DAY +
-                        hour * TS_MS_MULTIPLIER_HOUR +
-                        minute * TS_MS_MULTIPLIER_MINUTE +
-                        second * TS_MS_MULTIPLIER_SECOND +
-                        msec * TS_MS_MULTIPLIER_MILLISECOND);
-}
-
-bool cbe_add_timestamp_ns(cbe_buffer* buffer,
+bool cbe_add_timestamp_ms(cbe_buffer* const buffer,
                           const unsigned year,
                           const unsigned month,
                           const unsigned day,
                           const unsigned hour,
                           const unsigned minute,
                           const unsigned second,
-                          const unsigned nsec)
+                          const unsigned millisecond)
 {
-    return add_lowbytes(buffer, TYPE_TIMESTAMP_NS, 64/8, 
-                        year * TS_NS_MULTIPLIER_YEAR +
-                        (month-1) * TS_NS_MULTIPLIER_MONTH +
-                        (day-1) * TS_NS_MULTIPLIER_DAY +
-                        hour * TS_NS_MULTIPLIER_HOUR +
-                        minute * TS_NS_MULTIPLIER_MINUTE +
-                        second * TS_NS_MULTIPLIER_SECOND +
-                        nsec * TS_NS_MULTIPLIER_NANOSECOND);
+    return add_lowbytes(buffer, TYPE_TIMESTAMP_MILLI, 48/8, 
+                        year        * TS_MS_MULTIPLIER_YEAR +
+                        (month-1)   * TS_MS_MULTIPLIER_MONTH +
+                        (day-1)     * TS_MS_MULTIPLIER_DAY +
+                        hour        * TS_MS_MULTIPLIER_HOUR +
+                        minute      * TS_MS_MULTIPLIER_MINUTE +
+                        second      * TS_MS_MULTIPLIER_SECOND +
+                        millisecond * TS_MS_MULTIPLIER_MILLISECOND);
+}
+
+bool cbe_add_timestamp_us(cbe_buffer* buffer,
+                          const unsigned year,
+                          const unsigned month,
+                          const unsigned day,
+                          const unsigned hour,
+                          const unsigned minute,
+                          const unsigned second,
+                          const unsigned microsecond)
+{
+    return add_lowbytes(buffer, TYPE_TIMESTAMP_MICRO, 64/8, 
+                        year        * TS_US_MULTIPLIER_YEAR +
+                        (month-1)   * TS_US_MULTIPLIER_MONTH +
+                        (day-1)     * TS_US_MULTIPLIER_DAY +
+                        hour        * TS_US_MULTIPLIER_HOUR +
+                        minute      * TS_US_MULTIPLIER_MINUTE +
+                        second      * TS_US_MULTIPLIER_SECOND +
+                        microsecond * TS_US_MULTIPLIER_MICROSECOND);
 }
 
 bool cbe_add_string(cbe_buffer* const buffer, const char* const value)

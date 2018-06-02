@@ -23,14 +23,14 @@ void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start
 				callbacks->on_date(1,1,1,1,1,1);
 		        break;
 		    }
-			case TYPE_TIMESTAMP_MS:
+			case TYPE_TIMESTAMP_MILLI:
 			{
 				callbacks->on_timestamp_ms(1,1,1,1,1,1,1);
 		        break;
 		    }
-			case TYPE_TIMESTAMP_NS:
+			case TYPE_TIMESTAMP_MICRO:
 			{
-				callbacks->on_timestamp_ns(1,1,1,1,1,1,1);
+				callbacks->on_timestamp_us(1,1,1,1,1,1,1);
 		        break;
 		    }
 			case TYPE_END_CONTAINER:

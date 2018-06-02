@@ -12,8 +12,8 @@ typedef struct {
 	void (*on_empty)(void);
 	void (*on_bool)(bool value);
 	void (*on_date)(int year, int month, int day, int hour, int minute, int second);
-	void (*on_timestamp_ms)(int year, int month, int day, int hour, int minute, int second, int ms);
-	void (*on_timestamp_ns)(int year, int month, int day, int hour, int minute, int second, int ns);
+	void (*on_timestamp_ms)(int year, int month, int day, int hour, int minute, int second, int millisecond);
+	void (*on_timestamp_us)(int year, int month, int day, int hour, int minute, int second, int microsecond);
 	void (*on_end_container)(void);
 	void (*on_list_start)(void);
 	void (*on_map_start)(void);
