@@ -4,11 +4,12 @@
 extern "C" {
 #endif
 
+#include "cbe/cbe_config.h"
 
 typedef enum
 {
-	SMALLINT_MIN       = -101,
-	SMALLINT_MAX       = 101,
+	TYPE_SMALLINT_MIN  = -101,
+	TYPE_SMALLINT_MAX  = 101,
 	TYPE_FALSE         = 0x66,
 	TYPE_TRUE          = 0x67,
 	TYPE_DATE          = 0x68,
@@ -64,15 +65,80 @@ typedef enum
 	TYPE_EMPTY         = 0x9a,
 } type_field;
 
+typedef enum
+{
+	BYTES_LENGTH_8_BIT_MAX = 0xfc,
+	BYTES_LENGTH_16_BIT    = 0xfd,
+	BYTES_LENGTH_32_BIT    = 0xfe,
+	BYTES_LENGTH_64_BIT    = 0xff,
+} bytes_length;
 
 typedef enum
 {
-	LENGTH_8BIT_MIN = 0x00,
-	LENGTH_8BIT_MAX = 0xfc,
-	LENGTH_64BIT    = 0xfd,
-	LENGTH_32BIT    = 0xfe,
-	LENGTH_16BIT    = 0xff,
-} length_field;
+	ARRAY_CONTENT_TYPE_BOOLEAN      = 0x00,
+	ARRAY_CONTENT_TYPE_INT_16       = 0x10,
+	ARRAY_CONTENT_TYPE_INT_32       = 0x20,
+	ARRAY_CONTENT_TYPE_INT_64       = 0x30,
+	ARRAY_CONTENT_TYPE_INT_128      = 0x40,
+	ARRAY_CONTENT_TYPE_FLOAT_32     = 0x50,
+	ARRAY_CONTENT_TYPE_FLOAT_64     = 0x60,
+	ARRAY_CONTENT_TYPE_FLOAT_128    = 0x70,
+	ARRAY_CONTENT_TYPE_DECIMAL_64   = 0x80,
+	ARRAY_CONTENT_TYPE_DECIMAL_128  = 0x90,
+	ARRAY_CONTENT_TYPE_DATE         = 0xa0,
+	ARRAY_CONTENT_TYPE_TIMESTAMP_MS = 0xb0,
+	ARRAY_CONTENT_TYPE_TIMESTAMP_NS = 0xc0,
+} array_content_type_field;
+
+typedef enum
+{
+	ARRAY_LENGTH_SMALL_MAX = 0x0b,
+	ARRAY_LENGTH_8_BIT     = 0x0c,
+	ARRAY_LENGTH_16_BIT    = 0x0d,
+	ARRAY_LENGTH_32_BIT    = 0x0e,
+	ARRAY_LENGTH_64_BIT    = 0x0f,
+} array_length_field;
+
+
+#define DATE_MULTIPLIER_SECOND       1UL
+#define DATE_MULTIPLIER_MINUTE       ((DATE_MULTIPLIER_SECOND) * 61UL)
+#define DATE_MULTIPLIER_HOUR         ((DATE_MULTIPLIER_MINUTE) * 60UL)
+#define DATE_MULTIPLIER_DAY          ((DATE_MULTIPLIER_HOUR)   * 24UL)
+#define DATE_MULTIPLIER_MONTH        ((DATE_MULTIPLIER_DAY)    * 31UL)
+#define DATE_MULTIPLIER_YEAR         ((DATE_MULTIPLIER_MONTH)  * 12UL)
+
+#define TS_MS_MULTIPLIER_MILLISECOND 1UL
+#define TS_MS_MULTIPLIER_SECOND      ((DATE_MULTIPLIER_SECOND) * 1000UL)
+#define TS_MS_MULTIPLIER_MINUTE      ((DATE_MULTIPLIER_MINUTE) * 1000UL)
+#define TS_MS_MULTIPLIER_HOUR        ((DATE_MULTIPLIER_HOUR)   * 1000UL)
+#define TS_MS_MULTIPLIER_DAY         ((DATE_MULTIPLIER_DAY)    * 1000UL)
+#define TS_MS_MULTIPLIER_MONTH       ((DATE_MULTIPLIER_MONTH)  * 1000UL)
+#define TS_MS_MULTIPLIER_YEAR        ((DATE_MULTIPLIER_YEAR)   * 1000UL)
+
+#define TS_NS_MULTIPLIER_NANOSECOND  1UL
+#define TS_NS_MULTIPLIER_SECOND      ((DATE_MULTIPLIER_SECOND) * 1000000UL)
+#define TS_NS_MULTIPLIER_MINUTE      ((DATE_MULTIPLIER_MINUTE) * 1000000UL)
+#define TS_NS_MULTIPLIER_HOUR        ((DATE_MULTIPLIER_HOUR)   * 1000000UL)
+#define TS_NS_MULTIPLIER_DAY         ((DATE_MULTIPLIER_DAY)    * 1000000UL)
+#define TS_NS_MULTIPLIER_MONTH       ((DATE_MULTIPLIER_MONTH)  * 1000000UL)
+#define TS_NS_MULTIPLIER_YEAR        ((DATE_MULTIPLIER_YEAR)   * 1000000UL)
+
+// Force the compiler to generate handler code for unaligned accesses.
+#define DEFINE_SAFE_STRUCT(NAME, TYPE) typedef struct __attribute__((__packed__)) {TYPE contents;} NAME
+DEFINE_SAFE_STRUCT(safe_uint_16,     uint16_t);
+DEFINE_SAFE_STRUCT(safe_uint_32,     uint32_t);
+DEFINE_SAFE_STRUCT(safe_uint_64,     uint64_t);
+DEFINE_SAFE_STRUCT(safe_int_16,      int16_t);
+DEFINE_SAFE_STRUCT(safe_int_32,      int32_t);
+DEFINE_SAFE_STRUCT(safe_int_64,      int64_t);
+DEFINE_SAFE_STRUCT(safe_int_128,     __int128);
+DEFINE_SAFE_STRUCT(safe_float_32,    float);
+DEFINE_SAFE_STRUCT(safe_float_64,    double);
+DEFINE_SAFE_STRUCT(safe_float_128,   long double);
+#if CBE_HAS_DECIMAL_SUPPORT
+DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
+DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
+#endif
 
 #ifdef __cplusplus 
 }

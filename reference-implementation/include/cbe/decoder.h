@@ -6,6 +6,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "cbe_config.h"
 
 typedef struct {
 	void (*on_empty)(void);
@@ -26,8 +27,10 @@ typedef struct {
 	void (*on_float_32)(float value);
 	void (*on_float_64)(double value);
 	void (*on_float_128)(long double value);
+#if CBE_HAS_DECIMAL_SUPPORT
 	void (*on_decimal_64)(_Decimal64 value);
 	void (*on_decimal_128)(_Decimal128 value); 
+#endif
 	void (*on_array_int_16)(int16_t* start, int16_t* end);
 	void (*on_array_int_32)(int32_t* start, int32_t* end);
 	void (*on_array_int_64)(int64_t* start, int64_t* end);

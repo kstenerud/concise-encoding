@@ -1,6 +1,7 @@
 #pragma once
 
 // Terrible way to bridge decimal types in C and C++
+// this shit is broken
 #include <decimal/decimal>
 #define _Decimal64 std::decimal::decimal64
 #define _Decimal128 std::decimal::decimal128

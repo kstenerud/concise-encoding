@@ -165,7 +165,7 @@ Represents the absence of data. Some languages implement this as the NULL value.
 
 Example:
 
-    [95] = No data
+    [9a] = No data
 
 
 ### Boolean Type
@@ -291,7 +291,13 @@ The elements themselves do *NOT* contain a type field; only a payload. The type 
 
 #### Content Type & Length Field
 
-##### Upper 4 Bits
+The content type and lengths of an array are encoded in two 4-bit sub-fields:
+
+    upper nybble = content type
+    lower nybble = length
+
+
+##### Content Type
 
 | Code | Type                                                |
 | ---- | --------------------------------------------------- |
@@ -312,7 +318,7 @@ The elements themselves do *NOT* contain a type field; only a payload. The type 
 |   e  | Reserved                                            |
 |   f  | Reserved                                            |
 
-##### Lower 4 Bits
+##### Length
 
 | Code | Meaning       | Payload                   |
 | ---- | ------------- | ------------------------- |
@@ -328,10 +334,10 @@ The elements themselves do *NOT* contain a type field; only a payload. The type 
 |   9  | Length 9      |                           |
 |   a  | Length 10     |                           |
 |   b  | Length 11     |                           |
-|   c  | 64-bit Length | [16-bit unsigned integer] |
-|   d  | 32-bit Length | [16-bit unsigned integer] |
-|   e  | 16-bit Length | [16-bit unsigned integer] |
-|   f  | 8-bit Length  | [8-bit unsigned integer]  |
+|   c  | 8-bit Length  | [8-bit unsigned integer]  |
+|   d  | 16-bit Length | [16-bit unsigned integer] |
+|   e  | 32-bit Length | [32-bit unsigned integer] |
+|   f  | 64-bit Length | [64-bit unsigned integer] |
 
 Note: Length represents the number of array entries, not the byte count.
 
@@ -350,7 +356,21 @@ The generalized form is as follows:
 
     [90] [Length] [Byte 0] ...  [Byte (Length-1)]
 
-There are also specialized forms for lengths 15 and under, where the length is encoded into the type field.
+#### Length Field
+
+The length field for the bytes type can be encoded as an unsigned integer 8-64 bits wide:
+
+| Code | Meaning       | Payload                   |
+| ---- | ------------- | ------------------------- |
+|  00  | Length 0      |                           |
+|  01  | Length 1      |                           |
+| ...  | ...           |                           |
+|  fc  | Length 252    |                           |
+|  fd  | 16-bit Length | [16-bit unsigned integer] |
+|  fe  | 32-bit Length | [32-bit unsigned integer] |
+|  ff  | 64-bit Length | [64-bit unsigned integer] |
+
+There are also specialized forms for byte array lengths 15 and under, where the length is encoded into the type field.
 
 Examples:
 
@@ -366,7 +386,9 @@ The generalized form is as follows:
 
     [6f] [Length] [Byte 0] ...  [Byte (Length-1)]
 
-There are also specialized forms for byte lengths 15 and under, where the length is encoded into the type field.
+#### Length Field
+
+The string length field is implemented the same as for the bytes type, including specialized forms.
 
 Examples:
 
