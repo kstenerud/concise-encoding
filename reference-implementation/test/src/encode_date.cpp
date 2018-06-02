@@ -9,7 +9,7 @@ inline void expect_memory_after_add_date(unsigned year,
 										 unsigned second,
 										 std::vector<uint8_t> const& expected_memory)
 {
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
+	expect_memory_after_add_function([&](cbe_encode_buffer* buffer)
 	{
 		return cbe_add_date(buffer, year, month, day, hour, minute, second);
 	}, expected_memory);
@@ -24,7 +24,7 @@ inline void expect_memory_after_add_timestamp_ms(unsigned year,
 												 unsigned millisecond,
 												 std::vector<uint8_t> const& expected_memory)
 {
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
+	expect_memory_after_add_function([&](cbe_encode_buffer* buffer)
 	{
 		return cbe_add_timestamp_ms(buffer, year, month, day, hour, minute, second, millisecond);
 	}, expected_memory);
@@ -39,7 +39,7 @@ inline void expect_memory_after_add_timestamp_us(unsigned year,
 												 unsigned microsecond,
 												 std::vector<uint8_t> const& expected_memory)
 {
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
+	expect_memory_after_add_function([&](cbe_encode_buffer* buffer)
 	{
 		return cbe_add_timestamp_us(buffer, year, month, day, hour, minute, second, microsecond);
 	}, expected_memory);

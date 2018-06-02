@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "cbe/decoder.h"
+#include "cbe/cbe.h"
 #include "cbe_internal.h"
 
 void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end)

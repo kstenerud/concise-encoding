@@ -2,7 +2,7 @@
 
 static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
 {
-	expect_memory_after_add_function([=](cbe_buffer* buffer)
+	expect_memory_after_add_function([=](cbe_encode_buffer* buffer)
 	{
 		if(!cbe_start_list(buffer)) return false;
 		for(int i = 0; i < length; i++)

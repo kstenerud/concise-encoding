@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "cbe/cbe_config.h"
+#include "cbe/cbe.h"
 
 typedef enum
 {
