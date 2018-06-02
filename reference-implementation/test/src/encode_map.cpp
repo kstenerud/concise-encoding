@@ -9,7 +9,7 @@ static void expect_memory_after_add_map(int length, std::vector<uint8_t> expecte
 		{
 			char stringbuffer[2] = {0};
 			stringbuffer[0] = 'a' + i;
-			if(!cbe_add_int8(buffer, i + 1)) return false;
+			if(!cbe_add_int_8(buffer, i + 1)) return false;
 			if(!cbe_add_string(buffer, stringbuffer)) return false;
 		}
 		return cbe_end_container(buffer);

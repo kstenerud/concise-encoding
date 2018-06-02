@@ -225,26 +225,26 @@ bool cbe_add_int(cbe_buffer* const buffer, const int value)
     return false;
 }
 
-bool cbe_add_int8(cbe_buffer* const buffer, int8_t const value)
+bool cbe_add_int_8(cbe_buffer* const buffer, int8_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     return add_int_16(buffer, value);
 }
 
-bool cbe_add_int16(cbe_buffer* const buffer, int16_t const value)
+bool cbe_add_int_16(cbe_buffer* const buffer, int16_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     return add_int_16(buffer, value);
 }
 
-bool cbe_add_int32(cbe_buffer* const buffer, int32_t const value)
+bool cbe_add_int_32(cbe_buffer* const buffer, int32_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
     return add_int_32(buffer, value);
 }
 
-bool cbe_add_int64(cbe_buffer* const buffer, int64_t const value)
+bool cbe_add_int_64(cbe_buffer* const buffer, int64_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
@@ -252,7 +252,7 @@ bool cbe_add_int64(cbe_buffer* const buffer, int64_t const value)
     return add_int_64(buffer, value);
 }
 
-bool cbe_add_int128(cbe_buffer* const buffer, const __int128 value)
+bool cbe_add_int_128(cbe_buffer* const buffer, const __int128 value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
@@ -261,18 +261,18 @@ bool cbe_add_int128(cbe_buffer* const buffer, const __int128 value)
     return add_int_128(buffer, value);
 }
 
-bool cbe_add_float32(cbe_buffer* const buffer, const float value)
+bool cbe_add_float_32(cbe_buffer* const buffer, const float value)
 {
     return add_float_32(buffer, value);
 }
 
-bool cbe_add_float64(cbe_buffer* const buffer, const double value)
+bool cbe_add_float_64(cbe_buffer* const buffer, const double value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     return add_float_64(buffer, value);
 }
 
-bool cbe_add_float128(cbe_buffer* const buffer, const long double value)
+bool cbe_add_float_128(cbe_buffer* const buffer, const long double value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     if(FITS_IN_FLOAT_64(value)) return add_float_64(buffer, value);
@@ -386,37 +386,37 @@ static bool add_array(cbe_buffer* const buffer,
 }
 
 
-bool cbe_add_int16_array(cbe_buffer* const buffer, const int16_t* const values, const int entity_count)
+bool cbe_add_array_int_16(cbe_buffer* const buffer, const int16_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_16, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_int32_array(cbe_buffer* const buffer, const int32_t* const values, const int entity_count)
+bool cbe_add_array_int_32(cbe_buffer* const buffer, const int32_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_int64_array(cbe_buffer* const buffer, const int64_t* const values, const int entity_count)
+bool cbe_add_array_int_64(cbe_buffer* const buffer, const int64_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_int128_array(cbe_buffer* const buffer, const __int128* const values, const int entity_count)
+bool cbe_add_array_int_128(cbe_buffer* const buffer, const __int128* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_float32_array(cbe_buffer* const buffer, const float* const values, const int entity_count)
+bool cbe_add_array_float_32(cbe_buffer* const buffer, const float* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_float64_array(cbe_buffer* const buffer, const double* const values, const int entity_count)
+bool cbe_add_array_float_64(cbe_buffer* const buffer, const double* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_float128_array(cbe_buffer* const buffer, const long double* const values, const int entity_count)
+bool cbe_add_array_float_128(cbe_buffer* const buffer, const long double* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }

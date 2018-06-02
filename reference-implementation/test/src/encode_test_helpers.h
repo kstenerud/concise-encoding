@@ -41,14 +41,16 @@ inline bool add_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
     return FUNCTION_TO_CALL(buffer, value); \
 }
 DEFINE_ADD_VALUE_FUNCTION(bool,        cbe_add_boolean)
-DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_add_int8)
-DEFINE_ADD_VALUE_FUNCTION(int16_t,     cbe_add_int16)
-DEFINE_ADD_VALUE_FUNCTION(int32_t,     cbe_add_int32)
-DEFINE_ADD_VALUE_FUNCTION(int64_t,     cbe_add_int64)
-DEFINE_ADD_VALUE_FUNCTION(__int128,    cbe_add_int128)
-DEFINE_ADD_VALUE_FUNCTION(float,       cbe_add_float32)
-DEFINE_ADD_VALUE_FUNCTION(double,      cbe_add_float64)
-DEFINE_ADD_VALUE_FUNCTION(long double, cbe_add_float128)
+DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_add_int_8)
+DEFINE_ADD_VALUE_FUNCTION(int16_t,     cbe_add_int_16)
+DEFINE_ADD_VALUE_FUNCTION(int32_t,     cbe_add_int_32)
+DEFINE_ADD_VALUE_FUNCTION(int64_t,     cbe_add_int_64)
+DEFINE_ADD_VALUE_FUNCTION(__int128,    cbe_add_int_128)
+DEFINE_ADD_VALUE_FUNCTION(float,       cbe_add_float_32)
+DEFINE_ADD_VALUE_FUNCTION(double,      cbe_add_float_64)
+DEFINE_ADD_VALUE_FUNCTION(long double, cbe_add_float_128)
+// DEFINE_ADD_VALUE_FUNCTION(_Decimal64,  cbe_add_decimal_64)
+// DEFINE_ADD_VALUE_FUNCTION(_Decimal128, cbe_add_decimal_128)
 
 #define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
 template <> \
@@ -56,14 +58,16 @@ inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<
 { \
     return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
 }
-DEFINE_ADD_VECTOR_FUNCTION(uint8_t, cbe_add_bytes)
-DEFINE_ADD_VECTOR_FUNCTION(int16_t, cbe_add_int16_array)
-DEFINE_ADD_VECTOR_FUNCTION(int32_t, cbe_add_int32_array)
-DEFINE_ADD_VECTOR_FUNCTION(int64_t, cbe_add_int64_array)
-DEFINE_ADD_VECTOR_FUNCTION(__int128, cbe_add_int128_array)
-DEFINE_ADD_VECTOR_FUNCTION(float, cbe_add_float32_array)
-DEFINE_ADD_VECTOR_FUNCTION(double, cbe_add_float64_array)
-DEFINE_ADD_VECTOR_FUNCTION(long double, cbe_add_float128_array)
+DEFINE_ADD_VECTOR_FUNCTION(uint8_t,     cbe_add_bytes)
+DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_add_array_int_16)
+DEFINE_ADD_VECTOR_FUNCTION(int32_t,     cbe_add_array_int_32)
+DEFINE_ADD_VECTOR_FUNCTION(int64_t,     cbe_add_array_int_64)
+DEFINE_ADD_VECTOR_FUNCTION(__int128,    cbe_add_array_int_128)
+DEFINE_ADD_VECTOR_FUNCTION(float,       cbe_add_array_float_32)
+DEFINE_ADD_VECTOR_FUNCTION(double,      cbe_add_array_float_64)
+DEFINE_ADD_VECTOR_FUNCTION(long double, cbe_add_array_float_128)
+// DEFINE_ADD_VECTOR_FUNCTION(_Decimal64,  cbe_add_array_decimal_64)
+// DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_add_array_decimal_128)
 
 template <>
 inline bool add_value<std::string>(cbe_buffer* buffer, std::string value)

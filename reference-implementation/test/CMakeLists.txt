@@ -24,14 +24,14 @@ add_executable(cbe_test
                    src/main.cpp
                    src/encode_support.cpp
                    src/encode_bool.cpp
-                   src/encode_int8.cpp
-                   src/encode_int16.cpp
-                   src/encode_int32.cpp
-                   src/encode_int64.cpp
-                   src/encode_int128.cpp
-                   src/encode_float32.cpp
-                   src/encode_float64.cpp
-                   src/encode_float128.cpp
+                   src/encode_int_8.cpp
+                   src/encode_int_16.cpp
+                   src/encode_int_32.cpp
+                   src/encode_int_64.cpp
+                   src/encode_int_128.cpp
+                   src/encode_float_32.cpp
+                   src/encode_float_64.cpp
+                   src/encode_float_128.cpp
                    src/encode_date.cpp
                    src/encode_string.cpp
                    src/encode_bytes.cpp

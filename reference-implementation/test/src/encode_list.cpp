@@ -8,7 +8,7 @@ static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expec
 		for(int i = 0; i < length; i++)
 		{
 			int value = 10; // Any old number
-			if(!cbe_add_int8(buffer, value)) return false;
+			if(!cbe_add_int_8(buffer, value)) return false;
 		}
 		return cbe_end_container(buffer);
 	}, expected_memory);
