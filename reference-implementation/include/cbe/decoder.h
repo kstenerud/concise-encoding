@@ -17,8 +17,8 @@ typedef struct {
 	void (*on_end_container)(void);
 	void (*on_list_start)(void);
 	void (*on_map_start)(void);
-	void (*on_string)(int8_t* start, int8_t* end);
-	void (*on_bytes)(uint8_t* start, uint8_t* end);
+	void (*on_string)(const int8_t* start, const int8_t* end);
+	void (*on_bytes)(const uint8_t* start, const uint8_t* end);
 	void (*on_int_8)(int8_t value);
 	void (*on_int_16)(int16_t value);
 	void (*on_int_32)(int32_t value);
@@ -31,13 +31,13 @@ typedef struct {
 	void (*on_decimal_64)(_Decimal64 value);
 	void (*on_decimal_128)(_Decimal128 value); 
 #endif
-	void (*on_array_int_16)(int16_t* start, int16_t* end);
-	void (*on_array_int_32)(int32_t* start, int32_t* end);
-	void (*on_array_int_64)(int64_t* start, int64_t* end);
-	void (*on_array_int_128)(__int128* start, __int128* end);
-	void (*on_array_float_32)(float* start, float* end);
-	void (*on_array_float_64)(double* start, double* end);
-	void (*on_array_float_128)(long double* start, long double* end);
+	void (*on_array_int_16)(const int16_t* start, const int16_t* end);
+	void (*on_array_int_32)(const int32_t* start, const int32_t* end);
+	void (*on_array_int_64)(const int64_t* start, const int64_t* end);
+	void (*on_array_int_128)(const __int128* start, const __int128* end);
+	void (*on_array_float_32)(const float* start, const float* end);
+	void (*on_array_float_64)(const double* start, const double* end);
+	void (*on_array_float_128)(const long double* start, const long double* end);
 	// Array date, timestamps
 	// Array bool
 } cbe_decode_callbacks;
