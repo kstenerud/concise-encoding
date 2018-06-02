@@ -348,6 +348,22 @@ Examples:
     [6e 6e e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
 
 
+#### Special Case: Boolean Array
+
+Boolean arrays are encoded as little endian bitfields (least significant bit first). The length of the array is in bits.
+
+Bitfields start at the low bit (0) of the first byte, and end on one of the bits in byte (n/8)-1 (remember: array unit is bits, not bytes). Bits in the higher positions of the last byte are cleared.
+
+|     |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
+|     | -------- | -------- | --- | ------------ |
+| Bit | 01234567 | 01234567 | ... | 01234xxx     |
+|     | <- LSB                     MSB ->        |
+
+For example: 
+
+    [6e 0c 29 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
+
+
 ### Bytes Type
 
 The bytes type is an array that is implicitly of type 8-bit signed integer. It has no element type field.
@@ -370,7 +386,7 @@ The length field for the bytes type can be encoded as an unsigned integer 8-64 b
 |  fe  | 32-bit Length | [32-bit unsigned integer] |
 |  ff  | 64-bit Length | [64-bit unsigned integer] |
 
-There are also specialized forms for byte array lengths 15 and under, where the length is encoded into the type field.
+There are also specialized forms for byte array lengths 0-15, where the length is encoded into the type field.
 
 Examples:
 
@@ -388,7 +404,7 @@ The generalized form is as follows:
 
 #### Length Field
 
-The string length field is implemented the same as for the bytes type, including specialized forms.
+The string length field is implemented the same as for the bytes type, and has specialized forms for lengths 0-15.
 
 Examples:
 
