@@ -1,13 +1,14 @@
 #include "encode_test_helpers.h"
 
-static void test_add_list(int length, std::vector<uint8_t> expected_memory)
+static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
 {
-	expect_memory_after_store_function([=](cbe_buffer* buffer)
+	expect_memory_after_add_function([=](cbe_buffer* buffer)
 	{
 		if(!cbe_start_list(buffer)) return false;
 		for(int i = 0; i < length; i++)
 		{
-			if(!cbe_add_int8(buffer, 10)) return false;
+			int value = 10; // Any old number
+			if(!cbe_add_int8(buffer, value)) return false;
 		}
 		return cbe_end_container(buffer);
 	}, expected_memory);
@@ -16,7 +17,7 @@ static void test_add_list(int length, std::vector<uint8_t> expected_memory)
 #define DEFINE_ADD_LIST_TEST(LENGTH, ...) \
 TEST(ListTest, length_ ## LENGTH) \
 { \
-    test_add_list(LENGTH, __VA_ARGS__); \
+    expecte_memory_after_add_list(LENGTH, __VA_ARGS__); \
 }
 
 DEFINE_ADD_LIST_TEST(0, {TYPE_LIST, TYPE_END_CONTAINER})

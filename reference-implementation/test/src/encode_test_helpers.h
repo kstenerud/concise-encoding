@@ -1,17 +1,13 @@
 #pragma once
 
-// Terrible way to bridge decimal types in C and C++
-// this shit is broken
-#include <decimal/decimal>
-#define _Decimal64 std::decimal::decimal64
-#define _Decimal128 std::decimal::decimal128
-
 #include <functional>
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <cbe/encoder.h>
 #include <cbe_internal.h>
 #include <cxxabi.h>
+
+// Internal
 
 static cbe_buffer create_buffer(uint8_t* memory, int size)
 {
@@ -23,7 +19,7 @@ static cbe_buffer create_buffer(uint8_t* memory, int size)
 }
 
 template <typename T>
-inline bool store_value(cbe_buffer* buffer, T value)
+inline bool add_value(cbe_buffer* buffer, T value)
 {
     int status;
     std::string type_name = typeid(T).name();
@@ -34,49 +30,70 @@ inline bool store_value(cbe_buffer* buffer, T value)
     }   
 
     std::stringstream stream;
-    stream << "Unimplemented store_value handler called for " << type_name;
+    stream << "Unimplemented add_value handler called for " << type_name;
     throw std::runtime_error(stream.str());
 }
 
-#define DEFINE_STORE_SCALAR_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
+#define DEFINE_ADD_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool store_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
+inline bool add_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
 { \
     return FUNCTION_TO_CALL(buffer, value); \
 }
-DEFINE_STORE_SCALAR_FUNCTION(bool,        cbe_add_boolean)
-DEFINE_STORE_SCALAR_FUNCTION(int8_t,      cbe_add_int8)
-DEFINE_STORE_SCALAR_FUNCTION(int16_t,     cbe_add_int16)
-DEFINE_STORE_SCALAR_FUNCTION(int32_t,     cbe_add_int32)
-DEFINE_STORE_SCALAR_FUNCTION(int64_t,     cbe_add_int64)
-DEFINE_STORE_SCALAR_FUNCTION(__int128,    cbe_add_int128)
-DEFINE_STORE_SCALAR_FUNCTION(float,       cbe_add_float32)
-DEFINE_STORE_SCALAR_FUNCTION(double,      cbe_add_float64)
-DEFINE_STORE_SCALAR_FUNCTION(long double, cbe_add_float128)
+DEFINE_ADD_VALUE_FUNCTION(bool,        cbe_add_boolean)
+DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_add_int8)
+DEFINE_ADD_VALUE_FUNCTION(int16_t,     cbe_add_int16)
+DEFINE_ADD_VALUE_FUNCTION(int32_t,     cbe_add_int32)
+DEFINE_ADD_VALUE_FUNCTION(int64_t,     cbe_add_int64)
+DEFINE_ADD_VALUE_FUNCTION(__int128,    cbe_add_int128)
+DEFINE_ADD_VALUE_FUNCTION(float,       cbe_add_float32)
+DEFINE_ADD_VALUE_FUNCTION(double,      cbe_add_float64)
+DEFINE_ADD_VALUE_FUNCTION(long double, cbe_add_float128)
 
-#define DEFINE_STORE_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
+#define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool store_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<VECTOR_TYPE> value) \
+inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<VECTOR_TYPE> value) \
 { \
     return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
 }
-DEFINE_STORE_VECTOR_FUNCTION(uint8_t, cbe_add_bytes)
-DEFINE_STORE_VECTOR_FUNCTION(int16_t, cbe_add_int16_array)
-DEFINE_STORE_VECTOR_FUNCTION(int32_t, cbe_add_int32_array)
-DEFINE_STORE_VECTOR_FUNCTION(int64_t, cbe_add_int64_array)
-DEFINE_STORE_VECTOR_FUNCTION(__int128, cbe_add_int128_array)
-DEFINE_STORE_VECTOR_FUNCTION(float, cbe_add_float32_array)
-DEFINE_STORE_VECTOR_FUNCTION(double, cbe_add_float64_array)
-DEFINE_STORE_VECTOR_FUNCTION(long double, cbe_add_float128_array)
+DEFINE_ADD_VECTOR_FUNCTION(uint8_t, cbe_add_bytes)
+DEFINE_ADD_VECTOR_FUNCTION(int16_t, cbe_add_int16_array)
+DEFINE_ADD_VECTOR_FUNCTION(int32_t, cbe_add_int32_array)
+DEFINE_ADD_VECTOR_FUNCTION(int64_t, cbe_add_int64_array)
+DEFINE_ADD_VECTOR_FUNCTION(__int128, cbe_add_int128_array)
+DEFINE_ADD_VECTOR_FUNCTION(float, cbe_add_float32_array)
+DEFINE_ADD_VECTOR_FUNCTION(double, cbe_add_float64_array)
+DEFINE_ADD_VECTOR_FUNCTION(long double, cbe_add_float128_array)
 
 template <>
-inline bool store_value<std::string>(cbe_buffer* buffer, std::string value)
+inline bool add_value<std::string>(cbe_buffer* buffer, std::string value)
 {
     return cbe_add_string(buffer, value.c_str());
 }
 
-inline void expect_memory_after_store_function(std::function<bool(cbe_buffer* buffer)> store_function,
-                                                std::vector<uint8_t> const& expected_memory)
+
+// Test functions
+
+template<typename T>
+static std::vector<T> make_values_of_length(int length)
+{
+    std::vector<T> vec;
+    for(int i = 0; i < length; i++)
+    {
+        vec.push_back((T)(i & 0x7f));
+    }
+    return vec;
+}
+
+template<typename T>
+static void add_bytes(std::vector<uint8_t>& bytes, T value)
+{
+    int8_t* ptr = (int8_t*)&value;
+    bytes.insert(bytes.end(), ptr, ptr+sizeof(value));
+}
+
+inline void expect_memory_after_add_function(std::function<bool(cbe_buffer* buffer)> add_function,
+                                             std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
     std::array<uint8_t, memory_size> memory;
@@ -86,7 +103,7 @@ inline void expect_memory_after_store_function(std::function<bool(cbe_buffer* bu
     uint8_t* expected_pos = data + expected_size;
 
     cbe_buffer buffer = create_buffer(data, memory_size);
-    bool success = store_function(&buffer);
+    bool success = add_function(&buffer);
     fflush(stdout);
 
     std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
@@ -96,13 +113,13 @@ inline void expect_memory_after_store_function(std::function<bool(cbe_buffer* bu
 }
 
 template<typename T>
-inline void expect_memory_after_write(T writeValue, std::vector<uint8_t> const& expected_memory)
+inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_store_function([&](cbe_buffer* buffer) {return store_value(buffer, writeValue);}, expected_memory);
+    expect_memory_after_add_function([&](cbe_buffer* buffer) {return add_value(buffer, writeValue);}, expected_memory);
 }
 
-#define DEFINE_SCALAR_WRITE_TEST(TESTCASE, NAME, VALUE, ...) \
+#define DEFINE_ADD_VALUE_TEST(TESTCASE, NAME, VALUE, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    expect_memory_after_write(VALUE, __VA_ARGS__); \
+    expect_memory_after_add_value(VALUE, __VA_ARGS__); \
 }
