@@ -9,21 +9,7 @@ inline void expect_memory_after_add_date(unsigned year,
 										 unsigned second,
 										 std::vector<uint8_t> const& expected_memory)
 {
-	int expected_size = expected_memory.size();
-	const int memory_size = 100;
-	std::array<uint8_t, memory_size> memory;
-	uint8_t* data = memory.data();
-    uint8_t* expected_pos = data + expected_size;
-
-    cbe_buffer buffer = create_buffer(data, memory_size);
-
-	bool success = cbe_add_date(&buffer, year, month, day, hour, minute, second);
-    fflush(stdout);
-
-    std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
-    EXPECT_TRUE(success);
-    EXPECT_EQ(expected_pos, buffer.pos);
-    EXPECT_EQ(expected_memory, actual_memory);
+	expect_memory_after_add_function([&](cbe_buffer* buffer) {return cbe_add_date(buffer, year, month, day, hour, minute, second);}, expected_memory);
 }
 
 inline void expect_memory_after_add_timestamp_ms(unsigned year,
@@ -35,21 +21,7 @@ inline void expect_memory_after_add_timestamp_ms(unsigned year,
 												 unsigned msec,
 												 std::vector<uint8_t> const& expected_memory)
 {
-	int expected_size = expected_memory.size();
-	const int memory_size = 100;
-	std::array<uint8_t, memory_size> memory;
-	uint8_t* data = memory.data();
-    uint8_t* expected_pos = data + expected_size;
-
-    cbe_buffer buffer = create_buffer(data, memory_size);
-
-	bool success = cbe_add_timestamp(&buffer, year, month, day, hour, minute, second, msec);
-    fflush(stdout);
-
-    std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
-    EXPECT_TRUE(success);
-    EXPECT_EQ(expected_pos, buffer.pos);
-    EXPECT_EQ(expected_memory, actual_memory);
+	expect_memory_after_add_function([&](cbe_buffer* buffer) {return cbe_add_timestamp(buffer, year, month, day, hour, minute, second, msec);}, expected_memory);
 }
 
 inline void expect_memory_after_add_timestamp_ns(unsigned year,
@@ -61,21 +33,7 @@ inline void expect_memory_after_add_timestamp_ns(unsigned year,
 												 unsigned nsec,
 												 std::vector<uint8_t> const& expected_memory)
 {
-	int expected_size = expected_memory.size();
-	const int memory_size = 100;
-	std::array<uint8_t, memory_size> memory;
-	uint8_t* data = memory.data();
-    uint8_t* expected_pos = data + expected_size;
-
-    cbe_buffer buffer = create_buffer(data, memory_size);
-
-	bool success = cbe_add_timestamp_ns(&buffer, year, month, day, hour, minute, second, nsec);
-    fflush(stdout);
-
-    std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
-    EXPECT_TRUE(success);
-    EXPECT_EQ(expected_pos, buffer.pos);
-    EXPECT_EQ(expected_memory, actual_memory);
+	expect_memory_after_add_function([&](cbe_buffer* buffer) {return cbe_add_timestamp_ns(buffer, year, month, day, hour, minute, second, nsec);}, expected_memory);
 }
 
 #define DEFINE_ADD_DATE_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, ...) \
