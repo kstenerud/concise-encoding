@@ -212,6 +212,14 @@ void cbe_init_buffer(cbe_encode_buffer* const buffer, uint8_t* const memory_star
     buffer->pos = memory_start;
 }
 
+bool cbe_add_empty(cbe_encode_buffer* const buffer)
+{
+    uint8_t value = TYPE_EMPTY;
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    add_primitive_type(buffer, value);
+    return true;
+}
+
 bool cbe_add_boolean(cbe_encode_buffer* const buffer, const bool value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
@@ -222,7 +230,10 @@ bool cbe_add_boolean(cbe_encode_buffer* const buffer, const bool value)
 bool cbe_add_int(cbe_encode_buffer* const buffer, const int value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
-    return false;
+    if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
+    if(FITS_IN_INT_32(value)) return add_int_32(buffer, value);
+    if(FITS_IN_INT_64(value)) return add_int_64(buffer, value);
+    return add_int_128(buffer, value);
 }
 
 bool cbe_add_int_8(cbe_encode_buffer* const buffer, int8_t const value)

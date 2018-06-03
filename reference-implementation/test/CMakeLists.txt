@@ -39,6 +39,7 @@ add_executable(cbe_test
                    src/encode_list.cpp
                    src/encode_map.cpp
                    src/encode_array.cpp
+                   src/encode_empty.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)

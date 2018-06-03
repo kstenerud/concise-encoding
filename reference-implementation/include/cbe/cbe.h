@@ -29,6 +29,7 @@ const char* cbe_version();
 
 void cbe_init_buffer(cbe_encode_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end);
 
+bool cbe_add_empty(cbe_encode_buffer* const buffer);
 bool cbe_add_boolean(cbe_encode_buffer* const buffer, const bool value);
 bool cbe_add_int(cbe_encode_buffer* const buffer, const int value);
 bool cbe_add_int_8(cbe_encode_buffer* const buffer, const int8_t value);
