@@ -9,17 +9,17 @@
 
 // Internal
 
-static cbe_encode_buffer create_buffer(uint8_t* memory, int size)
+static cbe_buffer create_buffer(uint8_t* memory, int size)
 {
     uint8_t* memory_start = &memory[0];
     uint8_t* memory_end = &memory[size];
-    cbe_encode_buffer buffer;
+    cbe_buffer buffer;
     cbe_init_buffer(&buffer,  memory_start, memory_end);
     return buffer;
 }
 
 template <typename T>
-inline bool add_value(cbe_encode_buffer* buffer, T value)
+inline bool add_value(cbe_buffer* buffer, T value)
 {
     int status;
     std::string type_name = typeid(T).name();
@@ -36,7 +36,7 @@ inline bool add_value(cbe_encode_buffer* buffer, T value)
 
 #define DEFINE_ADD_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool add_value<SCALAR_TYPE>(cbe_encode_buffer* buffer, SCALAR_TYPE value) \
+inline bool add_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
 { \
     return FUNCTION_TO_CALL(buffer, value); \
 }
@@ -54,7 +54,7 @@ DEFINE_ADD_VALUE_FUNCTION(long double, cbe_add_float_128)
 
 #define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_encode_buffer* buffer, std::vector<VECTOR_TYPE> value) \
+inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<VECTOR_TYPE> value) \
 { \
     return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
 }
@@ -70,14 +70,14 @@ DEFINE_ADD_VECTOR_FUNCTION(long double, cbe_add_array_float_128)
 // DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_add_array_decimal_128)
 
 template <>
-inline bool add_value<std::string>(cbe_encode_buffer* buffer, std::string value)
+inline bool add_value<std::string>(cbe_buffer* buffer, std::string value)
 {
     return cbe_add_string(buffer, value.c_str());
 }
 
 
 template <>
-inline bool add_value<std::vector<bool>>(cbe_encode_buffer* buffer, std::vector<bool> entries)
+inline bool add_value<std::vector<bool>>(cbe_buffer* buffer, std::vector<bool> entries)
 {
     bool array[entries.size()];
     int index = 0;
@@ -109,7 +109,7 @@ static void add_bytes(std::vector<uint8_t>& bytes, T value)
     bytes.insert(bytes.end(), ptr, ptr+sizeof(value));
 }
 
-inline void expect_memory_after_add_function(std::function<bool(cbe_encode_buffer* buffer)> add_function,
+inline void expect_memory_after_add_function(std::function<bool(cbe_buffer* buffer)> add_function,
                                              std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
@@ -119,7 +119,7 @@ inline void expect_memory_after_add_function(std::function<bool(cbe_encode_buffe
     int expected_size = expected_memory.size();
     uint8_t* expected_pos = data + expected_size;
 
-    cbe_encode_buffer buffer = create_buffer(data, memory_size);
+    cbe_buffer buffer = create_buffer(data, memory_size);
     bool success = add_function(&buffer);
     fflush(stdout);
 
@@ -132,7 +132,7 @@ inline void expect_memory_after_add_function(std::function<bool(cbe_encode_buffe
 template<typename T>
 inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_add_function([&](cbe_encode_buffer* buffer) {return add_value(buffer, writeValue);}, expected_memory);
+    expect_memory_after_add_function([&](cbe_buffer* buffer) {return add_value(buffer, writeValue);}, expected_memory);
 }
 
 #define DEFINE_ADD_VALUE_TEST(TESTCASE, NAME, VALUE, ...) \

@@ -53,16 +53,16 @@ static inline unsigned int compacted_bytes_length_field_width(const uint64_t len
     return 9;
 }
 
-static inline void add_primitive_uint_8(cbe_encode_buffer* const buffer, const uint8_t value)
+static inline void add_primitive_uint_8(cbe_buffer* const buffer, const uint8_t value)
 {
     *buffer->pos++ = value;
 }
-static inline void add_primitive_int_8(cbe_encode_buffer* const buffer, const int8_t value)
+static inline void add_primitive_int_8(cbe_buffer* const buffer, const int8_t value)
 {
     add_primitive_uint_8(buffer, (uint8_t)value);
 }
 #define DEFINE_PRIMITIVE_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE) \
-static inline void add_primitive_ ## DEFINITION_TYPE(cbe_encode_buffer* const buffer, const DATA_TYPE value) \
+static inline void add_primitive_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
 { \
     /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
     memset(buffer->pos, 0, sizeof(value)); \
@@ -80,7 +80,7 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,      int_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(float,        float_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(double,       float_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(long double, float_128)
-static inline void add_primitive_bytes(cbe_encode_buffer* const buffer,
+static inline void add_primitive_bytes(cbe_buffer* const buffer,
                                        const uint8_t* const bytes,
                                        const unsigned int byte_count)
 {
@@ -88,12 +88,12 @@ static inline void add_primitive_bytes(cbe_encode_buffer* const buffer,
     buffer->pos += byte_count;
 }
 
-static inline void add_primitive_type(cbe_encode_buffer* const buffer, const type_field type)
+static inline void add_primitive_type(cbe_buffer* const buffer, const type_field type)
 {
     add_primitive_int_8(buffer, (int8_t)type);
 }
 
-static inline void add_primitive_byte_array_length(cbe_encode_buffer* const buffer, const uint64_t length)
+static inline void add_primitive_byte_array_length(cbe_buffer* const buffer, const uint64_t length)
 {
     if(length <= BYTES_LENGTH_8_BIT_MAX)
     {
@@ -116,7 +116,7 @@ static inline void add_primitive_byte_array_length(cbe_encode_buffer* const buff
     add_primitive_uint_64(buffer, length);
 }
 
-static inline void add_primitive_array_content_type_and_length(cbe_encode_buffer* const buffer,
+static inline void add_primitive_array_content_type_and_length(cbe_buffer* const buffer,
                                                                const array_content_type_field type,
                                                                const uint64_t length)
 {
@@ -148,7 +148,7 @@ static inline void add_primitive_array_content_type_and_length(cbe_encode_buffer
 }
 
 
-static inline bool add_small(cbe_encode_buffer* const buffer, const int8_t value)
+static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
     add_primitive_type(buffer, value);
@@ -156,7 +156,7 @@ static inline bool add_small(cbe_encode_buffer* const buffer, const int8_t value
 }
 
 #define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
-static inline bool add_ ## DEFINITION_TYPE(cbe_encode_buffer* const buffer, const DATA_TYPE value) \
+static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
 { \
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
     add_primitive_type(buffer, CBE_TYPE); \
@@ -171,7 +171,7 @@ DEFINE_SCALAR_ADD_FUNCTION(float,        float_32, TYPE_FLOAT_32)
 DEFINE_SCALAR_ADD_FUNCTION(double,       float_64, TYPE_FLOAT_64)
 DEFINE_SCALAR_ADD_FUNCTION(long double, float_128, TYPE_FLOAT_128)
 
-static inline bool add_lowbytes(cbe_encode_buffer* const buffer,
+static inline bool add_lowbytes(cbe_buffer* const buffer,
                                 const uint8_t type,
                                 const unsigned int byte_count,
                                 const uint64_t data)
@@ -182,7 +182,7 @@ static inline bool add_lowbytes(cbe_encode_buffer* const buffer,
     return true;
 }
 
-static inline bool add_bytes_with_type(cbe_encode_buffer* const buffer,
+static inline bool add_bytes_with_type(cbe_buffer* const buffer,
                                        const type_field short_type,
                                        const type_field long_type,
                                        const uint8_t* const bytes,
@@ -205,14 +205,14 @@ static inline bool add_bytes_with_type(cbe_encode_buffer* const buffer,
     return true;
 }
 
-void cbe_init_buffer(cbe_encode_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end)
+void cbe_init_buffer(cbe_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end)
 {
     buffer->start = memory_start;
     buffer->end = memory_end;
     buffer->pos = memory_start;
 }
 
-bool cbe_add_empty(cbe_encode_buffer* const buffer)
+bool cbe_add_empty(cbe_buffer* const buffer)
 {
     uint8_t value = TYPE_EMPTY;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
@@ -220,14 +220,14 @@ bool cbe_add_empty(cbe_encode_buffer* const buffer)
     return true;
 }
 
-bool cbe_add_boolean(cbe_encode_buffer* const buffer, const bool value)
+bool cbe_add_boolean(cbe_buffer* const buffer, const bool value)
 {
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
     add_primitive_type(buffer, value ? TYPE_TRUE : TYPE_FALSE);
     return true;
 }
 
-bool cbe_add_int(cbe_encode_buffer* const buffer, const int value)
+bool cbe_add_int(cbe_buffer* const buffer, const int value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
@@ -236,26 +236,26 @@ bool cbe_add_int(cbe_encode_buffer* const buffer, const int value)
     return add_int_128(buffer, value);
 }
 
-bool cbe_add_int_8(cbe_encode_buffer* const buffer, int8_t const value)
+bool cbe_add_int_8(cbe_buffer* const buffer, int8_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     return add_int_16(buffer, value);
 }
 
-bool cbe_add_int_16(cbe_encode_buffer* const buffer, int16_t const value)
+bool cbe_add_int_16(cbe_buffer* const buffer, int16_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     return add_int_16(buffer, value);
 }
 
-bool cbe_add_int_32(cbe_encode_buffer* const buffer, int32_t const value)
+bool cbe_add_int_32(cbe_buffer* const buffer, int32_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
     return add_int_32(buffer, value);
 }
 
-bool cbe_add_int_64(cbe_encode_buffer* const buffer, int64_t const value)
+bool cbe_add_int_64(cbe_buffer* const buffer, int64_t const value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
@@ -263,7 +263,7 @@ bool cbe_add_int_64(cbe_encode_buffer* const buffer, int64_t const value)
     return add_int_64(buffer, value);
 }
 
-bool cbe_add_int_128(cbe_encode_buffer* const buffer, const __int128 value)
+bool cbe_add_int_128(cbe_buffer* const buffer, const __int128 value)
 {
     if(FITS_IN_INT_SMALL(value)) return add_small(buffer, value);
     if(FITS_IN_INT_16(value)) return add_int_16(buffer, value);
@@ -272,25 +272,25 @@ bool cbe_add_int_128(cbe_encode_buffer* const buffer, const __int128 value)
     return add_int_128(buffer, value);
 }
 
-bool cbe_add_float_32(cbe_encode_buffer* const buffer, const float value)
+bool cbe_add_float_32(cbe_buffer* const buffer, const float value)
 {
     return add_float_32(buffer, value);
 }
 
-bool cbe_add_float_64(cbe_encode_buffer* const buffer, const double value)
+bool cbe_add_float_64(cbe_buffer* const buffer, const double value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     return add_float_64(buffer, value);
 }
 
-bool cbe_add_float_128(cbe_encode_buffer* const buffer, const long double value)
+bool cbe_add_float_128(cbe_buffer* const buffer, const long double value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     if(FITS_IN_FLOAT_64(value)) return add_float_64(buffer, value);
     return add_float_128(buffer, value);
 }
 
-bool cbe_add_date(cbe_encode_buffer* const buffer,
+bool cbe_add_date(cbe_buffer* const buffer,
                   const unsigned year,
                   const unsigned month,
                   const unsigned day,
@@ -307,7 +307,7 @@ bool cbe_add_date(cbe_encode_buffer* const buffer,
                         second    * DATE_MULTIPLIER_SECOND);
 }
 
-bool cbe_add_timestamp_ms(cbe_encode_buffer* const buffer,
+bool cbe_add_timestamp_ms(cbe_buffer* const buffer,
                           const unsigned year,
                           const unsigned month,
                           const unsigned day,
@@ -326,7 +326,7 @@ bool cbe_add_timestamp_ms(cbe_encode_buffer* const buffer,
                         millisecond * TS_MS_MULTIPLIER_MILLISECOND);
 }
 
-bool cbe_add_timestamp_us(cbe_encode_buffer* buffer,
+bool cbe_add_timestamp_us(cbe_buffer* buffer,
                           const unsigned year,
                           const unsigned month,
                           const unsigned day,
@@ -345,17 +345,17 @@ bool cbe_add_timestamp_us(cbe_encode_buffer* buffer,
                         microsecond * TS_US_MULTIPLIER_MICROSECOND);
 }
 
-bool cbe_add_string(cbe_encode_buffer* const buffer, const char* const value)
+bool cbe_add_string(cbe_buffer* const buffer, const char* const value)
 {
     return add_bytes_with_type(buffer, TYPE_STRING_0, TYPE_STRING, (const uint8_t*)value, strlen(value));
 }
 
-bool cbe_add_bytes(cbe_encode_buffer* const buffer, const uint8_t* const value, const int byte_count)
+bool cbe_add_bytes(cbe_buffer* const buffer, const uint8_t* const value, const int byte_count)
 {
     return add_bytes_with_type(buffer, TYPE_BYTES_0, TYPE_BYTES, value, byte_count);
 }
 
-bool cbe_start_list(cbe_encode_buffer* const buffer)
+bool cbe_start_list(cbe_buffer* const buffer)
 {
     const uint8_t type = TYPE_LIST;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) * 2);
@@ -363,7 +363,7 @@ bool cbe_start_list(cbe_encode_buffer* const buffer)
     return true;
 }
 
-bool cbe_start_map(cbe_encode_buffer* const buffer)
+bool cbe_start_map(cbe_buffer* const buffer)
 {
     const uint8_t type = TYPE_MAP;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) * 2);
@@ -371,7 +371,7 @@ bool cbe_start_map(cbe_encode_buffer* const buffer)
     return true;
 }
 
-bool cbe_end_container(cbe_encode_buffer* const buffer)
+bool cbe_end_container(cbe_buffer* const buffer)
 {
     const uint8_t type = TYPE_END_CONTAINER;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type));
@@ -379,7 +379,7 @@ bool cbe_end_container(cbe_encode_buffer* const buffer)
     return true;
 }
 
-static bool add_array(cbe_encode_buffer* const buffer,
+static bool add_array(cbe_buffer* const buffer,
                       const type_field content_type,
                       const uint8_t* const values,
                       const int entity_count,
@@ -397,42 +397,42 @@ static bool add_array(cbe_encode_buffer* const buffer,
 }
 
 
-bool cbe_add_array_int_16(cbe_encode_buffer* const buffer, const int16_t* const values, const int entity_count)
+bool cbe_add_array_int_16(cbe_buffer* const buffer, const int16_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_16, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_int_32(cbe_encode_buffer* const buffer, const int32_t* const values, const int entity_count)
+bool cbe_add_array_int_32(cbe_buffer* const buffer, const int32_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_int_64(cbe_encode_buffer* const buffer, const int64_t* const values, const int entity_count)
+bool cbe_add_array_int_64(cbe_buffer* const buffer, const int64_t* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_int_128(cbe_encode_buffer* const buffer, const __int128* const values, const int entity_count)
+bool cbe_add_array_int_128(cbe_buffer* const buffer, const __int128* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_INT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_float_32(cbe_encode_buffer* const buffer, const float* const values, const int entity_count)
+bool cbe_add_array_float_32(cbe_buffer* const buffer, const float* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_32, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_float_64(cbe_encode_buffer* const buffer, const double* const values, const int entity_count)
+bool cbe_add_array_float_64(cbe_buffer* const buffer, const double* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_float_128(cbe_encode_buffer* const buffer, const long double* const values, const int entity_count)
+bool cbe_add_array_float_128(cbe_buffer* const buffer, const long double* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_boolean(cbe_encode_buffer* const buffer, const bool* const values, const int entity_count)
+bool cbe_add_array_boolean(cbe_buffer* const buffer, const bool* const values, const int entity_count)
 {
     const uint8_t type = TYPE_ARRAY;
     int byte_count = entity_count / 8;

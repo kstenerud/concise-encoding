@@ -7,7 +7,7 @@ TEST(SupportTest, create_buffer)
     uint8_t* expected_pos = &memory[0];
     uint8_t* expected_end = &memory[sizeof(memory)];
 
-    cbe_encode_buffer buffer = create_buffer(memory, sizeof(memory));
+    cbe_buffer buffer = create_buffer(memory, sizeof(memory));
     fflush(stdout);
 
     EXPECT_EQ(expected_start, buffer.start);

@@ -2,6 +2,8 @@
 #include "cbe/cbe.h"
 #include "cbe_internal.h"
 
+
+
 void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end)
 {
 	for(const uint8_t* ptr = data_start; ptr < data_end;)
@@ -10,7 +12,7 @@ void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start
 		switch(type)
 		{
 			case TYPE_EMPTY:
-			callbacks->on_empty();
+				callbacks->on_empty();
 		        break;
 			case TYPE_FALSE:
 				callbacks->on_bool(false);
@@ -49,101 +51,49 @@ void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start
 				callbacks->on_string(NULL, NULL);
 		        break;
 			case TYPE_STRING_0:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_1:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_2:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_3:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_4:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_5:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_6:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_7:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_8:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_9:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_10:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_11:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_12:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_13:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_14:
-				callbacks->on_string(NULL, NULL);
-		        break;
 			case TYPE_STRING_15:
-				callbacks->on_string(NULL, NULL);
+			{
+				int length = type - TYPE_STRING_0;
+				callbacks->on_string((int8_t*)ptr, (int8_t*)(ptr + length));
+				ptr += length;
 		        break;
+		    }
 			case TYPE_BYTES_0:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_1:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_2:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_3:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_4:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_5:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_6:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_7:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_8:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_9:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_10:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_11:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_12:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_13:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_14:
-				callbacks->on_bytes(NULL, NULL);
-		        break;
 			case TYPE_BYTES_15:
-				callbacks->on_bytes(NULL, NULL);
+			{
+				int length = type - TYPE_STRING_0;
+				callbacks->on_bytes(ptr, ptr + length);
+				ptr += length;
 		        break;
+		    }
 			case TYPE_BYTES:
 				callbacks->on_bytes(NULL, NULL);
 		        break;
