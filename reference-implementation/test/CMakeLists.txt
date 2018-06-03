@@ -22,6 +22,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(cbe_test
                    src/main.cpp
+                   src/library.cpp
                    src/encode_support.cpp
                    src/encode_bool.cpp
                    src/encode_int_8.cpp

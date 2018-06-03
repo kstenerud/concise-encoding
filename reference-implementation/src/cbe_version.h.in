@@ -1,0 +1,1 @@
+#define CBE_VERSION "${PROJECT_VERSION}"

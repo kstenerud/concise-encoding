@@ -9,6 +9,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 # Create target and set properties
 
 add_library(cbe
+    src/library.c
     src/decoder.c
     src/encoder.c
 )
@@ -46,6 +47,9 @@ target_compile_options(cbe PRIVATE $<$<CXX_COMPILER_ID:GNU>:
 
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/CBE)
+
+configure_file(src/cbe_version.h.in cbe_version.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS cbe
     EXPORT cbe-targets
