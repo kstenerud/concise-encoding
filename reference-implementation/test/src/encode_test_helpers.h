@@ -76,6 +76,19 @@ inline bool add_value<std::string>(cbe_encode_buffer* buffer, std::string value)
 }
 
 
+template <>
+inline bool add_value<std::vector<bool>>(cbe_encode_buffer* buffer, std::vector<bool> entries)
+{
+    bool array[entries.size()];
+    int index = 0;
+    for(bool entry: entries)
+    {
+        array[index++] = entry;
+    }
+    return cbe_add_array_boolean(buffer, array, entries.size());
+}
+
+
 // Test functions
 
 template<typename T>

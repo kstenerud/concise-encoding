@@ -420,3 +420,35 @@ bool cbe_add_array_float_128(cbe_encode_buffer* const buffer, const long double*
 {
     return add_array(buffer, TYPE_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
+
+bool cbe_add_array_boolean(cbe_encode_buffer* const buffer, const bool* const values, const int entity_count)
+{
+    const uint8_t type = TYPE_ARRAY;
+    int byte_count = entity_count / 8;
+    if(entity_count & 7)
+    {
+        byte_count++;
+    }
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
+                                    sizeof(type) +
+                                    compacted_array_length_field_width(entity_count) +
+                                    byte_count);
+    add_primitive_type(buffer, type);
+    add_primitive_array_content_type_and_length(buffer, ARRAY_CONTENT_TYPE_BOOLEAN, entity_count);
+    for(int i = 0; i < entity_count;)
+    {
+        uint8_t bit_pos = 1;
+        uint8_t next_byte = 0;
+        for(int j = 0; j < 8 && i < entity_count; j++)
+        {
+            if(values[i])
+            {
+                next_byte |= bit_pos;
+            }
+            bit_pos <<= 1;
+            i++;
+        }
+        *buffer->pos++ = next_byte;
+    }
+    return true;
+}

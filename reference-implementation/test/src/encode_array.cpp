@@ -34,3 +34,20 @@ DEFINE_ARRAY_TEST_SET(ArrayFloat64Test, double, TYPE_FLOAT_64)
 
 // TODO: 128-bit float, and possibly all float, is broken.
 // DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, long double, TYPE_FLOAT_128)
+
+static void expect_memory_after_add_array_boolean(std::vector<bool> entities, std::vector<uint8_t> expected_memory)
+{
+	expect_memory_after_add_value(entities, expected_memory);
+}
+
+#define DEFINE_BOOLEAN_ARRAY_ADD_TEST(NAME, ...) \
+TEST(BooleanArrayTest, NAME) \
+{ \
+    expect_memory_after_add_array_boolean(__VA_ARGS__); \
+}
+
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_0, {}, {TYPE_ARRAY, 0x00})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_1, {true}, {TYPE_ARRAY, 0x01, 0x01})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_2, {true, true}, {TYPE_ARRAY, 0x02, 0x03})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_3, {true, false, true}, {TYPE_ARRAY, 0x03, 0x05})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_9, {true, false, true, false, false, true, false, true, true}, {TYPE_ARRAY, 0x09, 0xa5, 0x01})

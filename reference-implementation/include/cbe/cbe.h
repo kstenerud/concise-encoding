@@ -47,7 +47,7 @@ bool cbe_add_bytes(cbe_encode_buffer* const buffer, const uint8_t* const value, 
 bool cbe_start_list(cbe_encode_buffer* const buffer);
 bool cbe_start_map(cbe_encode_buffer* const buffer);
 bool cbe_end_container(cbe_encode_buffer* const buffer);
-bool cbe_add_array_boolean(cbe_encode_buffer* const buffer, const uint8_t* const packed_values, const int entity_count);
+bool cbe_add_array_boolean(cbe_encode_buffer* const buffer, const bool* const values, const int entity_count);
 bool cbe_add_array_int_16(cbe_encode_buffer* const buffer, const int16_t* const values, const int entity_count);
 bool cbe_add_array_int_32(cbe_encode_buffer* const buffer, const int32_t* const values, const int entity_count);
 bool cbe_add_array_int_64(cbe_encode_buffer* const buffer, const int64_t* const values, const int entity_count);
