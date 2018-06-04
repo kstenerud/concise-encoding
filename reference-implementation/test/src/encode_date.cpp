@@ -1,68 +1,30 @@
 #include "encode_test_helpers.h"
 
 
-inline void expect_memory_after_add_date(unsigned year,
-										 unsigned month,
-										 unsigned day,
-										 unsigned hour,
-										 unsigned minute,
-										 unsigned second,
-										 std::vector<uint8_t> const& expected_memory)
+inline void expect_memory_after_add_date(const cbe_date* const date, std::vector<uint8_t> const& expected_memory)
 {
 	expect_memory_after_add_function([&](cbe_buffer* buffer)
 	{
-		return cbe_add_date(buffer, year, month, day, hour, minute, second);
+		return cbe_add_date(buffer, date);
 	}, expected_memory);
 }
 
-inline void expect_memory_after_add_timestamp_ms(unsigned year,
-												 unsigned month,
-												 unsigned day,
-												 unsigned hour,
-												 unsigned minute,
-												 unsigned second,
-												 unsigned millisecond,
-												 std::vector<uint8_t> const& expected_memory)
-{
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
-	{
-		return cbe_add_timestamp_ms(buffer, year, month, day, hour, minute, second, millisecond);
-	}, expected_memory);
-}
-
-inline void expect_memory_after_add_timestamp_us(unsigned year,
-												 unsigned month,
-												 unsigned day,
-												 unsigned hour,
-												 unsigned minute,
-												 unsigned second,
-												 unsigned microsecond,
-												 std::vector<uint8_t> const& expected_memory)
-{
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
-	{
-		return cbe_add_timestamp_us(buffer, year, month, day, hour, minute, second, microsecond);
-	}, expected_memory);
-}
-
-#define DEFINE_ADD_DATE_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, ...) \
-TEST(DateTest, date_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND) \
+#define DEFINE_ADD_DATE_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC, ...) \
+TEST(DateTest, date_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-	expect_memory_after_add_date(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, __VA_ARGS__); \
+	cbe_date date = \
+	{ \
+		.year = YEAR, \
+		.month = MONTH, \
+		.day = DAY, \
+		.hour = HOUR, \
+		.minute = MINUTE, \
+		.second = SECOND, \
+		.microsecond = USEC \
+	}; \
+	expect_memory_after_add_date(&date, __VA_ARGS__); \
 }
 
-#define DEFINE_ADD_TIMESTAMP_MS_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MSEC, ...) \
-TEST(DateTest, timestamp_ms_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## MSEC) \
-{ \
-	expect_memory_after_add_timestamp_ms(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MSEC, __VA_ARGS__); \
-}
-
-#define DEFINE_ADD_TIMESTAMP_US_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, NSEC, ...) \
-TEST(DateTest, timestamp_ns_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## NSEC) \
-{ \
-	expect_memory_after_add_timestamp_us(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, NSEC, __VA_ARGS__); \
-}
-
-DEFINE_ADD_DATE_TEST(2000, 1, 1, 0, 0, 0, {TYPE_DATE, 0x00, 0x08, 0x57, 0x37, 0x0f})
-DEFINE_ADD_TIMESTAMP_MS_TEST(2000, 1, 1, 0, 0, 0, 0, {TYPE_TIMESTAMP_MILLI, 0x00, 0x40, 0xf7, 0x2b, 0x70, 0x3b})
-DEFINE_ADD_TIMESTAMP_US_TEST(2000, 1, 1, 0, 0, 0, 0, {TYPE_TIMESTAMP_MICRO, 0x00, 0x00, 0xd2, 0xbd, 0x2b, 0x2e, 0xe8, 0x00})
+DEFINE_ADD_DATE_TEST(1955, 11, 5, 8, 21, 0, 0, {TYPE_DATE, 0x21, 0x34, 0x57, 0xe1, 0x0e})
+DEFINE_ADD_DATE_TEST(2015, 10, 21, 14, 28, 9, 714000, {TYPE_TIMESTAMP_MILLI, 0x12, 0x55, 0xa3, 0x6b, 0xe8, 0x3b})
+DEFINE_ADD_DATE_TEST(1985, 10, 26, 8, 22, 16, 900142, {TYPE_TIMESTAMP_MICRO, 0xae, 0xa3, 0x95, 0xf2, 0xb2, 0x88, 0xe6, 0x00})

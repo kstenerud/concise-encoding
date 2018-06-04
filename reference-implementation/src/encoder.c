@@ -17,39 +17,18 @@
 
 static inline unsigned int compacted_array_length_field_width(const uint64_t length)
 {
-    if(length <= ARRAY_LENGTH_SMALL_MAX)
-    {
-        return 0;
-    }
-    if(length <= UINT8_MAX)
-    {
-        return 1;
-    }
-    if(length <= UINT16_MAX)
-    {
-        return 2;
-    }
-    if(length <= UINT32_MAX)
-    {
-        return 4;
-    }
+    if(length <= ARRAY_LENGTH_SMALL_MAX) return 0;
+    if(length <= UINT8_MAX)              return 1;
+    if(length <= UINT16_MAX)             return 2;
+    if(length <= UINT32_MAX)             return 4;
     return 8;
 }
 
 static inline unsigned int compacted_bytes_length_field_width(const uint64_t length)
 {
-    if(length <= BYTES_LENGTH_8_BIT_MAX)
-    {
-        return 1;
-    }
-    if(length <= UINT16_MAX)
-    {
-        return 3;
-    }
-    if(length <= UINT32_MAX)
-    {
-        return 5;
-    }
+    if(length <= BYTES_LENGTH_8_BIT_MAX) return 1;
+    if(length <= UINT16_MAX)             return 3;
+    if(length <= UINT32_MAX)             return 5;
     return 9;
 }
 
@@ -155,7 +134,7 @@ static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
     return true;
 }
 
-#define DEFINE_SCALAR_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
+#define DEFINE_ADD_SCALAR_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
 static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
 { \
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
@@ -163,13 +142,13 @@ static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_
     add_primitive_ ## DEFINITION_TYPE(buffer, value); \
     return true; \
 }
-DEFINE_SCALAR_ADD_FUNCTION(int16_t,        int_16, TYPE_INT_16)
-DEFINE_SCALAR_ADD_FUNCTION(int32_t,        int_32, TYPE_INT_32)
-DEFINE_SCALAR_ADD_FUNCTION(int64_t,        int_64, TYPE_INT_64)
-DEFINE_SCALAR_ADD_FUNCTION(__int128,      int_128, TYPE_INT_128)
-DEFINE_SCALAR_ADD_FUNCTION(float,        float_32, TYPE_FLOAT_32)
-DEFINE_SCALAR_ADD_FUNCTION(double,       float_64, TYPE_FLOAT_64)
-DEFINE_SCALAR_ADD_FUNCTION(long double, float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(int16_t,        int_16, TYPE_INT_16)
+DEFINE_ADD_SCALAR_FUNCTION(int32_t,        int_32, TYPE_INT_32)
+DEFINE_ADD_SCALAR_FUNCTION(int64_t,        int_64, TYPE_INT_64)
+DEFINE_ADD_SCALAR_FUNCTION(__int128,      int_128, TYPE_INT_128)
+DEFINE_ADD_SCALAR_FUNCTION(float,        float_32, TYPE_FLOAT_32)
+DEFINE_ADD_SCALAR_FUNCTION(double,       float_64, TYPE_FLOAT_64)
+DEFINE_ADD_SCALAR_FUNCTION(long double, float_128, TYPE_FLOAT_128)
 
 static inline bool add_lowbytes(cbe_buffer* const buffer,
                                 const uint8_t type,
@@ -290,59 +269,36 @@ bool cbe_add_float_128(cbe_buffer* const buffer, const long double value)
     return add_float_128(buffer, value);
 }
 
-bool cbe_add_date(cbe_buffer* const buffer,
-                  const unsigned year,
-                  const unsigned month,
-                  const unsigned day,
-                  const unsigned hour,
-                  const unsigned minute,
-                  const unsigned second)
+bool cbe_add_date(cbe_buffer* const buffer, const cbe_date* const date)
 {
-    return add_lowbytes(buffer, TYPE_DATE, 40/8, 
-                        year      * DATE_MULTIPLIER_YEAR +
-                        (month-1) * DATE_MULTIPLIER_MONTH +
-                        (day-1)   * DATE_MULTIPLIER_DAY +
-                        hour      * DATE_MULTIPLIER_HOUR +
-                        minute    * DATE_MULTIPLIER_MINUTE +
-                        second    * DATE_MULTIPLIER_SECOND);
-}
-
-bool cbe_add_timestamp_ms(cbe_buffer* const buffer,
-                          const unsigned year,
-                          const unsigned month,
-                          const unsigned day,
-                          const unsigned hour,
-                          const unsigned minute,
-                          const unsigned second,
-                          const unsigned millisecond)
-{
-    return add_lowbytes(buffer, TYPE_TIMESTAMP_MILLI, 48/8, 
-                        year        * TS_MS_MULTIPLIER_YEAR +
-                        (month-1)   * TS_MS_MULTIPLIER_MONTH +
-                        (day-1)     * TS_MS_MULTIPLIER_DAY +
-                        hour        * TS_MS_MULTIPLIER_HOUR +
-                        minute      * TS_MS_MULTIPLIER_MINUTE +
-                        second      * TS_MS_MULTIPLIER_SECOND +
-                        millisecond * TS_MS_MULTIPLIER_MILLISECOND);
-}
-
-bool cbe_add_timestamp_us(cbe_buffer* buffer,
-                          const unsigned year,
-                          const unsigned month,
-                          const unsigned day,
-                          const unsigned hour,
-                          const unsigned minute,
-                          const unsigned second,
-                          const unsigned microsecond)
-{
-    return add_lowbytes(buffer, TYPE_TIMESTAMP_MICRO, 64/8, 
-                        year        * TS_US_MULTIPLIER_YEAR +
-                        (month-1)   * TS_US_MULTIPLIER_MONTH +
-                        (day-1)     * TS_US_MULTIPLIER_DAY +
-                        hour        * TS_US_MULTIPLIER_HOUR +
-                        minute      * TS_US_MULTIPLIER_MINUTE +
-                        second      * TS_US_MULTIPLIER_SECOND +
-                        microsecond * TS_US_MULTIPLIER_MICROSECOND);
+    type_field type = TYPE_DATE;
+    int bits = 40;
+    uint64_t value = date->year      * DATE_MULTIPLIER_YEAR +
+                     (date->month-1) * DATE_MULTIPLIER_MONTH +
+                     (date->day-1)   * DATE_MULTIPLIER_DAY +
+                     date->hour      * DATE_MULTIPLIER_HOUR +
+                     date->minute    * DATE_MULTIPLIER_MINUTE +
+                     date->second    * DATE_MULTIPLIER_SECOND;
+    if(date->microsecond != 0)
+    {
+        bits += 8;
+        value += date->microsecond * DATE_MULTIPLIER_MICROSECOND;
+        if(date->microsecond % DATE_MODULO_MICROSECOND != 0)
+        {
+            type = TYPE_TIMESTAMP_MICRO;
+            bits += 16;
+        }
+        else
+        {
+            type = TYPE_TIMESTAMP_MILLI;
+            value /= DATE_MODULO_MICROSECOND;
+        }
+    }
+    else
+    {
+        value /= (DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND);
+    }
+    return add_lowbytes(buffer, type, bits/8, value);
 }
 
 bool cbe_add_string(cbe_buffer* const buffer, const char* const value)

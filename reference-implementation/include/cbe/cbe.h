@@ -24,6 +24,17 @@ typedef struct {
 	uint8_t* pos;
 } cbe_buffer;
 
+typedef struct
+{
+	unsigned int year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+	unsigned int microsecond;
+} cbe_date;
+
 
 const char* cbe_version();
 
@@ -40,9 +51,7 @@ bool cbe_add_int_128(cbe_buffer* const buffer, const __int128 value);
 bool cbe_add_float_32(cbe_buffer* const buffer, const float value);
 bool cbe_add_float_64(cbe_buffer* const buffer, const double value);
 bool cbe_add_float_128(cbe_buffer* const buffer, const long double value);
-bool cbe_add_date(cbe_buffer* const buffer, const unsigned year, const unsigned month, const unsigned day, const unsigned hour, const unsigned minute, const unsigned second);
-bool cbe_add_timestamp_ms(cbe_buffer* const buffer, const unsigned year, const unsigned month, const unsigned day, const unsigned hour, const unsigned minute, const unsigned second, const unsigned millisecond);
-bool cbe_add_timestamp_us(cbe_buffer* const buffer, const unsigned year, const unsigned month, const unsigned day, const unsigned hour, const unsigned minute, const unsigned second, const unsigned microsecond);
+bool cbe_add_date(cbe_buffer* const buffer, const cbe_date* const date);
 bool cbe_add_string(cbe_buffer* const buffer, const char* const value);
 bool cbe_add_bytes(cbe_buffer* const buffer, const uint8_t* const value, const int length);
 bool cbe_start_list(cbe_buffer* const buffer);
@@ -101,17 +110,6 @@ typedef struct
 	} data;
 	cbe_numeric_type type;
 } cbe_number;
-
-typedef struct
-{
-	unsigned int year;
-	unsigned int microsecond;
-	uint8_t month;
-	uint8_t day;
-	uint8_t hour;
-	uint8_t minute;
-	uint8_t second;
-} cbe_date;
 
 typedef struct {
 	void (*on_error)(const char* message);

@@ -97,6 +97,7 @@ static void decode_array(cbe_buffer* buffer, cbe_decode_callbacks* callbacks)
 			buffer->pos += length * sizeof(TYPE)
 
 		case ARRAY_CONTENT_TYPE_BOOLEAN:
+			// TODO
 			break;
 		case ARRAY_CONTENT_TYPE_INT_16:
 			DEFINE_DECODE_ARRAY_CASE_HANDLER(int16_t, int_16);
@@ -159,53 +160,6 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 			case TYPE_TRUE:
 				callbacks->on_bool(true);
 		        break;
-			case TYPE_DATE:
-			{
-				uint64_t encoded = read_uint_40(buffer);
-				cbe_date date =
-				{
-					.year = encoded / DATE_MULTIPLIER_YEAR,
-					.month = (encoded / DATE_MULTIPLIER_MONTH) % DATE_MODULO_MONTH + 1,
-					.day = (encoded / DATE_MULTIPLIER_DAY) % DATE_MODULO_DAY + 1,
-					.hour = (encoded / DATE_MULTIPLIER_HOUR) % DATE_MODULO_HOUR,
-					.minute = (encoded / DATE_MULTIPLIER_MINUTE) % DATE_MODULO_MINUTE,
-					.second = (encoded / DATE_MULTIPLIER_SECOND) % DATE_MODULO_SECOND,
-				};
-				callbacks->on_date(&date);
-		        break;
-		    }
-			case TYPE_TIMESTAMP_MILLI:
-			{
-				uint64_t encoded = read_uint_48(buffer);
-				cbe_date date =
-				{
-					.year = encoded / TS_MS_MULTIPLIER_YEAR,
-					.month = (encoded / TS_MS_MULTIPLIER_MONTH) % DATE_MODULO_MONTH + 1,
-					.day = (encoded / TS_MS_MULTIPLIER_DAY) % DATE_MODULO_DAY + 1,
-					.hour = (encoded / TS_MS_MULTIPLIER_HOUR) % DATE_MODULO_HOUR,
-					.minute = (encoded / TS_MS_MULTIPLIER_MINUTE) % DATE_MODULO_MINUTE,
-					.second = (encoded / TS_MS_MULTIPLIER_SECOND) % DATE_MODULO_SECOND,
-					.microsecond = ((encoded / TS_MS_MULTIPLIER_MILLISECOND) % DATE_MODULO_MILLISECOND) * 1000,
-				};
-				callbacks->on_date(&date);
-		        break;
-		    }
-			case TYPE_TIMESTAMP_MICRO:
-			{
-				uint64_t encoded = read_uint_64(buffer);
-				cbe_date date =
-				{
-					.year = encoded / TS_US_MULTIPLIER_YEAR,
-					.month = (encoded / TS_US_MULTIPLIER_MONTH) % DATE_MODULO_MONTH + 1,
-					.day = (encoded / TS_US_MULTIPLIER_DAY) % DATE_MODULO_DAY + 1,
-					.hour = (encoded / TS_US_MULTIPLIER_HOUR) % DATE_MODULO_HOUR,
-					.minute = (encoded / TS_US_MULTIPLIER_MINUTE) % DATE_MODULO_MINUTE,
-					.second = (encoded / TS_US_MULTIPLIER_SECOND) % DATE_MODULO_SECOND,
-					.microsecond = (encoded / TS_US_MULTIPLIER_MICROSECOND) % DATE_MODULO_MICROSECOND,
-				};
-				callbacks->on_date(&date);
-		        break;
-		    }
 			case TYPE_END_CONTAINER:
 				callbacks->on_end_container();
 		        break;
@@ -218,155 +172,100 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 			case TYPE_ARRAY:
 				decode_array(buffer, callbacks);
 		        break;
+
+		    #define CASE_DATE(VALUE) \
+			{ \
+				uint64_t encoded = VALUE; \
+				cbe_date date = \
+				{ \
+					.year = encoded / DATE_MULTIPLIER_YEAR, \
+					.month = (encoded / DATE_MULTIPLIER_MONTH) % DATE_MODULO_MONTH + 1, \
+					.day = (encoded / DATE_MULTIPLIER_DAY) % DATE_MODULO_DAY + 1, \
+					.hour = (encoded / DATE_MULTIPLIER_HOUR) % DATE_MODULO_HOUR, \
+					.minute = (encoded / DATE_MULTIPLIER_MINUTE) % DATE_MODULO_MINUTE, \
+					.second = (encoded / DATE_MULTIPLIER_SECOND) % DATE_MODULO_SECOND, \
+					.microsecond = (encoded / DATE_MULTIPLIER_MICROSECOND) % (DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND), \
+				}; \
+				callbacks->on_date(&date); \
+		    }
+			case TYPE_DATE:
+				CASE_DATE(read_uint_40(buffer) * DATE_MULTIPLIER_MILLISECOND * DATE_MULTIPLIER_MICROSECOND)
+		        break;
+			case TYPE_TIMESTAMP_MILLI:
+				CASE_DATE(read_uint_48(buffer) * DATE_MULTIPLIER_MICROSECOND)
+		        break;
+			case TYPE_TIMESTAMP_MICRO:
+				CASE_DATE(read_uint_64(buffer))
+		        break;
+
+		    #define CASE_STRING(LENGTH) \
+			{ \
+				uint64_t length = LENGTH; \
+				callbacks->on_string((int8_t*)buffer->pos, (int8_t*)buffer->pos + length); \
+				buffer->pos += length; \
+		    }
+			case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
+			case TYPE_STRING_4: case TYPE_STRING_5: case TYPE_STRING_6: case TYPE_STRING_7:
+			case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
+			case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
+				CASE_STRING(type - TYPE_STRING_0)
+		        break;
 			case TYPE_STRING:
-			{
-				uint64_t length = read_bytes_length(buffer);
-				// TODO: check for end of buffer
-				callbacks->on_string((int8_t*)buffer->pos, (int8_t*)buffer->pos+length);
-				buffer->pos += length;
+				CASE_STRING(read_bytes_length(buffer))
 		        break;
+
+		    #define CASE_BYTES(LENGTH) \
+			{ \
+				int length = LENGTH; \
+				callbacks->on_bytes(buffer->pos, buffer->pos + length); \
+				buffer->pos += length; \
 		    }
-			case TYPE_STRING_0:
-			case TYPE_STRING_1:
-			case TYPE_STRING_2:
-			case TYPE_STRING_3:
-			case TYPE_STRING_4:
-			case TYPE_STRING_5:
-			case TYPE_STRING_6:
-			case TYPE_STRING_7:
-			case TYPE_STRING_8:
-			case TYPE_STRING_9:
-			case TYPE_STRING_10:
-			case TYPE_STRING_11:
-			case TYPE_STRING_12:
-			case TYPE_STRING_13:
-			case TYPE_STRING_14:
-			case TYPE_STRING_15:
-			{
-				int length = type - TYPE_STRING_0;
-				callbacks->on_string((int8_t*)buffer->pos, (int8_t*)(buffer->pos + length));
-				buffer->pos += length;
-		        break;
-		    }
-			case TYPE_BYTES_0:
-			case TYPE_BYTES_1:
-			case TYPE_BYTES_2:
-			case TYPE_BYTES_3:
-			case TYPE_BYTES_4:
-			case TYPE_BYTES_5:
-			case TYPE_BYTES_6:
-			case TYPE_BYTES_7:
-			case TYPE_BYTES_8:
-			case TYPE_BYTES_9:
-			case TYPE_BYTES_10:
-			case TYPE_BYTES_11:
-			case TYPE_BYTES_12:
-			case TYPE_BYTES_13:
-			case TYPE_BYTES_14:
-			case TYPE_BYTES_15:
-			{
-				int length = type - TYPE_STRING_0;
-				callbacks->on_bytes(buffer->pos, buffer->pos + length);
-				buffer->pos += length;
-		        break;
-		    }
+			case TYPE_BYTES_0: case TYPE_BYTES_1: case TYPE_BYTES_2: case TYPE_BYTES_3:
+			case TYPE_BYTES_4: case TYPE_BYTES_5: case TYPE_BYTES_6: case TYPE_BYTES_7:
+			case TYPE_BYTES_8: case TYPE_BYTES_9: case TYPE_BYTES_10: case TYPE_BYTES_11:
+			case TYPE_BYTES_12: case TYPE_BYTES_13: case TYPE_BYTES_14: case TYPE_BYTES_15:
+				CASE_BYTES(type - TYPE_BYTES_0)
+				break;
 			case TYPE_BYTES:
-			{
-				uint64_t length = read_bytes_length(buffer);
-				// TODO: check for end of buffer
-				callbacks->on_bytes(buffer->pos, buffer->pos+length);
-		        break;
+				CASE_BYTES(read_bytes_length(buffer))
+				break;
+
+		    #define CASE_SCALAR(TYPE_UPPER, TYPE_LOWER) \
+			{ \
+		    	cbe_number number = \
+		    	{ \
+		    		.data = {.TYPE_LOWER = read_ ## TYPE_LOWER(buffer)}, \
+		    		.type = CBE_NUMERIC_ ## TYPE_UPPER \
+		    	}; \
+		    	callbacks->on_number(number); \
 		    }
 			case TYPE_INT_16:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.int_16 = read_int_16(buffer)},
-		    		.type = CBE_NUMERIC_INT_16
-		    	};
-		    	callbacks->on_number(number);
+				CASE_SCALAR(INT_16, int_16)
 		        break;
-		    }
 			case TYPE_INT_32:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.int_32 = read_int_32(buffer)},
-		    		.type = CBE_NUMERIC_INT_32
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(INT_32, int_32)
+				break;
 			case TYPE_INT_64:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.int_64 = read_int_64(buffer)},
-		    		.type = CBE_NUMERIC_INT_64
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(INT_64, int_64)
+				break;
 			case TYPE_INT_128:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.int_128 = read_int_128(buffer)},
-		    		.type = CBE_NUMERIC_INT_128
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(INT_128, int_128)
+				break;
 			case TYPE_FLOAT_32:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.float_32 = read_float_32(buffer)},
-		    		.type = CBE_NUMERIC_FLOAT_32
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(FLOAT_32, float_32)
+				break;
 			case TYPE_FLOAT_64:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.float_64 = read_float_64(buffer)},
-		    		.type = CBE_NUMERIC_FLOAT_64
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(FLOAT_64, float_64)
+				break;
 			case TYPE_FLOAT_128:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.float_128 = read_float_128(buffer)},
-		    		.type = CBE_NUMERIC_FLOAT_128
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(FLOAT_128, float_128)
+				break;
 			case TYPE_DECIMAL_64:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.decimal_64 = read_decimal_64(buffer)},
-		    		.type = CBE_NUMERIC_DECIMAL_64
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(DECIMAL_64, decimal_64)
+				break;
 			case TYPE_DECIMAL_128:
-			{
-		    	cbe_number number =
-		    	{
-		    		.data = {.decimal_128 = read_decimal_128(buffer)},
-		    		.type = CBE_NUMERIC_DECIMAL_128
-		    	};
-		    	callbacks->on_number(number);
-		        break;
-		    }
+				CASE_SCALAR(DECIMAL_128, decimal_128)
+				break;
 		    default:
 		    {
 		    	cbe_number number =
