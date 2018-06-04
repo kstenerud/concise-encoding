@@ -67,29 +67,63 @@ bool cbe_add_array_decimal_128(cbe_buffer* const buffer, const _Decimal128* cons
 
 // Decode
 
+
+typedef enum
+{
+	CBE_NUMERIC_INT_8,
+	CBE_NUMERIC_INT_16,
+	CBE_NUMERIC_INT_32,
+	CBE_NUMERIC_INT_64,
+	CBE_NUMERIC_INT_128,
+	CBE_NUMERIC_FLOAT_32,
+	CBE_NUMERIC_FLOAT_64,
+	CBE_NUMERIC_FLOAT_128,
+	CBE_NUMERIC_DECIMAL_64,
+	CBE_NUMERIC_DECIMAL_128,
+} cbe_numeric_type;
+
+typedef struct
+{
+	union
+	{
+		int8_t int_8;
+		int16_t int_16;
+		int32_t int_32;
+		int64_t int_64;
+		__int128 int_128;
+		float float_32;
+		double float_64;
+		long double float_128;
+#if CBE_HAS_DECIMAL_SUPPORT
+		_Decimal64 decimal_64;
+		_Decimal128 decimal_128;
+#endif
+	} data;
+	cbe_numeric_type type;
+} cbe_number;
+
+typedef struct
+{
+	unsigned int year;
+	unsigned int microsecond;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+} cbe_date;
+
 typedef struct {
+	void (*on_error)(const char* message);
 	void (*on_empty)(void);
 	void (*on_bool)(bool value);
-	void (*on_date)(int year, int month, int day, int hour, int minute, int second);
-	void (*on_timestamp_ms)(int year, int month, int day, int hour, int minute, int second, int millisecond);
-	void (*on_timestamp_us)(int year, int month, int day, int hour, int minute, int second, int microsecond);
+	void (*on_number)(cbe_number value);
+	void (*on_date)(cbe_date* value);
 	void (*on_end_container)(void);
 	void (*on_list_start)(void);
 	void (*on_map_start)(void);
 	void (*on_string)(const int8_t* start, const int8_t* end);
 	void (*on_bytes)(const uint8_t* start, const uint8_t* end);
-	void (*on_int_8)(int8_t value);
-	void (*on_int_16)(int16_t value);
-	void (*on_int_32)(int32_t value);
-	void (*on_int_64)(int64_t value);
-	void (*on_int_128)(__int128 value);
-	void (*on_float_32)(float value);
-	void (*on_float_64)(double value);
-	void (*on_float_128)(long double value);
-#if CBE_HAS_DECIMAL_SUPPORT
-	void (*on_decimal_64)(_Decimal64 value);
-	void (*on_decimal_128)(_Decimal128 value); 
-#endif
 	void (*on_array_int_16)(const int16_t* start, const int16_t* end);
 	void (*on_array_int_32)(const int32_t* start, const int32_t* end);
 	void (*on_array_int_64)(const int64_t* start, const int64_t* end);
@@ -97,12 +131,16 @@ typedef struct {
 	void (*on_array_float_32)(const float* start, const float* end);
 	void (*on_array_float_64)(const double* start, const double* end);
 	void (*on_array_float_128)(const long double* start, const long double* end);
+#if CBE_HAS_DECIMAL_SUPPORT
+	void (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
+	void (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
+#endif
 	// Array date, timestamps
 	// Array bool
 } cbe_decode_callbacks;
 
 
-void cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end);
+void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint8_t* const data_end);
 
 
 #ifdef __cplusplus 
