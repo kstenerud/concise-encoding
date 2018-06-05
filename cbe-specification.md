@@ -88,65 +88,65 @@ All objects are composed of a type field and a possible payload.
 
 ### Type Field
 
-| Code | Type               | Payload                                             |
-| ---- | ------------------ | --------------------------------------------------- |
-|  00  | Integer value 0    |                                                     |
-|  01  | Integer value 1    |                                                     |
-| ...  | ...                | ...                                                 |
-|  67  | Integer value 103  |                                                     |
-|  68  | False              |                                                     |
-|  69  | True               |                                                     |
-|  6a  | Date               | [40-bit data]                                       |
-|  6b  | Date (millisecond) | [48-bit data]                                       |
-|  6c  | Date (microsecond) | [64-bit data]                                       |
-|  6d  | List               | [object] ... [end of container]                     |
-|  6e  | Map                | [key object, value object] ... [end of container]   |
-|  6f  | End of Container   |                                                     |
-|  70  | String (empty)     |                                                     |
-|  71  | String (1 byte)    | [1 octet of data]                                   |
-|  72  | String (2 bytes)   | [2 octets of data]                                  |
-|  73  | String (3 bytes)   | [3 octets of data]                                  |
-|  74  | String (4 bytes)   | [4 octets of data]                                  |
-|  75  | String (5 bytes)   | [5 octets of data]                                  |
-|  76  | String (6 bytes)   | [6 octets of data]                                  |
-|  77  | String (7 bytes)   | [7 octets of data]                                  |
-|  78  | String (8 bytes)   | [8 octets of data]                                  |
-|  79  | String (9 bytes)   | [9 octets of data]                                  |
-|  7a  | String (10 bytes)  | [10 octets of data]                                 |
-|  7b  | String (11 bytes)  | [11 octets of data]                                 |
-|  7c  | String (12 bytes)  | [12 octets of data]                                 |
-|  7d  | String (13 bytes)  | [13 octets of data]                                 |
-|  7e  | String (14 bytes)  | [14 octets of data]                                 |
-|  7f  | String (15 bytes)  | [15 octets of data]                                 |
-|  80  | String             | [length] [UTF-8 encoded string]                     |
-|  81  | Array Boolean      | [length] [bitfield]                                 |
-|  82  | Array Int 8        | [length] [8-bit signed integers]                    |
-|  83  | Array Int 16       | [length] [16-bit signed integers]                   |
-|  84  | Array Int 32       | [length] [32-bit signed integers]                   |
-|  85  | Array Int 64       | [length] [64-bit signed integers]                   |
-|  86  | Array Int 128      | [length] [128-bit signed integers]                  |
-|  87  | Array Float 32     | [length] [32-bit floats]                            |
-|  88  | Array Float 64     | [length] [64-bit floats]                            |
-|  89  | Array Float 128    | [length] [128-bit floats]                           |
-|  8a  | Array Decimal 64   | [length] [64-bit decimals]                          |
-|  8b  | Array Decimal 128  | [length] [128-bit decimals]                         |
-|  8c  | Array Date 40      | [length] [40-bit dates]                             |
-|  8d  | Array Date 48      | [length] [48-bit dates]                             |
-|  8e  | Array Date 64      | [length] [64-bit dates]                             |
-|  8f  | Integer            | [16-bit two's complement signed integer]            |
-|  90  | Integer            | [32-bit two's complement signed integer]            |
-|  91  | Integer            | [64-bit two's complement signed integer]            |
-|  92  | Integer            | [128-bit two's complement signed integer]           |
-|  93  | Float              | [IEEE 754 binary32 floating point]                  |
-|  94  | Float              | [IEEE 754 binary64 floating point]                  |
-|  95  | Float              | [IEEE 754 binary128 floating point]                 |
-|  96  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]        |
-|  97  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]       |
-|  98  | Empty (no data)    |                                                     |
-|  99  | Integer value -103 |                                                     |
-| ...  | ...                | ...                                                 |
-|  fe  | Integer value -2   |                                                     |
-|  ff  | Integer value -1   |                                                     |
+| Code | Type               | Payload                                           |
+| ---- | ------------------ | ------------------------------------------------- |
+|  00  | Integer value 0    |                                                   |
+|  01  | Integer value 1    |                                                   |
+| ...  | ...                | ...                                               |
+|  67  | Integer value 103  |                                                   |
+|  68  | False              |                                                   |
+|  69  | True               |                                                   |
+|  6a  | Date               | [40-bit data]                                     |
+|  6b  | Date (millisecond) | [48-bit data]                                     |
+|  6c  | Date (microsecond) | [64-bit data]                                     |
+|  6d  | List               | [object] ... [end of container]                   |
+|  6e  | Map                | [key object, value object] ... [end of container] |
+|  6f  | End of Container   |                                                   |
+|  70  | String (empty)     |                                                   |
+|  71  | String (1 byte)    | [1 octet of data]                                 |
+|  72  | String (2 bytes)   | [2 octets of data]                                |
+|  73  | String (3 bytes)   | [3 octets of data]                                |
+|  74  | String (4 bytes)   | [4 octets of data]                                |
+|  75  | String (5 bytes)   | [5 octets of data]                                |
+|  76  | String (6 bytes)   | [6 octets of data]                                |
+|  77  | String (7 bytes)   | [7 octets of data]                                |
+|  78  | String (8 bytes)   | [8 octets of data]                                |
+|  79  | String (9 bytes)   | [9 octets of data]                                |
+|  7a  | String (10 bytes)  | [10 octets of data]                               |
+|  7b  | String (11 bytes)  | [11 octets of data]                               |
+|  7c  | String (12 bytes)  | [12 octets of data]                               |
+|  7d  | String (13 bytes)  | [13 octets of data]                               |
+|  7e  | String (14 bytes)  | [14 octets of data]                               |
+|  7f  | String (15 bytes)  | [15 octets of data]                               |
+|  80  | String             | [length] [UTF-8 encoded string]                   |
+|  81  | Array Boolean      | [length] [bitfield]                               |
+|  82  | Array Int 8        | [length] [8-bit signed integers]                  |
+|  83  | Array Int 16       | [length] [16-bit signed integers]                 |
+|  84  | Array Int 32       | [length] [32-bit signed integers]                 |
+|  85  | Array Int 64       | [length] [64-bit signed integers]                 |
+|  86  | Array Int 128      | [length] [128-bit signed integers]                |
+|  87  | Array Float 32     | [length] [32-bit floats]                          |
+|  88  | Array Float 64     | [length] [64-bit floats]                          |
+|  89  | Array Float 128    | [length] [128-bit floats]                         |
+|  8a  | Array Decimal 64   | [length] [64-bit decimals]                        |
+|  8b  | Array Decimal 128  | [length] [128-bit decimals]                       |
+|  8c  | Array Date 40      | [length] [40-bit dates]                           |
+|  8d  | Array Date 48      | [length] [48-bit dates]                           |
+|  8e  | Array Date 64      | [length] [64-bit dates]                           |
+|  8f  | Integer            | [16-bit two's complement signed integer]          |
+|  90  | Integer            | [32-bit two's complement signed integer]          |
+|  91  | Integer            | [64-bit two's complement signed integer]          |
+|  92  | Integer            | [128-bit two's complement signed integer]         |
+|  93  | Float              | [IEEE 754 binary32 floating point]                |
+|  94  | Float              | [IEEE 754 binary64 floating point]                |
+|  95  | Float              | [IEEE 754 binary128 floating point]               |
+|  96  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]      |
+|  97  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]     |
+|  98  | Empty (no data)    |                                                   |
+|  99  | Integer value -103 |                                                   |
+| ...  | ...                | ...                                               |
+|  fe  | Integer value -2   |                                                   |
+|  ff  | Integer value -1   |                                                   |
 
 
 
@@ -292,15 +292,15 @@ The array length field is an unsigned integer that represents the number of elem
 
 Codes fd, fe, ff indicate that a larger payload follows containing the length.
 
-| Code | Meaning       | Payload                     |
-| ---- | ------------- | --------------------------- |
-| 0x00 | Length 0      |                             |
-| 0x01 | Length 1      |                             |
-|  ... | ...           |                             |
-| 0xfc | Length 252    |                             |
-| 0xfd | 16-bit Length | [16-bit unsigned integer]   |
-| 0xfe | 32-bit Length | [32-bit unsigned integer]   |
-| 0xff | 64-bit Length | [64-bit unsigned integer]   |
+| Code | Meaning       | Payload                   |
+| ---- | ------------- | ------------------------- |
+| 0x00 | Length 0      |                           |
+| 0x01 | Length 1      |                           |
+|  ... | ...           |                           |
+| 0xfc | Length 252    |                           |
+| 0xfd | 16-bit Length | [16-bit unsigned integer] |
+| 0xfe | 32-bit Length | [32-bit unsigned integer] |
+| 0xff | 64-bit Length | [64-bit unsigned integer] |
 
 Examples:
 
