@@ -43,10 +43,10 @@ Many common data types and structures are supported:
 
 Binary, stored in little endian byte order.
 
-  * **Boolean**: Supports the values true and false.
+  * **Boolean**: True or false.
   * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
-  * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits. DPD encoding.
+  * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits, DPD encoding.
   * **Date**: UTC-based date with precision to the second, millisecond or microsecond.
 
 
@@ -77,6 +77,7 @@ Types used in support of other types only. They cannot be used on their own.
 ### Other Types
 
   * **Empty**: Denotes the absence of data.
+  * **Padding**: Invisible field used to align data in a CPU friendly manner.
 
 
 
@@ -94,14 +95,14 @@ All objects are composed of a type field and a possible payload.
 |  01  | Integer value 1    |                                                   |
 | ...  | ...                | ...                                               |
 |  67  | Integer value 103  |                                                   |
-|  68  | False              |                                                   |
-|  69  | True               |                                                   |
-|  6a  | Date               | [40-bit data]                                     |
-|  6b  | Date (millisecond) | [48-bit data]                                     |
-|  6c  | Date (microsecond) | [64-bit data]                                     |
-|  6d  | List               | [object] ... [end of container]                   |
-|  6e  | Map                | [key object, value object] ... [end of container] |
-|  6f  | End of Container   |                                                   |
+|  68  | Empty (no data)    |                                                   |
+|  69  | Date               | [40-bit data]                                     |
+|  6a  | Date (millisecond) | [48-bit data]                                     |
+|  6b  | Date (microsecond) | [64-bit data]                                     |
+|  6c  | List               | [object] ... [end of container]                   |
+|  6d  | Map                | [key object, value object] ... [end of container] |
+|  6e  | End of Container   |                                                   |
+|  6f  | Padding            |                                                   |
 |  70  | String (empty)     |                                                   |
 |  71  | String (1 byte)    | [1 octet of data]                                 |
 |  72  | String (2 bytes)   | [2 octets of data]                                |
@@ -130,20 +131,19 @@ All objects are composed of a type field and a possible payload.
 |  89  | Array Float 128    | [length] [128-bit floats]                         |
 |  8a  | Array Decimal 64   | [length] [64-bit decimals]                        |
 |  8b  | Array Decimal 128  | [length] [128-bit decimals]                       |
-|  8c  | Array Date 40      | [length] [40-bit dates]                           |
-|  8d  | Array Date 48      | [length] [48-bit dates]                           |
-|  8e  | Array Date 64      | [length] [64-bit dates]                           |
-|  8f  | Integer            | [16-bit two's complement signed integer]          |
-|  90  | Integer            | [32-bit two's complement signed integer]          |
-|  91  | Integer            | [64-bit two's complement signed integer]          |
-|  92  | Integer            | [128-bit two's complement signed integer]         |
-|  93  | Float              | [IEEE 754 binary32 floating point]                |
-|  94  | Float              | [IEEE 754 binary64 floating point]                |
-|  95  | Float              | [IEEE 754 binary128 floating point]               |
-|  96  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]      |
-|  97  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]     |
-|  98  | Empty (no data)    |                                                   |
-|  99  | Integer value -103 |                                                   |
+|  8c  | Array Date         | [length] [64-bit dates]                           |
+|  8d  | Integer            | [16-bit two's complement signed integer]          |
+|  8e  | Integer            | [32-bit two's complement signed integer]          |
+|  8f  | Integer            | [64-bit two's complement signed integer]          |
+|  90  | Integer            | [128-bit two's complement signed integer]         |
+|  91  | Float              | [IEEE 754 binary32 floating point]                |
+|  92  | Float              | [IEEE 754 binary64 floating point]                |
+|  93  | Float              | [IEEE 754 binary128 floating point]               |
+|  94  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]      |
+|  95  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]     |
+|  96  | False              |                                                   |
+|  97  | True               |                                                   |
+|  98  | Integer value -104 |                                                   |
 | ...  | ...                | ...                                               |
 |  fe  | Integer value -2   |                                                   |
 |  ff  | Integer value -1   |                                                   |
@@ -152,6 +152,10 @@ All objects are composed of a type field and a possible payload.
 
 Types
 -----
+
+### Padding
+
+The padding type has no semantic meaning; its only purpose is for memory alignment. A decoder must read it and discard it. An encooder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads off the buffer.
 
 
 ### Empty Type
@@ -290,20 +294,23 @@ The string and bitfield arrays are handled a little differently, and will be dis
 
 The array length field is an unsigned integer that represents the number of elements in the array, not the byte count (the only exception to this is the string type).
 
-Codes fd, fe, ff indicate that a larger payload follows containing the length.
+The two lowest bits are the width code, and determine the full field width:
 
-| Code | Meaning       | Payload                   |
-| ---- | ------------- | ------------------------- |
-| 0x00 | Length 0      |                           |
-| 0x01 | Length 1      |                           |
-|  ... | ...           |                           |
-| 0xfc | Length 252    |                           |
-| 0xfd | 16-bit Length | [16-bit unsigned integer] |
-| 0xfe | 32-bit Length | [32-bit unsigned integer] |
-| 0xff | 64-bit Length | [64-bit unsigned integer] |
+| Code |  Width  | Bit Layout in Memory (little endian) W = width bit, L = length bit      |
+| ---- | ------- | ----------------------------------------------------------------------- |
+|   0  |  6 bits | WWLLLLLL                                                                |
+|   1  | 14 bits | WWLLLLLL LLLLLLLL                                                       |
+|   2  | 30 bits | WWLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL                                     |
+|   3  | 62 bits | WWLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL |
+
+To read the length:
+
+  * Read the first byte to get the width subfield.
+  * Read from the same location as an unsigned integer of the appropriate width.
+  * Shift "right" by 2 ( length = value >> 2 ).
 
 Examples:
-
+FIXME
     [87 00] Array of 32-bit floats, length 0.
     [83 03 18 fc 00 00 e8 03] Array of 16-bit integers, length 2, contents (-1000, 0, 1000).
     [88 fd e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).

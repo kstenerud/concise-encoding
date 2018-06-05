@@ -8,16 +8,16 @@ extern "C" {
 
 typedef enum
 {
-	TYPE_SMALLINT_MIN      = -103,
+	TYPE_SMALLINT_MIN      = -104,
 	TYPE_SMALLINT_MAX      = 103,
-	TYPE_FALSE             = 0x68,
-	TYPE_TRUE              = 0x69,
-	TYPE_DATE_40           = 0x6a,
-	TYPE_DATE_48           = 0x6b,
-	TYPE_DATE_64           = 0x6c,
-	TYPE_LIST              = 0x6d,
-	TYPE_MAP               = 0x6e,
-	TYPE_END_CONTAINER     = 0x6f,
+	TYPE_EMPTY             = 0x68,
+	TYPE_DATE_40           = 0x69,
+	TYPE_DATE_48           = 0x6a,
+	TYPE_DATE_64           = 0x6b,
+	TYPE_LIST              = 0x6c,
+	TYPE_MAP               = 0x6d,
+	TYPE_END_CONTAINER     = 0x6e,
+	TYPE_PADDING           = 0x6f,
 	TYPE_STRING_0          = 0x70,
 	TYPE_STRING_1          = 0x71,
 	TYPE_STRING_2          = 0x72,
@@ -46,28 +46,32 @@ typedef enum
 	TYPE_ARRAY_FLOAT_128   = 0x89,
 	TYPE_ARRAY_DECIMAL_64  = 0x8a,
 	TYPE_ARRAY_DECIMAL_128 = 0x8b,
-	TYPE_ARRAY_DATE_40     = 0x8c,
-	TYPE_ARRAY_DATE_48     = 0x8d,
-	TYPE_ARRAY_DATE_64     = 0x8e,
-	TYPE_INT_16            = 0x8f,
-	TYPE_INT_32            = 0x90,
-	TYPE_INT_64            = 0x91,
-	TYPE_INT_128           = 0x92,
-	TYPE_FLOAT_32          = 0x93,
-	TYPE_FLOAT_64          = 0x94,
-	TYPE_FLOAT_128         = 0x95,
-	TYPE_DECIMAL_64        = 0x96,
-	TYPE_DECIMAL_128       = 0x97,
-	TYPE_EMPTY             = 0x98,
+	TYPE_ARRAY_DATE        = 0x8c,
+	TYPE_INT_16            = 0x8d,
+	TYPE_INT_32            = 0x8e,
+	TYPE_INT_64            = 0x8f,
+	TYPE_INT_128           = 0x90,
+	TYPE_FLOAT_32          = 0x91,
+	TYPE_FLOAT_64          = 0x92,
+	TYPE_FLOAT_128         = 0x93,
+	TYPE_DECIMAL_64        = 0x94,
+	TYPE_DECIMAL_128       = 0x95,
+	TYPE_FALSE             = 0x96,
+	TYPE_TRUE              = 0x97,
 } type_field;
+
 
 typedef enum
 {
-	ARRAY_LENGTH_8_BIT_MAX = 0xfc,
-	ARRAY_LENGTH_16_BIT    = 0xfd,
-	ARRAY_LENGTH_32_BIT    = 0xfe,
-	ARRAY_LENGTH_64_BIT    = 0xff,
-} array_length_field;
+	LENGTH_FIELD_WIDTH_6_BIT  = 0,
+	LENGTH_FIELD_WIDTH_14_BIT = 1,
+	LENGTH_FIELD_WIDTH_30_BIT = 2,
+	LENGTH_FIELD_WIDTH_62_BIT = 3,
+} length_field_width;
+
+#define MAX_VALUE_6_BIT  0x3f
+#define MAX_VALUE_14_BIT 0x3fff
+#define MAX_VALUE_30_BIT 0x3fffffff
 
 #define DATE_MODULO_MICROSECOND     1000UL
 #define DATE_MODULO_MILLISECOND     1000UL

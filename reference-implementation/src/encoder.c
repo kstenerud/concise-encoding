@@ -15,12 +15,12 @@
 #define FITS_IN_FLOAT_64(VALUE)   ((VALUE) == (double)(VALUE))
 #define FITS_IN_DECIMAL_64(VALUE) ((VALUE) == (_Decimal64)(VALUE))
 
-static inline unsigned int array_length_field_width(const uint64_t length)
+static inline unsigned int get_length_field_width(const uint64_t length)
 {
-    if(length <= ARRAY_LENGTH_8_BIT_MAX) return sizeof(uint8_t);
-    if(length <= UINT16_MAX)             return sizeof(uint8_t) + sizeof(uint16_t);
-    if(length <= UINT32_MAX)             return sizeof(uint8_t) + sizeof(uint32_t);
-    return sizeof(uint8_t) + sizeof(uint64_t);
+    if(length <= MAX_VALUE_6_BIT)  return sizeof(uint8_t);
+    if(length <= MAX_VALUE_14_BIT) return sizeof(uint16_t);
+    if(length <= MAX_VALUE_30_BIT) return sizeof(uint32_t);
+    return sizeof(uint64_t);
 }
 
 static inline void add_primitive_uint_8(cbe_buffer* const buffer, const uint8_t value)
@@ -63,29 +63,25 @@ static inline void add_primitive_type(cbe_buffer* const buffer, const type_field
     add_primitive_int_8(buffer, (int8_t)type);
 }
 
-static inline void add_primitive_array_length(cbe_buffer* const buffer, const uint64_t length)
+static inline void add_primitive_length(cbe_buffer* const buffer, const uint64_t length)
 {
-    if(length <= ARRAY_LENGTH_8_BIT_MAX)
+    if(length <= MAX_VALUE_6_BIT)
     {
-        add_primitive_uint_8(buffer, (uint8_t)length);
+        add_primitive_uint_8(buffer, (uint8_t)((length << 2) | LENGTH_FIELD_WIDTH_6_BIT));
         return;
     }
-    if(length <= UINT16_MAX)
+    if(length <= MAX_VALUE_14_BIT)
     {
-        add_primitive_uint_8(buffer, (uint8_t)ARRAY_LENGTH_16_BIT);
-        add_primitive_uint_16(buffer, length);
+        add_primitive_uint_16(buffer, (uint16_t)((length << 2) | LENGTH_FIELD_WIDTH_14_BIT));
         return;
     }
-    if(length <= UINT32_MAX)
+    if(length <= MAX_VALUE_30_BIT)
     {
-        add_primitive_uint_8(buffer, (uint8_t)ARRAY_LENGTH_32_BIT);
-        add_primitive_uint_32(buffer, length);
+        add_primitive_uint_32(buffer, (uint32_t)((length << 2) | LENGTH_FIELD_WIDTH_30_BIT));
         return;
     }
-    add_primitive_uint_8(buffer, (uint8_t)ARRAY_LENGTH_64_BIT);
-    add_primitive_uint_64(buffer, length);
+    add_primitive_uint_64(buffer, (length << 2) | LENGTH_FIELD_WIDTH_62_BIT);
 }
-
 
 static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
 {
@@ -130,10 +126,10 @@ static bool add_array(cbe_buffer* const buffer,
     const uint8_t type = array_type;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
                                     sizeof(type) +
-                                    array_length_field_width(entity_count) +
+                                    get_length_field_width(entity_count) +
                                     entity_count * entity_size);
     add_primitive_type(buffer, type);
-    add_primitive_array_length(buffer, entity_count);
+    add_primitive_length(buffer, entity_count);
     add_primitive_bytes(buffer, values, entity_count * entity_size);
     return true;
 }
@@ -345,10 +341,10 @@ bool cbe_add_array_boolean(cbe_buffer* const buffer, const bool* const values, c
     }
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
                                     sizeof(type) +
-                                    array_length_field_width(entity_count) +
+                                    get_length_field_width(entity_count) +
                                     byte_count);
     add_primitive_type(buffer, type);
-    add_primitive_array_length(buffer, entity_count);
+    add_primitive_length(buffer, entity_count);
     for(int i = 0; i < entity_count;)
     {
         uint8_t bit_pos = 1;

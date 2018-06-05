@@ -18,7 +18,8 @@ extern "C" {
 
 // Encode
 
-typedef struct {
+typedef struct
+{
 	uint8_t* start;
 	uint8_t* end;
 	uint8_t* pos;
@@ -120,7 +121,8 @@ typedef struct {
 	void (*on_end_container)(void);
 	void (*on_list_start)(void);
 	void (*on_map_start)(void);
-	void (*on_string)(const int8_t* start, const int8_t* end);
+	void (*on_bitfield)(const uint8_t* start, const uint64_t length);
+	void (*on_string)(const char* start, const char* end);
 	void (*on_array_int_8)(const int8_t* start, const int8_t* end);
 	void (*on_array_int_16)(const int16_t* start, const int16_t* end);
 	void (*on_array_int_32)(const int32_t* start, const int32_t* end);
@@ -133,8 +135,7 @@ typedef struct {
 	void (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
 	void (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
 #endif
-	// Array date, timestamps
-	// Array bool
+	void (*on_array_date)(const uint64_t* start, const uint64_t* end);
 } cbe_decode_callbacks;
 
 
