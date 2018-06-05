@@ -30,7 +30,8 @@ static void expect_memory_after_add_string(int length, std::vector<uint8_t> leng
 {
 	std::string str = make_string_with_length(length);
 	std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
-	uint8_t type = TYPE_STRING;
+	uint8_t type = TYPE_ARRAY_STRING;
+	// TODO: Update this to use arrays
 	expected_memory.insert(expected_memory.begin(), length_field_values.begin(), length_field_values.end());
 	expected_memory.insert(expected_memory.begin(), type);
 	expect_memory_after_add_value(str, expected_memory);
@@ -69,9 +70,9 @@ DEFINE_ADD_STRING_TEST( 16, {16});
 DEFINE_ADD_STRING_TEST( 17, {17});
 DEFINE_ADD_STRING_TEST(251, {251});
 DEFINE_ADD_STRING_TEST(252, {252});
-DEFINE_ADD_STRING_TEST(253, {BYTES_LENGTH_16_BIT, 0xfd, 0x00});
-DEFINE_ADD_STRING_TEST(254, {BYTES_LENGTH_16_BIT, 0xfe, 0x00});
-DEFINE_ADD_STRING_TEST(255, {BYTES_LENGTH_16_BIT, 0xff, 0x00});
-DEFINE_ADD_STRING_TEST(256, {BYTES_LENGTH_16_BIT, 0x00, 0x01});
-DEFINE_ADD_STRING_TEST(65535, {BYTES_LENGTH_16_BIT, 0xff, 0xff});
-DEFINE_ADD_STRING_TEST(65536, {BYTES_LENGTH_32_BIT, 0x00, 0x00, 0x01, 0x00});
+DEFINE_ADD_STRING_TEST(253, {ARRAY_LENGTH_16_BIT, 0xfd, 0x00});
+DEFINE_ADD_STRING_TEST(254, {ARRAY_LENGTH_16_BIT, 0xfe, 0x00});
+DEFINE_ADD_STRING_TEST(255, {ARRAY_LENGTH_16_BIT, 0xff, 0x00});
+DEFINE_ADD_STRING_TEST(256, {ARRAY_LENGTH_16_BIT, 0x00, 0x01});
+DEFINE_ADD_STRING_TEST(65535, {ARRAY_LENGTH_16_BIT, 0xff, 0xff});
+DEFINE_ADD_STRING_TEST(65536, {ARRAY_LENGTH_32_BIT, 0x00, 0x00, 0x01, 0x00});

@@ -29,7 +29,7 @@ License deed: https://creativecommons.org/licenses/by/4.0/
 Version History
 ---------------
 
-May 27, 2018: Version 1
+June 5, 2018: Version 1
 
 
 
@@ -47,16 +47,15 @@ Binary, stored in little endian byte order.
   * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
   * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits. DPD encoding.
-  * **Date**: UTC-based date with precision to the second.
-  * **Timestamp**: UTC-based date with precision to the millisecond or nanosecond.
+  * **Date**: UTC-based date with precision to the second, millisecond or microsecond.
 
 
 ### Array Types
 
 Array types can hold multiple scalar values of the same type and size.
 
-  * **Array**: Array of any scalar type
-  * **Bytes**: Array of octets
+  * **Array**: Array of a scalar type
+  * **Bitfield**: Packed "Array" of bits
   * **String**: Array of UTF-8 encoded characters without BOM
 
 
@@ -72,7 +71,7 @@ Containers can store any type, including other containers. They can also contain
 
 Types used in support of other types only. They cannot be used on their own.
 
-  * **Length**: Unsigned integer in widths from 8 to 64 bits.
+  * **Array Length**: Unsigned integer in widths from 8 to 64 bits.
 
 
 ### Other Types
@@ -94,17 +93,15 @@ All objects are composed of a type field and a possible payload.
 |  00  | Integer value 0    |                                                     |
 |  01  | Integer value 1    |                                                     |
 | ...  | ...                | ...                                                 |
-|  65  | Integer value 101  |                                                     |
-|  66  | False              |                                                     |
-|  67  | True               |                                                     |
-|  68  | Date               | [40-bit data]                                       |
-|  69  | Timestamp (ms)     | [48-bit data]                                       |
-|  6a  | Timestamp (ns)     | [64-bit data]                                       |
-|  6b  | End of Container   |                                                     |
-|  6c  | List               | [object] ... [end of container]                     |
-|  6d  | Map                | [key object, value object] ... [end of container]   |
-|  6e  | Array              | [content type & element count] [element] ...        |
-|  6f  | String             | [length in octets] [octets]                         |
+|  67  | Integer value 103  |                                                     |
+|  68  | False              |                                                     |
+|  69  | True               |                                                     |
+|  6a  | Date               | [40-bit data]                                       |
+|  6b  | Date (millisecond) | [48-bit data]                                       |
+|  6c  | Date (microsecond) | [64-bit data]                                       |
+|  6d  | List               | [object] ... [end of container]                     |
+|  6e  | Map                | [key object, value object] ... [end of container]   |
+|  6f  | End of Container   |                                                     |
 |  70  | String (empty)     |                                                     |
 |  71  | String (1 byte)    | [1 octet of data]                                   |
 |  72  | String (2 bytes)   | [2 octets of data]                                  |
@@ -121,34 +118,32 @@ All objects are composed of a type field and a possible payload.
 |  7d  | String (13 bytes)  | [13 octets of data]                                 |
 |  7e  | String (14 bytes)  | [14 octets of data]                                 |
 |  7f  | String (15 bytes)  | [15 octets of data]                                 |
-|  80  | Bytes  (empty)     |                                                     |
-|  81  | Bytes  (1 byte)    | [1 octet of data]                                   |
-|  82  | Bytes  (2 bytes)   | [2 octets of data]                                  |
-|  83  | Bytes  (3 bytes)   | [3 octets of data]                                  |
-|  84  | Bytes  (4 bytes)   | [4 octets of data]                                  |
-|  85  | Bytes  (5 bytes)   | [5 octets of data]                                  |
-|  86  | Bytes  (6 bytes)   | [6 octets of data]                                  |
-|  87  | Bytes  (7 bytes)   | [7 octets of data]                                  |
-|  88  | Bytes  (8 bytes)   | [8 octets of data]                                  |
-|  89  | Bytes  (9 bytes)   | [9 octets of data]                                  |
-|  8a  | Bytes  (10 bytes)  | [10 octets of data]                                 |
-|  8b  | Bytes  (11 bytes)  | [11 octets of data]                                 |
-|  8c  | Bytes  (12 bytes)  | [12 octets of data]                                 |
-|  8d  | Bytes  (13 bytes)  | [13 octets of data]                                 |
-|  8e  | Bytes  (14 bytes)  | [14 octets of data]                                 |
-|  8f  | Bytes  (15 bytes)  | [15 octets of data]                                 |
-|  90  | Bytes              | [length in octets] [octets]                         |
-|  91  | Integer            | [16-bit two's complement signed integer]            |
-|  92  | Integer            | [32-bit two's complement signed integer]            |
-|  93  | Integer            | [64-bit two's complement signed integer]            |
-|  94  | Integer            | [128-bit two's complement signed integer]           |
-|  95  | Float              | [IEEE 754 binary32 floating point]                  |
-|  96  | Float              | [IEEE 754 binary64 floating point]                  |
-|  97  | Float              | [IEEE 754 binary128 floating point]                 |
-|  98  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]        |
-|  99  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]       |
-|  9a  | Empty (no data)    |                                                     |
-|  9b  | Integer value -101 |                                                     |
+|  80  | String             | [length] [UTF-8 encoded string]                     |
+|  81  | Array Boolean      | [length] [bitfield]                                 |
+|  82  | Array Int 8        | [length] [8-bit signed integers]                    |
+|  83  | Array Int 16       | [length] [16-bit signed integers]                   |
+|  84  | Array Int 32       | [length] [32-bit signed integers]                   |
+|  85  | Array Int 64       | [length] [64-bit signed integers]                   |
+|  86  | Array Int 128      | [length] [128-bit signed integers]                  |
+|  87  | Array Float 32     | [length] [32-bit floats]                            |
+|  88  | Array Float 64     | [length] [64-bit floats]                            |
+|  89  | Array Float 128    | [length] [128-bit floats]                           |
+|  8a  | Array Decimal 64   | [length] [64-bit decimals]                          |
+|  8b  | Array Decimal 128  | [length] [128-bit decimals]                         |
+|  8c  | Array Date 40      | [length] [40-bit dates]                             |
+|  8d  | Array Date 48      | [length] [48-bit dates]                             |
+|  8e  | Array Date 64      | [length] [64-bit dates]                             |
+|  8f  | Integer            | [16-bit two's complement signed integer]            |
+|  90  | Integer            | [32-bit two's complement signed integer]            |
+|  91  | Integer            | [64-bit two's complement signed integer]            |
+|  92  | Integer            | [128-bit two's complement signed integer]           |
+|  93  | Float              | [IEEE 754 binary32 floating point]                  |
+|  94  | Float              | [IEEE 754 binary64 floating point]                  |
+|  95  | Float              | [IEEE 754 binary128 floating point]                 |
+|  96  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]        |
+|  97  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]       |
+|  98  | Empty (no data)    |                                                     |
+|  99  | Integer value -103 |                                                     |
 | ...  | ...                | ...                                                 |
 |  fe  | Integer value -2   |                                                     |
 |  ff  | Integer value -1   |                                                     |
@@ -165,7 +160,7 @@ Represents the absence of data. Some languages implement this as the NULL value.
 
 Example:
 
-    [9a] = No data
+    [98] = No data
 
 
 ### Boolean Type
@@ -174,8 +169,8 @@ True or false. As the data itself is stored in the type field, there is no paylo
 
 Examples:
 
-    [66] = false
-    [67] = true
+    [68] = false
+    [69] = true
 
 
 ### Integer Type
@@ -190,9 +185,9 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [91 00 7f] = 127
-    [92 40 42 0f 00] = 1,000,000
-    [93 00 f0 5a 2b 17 ff ff ff] = -1000000000000
+    [8f 00 7f] = 127
+    [90 40 42 0f 00] = 1,000,000
+    [91 00 f0 5a 2b 17 ff ff ff] = -1000000000000
 
 
 ### Floating Point Type
@@ -201,8 +196,8 @@ IEEE 754 binary floating point types, at 32, 64, or 128 bits wide. They can be r
 
 Examples:
 
-    [95 00 00 48 41] = 12.5
-    [96 66 66 66 66 66 42 A0 40] = 1281.2
+    [93 00 00 48 41] = 12.5
+    [94 66 66 66 66 66 42 A0 40] = 1281.2
 
 
 ### Decimal Type
@@ -243,7 +238,7 @@ Date fields can be extracted as follows:
 
 Example:
 
-    [68 21 34 57 e1 0e] = 1955-11-05T08:21:00Z = Nov 5th, 1955 08:21:00 GMT
+    [6a 21 34 57 e1 0e] = 1955-11-05T08:21:00Z = Nov 5th, 1955 08:21:00 GMT
 
 
 #### 48-bit Microsecond Timestamp
@@ -260,7 +255,7 @@ Example:
 
 Example:
 
-    [69 12 55 a3 6b e8 3b] = 2015-10-21T14:28:09.714Z = Oct 21st, 2015 14:28:09.714 GMT
+    [6b 12 55 a3 6b e8 3b] = 2015-10-21T14:28:09.714Z = Oct 21st, 2015 14:28:09.714 GMT
 
 
 #### 64-bit Nanosecond Timestamp
@@ -278,74 +273,40 @@ Example:
 
 Example:
 
-    [6a ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
+    [6c ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
 ### Array Type
 
 An array of scalar values. All elements are of the same type and width.
 
-    [6e] [Content Type & Length] [Element 0] ... [Element (Length-1)]
+    [Type] [Length] [Element 0] ... [Element (Length-1)]
 
-The elements themselves do *NOT* contain a type field; only a payload. The type is specified in the `Content Type` field of the array. In this way, the elements of an array can be natively read off the buffer.
+The elements themselves do *NOT* contain a type field; only a payload. The content type is inferred from the array type.
 
-#### Content Type & Length Field
+The string and bitfield arrays are handled a little differently, and will be discussed separately.
 
-The content type and lengths of an array are encoded in two 4-bit sub-fields:
+#### Length Field
 
-    upper nybble = content type
-    lower nybble = length
+The array length field is an unsigned integer that represents the number of elements in the array, not the byte count (the only exception to this is the string type).
 
+Codes fd, fe, ff indicate that a larger payload follows containing the length.
 
-##### Content Type
-
-| Code | Type                                                |
-| ---- | --------------------------------------------------- |
-|   0  | Boolean                                             |
-|   1  | [16-bit two's complement signed integer]            |
-|   2  | [32-bit two's complement signed integer]            |
-|   3  | [64-bit two's complement signed integer]            |
-|   4  | [128-bit two's complement signed integer]           |
-|   5  | [IEEE 754 binary32 floating point]                  |
-|   6  | [IEEE 754 binary64 floating point]                  |
-|   7  | [IEEE 754 binary128 floating point]                 |
-|   8  | [IEEE 754 decimal64, Densely Packed Decimal]        |
-|   9  | [IEEE 754 decimal128, Densely Packed Decimal]       |
-|   a  | Date                                                |
-|   b  | Timestamp with milliseconds                         |
-|   c  | Timestamp with nanoseconds                          |
-|   d  | Reserved                                            |
-|   e  | Reserved                                            |
-|   f  | Reserved                                            |
-
-##### Length
-
-| Code | Meaning       | Payload                   |
-| ---- | ------------- | ------------------------- |
-|   0  | Length 0      |                           |
-|   1  | Length 1      |                           |
-|   2  | Length 2      |                           |
-|   3  | Length 3      |                           |
-|   4  | Length 4      |                           |
-|   5  | Length 5      |                           |
-|   6  | Length 6      |                           |
-|   7  | Length 7      |                           |
-|   8  | Length 8      |                           |
-|   9  | Length 9      |                           |
-|   a  | Length 10     |                           |
-|   b  | Length 11     |                           |
-|   c  | 8-bit Length  | [8-bit unsigned integer]  |
-|   d  | 16-bit Length | [16-bit unsigned integer] |
-|   e  | 32-bit Length | [32-bit unsigned integer] |
-|   f  | 64-bit Length | [64-bit unsigned integer] |
-
-Note: Length represents the number of array entries, not the byte count.
+| Code | Meaning       | Payload                     |
+| ---- | ------------- | --------------------------- |
+| 0x00 | Length 0      |                             |
+| 0x01 | Length 1      |                             |
+|  ... | ...           |                             |
+| 0xfc | Length 252    |                             |
+| 0xfd | 16-bit Length | [16-bit unsigned integer]   |
+| 0xfe | 32-bit Length | [32-bit unsigned integer]   |
+| 0xff | 64-bit Length | [64-bit unsigned integer]   |
 
 Examples:
 
-    [6e 50] Array of 32-bit floats, length 0.
-    [6e 13 18 fc 00 00 e8 03] Array of 16-bit integers, length 2, contents (-1000, 0, 1000).
-    [6e 6e e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
+    [87 00] Array of 32-bit floats, length 0.
+    [83 03 18 fc 00 00 e8 03] Array of 16-bit integers, length 2, contents (-1000, 0, 1000).
+    [88 fd e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
 
 
 #### Special Case: Boolean Array
@@ -361,56 +322,20 @@ Bitfields start at the low bit (0) of the first byte, and end on one of the bits
 
 For example: 
 
-    [6e 0c 29 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
-
-
-### Bytes Type
-
-The bytes type is an array that is implicitly of type 8-bit signed integer. It has no element type field.
-
-The generalized form is as follows:
-
-    [90] [Length] [Byte 0] ...  [Byte (Length-1)]
-
-#### Length Field
-
-The length field for the bytes type can be encoded as an unsigned integer 8-64 bits wide:
-
-| Code | Meaning       | Payload                   |
-| ---- | ------------- | ------------------------- |
-|  00  | Length 0      |                           |
-|  01  | Length 1      |                           |
-| ...  | ...           |                           |
-|  fc  | Length 252    |                           |
-|  fd  | 16-bit Length | [16-bit unsigned integer] |
-|  fe  | 32-bit Length | [32-bit unsigned integer] |
-|  ff  | 64-bit Length | [64-bit unsigned integer] |
-
-There are also specialized forms for byte array lengths 0-15, where the length is encoded into the type field.
-
-Examples:
-
-    [82 00 00] = 2 byte array containing 0x00, 0x00.
-    [90 12 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12] = 18 byte array containing values from 1 to 18.
+    [81 0c 29 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
 
 ### String Type
 
 Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), not the character length.
 
-The generalized form is as follows:
-
-    [6f] [Length] [Byte 0] ...  [Byte (Length-1)]
-
-#### Length Field
-
-The string length field is implemented the same as for the bytes type, and has specialized forms for lengths 0-15.
+For byte lengths from 0 to 15, there are special top-level inferred-length string type values. For larger strings, use the array encoding.
 
 Examples:
 
     [7b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [7c 52 6f 64 65 6c 73 74 72 61 c3 9f 65] = Rodelstraße
-    [6f 15 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [80 15 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### List Type
@@ -421,7 +346,7 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    [6c 01 91 88 13 6b] = List containing integers (1, 5000)
+    [6d 01 91 88 13 6f] = List containing integers (1, 5000)
 
 
 ### Map Type
@@ -430,13 +355,13 @@ A map associates objects (keys) with other objects (values). Keys may be scalar 
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
-    [6c] [key 1] [value 1] [key 2] [value 2] ... [6b]
+    [6e] [key 1] [value 1] [key 2] [value 2] ... [6f]
 
 All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys in the same map.
 
 Example:
 
-    [6d 71 61 01 71 62 02 6b] = Map containg the key-value pairs ("a", 1) ("b", 2)
+    [6e 71 61 01 71 62 02 6f] = Map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 

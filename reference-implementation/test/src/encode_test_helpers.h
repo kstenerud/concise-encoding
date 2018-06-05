@@ -58,7 +58,7 @@ inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<
 { \
     return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
 }
-DEFINE_ADD_VECTOR_FUNCTION(uint8_t,     cbe_add_bytes)
+DEFINE_ADD_VECTOR_FUNCTION(int8_t,      cbe_add_array_int_8)
 DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_add_array_int_16)
 DEFINE_ADD_VECTOR_FUNCTION(int32_t,     cbe_add_array_int_32)
 DEFINE_ADD_VECTOR_FUNCTION(int64_t,     cbe_add_array_int_64)
@@ -72,7 +72,8 @@ DEFINE_ADD_VECTOR_FUNCTION(long double, cbe_add_array_float_128)
 template <>
 inline bool add_value<std::string>(cbe_buffer* buffer, std::string value)
 {
-    return cbe_add_string(buffer, value.c_str());
+    const char* const str = value.c_str();
+    return cbe_add_string(buffer, str, strlen(str));
 }
 
 

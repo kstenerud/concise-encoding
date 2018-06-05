@@ -35,7 +35,6 @@ add_executable(cbe_test
                    src/encode_float_128.cpp
                    src/encode_date.cpp
                    src/encode_string.cpp
-                   src/encode_bytes.cpp
                    src/encode_list.cpp
                    src/encode_map.cpp
                    src/encode_array.cpp

@@ -47,34 +47,11 @@ DEFINE_READ_FUNCTION(long double, float_128)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
 
-static inline uint64_t read_bytes_length(cbe_buffer* const buffer)
+static inline uint64_t get_array_length(cbe_buffer* const buffer)
 {
 	uint8_t length = read_uint_8(buffer);
 	switch(length)
 	{
-		case BYTES_LENGTH_16_BIT:
-			return read_uint_16(buffer);
-		case BYTES_LENGTH_32_BIT:
-			return read_uint_32(buffer);
-		case BYTES_LENGTH_64_BIT:
-			return read_uint_64(buffer);
-		default:
-			return length;
-	}
-}
-
-static inline array_content_type_field get_array_content_type(cbe_buffer* const buffer)
-{
-	return *buffer->pos & ARRAY_CONTENT_TYPE_MASK;
-}
-
-static inline uint64_t get_array_length(cbe_buffer* const buffer)
-{
-	uint8_t length = read_uint_8(buffer) & ~ARRAY_CONTENT_TYPE_MASK;
-	switch(length)
-	{
-		case ARRAY_LENGTH_8_BIT:
-			return read_uint_8(buffer);
 		case ARRAY_LENGTH_16_BIT:
 			return read_uint_16(buffer);
 		case ARRAY_LENGTH_32_BIT:
@@ -83,61 +60,6 @@ static inline uint64_t get_array_length(cbe_buffer* const buffer)
 			return read_uint_64(buffer);
 		default:
 			return length;
-	}
-}
-
-static void decode_array(cbe_buffer* buffer, cbe_decode_callbacks* callbacks)
-{
-	array_content_type_field type = get_array_content_type(buffer);
-	uint64_t length = get_array_length(buffer);
-	switch(type)
-	{
-		#define DEFINE_DECODE_ARRAY_CASE_HANDLER(TYPE, SUFFIX) \
-			callbacks->on_array_ ## SUFFIX((TYPE*)buffer->pos, (TYPE*)buffer->pos + length * sizeof(TYPE)); \
-			buffer->pos += length * sizeof(TYPE)
-
-		case ARRAY_CONTENT_TYPE_BOOLEAN:
-			// TODO
-			break;
-		case ARRAY_CONTENT_TYPE_INT_16:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(int16_t, int_16);
-			break;
-		case ARRAY_CONTENT_TYPE_INT_32:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(int32_t, int_32);
-			break;
-		case ARRAY_CONTENT_TYPE_INT_64:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(int64_t, int_64);
-			break;
-		case ARRAY_CONTENT_TYPE_INT_128:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(__int128, int_128);
-			break;
-		case ARRAY_CONTENT_TYPE_FLOAT_32:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(float, float_32);
-			break;
-		case ARRAY_CONTENT_TYPE_FLOAT_64:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(double, float_64);
-			break;
-		case ARRAY_CONTENT_TYPE_FLOAT_128:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(long double, float_128);
-			break;
-		case ARRAY_CONTENT_TYPE_DECIMAL_64:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(_Decimal64, decimal_64);
-			break;
-		case ARRAY_CONTENT_TYPE_DECIMAL_128:
-			DEFINE_DECODE_ARRAY_CASE_HANDLER(_Decimal128, decimal_128);
-			break;
-		case ARRAY_CONTENT_TYPE_DATE:
-			// TODO
-			break;
-		case ARRAY_CONTENT_TYPE_TIMESTAMP_MS:
-			// TODO
-			break;
-		case ARRAY_CONTENT_TYPE_TIMESTAMP_NS:
-			// TODO
-			break;
-		default:
-			// TODO: Error
-			break;
 	}
 }
 
@@ -169,9 +91,6 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 			case TYPE_MAP:
 				callbacks->on_map_start();
 		        break;
-			case TYPE_ARRAY:
-				decode_array(buffer, callbacks);
-		        break;
 
 		    #define CASE_DATE(VALUE) \
 			{ \
@@ -188,13 +107,13 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 				}; \
 				callbacks->on_date(&date); \
 		    }
-			case TYPE_DATE:
+			case TYPE_DATE_40:
 				CASE_DATE(read_uint_40(buffer) * DATE_MULTIPLIER_MILLISECOND * DATE_MULTIPLIER_MICROSECOND)
 		        break;
-			case TYPE_TIMESTAMP_MILLI:
+			case TYPE_DATE_48:
 				CASE_DATE(read_uint_48(buffer) * DATE_MULTIPLIER_MICROSECOND)
 		        break;
-			case TYPE_TIMESTAMP_MICRO:
+			case TYPE_DATE_64:
 				CASE_DATE(read_uint_64(buffer))
 		        break;
 
@@ -207,28 +126,9 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 			case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
 			case TYPE_STRING_4: case TYPE_STRING_5: case TYPE_STRING_6: case TYPE_STRING_7:
 			case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
-			case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
+			case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_MAX:
 				CASE_STRING(type - TYPE_STRING_0)
 		        break;
-			case TYPE_STRING:
-				CASE_STRING(read_bytes_length(buffer))
-		        break;
-
-		    #define CASE_BYTES(LENGTH) \
-			{ \
-				int length = LENGTH; \
-				callbacks->on_bytes(buffer->pos, buffer->pos + length); \
-				buffer->pos += length; \
-		    }
-			case TYPE_BYTES_0: case TYPE_BYTES_1: case TYPE_BYTES_2: case TYPE_BYTES_3:
-			case TYPE_BYTES_4: case TYPE_BYTES_5: case TYPE_BYTES_6: case TYPE_BYTES_7:
-			case TYPE_BYTES_8: case TYPE_BYTES_9: case TYPE_BYTES_10: case TYPE_BYTES_11:
-			case TYPE_BYTES_12: case TYPE_BYTES_13: case TYPE_BYTES_14: case TYPE_BYTES_15:
-				CASE_BYTES(type - TYPE_BYTES_0)
-				break;
-			case TYPE_BYTES:
-				CASE_BYTES(read_bytes_length(buffer))
-				break;
 
 		    #define CASE_SCALAR(TYPE_UPPER, TYPE_LOWER) \
 			{ \
@@ -266,6 +166,58 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 			case TYPE_DECIMAL_128:
 				CASE_SCALAR(DECIMAL_128, decimal_128)
 				break;
+			#define DEFINE_DECODE_ARRAY_CASE_HANDLER(TYPE, SUFFIX) \
+			{ \
+				uint64_t length = get_array_length(buffer); \
+				callbacks->on_array_ ## SUFFIX((TYPE*)buffer->pos, (TYPE*)buffer->pos + length * sizeof(TYPE)); \
+				buffer->pos += length * sizeof(TYPE); \
+			}
+			case TYPE_ARRAY_BOOLEAN:
+				// TODO
+				break;
+			case TYPE_ARRAY_STRING:
+				// TODO
+				break;
+			case TYPE_ARRAY_INT_8:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(int8_t, int_8);
+				break;
+			case TYPE_ARRAY_INT_16:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(int16_t, int_16);
+				break;
+			case TYPE_ARRAY_INT_32:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(int32_t, int_32);
+				break;
+			case TYPE_ARRAY_INT_64:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(int64_t, int_64);
+				break;
+			case TYPE_ARRAY_INT_128:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(__int128, int_128);
+				break;
+			case TYPE_ARRAY_FLOAT_32:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(float, float_32);
+				break;
+			case TYPE_ARRAY_FLOAT_64:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(double, float_64);
+				break;
+			case TYPE_ARRAY_FLOAT_128:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(long double, float_128);
+				break;
+			case TYPE_ARRAY_DECIMAL_64:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(_Decimal64, decimal_64);
+				break;
+			case TYPE_ARRAY_DECIMAL_128:
+				DEFINE_DECODE_ARRAY_CASE_HANDLER(_Decimal128, decimal_128);
+				break;
+			case TYPE_ARRAY_DATE_40:
+				// TODO
+				break;
+			case TYPE_ARRAY_DATE_48:
+				// TODO
+				break;
+			case TYPE_ARRAY_DATE_64:
+				// TODO
+				break;
+
 		    default:
 		    {
 		    	cbe_number number =
