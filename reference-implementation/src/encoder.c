@@ -40,16 +40,18 @@ static inline void add_primitive_ ## DEFINITION_TYPE(cbe_buffer* const buffer, c
     safe->contents = value; \
     buffer->pos += sizeof(value); \
 }
-DEFINE_PRIMITIVE_ADD_FUNCTION(uint16_t,      uint_16)
-DEFINE_PRIMITIVE_ADD_FUNCTION(uint32_t,      uint_32)
-DEFINE_PRIMITIVE_ADD_FUNCTION(uint64_t,      uint_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int16_t,        int_16)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int32_t,        int_32)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,        int_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,      int_128)
-DEFINE_PRIMITIVE_ADD_FUNCTION(float,        float_32)
-DEFINE_PRIMITIVE_ADD_FUNCTION(double,       float_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(long double, float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(uint16_t,        uint_16)
+DEFINE_PRIMITIVE_ADD_FUNCTION(uint32_t,        uint_32)
+DEFINE_PRIMITIVE_ADD_FUNCTION(uint64_t,        uint_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(int16_t,          int_16)
+DEFINE_PRIMITIVE_ADD_FUNCTION(int32_t,          int_32)
+DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,          int_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,        int_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(float,          float_32)
+DEFINE_PRIMITIVE_ADD_FUNCTION(double,         float_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(long double,   float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal64,   decimal_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal128, decimal_128)
 static inline void add_primitive_bytes(cbe_buffer* const buffer,
                                        const uint8_t* const bytes,
                                        const unsigned int byte_count)
@@ -98,13 +100,15 @@ static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_
     add_primitive_ ## DEFINITION_TYPE(buffer, value); \
     return true; \
 }
-DEFINE_ADD_SCALAR_FUNCTION(int16_t,        int_16, TYPE_INT_16)
-DEFINE_ADD_SCALAR_FUNCTION(int32_t,        int_32, TYPE_INT_32)
-DEFINE_ADD_SCALAR_FUNCTION(int64_t,        int_64, TYPE_INT_64)
-DEFINE_ADD_SCALAR_FUNCTION(__int128,      int_128, TYPE_INT_128)
-DEFINE_ADD_SCALAR_FUNCTION(float,        float_32, TYPE_FLOAT_32)
-DEFINE_ADD_SCALAR_FUNCTION(double,       float_64, TYPE_FLOAT_64)
-DEFINE_ADD_SCALAR_FUNCTION(long double, float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(int16_t,          int_16, TYPE_INT_16)
+DEFINE_ADD_SCALAR_FUNCTION(int32_t,          int_32, TYPE_INT_32)
+DEFINE_ADD_SCALAR_FUNCTION(int64_t,          int_64, TYPE_INT_64)
+DEFINE_ADD_SCALAR_FUNCTION(__int128,        int_128, TYPE_INT_128)
+DEFINE_ADD_SCALAR_FUNCTION(float,          float_32, TYPE_FLOAT_32)
+DEFINE_ADD_SCALAR_FUNCTION(double,         float_64, TYPE_FLOAT_64)
+DEFINE_ADD_SCALAR_FUNCTION(long double,   float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,   decimal_64, TYPE_DECIMAL_64)
+DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
 
 static inline bool add_lowbytes(cbe_buffer* const buffer,
                                 const uint8_t type,
@@ -218,6 +222,17 @@ bool cbe_add_float_128(cbe_buffer* const buffer, const long double value)
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     if(FITS_IN_FLOAT_64(value)) return add_float_64(buffer, value);
     return add_float_128(buffer, value);
+}
+
+bool cbe_add_decimal_64(cbe_buffer* const buffer, const _Decimal64 value)
+{
+    return add_decimal_64(buffer, value);
+}
+
+bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value)
+{
+    if(FITS_IN_DECIMAL_64(value)) return add_decimal_64(buffer, value);
+    return add_decimal_128(buffer, value);
 }
 
 bool cbe_add_date(cbe_buffer* const buffer, const cbe_date* const date)

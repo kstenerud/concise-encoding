@@ -8,32 +8,24 @@ static bool on_number(cbe_number value)
 	switch(value.type)
 	{
 		case CBE_NUMERIC_INT_8:
-			cbe_add_int_8(&g_buffer, value.data.int_8);
-			break;
+			return cbe_add_int_8(&g_buffer, value.data.int_8);
 		case CBE_NUMERIC_INT_16:
-			cbe_add_int_16(&g_buffer, value.data.int_16);
-			break;
+			return cbe_add_int_16(&g_buffer, value.data.int_16);
 		case CBE_NUMERIC_INT_32:
-			cbe_add_int_32(&g_buffer, value.data.int_32);
-			break;
+			return cbe_add_int_32(&g_buffer, value.data.int_32);
 		case CBE_NUMERIC_INT_64:
-			cbe_add_int_64(&g_buffer, value.data.int_64);
-			break;
+			return cbe_add_int_64(&g_buffer, value.data.int_64);
 		case CBE_NUMERIC_INT_128:
-			cbe_add_int_128(&g_buffer, value.data.int_128);
-			break;
+			return cbe_add_int_128(&g_buffer, value.data.int_128);
 		case CBE_NUMERIC_FLOAT_32:
-			cbe_add_float_32(&g_buffer, value.data.float_32);
-			break;
+			return cbe_add_float_32(&g_buffer, value.data.float_32);
 		case CBE_NUMERIC_FLOAT_64:
-			cbe_add_float_64(&g_buffer, value.data.float_64);
-			break;
+			return cbe_add_float_64(&g_buffer, value.data.float_64);
 		case CBE_NUMERIC_FLOAT_128:
-			cbe_add_float_128(&g_buffer, value.data.float_128);
-			break;
+			return cbe_add_float_128(&g_buffer, value.data.float_128);
 #if CBE_HAS_DECIMAL_SUPPORT
 		case CBE_NUMERIC_DECIMAL_64:
-			break;
+			return cbe_add_decimal_64(&g_buffer, value.data.decimal_64);
 		case CBE_NUMERIC_DECIMAL_128:
 			break;
 #endif
