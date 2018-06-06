@@ -113,33 +113,33 @@ typedef struct
 } cbe_number;
 
 typedef struct {
-	void (*on_error)(const char* message);
-	void (*on_empty)(void);
-	void (*on_bool)(bool value);
-	void (*on_number)(cbe_number value);
-	void (*on_date)(cbe_date* value);
-	void (*on_end_container)(void);
-	void (*on_list_start)(void);
-	void (*on_map_start)(void);
-	void (*on_bitfield)(const uint8_t* start, const uint64_t length);
-	void (*on_string)(const char* start, const char* end);
-	void (*on_array_int_8)(const int8_t* start, const int8_t* end);
-	void (*on_array_int_16)(const int16_t* start, const int16_t* end);
-	void (*on_array_int_32)(const int32_t* start, const int32_t* end);
-	void (*on_array_int_64)(const int64_t* start, const int64_t* end);
-	void (*on_array_int_128)(const __int128* start, const __int128* end);
-	void (*on_array_float_32)(const float* start, const float* end);
-	void (*on_array_float_64)(const double* start, const double* end);
-	void (*on_array_float_128)(const long double* start, const long double* end);
+	bool (*on_error)(const char* message);
+	bool (*on_empty)(void);
+	bool (*on_bool)(bool value);
+	bool (*on_number)(cbe_number value);
+	bool (*on_date)(cbe_date* value);
+	bool (*on_end_container)(void);
+	bool (*on_list_start)(void);
+	bool (*on_map_start)(void);
+	bool (*on_bitfield)(const uint8_t* start, const uint64_t length);
+	bool (*on_string)(const char* start, const char* end);
+	bool (*on_array_int_8)(const int8_t* start, const int8_t* end);
+	bool (*on_array_int_16)(const int16_t* start, const int16_t* end);
+	bool (*on_array_int_32)(const int32_t* start, const int32_t* end);
+	bool (*on_array_int_64)(const int64_t* start, const int64_t* end);
+	bool (*on_array_int_128)(const __int128* start, const __int128* end);
+	bool (*on_array_float_32)(const float* start, const float* end);
+	bool (*on_array_float_64)(const double* start, const double* end);
+	bool (*on_array_float_128)(const long double* start, const long double* end);
 #if CBE_HAS_DECIMAL_SUPPORT
-	void (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
-	void (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
+	bool (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
+	bool (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
 #endif
-	void (*on_array_date)(const uint64_t* start, const uint64_t* end);
+	bool (*on_array_date)(const uint64_t* start, const uint64_t* end);
 } cbe_decode_callbacks;
 
 
-void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint8_t* const data_end);
+uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, uint8_t* const data_end);
 
 
 #ifdef __cplusplus 

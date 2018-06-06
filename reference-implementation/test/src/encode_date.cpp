@@ -3,7 +3,7 @@
 
 inline void expect_memory_after_add_date(const cbe_date* const date, std::vector<uint8_t> const& expected_memory)
 {
-	expect_memory_after_add_function([&](cbe_buffer* buffer)
+	expect_memory_after_operation([&](cbe_buffer* buffer)
 	{
 		return cbe_add_date(buffer, date);
 	}, expected_memory);

@@ -67,7 +67,7 @@ static inline uint64_t get_array_length(cbe_buffer* const buffer)
 	}
 }
 
-void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint8_t* const data_end)
+uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, uint8_t* const data_end)
 {
 	cbe_buffer real_buffer;
 	cbe_buffer* buffer = &real_buffer;
@@ -78,7 +78,11 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 		switch(type)
 		{
 			case TYPE_EMPTY:
-				callbacks->on_empty();
+				if(!callbacks->on_empty())
+				{
+					callbacks->on_error("on_empty() failed");
+					return false;
+				}
 		        break;
 			case TYPE_FALSE:
 				callbacks->on_bool(false);
@@ -239,4 +243,5 @@ void cbe_decode(cbe_decode_callbacks* callbacks, uint8_t* const data_start, uint
 		    }
 		}
 	}
+	return buffer->pos;
 }
