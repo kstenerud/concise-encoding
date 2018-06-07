@@ -4,7 +4,6 @@ Reference Implementation for Concise Binary Encoding
 A C implementation to demonstrate a simple CBE codec.
 
 Everything except decimal types are implemented.
-Tests are at 95% (haven't tested error cases yet).
 
 
 Notes
