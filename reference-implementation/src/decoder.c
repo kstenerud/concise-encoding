@@ -206,7 +206,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             #define HANDLE_CASE_ARRAY(TYPE, HANDLER) \
             { \
                 uint64_t length = get_array_length(buffer); \
-                if(!callbacks->HANDLER((TYPE*)buffer->pos, (TYPE*)buffer->pos + length * sizeof(TYPE))) return NULL; \
+                if(!callbacks->HANDLER((TYPE*)buffer->pos, (TYPE*)(buffer->pos) + length)) return NULL; \
                 buffer->pos += length * sizeof(TYPE); \
             }
             case TYPE_ARRAY_STRING:

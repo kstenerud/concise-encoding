@@ -10,6 +10,7 @@ static void expect_encode_decode_encode_array(int length, std::vector<uint8_t> e
         add_bytes(expected_memory, entity);
     }
     expect_memory_after_add_value(entities, expected_memory);
+    expect_decode_encode(expected_memory);
 }
 
 #define DEFINE_ARRAY_TEST(NAME, TYPE, LENGTH, ...) \
