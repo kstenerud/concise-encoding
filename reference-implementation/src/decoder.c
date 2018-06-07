@@ -24,7 +24,7 @@ ro_buffer new_buffer(const uint8_t* const memory_start, const uint8_t* const mem
 }
 
 
-static inline uint8_t peek_uint_8(ro_buffer* const buffer)
+static inline uint8_t peek_uint_8(const ro_buffer* const buffer)
 {
     return *buffer->pos;
 }
@@ -74,6 +74,21 @@ DEFINE_READ_FUNCTION(long double, float_128)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
 
+static inline int get_array_length_field_width(const ro_buffer* const buffer)
+{
+    switch(peek_uint_8(buffer) & 3)
+    {
+        case LENGTH_FIELD_WIDTH_6_BIT:
+            return 1;
+        case LENGTH_FIELD_WIDTH_14_BIT:
+            return 2;
+        case LENGTH_FIELD_WIDTH_30_BIT:
+            return 4;
+        default:
+            return 8;
+    }
+}
+
 static inline uint64_t get_array_length(ro_buffer* const buffer)
 {
     switch(peek_uint_8(buffer) & 3)
@@ -89,15 +104,27 @@ static inline uint64_t get_array_length(ro_buffer* const buffer)
     }
 }
 
-// static void report_error(cbe_decode_callbacks* callbacks, char* fmt, ...)
-// {
-//  va_list args;
-//  va_start(args, fmt);
-//  char buff[200];
-//  vsprintf(buff, fmt, args);
-//  callbacks->on_error(buff);
-//  va_end(args);
-// }
+static void report_error(cbe_decode_callbacks* callbacks, char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char buff[200];
+    vsprintf(buff, fmt, args);
+    callbacks->on_error(buff);
+    va_end(args);
+}
+
+#define REQUEST_BYTES(TYPE, BYTE_COUNT) \
+if(buffer->pos + (BYTE_COUNT) > buffer->end) \
+{ \
+    report_error(callbacks, "Type %s requires %d bytes, but only %d bytes available", \
+                            TYPE, \
+                            BYTE_COUNT, \
+                            (int)(buffer->end - buffer->pos)); \
+    return NULL; \
+}
+
+static const cbe_number g_for_sizing;
 
 const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end)
 {
@@ -146,12 +173,15 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 if(!callbacks->on_date(&date)) return NULL; \
             }
             case TYPE_DATE_40:
+                REQUEST_BYTES("40-bit date", 40/8)
                 HANDLE_CASE_DATE(read_uint_40(buffer) * DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND)
                 break;
             case TYPE_DATE_48:
+                REQUEST_BYTES("48-bit date", 48/8)
                 HANDLE_CASE_DATE(read_uint_48(buffer) * DATE_MODULO_MICROSECOND)
                 break;
             case TYPE_DATE_64:
+                REQUEST_BYTES("64-bit date", 64/8)
                 HANDLE_CASE_DATE(read_uint_64(buffer))
                 break;
 
@@ -160,14 +190,16 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
             case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_MAX:
             {
-                uint64_t length = type - TYPE_STRING_0;
-                if(!callbacks->on_string((char*)buffer->pos, (char*)buffer->pos + length)) return NULL;
-                buffer->pos += length;
+                uint64_t byte_count = type - TYPE_STRING_0;
+                REQUEST_BYTES("string", byte_count)
+                if(!callbacks->on_string((char*)buffer->pos, (char*)buffer->pos + byte_count)) return NULL;
+                buffer->pos += byte_count;
                 break;
             }
 
             #define HANDLE_CASE_SCALAR(TYPE_UPPERCASE, TYPE_LOWERCASE) \
             { \
+                REQUEST_BYTES(#TYPE_LOWERCASE, sizeof(g_for_sizing.data.TYPE_LOWERCASE)) \
                 cbe_number number = \
                 { \
                     .data = {.TYPE_LOWERCASE = read_ ## TYPE_LOWERCASE(buffer)}, \
@@ -205,9 +237,12 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
 
             #define HANDLE_CASE_ARRAY(TYPE, HANDLER) \
             { \
+                REQUEST_BYTES(#TYPE " array", get_array_length_field_width(buffer)) \
                 uint64_t length = get_array_length(buffer); \
+                uint64_t byte_count = length * sizeof(TYPE); \
+                REQUEST_BYTES(#TYPE " array", byte_count) \
                 if(!callbacks->HANDLER((TYPE*)buffer->pos, (TYPE*)(buffer->pos) + length)) return NULL; \
-                buffer->pos += length * sizeof(TYPE); \
+                buffer->pos += byte_count; \
             }
             case TYPE_ARRAY_STRING:
                 HANDLE_CASE_ARRAY(char, on_string);
@@ -247,14 +282,16 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {
+                REQUEST_BYTES("bitfield", get_array_length_field_width(buffer)) \
                 uint64_t length = get_array_length(buffer);
-                if(!callbacks->on_bitfield(buffer->pos, length)) return NULL;
-                uint64_t bytes = length / 8;
-                if(bytes & 7)
+                uint64_t byte_count = length / 8;
+                if(byte_count & 7)
                 {
-                    bytes++;
+                    byte_count++;
                 }
-                buffer->pos += bytes;
+                REQUEST_BYTES("bitfield", byte_count) \
+                if(!callbacks->on_bitfield(buffer->pos, length)) return NULL;
+                buffer->pos += byte_count;
                 break;
             }
             default:
