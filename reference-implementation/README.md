@@ -3,7 +3,7 @@ Reference Implementation for Concise Binary Encoding
 
 A C implementation to demonstrate a simple CBE codec.
 
-Everything except decimal types are implemented.
+Everything except decimal types are tested.
 
 
 Notes
