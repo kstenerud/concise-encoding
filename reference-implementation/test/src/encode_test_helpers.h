@@ -1,6 +1,7 @@
 #pragma once
 
 #include "test_helpers.h"
+#include "decode_encode.h"
 
 // Internal
 
@@ -95,4 +96,27 @@ inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> con
 TEST(TESTCASE, NAME) \
 { \
     expect_memory_after_add_value(VALUE, __VA_ARGS__); \
+}
+
+#define DEFINE_DECODE_ENCODE_TEST(TESTCASE, NAME, ...) \
+TEST(TESTCASE, NAME) \
+{ \
+    const std::vector<uint8_t> expected = __VA_ARGS__; \
+    expect_memory_after_operation([=](cbe_buffer* buffer) \
+    { \
+        return decode_encode(expected.data(), expected.size(), buffer); \
+    }, \
+     expected); \
+}
+
+#define DEFINE_ENCODE_DECODE_ENCODE_TEST(TESTCASE, NAME, VALUE, ...) \
+TEST(TESTCASE, NAME) \
+{ \
+    const std::vector<uint8_t> expected = __VA_ARGS__; \
+    expect_memory_after_add_value(VALUE, expected); \
+    expect_memory_after_operation([=](cbe_buffer* buffer) \
+    { \
+        return decode_encode(expected.data(), expected.size(), buffer); \
+    }, \
+     expected); \
 }

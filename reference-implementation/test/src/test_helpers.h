@@ -8,11 +8,7 @@
 
 static cbe_buffer create_buffer(uint8_t* memory, int size)
 {
-    uint8_t* memory_start = &memory[0];
-    uint8_t* memory_end = &memory[size];
-    cbe_buffer buffer;
-    cbe_init_buffer(&buffer,  memory_start, memory_end);
-    return buffer;
+    return cbe_new_buffer(memory, memory + size);
 }
 
 template<typename T>

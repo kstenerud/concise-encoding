@@ -139,11 +139,15 @@ static bool add_array(cbe_buffer* const buffer,
 }
 
 
-void cbe_init_buffer(cbe_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end)
+cbe_buffer cbe_new_buffer(uint8_t* const memory_start, uint8_t* const memory_end)
 {
-    buffer->start = memory_start;
-    buffer->end = memory_end;
-    buffer->pos = memory_start;
+    cbe_buffer buffer =
+    {
+        .start = memory_start,
+        .pos = memory_start,
+        .end = memory_end,
+    };
+    return buffer;
 }
 
 bool cbe_add_empty(cbe_buffer* const buffer)

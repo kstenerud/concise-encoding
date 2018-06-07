@@ -20,8 +20,8 @@ extern "C" {
 
 typedef struct
 {
-	uint8_t* start;
-	uint8_t* end;
+	const uint8_t* const start;
+	const uint8_t* const end;
 	uint8_t* pos;
 } cbe_buffer;
 
@@ -39,7 +39,7 @@ typedef struct
 
 const char* cbe_version();
 
-void cbe_init_buffer(cbe_buffer* const buffer, uint8_t* const memory_start, uint8_t* const memory_end);
+cbe_buffer cbe_new_buffer(uint8_t* const memory_start, uint8_t* const memory_end);
 
 bool cbe_add_empty(cbe_buffer* const buffer);
 bool cbe_add_boolean(cbe_buffer* const buffer, const bool value);
@@ -139,7 +139,7 @@ typedef struct {
 } cbe_decode_callbacks;
 
 
-uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, uint8_t* const data_end);
+const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end);
 
 
 #ifdef __cplusplus 
