@@ -3,26 +3,26 @@
 
 inline void expect_memory_after_add_date(const cbe_date* const date, std::vector<uint8_t> const& expected_memory)
 {
-	expect_memory_after_operation([&](cbe_buffer* buffer)
-	{
-		return cbe_add_date(buffer, date);
-	}, expected_memory);
+    expect_memory_after_operation([&](cbe_buffer* buffer)
+    {
+        return cbe_add_date(buffer, date);
+    }, expected_memory);
 }
 
 #define DEFINE_ADD_DATE_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC, ...) \
 TEST(DateTest, date_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-	cbe_date date = \
-	{ \
-		.year = YEAR, \
-		.month = MONTH, \
-		.day = DAY, \
-		.hour = HOUR, \
-		.minute = MINUTE, \
-		.second = SECOND, \
-		.microsecond = USEC \
-	}; \
-	expect_memory_after_add_date(&date, __VA_ARGS__); \
+    cbe_date date = \
+    { \
+        .year = YEAR, \
+        .month = MONTH, \
+        .day = DAY, \
+        .hour = HOUR, \
+        .minute = MINUTE, \
+        .second = SECOND, \
+        .microsecond = USEC \
+    }; \
+    expect_memory_after_add_date(&date, __VA_ARGS__); \
 }
 
 DEFINE_ADD_DATE_TEST(1955, 11, 5, 8, 21, 0, 0, {TYPE_DATE_40, 0x21, 0x34, 0x57, 0xe1, 0x0e})

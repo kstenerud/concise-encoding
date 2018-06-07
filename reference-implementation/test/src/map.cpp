@@ -2,18 +2,18 @@
 
 static void expect_memory_after_add_map(int length, std::vector<uint8_t> expected_memory)
 {
-	expect_memory_after_operation([=](cbe_buffer* buffer)
-	{
-		if(!cbe_start_map(buffer)) return false;
-		for(int i = 0; i < length; i++)
-		{
-			char stringbuffer[2] = {0};
-			stringbuffer[0] = 'a' + i;
-			if(!cbe_add_int_8(buffer, i + 1)) return false;
-			if(!cbe_add_string(buffer, stringbuffer, strlen(stringbuffer))) return false;
-		}
-		return cbe_end_container(buffer);
-	}, expected_memory);
+    expect_memory_after_operation([=](cbe_buffer* buffer)
+    {
+        if(!cbe_start_map(buffer)) return false;
+        for(int i = 0; i < length; i++)
+        {
+            char stringbuffer[2] = {0};
+            stringbuffer[0] = 'a' + i;
+            if(!cbe_add_int_8(buffer, i + 1)) return false;
+            if(!cbe_add_string(buffer, stringbuffer, strlen(stringbuffer))) return false;
+        }
+        return cbe_end_container(buffer);
+    }, expected_memory);
 }
 
 #define DEFINE_ADD_MAP_TEST(LENGTH, ...) \

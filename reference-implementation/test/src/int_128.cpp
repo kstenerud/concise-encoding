@@ -2,7 +2,7 @@
 
 static inline __int128 i128(int64_t high, uint64_t low)
 {
-	return (((__int128)high) << 64) + low;
+    return (((__int128)high) << 64) + low;
 }
 
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int128Test, _0,         (__int128)          0L, {0x00})

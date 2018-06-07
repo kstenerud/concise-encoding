@@ -2,16 +2,16 @@
 
 static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
 {
-	expect_memory_after_operation([=](cbe_buffer* buffer)
-	{
-		if(!cbe_start_list(buffer)) return false;
-		for(int i = 0; i < length; i++)
-		{
-			int value = 10; // Any old number
-			if(!cbe_add_int_8(buffer, value)) return false;
-		}
-		return cbe_end_container(buffer);
-	}, expected_memory);
+    expect_memory_after_operation([=](cbe_buffer* buffer)
+    {
+        if(!cbe_start_list(buffer)) return false;
+        for(int i = 0; i < length; i++)
+        {
+            int value = 10; // Any old number
+            if(!cbe_add_int_8(buffer, value)) return false;
+        }
+        return cbe_end_container(buffer);
+    }, expected_memory);
 }
 
 #define DEFINE_ADD_LIST_TEST(LENGTH, ...) \

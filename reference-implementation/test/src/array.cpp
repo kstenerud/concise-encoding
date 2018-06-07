@@ -3,13 +3,13 @@
 template<typename T>
 static void expect_memory_after_add_array(int length, std::vector<uint8_t> expected_prefix)
 {
-	std::vector<T> entities = make_values_of_length<T>(length);
-	std::vector<uint8_t> expected_memory(expected_prefix);
-	for(auto entity: entities)
-	{
-		add_bytes(expected_memory, entity);
-	}
-	expect_memory_after_add_value(entities, expected_memory);
+    std::vector<T> entities = make_values_of_length<T>(length);
+    std::vector<uint8_t> expected_memory(expected_prefix);
+    for(auto entity: entities)
+    {
+        add_bytes(expected_memory, entity);
+    }
+    expect_memory_after_add_value(entities, expected_memory);
 }
 
 #define DEFINE_ARRAY_WRITE_TEST(NAME, TYPE, LENGTH, ...) \
@@ -38,7 +38,7 @@ DEFINE_ARRAY_TEST_SET(ArrayFloat64Test, double, TYPE_ARRAY_FLOAT_64)
 
 static void expect_memory_after_add_array_boolean(std::vector<bool> entities, std::vector<uint8_t> expected_memory)
 {
-	expect_memory_after_add_value(entities, expected_memory);
+    expect_memory_after_add_value(entities, expected_memory);
 }
 
 #define DEFINE_BOOLEAN_ARRAY_ADD_TEST(NAME, ...) \

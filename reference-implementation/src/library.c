@@ -3,5 +3,5 @@
 
 const char* cbe_version()
 {
-	return CBE_VERSION;
+    return CBE_VERSION;
 }
