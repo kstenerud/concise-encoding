@@ -1,7 +1,7 @@
 #include "test_helpers.h"
 
 template<typename T>
-static void expect_memory_after_add_array(int length, std::vector<uint8_t> expected_prefix)
+static void expect_encode_decode_encode_array(int length, std::vector<uint8_t> expected_prefix)
 {
     std::vector<T> entities = make_values_of_length<T>(length);
     std::vector<uint8_t> expected_memory(expected_prefix);
@@ -12,15 +12,15 @@ static void expect_memory_after_add_array(int length, std::vector<uint8_t> expec
     expect_memory_after_add_value(entities, expected_memory);
 }
 
-#define DEFINE_ARRAY_WRITE_TEST(NAME, TYPE, LENGTH, ...) \
+#define DEFINE_ARRAY_TEST(NAME, TYPE, LENGTH, ...) \
 TEST(NAME, length_ ## LENGTH) \
 { \
-    expect_memory_after_add_array<TYPE>(LENGTH, __VA_ARGS__); \
+    expect_encode_decode_encode_array<TYPE>(LENGTH, __VA_ARGS__); \
 }
 #define DEFINE_ARRAY_TEST_SET(NAME, TYPE, CBE_TYPE) \
-DEFINE_ARRAY_WRITE_TEST(NAME, TYPE, 0, {CBE_TYPE, 0}) \
-DEFINE_ARRAY_WRITE_TEST(NAME, TYPE, 1, {CBE_TYPE, 4}) \
-DEFINE_ARRAY_WRITE_TEST(NAME, TYPE, 2, {CBE_TYPE, 8})
+DEFINE_ARRAY_TEST(NAME, TYPE, 0, {CBE_TYPE, 0}) \
+DEFINE_ARRAY_TEST(NAME, TYPE, 1, {CBE_TYPE, 4}) \
+DEFINE_ARRAY_TEST(NAME, TYPE, 2, {CBE_TYPE, 8})
 
 
 // ######################

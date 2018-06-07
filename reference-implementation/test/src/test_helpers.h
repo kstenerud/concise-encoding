@@ -132,6 +132,15 @@ inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> con
     expect_memory_after_operation([&](cbe_buffer* buffer) {return add_value(buffer, writeValue);}, expected_memory);
 }
 
+inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
+{
+    expect_memory_after_operation([=](cbe_buffer* buffer)
+    {
+        return decode_encode(expected_memory.data(), expected_memory.size(), buffer);
+    },
+     expected_memory);
+}
+
 #define DEFINE_ADD_VALUE_TEST(TESTCASE, NAME, VALUE, ...) \
 TEST(TESTCASE, NAME) \
 { \
@@ -141,22 +150,13 @@ TEST(TESTCASE, NAME) \
 #define DEFINE_DECODE_ENCODE_TEST(TESTCASE, NAME, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> expected = __VA_ARGS__; \
-    expect_memory_after_operation([=](cbe_buffer* buffer) \
-    { \
-        return decode_encode(expected.data(), expected.size(), buffer); \
-    }, \
-     expected); \
+    expect_decode_encode(__VA_ARGS__); \
 }
 
 #define DEFINE_ENCODE_DECODE_ENCODE_TEST(TESTCASE, NAME, VALUE, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> expected = __VA_ARGS__; \
-    expect_memory_after_add_value(VALUE, expected); \
-    expect_memory_after_operation([=](cbe_buffer* buffer) \
-    { \
-        return decode_encode(expected.data(), expected.size(), buffer); \
-    }, \
-     expected); \
+    const std::vector<uint8_t> expected_memory = __VA_ARGS__; \
+    expect_memory_after_add_value(VALUE, expected_memory); \
+    expect_decode_encode(expected_memory); \
 }
