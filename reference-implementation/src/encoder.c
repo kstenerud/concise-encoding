@@ -350,6 +350,34 @@ bool cbe_add_array_float_128(cbe_buffer* const buffer, const long double* const 
     return add_array(buffer, TYPE_ARRAY_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
+bool cbe_add_array_decimal_64(cbe_buffer* const buffer, const _Decimal64* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_ARRAY_DECIMAL_64, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_array_decimal_128(cbe_buffer* const buffer, const _Decimal128* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_ARRAY_DECIMAL_128, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_bitfield(cbe_buffer* const buffer, const uint8_t* const packed_values, const int entity_count)
+{
+    const uint8_t type = TYPE_ARRAY_BOOLEAN;
+    int byte_count = entity_count / 8;
+    if(entity_count & 7)
+    {
+        byte_count++;
+    }
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
+                                    sizeof(type) +
+                                    get_length_field_width(entity_count) +
+                                    byte_count);
+    add_primitive_type(buffer, type);
+    add_primitive_length(buffer, entity_count);
+    add_primitive_bytes(buffer, packed_values, byte_count);
+    return true;
+}
+
 bool cbe_add_array_boolean(cbe_buffer* const buffer, const bool* const values, const int entity_count)
 {
     const uint8_t type = TYPE_ARRAY_BOOLEAN;

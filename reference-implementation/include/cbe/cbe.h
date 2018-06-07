@@ -57,6 +57,7 @@ bool cbe_add_string(cbe_buffer* const buffer, const char* const str, const int b
 bool cbe_start_list(cbe_buffer* const buffer);
 bool cbe_start_map(cbe_buffer* const buffer);
 bool cbe_end_container(cbe_buffer* const buffer);
+bool cbe_add_bitfield(cbe_buffer* const buffer, const uint8_t* const packed_values, const int entity_count);
 bool cbe_add_array_boolean(cbe_buffer* const buffer, const bool* const values, const int entity_count);
 bool cbe_add_array_int_8(cbe_buffer* const buffer, const int8_t* const values, const int entity_count);
 bool cbe_add_array_int_16(cbe_buffer* const buffer, const int16_t* const values, const int entity_count);
