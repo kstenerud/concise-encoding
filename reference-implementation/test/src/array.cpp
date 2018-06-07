@@ -1,4 +1,4 @@
-#include "encode_test_helpers.h"
+#include "test_helpers.h"
 
 template<typename T>
 static void expect_memory_after_add_array(int length, std::vector<uint8_t> expected_prefix)

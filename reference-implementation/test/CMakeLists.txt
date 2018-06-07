@@ -24,23 +24,22 @@ add_executable(cbe_test
                    src/main.cpp
                    src/decode_encode.c
                    src/library.cpp
-                   src/encode_support.cpp
-                   src/encode_bool.cpp
-                   src/encode_int_8.cpp
-                   src/encode_int_16.cpp
-                   src/encode_int_32.cpp
-                   src/encode_int_64.cpp
-                   src/encode_int_128.cpp
-                   src/encode_float_32.cpp
-                   src/encode_float_64.cpp
-                   src/encode_float_128.cpp
-                   src/encode_date.cpp
-                   src/encode_string.cpp
-                   src/encode_list.cpp
-                   src/encode_map.cpp
-                   src/encode_array.cpp
-                   src/encode_empty.cpp
-                   src/decode_int.cpp
+                   src/support.cpp
+                   src/bool.cpp
+                   src/int_8.cpp
+                   src/int_16.cpp
+                   src/int_32.cpp
+                   src/int_64.cpp
+                   src/int_128.cpp
+                   src/float_32.cpp
+                   src/float_64.cpp
+                   src/float_128.cpp
+                   src/date.cpp
+                   src/string.cpp
+                   src/list.cpp
+                   src/map.cpp
+                   src/array.cpp
+                   src/empty.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)

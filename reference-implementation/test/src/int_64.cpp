@@ -1,4 +1,4 @@
-#include "encode_test_helpers.h"
+#include "test_helpers.h"
 
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _0,         (int64_t)          0L, {0x00})
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _1,         (int64_t)          1L, {0x01})

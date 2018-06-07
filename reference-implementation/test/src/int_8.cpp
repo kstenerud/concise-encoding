@@ -1,4 +1,4 @@
-#include "encode_test_helpers.h"
+#include "test_helpers.h"
 
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int8Test, _0,    (int8_t)   0, {0x00})
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int8Test, _1,    (int8_t)   1, {0x01})
