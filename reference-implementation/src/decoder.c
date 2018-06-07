@@ -58,7 +58,7 @@ DEFINE_READ_UINT_IRREGULAR_FUNCTION(48)
 static inline TYPE read_ ## TYPE_SUFFIX(ro_buffer* const buffer) \
 { \
 	const safe_ ## TYPE_SUFFIX* const safe = (safe_ ## TYPE_SUFFIX*)buffer->pos; \
-	buffer->pos += sizeof(safe); \
+	buffer->pos += sizeof(*safe); \
 	return safe->contents; \
 }
 DEFINE_READ_FUNCTION(uint16_t,    uint_16)
@@ -166,12 +166,12 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
 		        break;
 		    }
 
-		    #define HANDLE_CASE_SCALAR(TYPE_UPPER, TYPE_LOWER) \
+		    #define HANDLE_CASE_SCALAR(TYPE_UPPERCASE, TYPE_LOWERCASE) \
 			{ \
 		    	cbe_number number = \
 		    	{ \
-		    		.data = {.TYPE_LOWER = read_ ## TYPE_LOWER(buffer)}, \
-		    		.type = CBE_NUMERIC_ ## TYPE_UPPER \
+		    		.data = {.TYPE_LOWERCASE = read_ ## TYPE_LOWERCASE(buffer)}, \
+		    		.type = CBE_NUMERIC_ ## TYPE_UPPERCASE \
 		    	}; \
 		    	if(!callbacks->on_number(number)) return NULL; \
 		    }
