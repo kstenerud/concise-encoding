@@ -146,10 +146,10 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 if(!callbacks->on_date(&date)) return NULL; \
             }
             case TYPE_DATE_40:
-                HANDLE_CASE_DATE(read_uint_40(buffer) * DATE_MULTIPLIER_MILLISECOND * DATE_MULTIPLIER_MICROSECOND)
+                HANDLE_CASE_DATE(read_uint_40(buffer) * DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND)
                 break;
             case TYPE_DATE_48:
-                HANDLE_CASE_DATE(read_uint_48(buffer) * DATE_MULTIPLIER_MICROSECOND)
+                HANDLE_CASE_DATE(read_uint_48(buffer) * DATE_MODULO_MICROSECOND)
                 break;
             case TYPE_DATE_64:
                 HANDLE_CASE_DATE(read_uint_64(buffer))
