@@ -43,6 +43,24 @@ inline void expect_memory_after_operation(std::function<bool(cbe_buffer* buffer)
     EXPECT_EQ(expected_memory, actual_memory);
 }
 
+inline void expect_failed_operation(const int buffer_size, std::function<bool(cbe_buffer* buffer)> operation)
+{
+    uint8_t data[buffer_size];
+    memset(data, 0xf7, buffer_size);
+    cbe_buffer buffer = create_buffer(data, buffer_size);
+    bool success = operation(&buffer);
+    fflush(stdout);
+    EXPECT_FALSE(success);
+}
+
+inline void expect_failed_operation_decrementing(const int buffer_size, std::function<bool(cbe_buffer* buffer)> operation)
+{
+    for(int size = buffer_size; size >= 0; size--)
+    {
+        expect_failed_operation(size, operation);
+    }
+}
+
 // Internal
 
 template <typename T>
@@ -141,6 +159,24 @@ inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
      expected_memory);
 }
 
+template<typename T>
+inline void expect_add_value_fail(const int buffer_size, T writeValue)
+{
+    expect_failed_operation(buffer_size, [&](cbe_buffer* buffer) \
+    { \
+        return add_value(buffer, writeValue); \
+    }); \
+}
+
+template<typename T>
+inline void expect_add_value_fail_decrementing(const int buffer_size, T writeValue)
+{
+    expect_failed_operation_decrementing(buffer_size, [&](cbe_buffer* buffer) \
+    { \
+        return add_value(buffer, writeValue); \
+    }); \
+}
+
 #define DEFINE_ADD_VALUE_TEST(TESTCASE, NAME, VALUE, ...) \
 TEST(TESTCASE, NAME) \
 { \
@@ -159,4 +195,10 @@ TEST(TESTCASE, NAME) \
     const std::vector<uint8_t> expected_memory = __VA_ARGS__; \
     expect_memory_after_add_value(VALUE, expected_memory); \
     expect_decode_encode(expected_memory); \
+}
+
+#define DEFINE_FAILED_ADD_TEST(TESTCASE, NAME, SIZE, VALUE) \
+TEST(TESTCASE, NAME) \
+{ \
+    expect_add_value_fail_decrementing(SIZE, VALUE); \
 }

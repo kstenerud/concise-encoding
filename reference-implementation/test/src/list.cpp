@@ -28,3 +28,13 @@ DEFINE_ADD_LIST_TEST(2, {TYPE_LIST, 10, 10, TYPE_END_CONTAINER})
 DEFINE_ADD_LIST_TEST(3, {TYPE_LIST, 10, 10, 10, TYPE_END_CONTAINER})
 DEFINE_ADD_LIST_TEST(4, {TYPE_LIST, 10, 10, 10, 10, TYPE_END_CONTAINER})
 DEFINE_ADD_LIST_TEST(5, {TYPE_LIST, 10, 10, 10, 10, 10, TYPE_END_CONTAINER})
+
+TEST(ListTest, failed)
+{
+    expect_failed_operation_decrementing(2, [&](cbe_buffer* buffer)
+    {
+        cbe_start_list(buffer);
+        cbe_add_int_8(buffer, 0);
+        return cbe_end_container(buffer);
+    });
+}

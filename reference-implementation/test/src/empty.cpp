@@ -9,3 +9,10 @@ TEST(EmptyTest, empty)
     }, expected_memory);
     expect_decode_encode(expected_memory);
 }
+
+TEST(EmptyTest, failed)
+{
+    expect_failed_operation(0, [](cbe_buffer* buffer) {
+        return cbe_add_empty(buffer);
+    });
+}

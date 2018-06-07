@@ -19,3 +19,5 @@ DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _80000000,  (int64_t) 0x80000000L, {
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _n80000001, (int64_t)-0x80000001L, {TYPE_INT_64, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff})
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _7fffffffffffffff,  (int64_t) 0x7fffffffffffffffL, {TYPE_INT_64, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f})
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int64Test, _n8000000000000000, (int64_t)-0x8000000000000000L, {TYPE_INT_64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80})
+
+DEFINE_FAILED_ADD_TEST(Int64Test, add_fail, 7, 0x7fffffffffffffffL)

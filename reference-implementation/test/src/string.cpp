@@ -39,6 +39,12 @@ static void expect_memory_string(int length, std::vector<uint8_t> length_field_v
     expect_decode_encode(expected_memory);
 }
 
+static void expect_failed_string(int buffer_length, int string_length)
+{
+    std::string str = make_string_with_length(string_length);
+
+}
+
 #define DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(LENGTH) \
 TEST(StringTest, inferred_length_ ## LENGTH) \
 { \
@@ -49,6 +55,12 @@ TEST(StringTest, inferred_length_ ## LENGTH) \
 TEST(StringTest, length_ ## LENGTH) \
 { \
     expect_memory_string(LENGTH, __VA_ARGS__); \
+}
+
+#define DEFINE_FAILED_ADD_STRING_TEST(SIZE) \
+TEST(StringTest, failed_length_ ## SIZE) \
+{ \
+    expect_failed_string(SIZE - 1, SIZE); \
 }
 
 DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(0)
@@ -76,3 +88,22 @@ DEFINE_ADD_STRING_TEST(    64, {0x01, 0x01});
 DEFINE_ADD_STRING_TEST(    65, {0x05, 0x01});
 DEFINE_ADD_STRING_TEST(0x3fff, {0xfd, 0xff});
 DEFINE_ADD_STRING_TEST(0x4000, {0x02, 0x00, 0x01, 0x00});
+
+DEFINE_FAILED_ADD_STRING_TEST(1)
+DEFINE_FAILED_ADD_STRING_TEST(2)
+DEFINE_FAILED_ADD_STRING_TEST(3)
+DEFINE_FAILED_ADD_STRING_TEST(4)
+DEFINE_FAILED_ADD_STRING_TEST(5)
+DEFINE_FAILED_ADD_STRING_TEST(6)
+DEFINE_FAILED_ADD_STRING_TEST(7)
+DEFINE_FAILED_ADD_STRING_TEST(8)
+DEFINE_FAILED_ADD_STRING_TEST(9)
+DEFINE_FAILED_ADD_STRING_TEST(10)
+DEFINE_FAILED_ADD_STRING_TEST(11)
+DEFINE_FAILED_ADD_STRING_TEST(12)
+DEFINE_FAILED_ADD_STRING_TEST(13)
+DEFINE_FAILED_ADD_STRING_TEST(14)
+DEFINE_FAILED_ADD_STRING_TEST(15)
+DEFINE_FAILED_ADD_STRING_TEST(16)
+DEFINE_FAILED_ADD_STRING_TEST(17)
+DEFINE_FAILED_ADD_STRING_TEST(0x1000)

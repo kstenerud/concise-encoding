@@ -28,3 +28,14 @@ DEFINE_ADD_MAP_TEST(0, {TYPE_MAP, TYPE_END_CONTAINER})
 DEFINE_ADD_MAP_TEST(1, {TYPE_MAP, 1, TYPE_STRING_1, 'a', TYPE_END_CONTAINER})
 DEFINE_ADD_MAP_TEST(2, {TYPE_MAP, 1, TYPE_STRING_1, 'a', 2, TYPE_STRING_1, 'b', TYPE_END_CONTAINER})
 DEFINE_ADD_MAP_TEST(3, {TYPE_MAP, 1, TYPE_STRING_1, 'a', 2, TYPE_STRING_1, 'b', 3, TYPE_STRING_1, 'c', TYPE_END_CONTAINER})
+
+TEST(MapTest, failed)
+{
+    expect_failed_operation_decrementing(3, [&](cbe_buffer* buffer)
+    {
+        cbe_start_list(buffer);
+        cbe_add_int_8(buffer, 0);
+        cbe_add_int_8(buffer, 0);
+        return cbe_end_container(buffer);
+    });
+}
