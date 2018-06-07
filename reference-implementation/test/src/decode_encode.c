@@ -44,7 +44,7 @@ static bool on_number(cbe_number value)
         case CBE_NUMERIC_DECIMAL_64:
             return cbe_add_decimal_64(g_buffer, value.data.decimal_64);
         case CBE_NUMERIC_DECIMAL_128:
-            // TODO
+            return cbe_add_decimal_128(g_buffer, value.data.decimal_64);
             break;
 #endif
     }
