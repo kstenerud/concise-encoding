@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <cbe/cbe.h>
-#include <cbe_internal.h>
 #include "decode_encode.h"
 
 static cbe_buffer create_buffer(uint8_t* memory, int size)

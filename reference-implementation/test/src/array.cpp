@@ -40,14 +40,14 @@ TEST(ArrayFail, type_ ## TYPE) \
 
 // ######################
 
-DEFINE_ARRAY_TEST_SET(ArrayInt8Test, int8_t, TYPE_ARRAY_INT_8)
-DEFINE_ARRAY_TEST_SET(ArrayInt16Test, int16_t, TYPE_ARRAY_INT_16)
-DEFINE_ARRAY_TEST_SET(ArrayInt32Test, int32_t, TYPE_ARRAY_INT_32)
-DEFINE_ARRAY_TEST_SET(ArrayInt64Test, int64_t, TYPE_ARRAY_INT_64)
-DEFINE_ARRAY_TEST_SET(ArrayInt128Test, __int128, TYPE_ARRAY_INT_128)
-DEFINE_ARRAY_TEST_SET(ArrayFloat32Test, float, TYPE_ARRAY_FLOAT_32)
-DEFINE_ARRAY_TEST_SET(ArrayFloat64Test, double, TYPE_ARRAY_FLOAT_64)
-// DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, long double, TYPE_FLOAT_128)
+DEFINE_ARRAY_TEST_SET(ArrayInt8Test, int8_t, 0x82)
+DEFINE_ARRAY_TEST_SET(ArrayInt16Test, int16_t, 0x83)
+DEFINE_ARRAY_TEST_SET(ArrayInt32Test, int32_t, 0x84)
+DEFINE_ARRAY_TEST_SET(ArrayInt64Test, int64_t, 0x85)
+DEFINE_ARRAY_TEST_SET(ArrayInt128Test, __int128, 0x86)
+DEFINE_ARRAY_TEST_SET(ArrayFloat32Test, float, 0x87)
+DEFINE_ARRAY_TEST_SET(ArrayFloat64Test, double, 0x88)
+// DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, long double, 0x89)
 
 static void expect_memory_after_add_array_boolean(std::vector<bool> entities, std::vector<uint8_t> expected_memory)
 {
@@ -60,11 +60,11 @@ TEST(BooleanArrayTest, NAME) \
     expect_memory_after_add_array_boolean(__VA_ARGS__); \
 }
 
-DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_0, {}, {TYPE_ARRAY_BOOLEAN, 0x00})
-DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_1, {true}, {TYPE_ARRAY_BOOLEAN, 0x04, 0x01})
-DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_2, {true, true}, {TYPE_ARRAY_BOOLEAN, 0x08, 0x03})
-DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_3, {true, false, true}, {TYPE_ARRAY_BOOLEAN, 0x0c, 0x05})
-DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_9, {true, false, true, false, false, true, false, true, true}, {TYPE_ARRAY_BOOLEAN, 0x24, 0xa5, 0x01})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_0, {}, {0x81, 0x00})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_1, {true}, {0x81, 0x04, 0x01})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_2, {true, true}, {0x81, 0x08, 0x03})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_3, {true, false, true}, {0x81, 0x0c, 0x05})
+DEFINE_BOOLEAN_ARRAY_ADD_TEST(size_9, {true, false, true, false, false, true, false, true, true}, {0x81, 0x24, 0xa5, 0x01})
 
 DEFINE_FAILED_ARRAY_TEST(int8_t)
 DEFINE_FAILED_ARRAY_TEST(int16_t)

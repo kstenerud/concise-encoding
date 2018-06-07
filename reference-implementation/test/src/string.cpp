@@ -21,7 +21,7 @@ static void expect_memory_string_inferred_length(int length)
 {
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
-    uint8_t type = TYPE_STRING_0 + length;
+    uint8_t type = 0x70 + length;
     expected_memory.insert(expected_memory.begin(), type);
     expect_memory_after_add_value(str, expected_memory);
     expect_decode_encode(expected_memory);
@@ -31,7 +31,7 @@ static void expect_memory_string(int length, std::vector<uint8_t> length_field_v
 {
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
-    uint8_t type = TYPE_ARRAY_STRING;
+    uint8_t type = 0x80;
     // TODO: Update this to use arrays
     expected_memory.insert(expected_memory.begin(), length_field_values.begin(), length_field_values.end());
     expected_memory.insert(expected_memory.begin(), type);
