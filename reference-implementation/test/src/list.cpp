@@ -1,6 +1,6 @@
 #include "test_helpers.h"
 
-static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
+static void expect_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
 {
     expect_memory_after_operation([=](cbe_buffer* buffer)
     {
@@ -17,7 +17,9 @@ static void expecte_memory_after_add_list(int length, std::vector<uint8_t> expec
 #define DEFINE_ADD_LIST_TEST(LENGTH, ...) \
 TEST(ListTest, length_ ## LENGTH) \
 { \
-    expecte_memory_after_add_list(LENGTH, __VA_ARGS__); \
+    std::vector<uint8_t> expected_memory = __VA_ARGS__; \
+    expect_memory_after_add_list(LENGTH, expected_memory); \
+    expect_decode_encode(expected_memory); \
 }
 
 DEFINE_ADD_LIST_TEST(0, {TYPE_LIST, TYPE_END_CONTAINER})

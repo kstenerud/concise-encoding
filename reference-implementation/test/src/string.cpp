@@ -17,16 +17,17 @@ static std::string make_string_with_length(int length)
     return stream.str();
 }
 
-static void expect_memory_after_add_string_inferred_length(int length)
+static void expect_memory_string_inferred_length(int length)
 {
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
     uint8_t type = TYPE_STRING_0 + length;
     expected_memory.insert(expected_memory.begin(), type);
     expect_memory_after_add_value(str, expected_memory);
+    expect_decode_encode(expected_memory);
 }
 
-static void expect_memory_after_add_string(int length, std::vector<uint8_t> length_field_values)
+static void expect_memory_string(int length, std::vector<uint8_t> length_field_values)
 {
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
@@ -35,18 +36,19 @@ static void expect_memory_after_add_string(int length, std::vector<uint8_t> leng
     expected_memory.insert(expected_memory.begin(), length_field_values.begin(), length_field_values.end());
     expected_memory.insert(expected_memory.begin(), type);
     expect_memory_after_add_value(str, expected_memory);
+    expect_decode_encode(expected_memory);
 }
 
 #define DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(LENGTH) \
 TEST(StringTest, inferred_length_ ## LENGTH) \
 { \
-    expect_memory_after_add_string_inferred_length(LENGTH); \
+    expect_memory_string_inferred_length(LENGTH); \
 }
 
 #define DEFINE_ADD_STRING_TEST(LENGTH, ...) \
 TEST(StringTest, length_ ## LENGTH) \
 { \
-    expect_memory_after_add_string(LENGTH, __VA_ARGS__); \
+    expect_memory_string(LENGTH, __VA_ARGS__); \
 }
 
 DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(0)

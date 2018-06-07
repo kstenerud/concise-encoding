@@ -19,7 +19,9 @@ static void expect_memory_after_add_map(int length, std::vector<uint8_t> expecte
 #define DEFINE_ADD_MAP_TEST(LENGTH, ...) \
 TEST(MapTest, length_ ## LENGTH) \
 { \
-    expect_memory_after_add_map(LENGTH, __VA_ARGS__); \
+    std::vector<uint8_t> expected_memory = __VA_ARGS__; \
+    expect_memory_after_add_map(LENGTH, expected_memory); \
+    expect_decode_encode(expected_memory); \
 }
 
 DEFINE_ADD_MAP_TEST(0, {TYPE_MAP, TYPE_END_CONTAINER})
