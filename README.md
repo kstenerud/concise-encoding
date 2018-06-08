@@ -56,7 +56,7 @@ Containers can store any type, including other containers. They can also contain
 
 
 
-See [the specification](cbe_specification.md) for more details.
+See [the specification](cbe-specification.md) for more details.
 
 
 Specification released under Creative Commons Attribution 4.0 International Public License.
