@@ -155,7 +155,12 @@ Types
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. A decoder must read it and discard it. An encooder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads off the buffer.
+The padding type has no semantic meaning; its only purpose is for memory alignment. A decoder must read it and discard it. An encoder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads off the buffer.
+
+Example:
+
+    [6f 6f 6f 84 02 61 11 00 ff ff ff 7f fe ff ff 7f ...] =
+    Array of 10,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded to begin on a 4-byte boundary.
 
 
 ### Empty Type
@@ -181,7 +186,7 @@ Examples:
 
 Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
 
-Values from -100 to 100 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
+Values from -104 to 103 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
 
 Examples:
@@ -296,18 +301,17 @@ The array length field is an unsigned integer that represents the number of elem
 
 The two lowest bits are the width code, and determine the full field width:
 
-| Code |  Width  | Bit Layout in Memory (little endian) W = width bit, L = length bit      |
+| Code |  Width  | Bit Layout in Memory (little endian) LSB to the left, L = length bit    |
 | ---- | ------- | ----------------------------------------------------------------------- |
-|   0  |  6 bits | WWLLLLLL                                                                |
-|   1  | 14 bits | WWLLLLLL LLLLLLLL                                                       |
-|   2  | 30 bits | WWLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL                                     |
-|   3  | 62 bits | WWLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL |
+|   0  |  6 bits | 00LLLLLL                                                                |
+|   1  | 14 bits | 10LLLLLL LLLLLLLL                                                       |
+|   2  | 30 bits | 01LLLLLL LLLLLLLL LLLLLLLL LLLLLLLL                                     |
+|   3  | 62 bits | 11LLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL |
 
 To read the length:
 
-  * Read the first byte to get the width subfield.
-  * Read from the same location as an unsigned integer of the appropriate width.
-  * Shift "right" by 2 ( length = value >> 2 ).
+  * Read the first byte, lower 2 bits to get the width subfield ( width = byte & 3 ).
+  * Read from the same location as an unsigned integer of the correct width and shift "right" by 2 ( length = value >> 2 ).
 
 Examples:
 
@@ -379,7 +383,7 @@ Illegal encodings must not be used, as they will cause problems or even API viol
 
   * Dates must be valid. For example: February 31st, while technically encodable, is not allowed.
   * Map keys must not be container types or the EMPTY type.
-  * Maps must not contain duplicate keys. This includes keys that resolve to the same value.
+  * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the exact same value.
   * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY are not allowed.
 
 
