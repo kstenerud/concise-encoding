@@ -323,11 +323,11 @@ Boolean arrays are encoded as little endian bitfields (least significant bit fir
 Bitfields start at the low bit (0) of the first byte, and end on one of the bits in byte (n/8)-1 (remember: array unit is bits, not bytes). Bits in the higher positions of the last byte are cleared.
 
 |     |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
-|     | -------- | -------- | --- | ------------ |
+| --- | -------- | -------- | --- | ------------ |
 | Bit | 01234567 | 01234567 | ... | 01234xxx     |
 |     | <- LSB   |          |     | MSB ->       |
 
-For example: 
+For example:
 
     [81 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
