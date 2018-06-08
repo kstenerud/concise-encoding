@@ -341,7 +341,7 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
 Examples:
 
     [7b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
-    [7c 52 6f 64 65 6c 73 74 72 61 c3 9f 65] = Rodelstraße
+    [7d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [80 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
