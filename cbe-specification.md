@@ -350,21 +350,23 @@ Examples:
 
 Implementations requiring null-terminated strings can modify the underlying buffer after extracting values and offsets.
 
-Example: Map containing "a": 1, "b": 2
+Example: Map containing {"alpha": 1, "beta": 2}
 
 Original data:
 
-| 0   | 1      | 2   | 3  | 4      | 5   |  6 |  7            |
-| --- | ------ | --- | -- | ------ | --- | -- | ------------- |
-| 6d  | 71     | 61  | 01 | 71     | 62  | 02 | 6e            |
-| Map | String | "a" | 1  | String | "b" | 2  | End container |
+| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7  | 8      | 9  | 10 | 11 | 12 | 13 | 14            |
+| --- | ------ | -- | -- | -- | -- | -- | -- | ------ | -- | -- | -- | -- | -- | ------------- |
+| 6d  | 75     | 61 | 6c | 70 | 68 | 61 | 01 | 74     | 62 | 65 | 74 | 61 | 02 | 6e            |
+| Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
 
-After applying null termination:
+First, extract data, including pointers to offset 2 ("alpha") and offset 9 ("beta").
 
-| 0   | 1      | 2   | 3   | 4      | 5   |  6  |  7            |
-| --- | ------ | --- | --- | ------ | --- | --- | ------------- |
-| 6d  | 71     | 61  | 00  | 71     | 62  | 00  | 6e            |
-| Map | String | "a" | nul | String | "b" | nul | End container |
+Next, apply null termination:
+
+| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7   | 8      | 9  | 10 | 11 | 12 | 13  | 14            |
+| --- | ------ | -- | -- | -- | -- | -- | --- | ------ | -- | -- | -- | -- | --- | ------------- |
+| 6d  | 75     | 61 | 6c | 70 | 68 | 61 | 00  | 74     | 62 | 65 | 74 | 61 | 00  | 6e            |
+| Map | String | a  | l  | p  | h  | a  | nul | String | b  | e  | t  | a  | nul | End container |
 
 
 ### List Type
