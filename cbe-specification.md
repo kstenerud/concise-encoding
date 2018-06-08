@@ -340,7 +340,7 @@ For example:
 
 Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), not the character length.
 
-For byte lengths from 0 to 15, there are special top-level inferred-length string type values. For larger strings, use the array encoding.
+For byte lengths from 0 to 15, there are special top-level inferred-length string types. For larger strings, use the array type.
 
 Examples:
 
@@ -384,7 +384,8 @@ Illegal encodings must not be used, as they will cause problems or even API viol
   * Dates must be valid. For example: February 31st, while technically encodable, is not allowed.
   * Map keys must not be container types or the EMPTY type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the exact same value.
-  * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY are not allowed.
+  * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY, are not allowed.
+  * An array's length field must match the length of its data.
 
 
 
@@ -393,7 +394,7 @@ Smallest Possible Size
 
 Preservation of the original data width information is not considered important by default. Encoders are encouraged to find the smallest width of the same data type that stores a value without loss.
 
-For specialized applications, an encoder implementation may choose to preserve larger type widths as a tradeoff in processing cost vs data size. This must not be considered illegal by a decoder.
+For specialized applications, an encoder implementation may choose to preserve larger type widths as a tradeoff in processing cost vs data size.
 
 
 
