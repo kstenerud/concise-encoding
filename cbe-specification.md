@@ -173,8 +173,8 @@ True or false. As the data itself is stored in the type field, there is no paylo
 
 Examples:
 
-    [68] = false
-    [69] = true
+    [96] = false
+    [97] = true
 
 
 ### Integer Type
@@ -189,9 +189,9 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [8f 00 7f] = 127
-    [90 40 42 0f 00] = 1,000,000
-    [91 00 f0 5a 2b 17 ff ff ff] = -1000000000000
+    [8d 00 7f] = 127
+    [8e 40 42 0f 00] = 1,000,000
+    [8f 00 f0 5a 2b 17 ff ff ff] = -1000000000000
 
 
 ### Floating Point Type
@@ -200,8 +200,8 @@ IEEE 754 binary floating point types, at 32, 64, or 128 bits wide. They can be r
 
 Examples:
 
-    [93 00 00 48 41] = 12.5
-    [94 66 66 66 66 66 42 A0 40] = 1281.2
+    [91 00 00 48 41] = 12.5
+    [92 66 66 66 66 66 42 A0 40] = 1281.2
 
 
 ### Decimal Type
@@ -210,7 +210,7 @@ IEEE 754 decimal64 and decimal128 types, used in financial applications where em
 
 Example:
 
-    [9a D0 03 00 00 00 00 30 A2] = -7.50
+    [94 D0 03 00 00 00 00 30 A2] = -7.50
 
 
 ### Date Type
@@ -242,7 +242,7 @@ Date fields can be extracted as follows:
 
 Example:
 
-    [6a 21 34 57 e1 0e] = 1955-11-05T08:21:00Z = Nov 5th, 1955 08:21:00 GMT
+    [69 21 34 57 e1 0e] = 1955-11-05T08:21:00Z = Nov 5th, 1955 08:21:00 GMT
 
 
 #### 48-bit Microsecond Timestamp
@@ -259,7 +259,7 @@ Example:
 
 Example:
 
-    [6b 12 55 a3 6b e8 3b] = 2015-10-21T14:28:09.714Z = Oct 21st, 2015 14:28:09.714 GMT
+    [6a 12 55 a3 6b e8 3b] = 2015-10-21T14:28:09.714Z = Oct 21st, 2015 14:28:09.714 GMT
 
 
 #### 64-bit Nanosecond Timestamp
@@ -277,7 +277,7 @@ Example:
 
 Example:
 
-    [6c ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
+    [6b ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
 ### Array Type
@@ -310,10 +310,10 @@ To read the length:
   * Shift "right" by 2 ( length = value >> 2 ).
 
 Examples:
-FIXME
+
     [87 00] Array of 32-bit floats, length 0.
-    [83 03 18 fc 00 00 e8 03] Array of 16-bit integers, length 2, contents (-1000, 0, 1000).
-    [88 fd e8 03 ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
+    [83 0c 18 fc 00 00 e8 03] Array of 16-bit integers, length 3, contents (-1000, 0, 1000).
+    [88 a0 0f ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
 
 
 #### Special Case: Boolean Array
@@ -325,11 +325,11 @@ Bitfields start at the low bit (0) of the first byte, and end on one of the bits
 |     |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
 |     | -------- | -------- | --- | ------------ |
 | Bit | 01234567 | 01234567 | ... | 01234xxx     |
-|     | <- LSB                     MSB ->        |
+|     | <- LSB   |          |     | MSB ->       |
 
 For example: 
 
-    [81 0c 29 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
+    [81 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
 
 ### String Type
@@ -342,7 +342,7 @@ Examples:
 
     [7b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [7c 52 6f 64 65 6c 73 74 72 61 c3 9f 65] = Rodelstraße
-    [80 15 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [80 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### List Type
@@ -353,7 +353,7 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    [6d 01 91 88 13 6f] = List containing integers (1, 5000)
+    [6c 01 8d 88 13 6e] = List containing integers (1, 5000)
 
 
 ### Map Type
@@ -362,13 +362,13 @@ A map associates objects (keys) with other objects (values). Keys may be scalar 
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
-    [6e] [key 1] [value 1] [key 2] [value 2] ... [6f]
+    [6d] [key 1] [value 1] [key 2] [value 2] ... [6e]
 
 All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys in the same map.
 
 Example:
 
-    [6e 71 61 01 71 62 02 6f] = Map containg the key-value pairs ("a", 1) ("b", 2)
+    [6d 71 61 01 71 62 02 6e] = Map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 
