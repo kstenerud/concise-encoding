@@ -159,8 +159,8 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [6f 6f 6f 84 02 61 11 00 ff ff ff 7f fe ff ff 7f ...] =
-    Array of 10,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded to begin on a 4-byte boundary.
+    [6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
+    Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded to begin on a 4-byte boundary.
 
 
 ### Empty Type
@@ -397,6 +397,30 @@ For specialized applications, an encoder implementation may choose to preserve l
 
 
 
+Alignment
+---------
+
+Applications may require data to be aligned in some cases. For example, some processors cannot read unaligned multibyte data types without compiler intervention. Others can read the data unaligned, but may take more processing time to do so. An encoder could be tuned to insert PADDING bytes when encoding certain types.
+
+This can be especially beneficial for arrays, where the cost of a little upfront padding overhead makes the entire array more efficient to read.
+
+    read_data(buffer, buffer_length);
+
+|  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | ... |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --- |
+| 6f | 6f | 6f | 84 | 80 | 38 | 01 | 00 | ff | ff | ff | 7f | fe | ff | ff | 7f | ... |
+
+Alternatively, if you have a known schema for your data, you could structure your read offset on the decoder end such that the data just happens to align correctly:
+
+    read_data(buffer+3, buffer_length-3);
+
+| Bytes 0-3      | Bytes 4-7     | Bytes 8-11  | Bytes 12-15 | ... |
+| -------------- | ------------- | ----------- | ----------- | --- |
+| xx xx xx 84    | 80 38 01 00   | ff ff ff 7f | fe ff ff 7f | ... |
+| Array of int32 | Length 20,000 | 0x7fffffff  | 0x7ffffffe  | ... |
+
+
+
 File Format
 -----------
 
@@ -424,4 +448,9 @@ For example, a file encoded in CBE format version 1 would begin with the header 
 
 ### Encoded Object
 
-The encoded data following the header must be a single top-level object. You can store multiple objects by using a collection or array as the "single" object.
+The encoded data following the header must contain zero or more padding bytes followed by a single top-level object. You can store multiple objects by using a collection or array as the "single" object.
+
+Example:
+
+    [43 42 45 01 6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
+    CBE file containing an array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded to begin on a 4-byte boundary.
