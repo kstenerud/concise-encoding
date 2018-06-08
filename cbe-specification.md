@@ -348,6 +348,24 @@ Examples:
     [7d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [80 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
+Implementations requiring null-terminated strings can modify the underlying buffer after extracting values and offsets.
+
+Example: Map containing "a": 1, "b": 2
+
+Original data:
+
+| 0   | 1      | 2   | 3  | 4      | 5   |  6 |  7            |
+| --- | ------ | --- | -- | ------ | --- | -- | ------------- |
+| 6d  | 71     | 61  | 01 | 71     | 62  | 02 | 6e            |
+| Map | String | "a" | 1  | String | "b" | 2  | End container |
+
+After applying null termination:
+
+| 0   | 1      | 2   | 3   | 4      | 5   |  6  |  7            |
+| --- | ------ | --- | --- | ------ | --- | --- | ------------- |
+| 6d  | 71     | 61  | 00  | 71     | 62  | 00  | 6e            |
+| Map | String | "a" | nul | String | "b" | nul | End container |
+
 
 ### List Type
 
