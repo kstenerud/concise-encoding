@@ -1,0 +1,1 @@
+#define CTE_VERSION "${PROJECT_VERSION}"
