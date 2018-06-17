@@ -47,7 +47,7 @@ DEFINE_ARRAY_TEST_SET(ArrayInt64Test, int64_t, 0x85)
 DEFINE_ARRAY_TEST_SET(ArrayInt128Test, __int128, 0x86)
 DEFINE_ARRAY_TEST_SET(ArrayFloat32Test, float, 0x87)
 DEFINE_ARRAY_TEST_SET(ArrayFloat64Test, double, 0x88)
-// DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, long double, 0x89)
+// DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, __float128, 0x89)
 
 static void expect_memory_after_add_array_boolean(std::vector<bool> entities, std::vector<uint8_t> expected_memory)
 {

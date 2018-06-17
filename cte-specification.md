@@ -12,6 +12,8 @@ Number:
  * 755o
  * 10001011b
 
+b, o, h, d
+
 Empty: empty
 
 List: [a, b, c]
@@ -34,3 +36,5 @@ Array: type(a, b, c)
  * d64, d128
  * b
  * ts, tm, tu
+
+1, 2, 4, 8 16

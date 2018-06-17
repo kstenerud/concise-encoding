@@ -116,7 +116,7 @@ bool on_array_float_64(const double* start, const double* end)
     return cbe_add_array_float_64(g_buffer, start, end - start);
 }
 
-bool on_array_float_128(const long double* start, const long double* end)
+bool on_array_float_128(const __float128* start, const __float128* end)
 {
     return cbe_add_array_float_128(g_buffer, start, end - start);
 }

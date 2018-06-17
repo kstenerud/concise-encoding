@@ -161,7 +161,7 @@ bool cbe_add_float_64(cbe_buffer* const buffer, const double value);
  * @param value The value to add.
  * @return true if the operation was successful.
  */
-bool cbe_add_float_128(cbe_buffer* const buffer, const long double value);
+bool cbe_add_float_128(cbe_buffer* const buffer, const __float128 value);
 
 /**
  * Add a date value to the buffer.
@@ -307,7 +307,7 @@ bool cbe_add_array_float_64(cbe_buffer* const buffer, const double* const values
  * @param entity_count The number of values to add.
  * @return true if the operation was successful.
  */
-bool cbe_add_array_float_128(cbe_buffer* const buffer, const long double* const values, const int entity_count);
+bool cbe_add_array_float_128(cbe_buffer* const buffer, const __float128* const values, const int entity_count);
 
 #if CBE_HAS_DECIMAL_SUPPORT
 /**
@@ -386,7 +386,7 @@ typedef struct
 		__int128 int_128;
 		float float_32;
 		double float_64;
-		long double float_128;
+		__float128 float_128;
 #if CBE_HAS_DECIMAL_SUPPORT
 		_Decimal64 decimal_64;
 		_Decimal128 decimal_128;
@@ -418,7 +418,7 @@ typedef struct {
 	bool (*on_array_int_128)(const __int128* start, const __int128* end);
 	bool (*on_array_float_32)(const float* start, const float* end);
 	bool (*on_array_float_64)(const double* start, const double* end);
-	bool (*on_array_float_128)(const long double* start, const long double* end);
+	bool (*on_array_float_128)(const __float128* start, const __float128* end);
 #if CBE_HAS_DECIMAL_SUPPORT
 	bool (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
 	bool (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);

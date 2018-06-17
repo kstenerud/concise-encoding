@@ -101,7 +101,7 @@ DEFINE_SAFE_STRUCT(safe_int_64,      int64_t);
 DEFINE_SAFE_STRUCT(safe_int_128,     __int128);
 DEFINE_SAFE_STRUCT(safe_float_32,    float);
 DEFINE_SAFE_STRUCT(safe_float_64,    double);
-DEFINE_SAFE_STRUCT(safe_float_128,   long double);
+DEFINE_SAFE_STRUCT(safe_float_128,   __float128);
 #if CBE_HAS_DECIMAL_SUPPORT
 DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);

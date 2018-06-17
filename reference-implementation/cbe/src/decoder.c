@@ -69,7 +69,7 @@ DEFINE_READ_FUNCTION(int64_t,     int_64)
 DEFINE_READ_FUNCTION(__int128,    int_128)
 DEFINE_READ_FUNCTION(float,       float_32)
 DEFINE_READ_FUNCTION(double,      float_64)
-DEFINE_READ_FUNCTION(long double, float_128)
+DEFINE_READ_FUNCTION(__float128, float_128)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
 
@@ -268,7 +268,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 HANDLE_CASE_ARRAY(double, on_array_float_64);
                 break;
             case TYPE_ARRAY_FLOAT_128:
-                HANDLE_CASE_ARRAY(long double, on_array_float_128);
+                HANDLE_CASE_ARRAY(__float128, on_array_float_128);
                 break;
             case TYPE_ARRAY_DECIMAL_64:
                 HANDLE_CASE_ARRAY(_Decimal64, on_array_decimal_64);

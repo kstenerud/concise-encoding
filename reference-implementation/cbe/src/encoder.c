@@ -49,7 +49,7 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,          int_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,        int_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(float,          float_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(double,         float_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(long double,   float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(__float128,   float_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal64,   decimal_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal128, decimal_128)
 static inline void add_primitive_bytes(cbe_buffer* const buffer,
@@ -106,7 +106,7 @@ DEFINE_ADD_SCALAR_FUNCTION(int64_t,          int_64, TYPE_INT_64)
 DEFINE_ADD_SCALAR_FUNCTION(__int128,        int_128, TYPE_INT_128)
 DEFINE_ADD_SCALAR_FUNCTION(float,          float_32, TYPE_FLOAT_32)
 DEFINE_ADD_SCALAR_FUNCTION(double,         float_64, TYPE_FLOAT_64)
-DEFINE_ADD_SCALAR_FUNCTION(long double,   float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(__float128,   float_128, TYPE_FLOAT_128)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,   decimal_64, TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
 
@@ -221,7 +221,7 @@ bool cbe_add_float_64(cbe_buffer* const buffer, const double value)
     return add_float_64(buffer, value);
 }
 
-bool cbe_add_float_128(cbe_buffer* const buffer, const long double value)
+bool cbe_add_float_128(cbe_buffer* const buffer, const __float128 value)
 {
     if(FITS_IN_FLOAT_32(value)) return add_float_32(buffer, value);
     if(FITS_IN_FLOAT_64(value)) return add_float_64(buffer, value);
@@ -345,7 +345,7 @@ bool cbe_add_array_float_64(cbe_buffer* const buffer, const double* const values
     return add_array(buffer, TYPE_ARRAY_FLOAT_64, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
-bool cbe_add_array_float_128(cbe_buffer* const buffer, const long double* const values, const int entity_count)
+bool cbe_add_array_float_128(cbe_buffer* const buffer, const __float128* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_ARRAY_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
