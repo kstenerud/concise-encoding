@@ -13,7 +13,7 @@ const char* cte_version();
 typedef struct
 {
 	void (*on_parse_error) (void* context, const char* message);
-    void (*on_null)        (void* context);
+    void (*on_empty)       (void* context);
     void (*on_boolean)     (void* context, bool value);
     void (*on_int)         (void* context, int64_t value);
     void (*on_float)       (void* context, double value);
@@ -78,12 +78,12 @@ cte_encode_context cte_new_encode_context_with_config(uint8_t* const memory_star
 cte_encode_context cte_new_encode_context(uint8_t* const memory_start, uint8_t* const memory_end);
 
 /**
- * Add a null value to the context.
+ * Add an empty value to the context.
  *
  * @param context The context to add to.
  * @return true if the operation was successful.
  */
-bool cte_add_null(cte_encode_context* const context);
+bool cte_add_empty(cte_encode_context* const context);
 
 /**
  * Add a boolean value to the context.

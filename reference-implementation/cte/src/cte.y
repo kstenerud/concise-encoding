@@ -35,7 +35,7 @@ void yyerror(const void *scanner, const cte_parse_callbacks* callbacks, void* co
 %type <float64_v> TOKEN_FLOAT
 %type <bool_v>    TOKEN_BOOLEAN
 
-%token TOKEN_BOOLEAN TOKEN_INTEGER TOKEN_FLOAT TOKEN_DECIMAL TOKEN_STRING TOKEN_NULL TOKEN_UNEXPECTED TOKEN_BAD_DATA
+%token TOKEN_BOOLEAN TOKEN_INTEGER TOKEN_FLOAT TOKEN_DECIMAL TOKEN_STRING TOKEN_EMPTY TOKEN_UNEXPECTED TOKEN_BAD_DATA
 %token TOKEN_MAP_START TOKEN_MAP_END TOKEN_LIST_START TOKEN_LIST_END TOKEN_ITEM_SEPARATOR TOKEN_ASSIGNMENT_SEPARATOR
 
 %start object
@@ -47,7 +47,7 @@ object:
     | TOKEN_INTEGER    { callbacks->on_int(context, $1); }
     | TOKEN_FLOAT      { callbacks->on_float(context, $1); }
     | TOKEN_BOOLEAN    { callbacks->on_boolean(context, $1); }
-    | TOKEN_NULL       { callbacks->on_null(context); }
+    | TOKEN_EMPTY      { callbacks->on_empty(context); }
     | list
     | map
     | TOKEN_UNEXPECTED {

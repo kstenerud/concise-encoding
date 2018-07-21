@@ -176,18 +176,18 @@ TEST(CTE_Parse, boolean)
     expect_decoded("false", TYPE_BOOLEAN, (int)false, 0);
 }
 
-TEST(CTE_Parse, null)
+TEST(CTE_Parse, empty)
 {
-    expect_decoded("null", TYPE_NULL, 0);
+    expect_decoded("empty", TYPE_EMPTY, 0);
 }
 
 TEST(CTE_Parse, mixed)
 {
-    expect_decoded("{\"a\": [1, 2, 3], \"b\": false, \"c\": null}",
+    expect_decoded("{\"a\": [1, 2, 3], \"b\": false, \"c\": empty}",
         TYPE_MAP_START,
             TYPE_STRING, "a", TYPE_LIST_START, TYPE_INT, 1, TYPE_INT, 2, TYPE_INT, 3, TYPE_LIST_END,
             TYPE_STRING, "b", TYPE_BOOLEAN, (int)false,
-            TYPE_STRING, "c", TYPE_NULL,
+            TYPE_STRING, "c", TYPE_EMPTY,
         TYPE_MAP_END,
         0);
 }

@@ -84,9 +84,9 @@ static void on_string(void* context, const char* str)
     parse_add_string((parse_test_context*)context, TYPE_STRING, str);
 }
 
-static void on_null(void* context)
+static void on_empty(void* context)
 {
-    parse_add_type((parse_test_context*)context, TYPE_NULL);
+    parse_add_type((parse_test_context*)context, TYPE_EMPTY);
 }
     
 static void on_bool(void* context, bool value)
@@ -128,7 +128,7 @@ cte_parse_callbacks parse_new_callbacks()
 {
     cte_parse_callbacks callbacks;
     // sorry, unimplemented: non-trivial designated initializers not supported
-        callbacks.on_null = on_null;
+        callbacks.on_empty = on_empty;
         callbacks.on_boolean = on_bool;
         callbacks.on_int = on_int;
         callbacks.on_float = on_float;

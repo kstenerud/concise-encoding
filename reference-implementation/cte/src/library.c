@@ -115,10 +115,10 @@ static bool add_object(cte_encode_context* const context, const char* encoded_ob
     return true;
 }
 
-bool cte_add_null(cte_encode_context* const context)
+bool cte_add_empty(cte_encode_context* const context)
 {
     if(context->next_object_is_map_key) return false;
-    return add_object(context, "null");
+    return add_object(context, "empty");
 }
 
 bool cte_add_boolean(cte_encode_context* const context, const bool value)

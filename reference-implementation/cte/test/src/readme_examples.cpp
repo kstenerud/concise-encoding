@@ -13,7 +13,7 @@ TEST(CTE_Examples, encode)
 
     cte_start_map(&context);
     cte_add_string(&context, "null");
-    cte_add_null(&context);
+    cte_add_empty(&context);
     cte_add_string(&context, "one");
     cte_add_integer(&context, 1);
     cte_add_string(&context, "list");
@@ -62,10 +62,10 @@ static void on_string(void* context, const char* str)
     printf("\"%s\"\n", str);
 }
 
-static void on_null(void* context)
+static void on_empty(void* context)
 {
     indent((cte_parse_context*)context);
-    printf("null\n");
+    printf("empty\n");
 }
     
 static void on_bool(void* context, bool value)
@@ -117,7 +117,7 @@ static void on_map_end(void* context)
 TEST(CTE_Examples, parse)
 {
     cte_parse_callbacks callbacks;
-    callbacks.on_null = on_null;
+    callbacks.on_empty = on_empty;
     callbacks.on_boolean = on_bool;
     callbacks.on_int = on_int;
     callbacks.on_float = on_float;

@@ -52,7 +52,7 @@ TEST(CTE_Encode, NAME) \
     fflush(stdout); \
 }
 
-DEFINE_ENCODE_TEST(null, "null", { ASSERT_TRUE(cte_add_null(&context)); })
+DEFINE_ENCODE_TEST(empty, "empty", { ASSERT_TRUE(cte_add_empty(&context)); })
 DEFINE_ENCODE_TEST(false, "false", { ASSERT_TRUE(cte_add_boolean(&context, false)); })
 DEFINE_ENCODE_TEST(true, "true", { ASSERT_TRUE(cte_add_boolean(&context, true)); })
 DEFINE_ENCODE_TEST(int_1000, "1000", { ASSERT_TRUE(cte_add_integer(&context, 1000)); })
@@ -125,11 +125,11 @@ DEFINE_ENCODE_TEST(single_map, "{\"a\":1}",
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
 
-DEFINE_ENCODE_TEST(complex, "{\"null\":null,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}",
+DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}",
 {
     ASSERT_TRUE(cte_start_map(&context));
-    ASSERT_TRUE(cte_add_string(&context, "null"));
-    ASSERT_TRUE(cte_add_null(&context));
+    ASSERT_TRUE(cte_add_string(&context, "empty"));
+    ASSERT_TRUE(cte_add_empty(&context));
     ASSERT_TRUE(cte_add_string(&context, "one"));
     ASSERT_TRUE(cte_add_integer(&context, 1));
     ASSERT_TRUE(cte_add_string(&context, "list"));
@@ -172,9 +172,9 @@ DEFINE_ENCODE_FAIL_TEST(fail_string_size_10,10,
     ASSERT_FALSE(cte_add_string(&context, "this is a test"));
 })
 
-DEFINE_ENCODE_FAIL_TEST(fail_null,3,
+DEFINE_ENCODE_FAIL_TEST(fail_empty,3,
 {
-    ASSERT_FALSE(cte_add_null(&context));
+    ASSERT_FALSE(cte_add_empty(&context));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_true,3,
@@ -237,10 +237,10 @@ DEFINE_ENCODE_FAIL_TEST(fail_too_many_map_closes,100,
     ASSERT_FALSE(cte_end_container(&context));
 })
 
-DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_null,100,
+DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_empty,100,
 {
     ASSERT_TRUE(cte_start_map(&context));
-    ASSERT_FALSE(cte_add_null(&context));
+    ASSERT_FALSE(cte_add_empty(&context));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_boolean,100,

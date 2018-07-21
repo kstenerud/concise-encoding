@@ -24,7 +24,7 @@ static const char* string_unescape(char* str);
 WHITESPACE    [ \t\r\n]
 STRING_CHAR   [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
 VALUE_STRING  \"{STRING_CHAR}*\"
-VALUE_NULL    null
+VALUE_EMPTY   empty
 VALUE_TRUE    true
 VALUE_FALSE   false
 VALUE_INTEGER [-+]?[0-9]+
@@ -40,7 +40,7 @@ VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
 ":" { return TOKEN_ASSIGNMENT_SEPARATOR; }
 
 {WHITESPACE}  {/* Ignored */}
-{VALUE_NULL}  { return TOKEN_NULL; }
+{VALUE_EMPTY} { return TOKEN_EMPTY; }
 {VALUE_TRUE}  { yylval->bool_v = true; return TOKEN_BOOLEAN; }
 {VALUE_FALSE} { yylval->bool_v = false; return TOKEN_BOOLEAN; }
 
