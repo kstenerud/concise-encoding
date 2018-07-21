@@ -21,14 +21,14 @@ static const char* string_unescape(char* str);
 %option reentrant
 %option warn
 
-WHITESPACE    [ \t\r\n]
-STRING_CHAR   [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
-VALUE_STRING  \"{STRING_CHAR}*\"
-VALUE_EMPTY   empty
-VALUE_TRUE    t|true
-VALUE_FALSE   f|false
-VALUE_INTEGER [-+]?[0-9]+
-VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
+WHITESPACE   [ \t\r\n]
+STRING_CHAR  [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
+TYPE_STRING  \"{STRING_CHAR}*\"
+TYPE_INTEGER [-+]?[0-9]+
+TYPE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
+VALUE_EMPTY  empty
+VALUE_TRUE   t|true
+VALUE_FALSE  f|false
 
 %%
 
@@ -44,7 +44,7 @@ VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
 {VALUE_TRUE}  { yylval->bool_v = true; return TOKEN_BOOLEAN; }
 {VALUE_FALSE} { yylval->bool_v = false; return TOKEN_BOOLEAN; }
 
-{VALUE_INTEGER} {
+{TYPE_INTEGER} {
     int64_t value = strtoll(yytext, NULL, 10);
     if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
     {
@@ -55,7 +55,7 @@ VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
     return TOKEN_INTEGER;
 }
 
-{VALUE_FLOAT} {
+{TYPE_FLOAT} {
 	double value = yylval->float64_v = strtod(yytext, NULL);
     if((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
     {
@@ -66,7 +66,7 @@ VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
 	return TOKEN_FLOAT;
 }
 
-{VALUE_STRING} {
+{TYPE_STRING} {
     const char* bad_data_loc = string_unescape(yytext);
     if(bad_data_loc == NULL)
     {
