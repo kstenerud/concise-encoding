@@ -124,7 +124,7 @@ bool cte_add_empty(cte_encode_context* const context)
 bool cte_add_boolean(cte_encode_context* const context, const bool value)
 {
     if(context->next_object_is_map_key) return false;
-    return add_object(context, value ? "true" : "false");
+    return add_object(context, value ? "t" : "f");
 }
 
 bool cte_add_integer(cte_encode_context* const context, const int64_t value)

@@ -25,8 +25,8 @@ WHITESPACE    [ \t\r\n]
 STRING_CHAR   [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
 VALUE_STRING  \"{STRING_CHAR}*\"
 VALUE_EMPTY   empty
-VALUE_TRUE    true
-VALUE_FALSE   false
+VALUE_TRUE    t|true
+VALUE_FALSE   f|false
 VALUE_INTEGER [-+]?[0-9]+
 VALUE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
 

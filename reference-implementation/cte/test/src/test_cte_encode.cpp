@@ -53,8 +53,8 @@ TEST(CTE_Encode, NAME) \
 }
 
 DEFINE_ENCODE_TEST(empty, "empty", { ASSERT_TRUE(cte_add_empty(&context)); })
-DEFINE_ENCODE_TEST(false, "false", { ASSERT_TRUE(cte_add_boolean(&context, false)); })
-DEFINE_ENCODE_TEST(true, "true", { ASSERT_TRUE(cte_add_boolean(&context, true)); })
+DEFINE_ENCODE_TEST(false, "f", { ASSERT_TRUE(cte_add_boolean(&context, false)); })
+DEFINE_ENCODE_TEST(true, "t", { ASSERT_TRUE(cte_add_boolean(&context, true)); })
 DEFINE_ENCODE_TEST(int_1000, "1000", { ASSERT_TRUE(cte_add_integer(&context, 1000)); })
 DEFINE_ENCODE_TEST(int_9223372036854775807, "9223372036854775807", { ASSERT_TRUE(cte_add_integer(&context, 9223372036854775807L)); })
 DEFINE_ENCODE_TEST(int_n9223372036854775807, "-9223372036854775807", { ASSERT_TRUE(cte_add_integer(&context, -9223372036854775807L)); })
@@ -125,7 +125,7 @@ DEFINE_ENCODE_TEST(single_map, "{\"a\":1}",
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
 
-DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}",
+DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":t}",
 {
     ASSERT_TRUE(cte_start_map(&context));
     ASSERT_TRUE(cte_add_string(&context, "empty"));
@@ -177,17 +177,7 @@ DEFINE_ENCODE_FAIL_TEST(fail_empty,3,
     ASSERT_FALSE(cte_add_empty(&context));
 })
 
-DEFINE_ENCODE_FAIL_TEST(fail_true,3,
-{
-    ASSERT_FALSE(cte_add_boolean(&context, true));
-})
-
-DEFINE_ENCODE_FAIL_TEST(fail_false,4,
-{
-    ASSERT_FALSE(cte_add_boolean(&context, false));
-})
-
-DEFINE_ENCODE_FAIL_TEST(fail_completion,5,
+DEFINE_ENCODE_FAIL_TEST(fail_completion,1,
 {
     ASSERT_TRUE(cte_add_boolean(&context, false));
     ASSERT_FALSE(cte_end_encoding(&context)); \

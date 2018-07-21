@@ -172,7 +172,9 @@ TEST(CTE_Parse, float)
 
 TEST(CTE_Parse, boolean)
 {
+    expect_decoded("t", TYPE_BOOLEAN, (int)true, 0);
     expect_decoded("true", TYPE_BOOLEAN, (int)true, 0);
+    expect_decoded("f", TYPE_BOOLEAN, (int)false, 0);
     expect_decoded("false", TYPE_BOOLEAN, (int)false, 0);
 }
 
