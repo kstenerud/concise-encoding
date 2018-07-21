@@ -239,34 +239,34 @@ bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value)
     return add_decimal_128(buffer, value);
 }
 
-bool cbe_add_date(cbe_buffer* const buffer, const cbe_date* const date)
+bool cbe_add_time(cbe_buffer* const buffer, const cbe_time* const time)
 {
-    type_field type = TYPE_DATE_40;
+    type_field type = TYPE_TIME_40;
     int bits = 40;
-    uint64_t value = date->year      * DATE_MULTIPLIER_YEAR +
-                     (date->month-1) * DATE_MULTIPLIER_MONTH +
-                     (date->day-1)   * DATE_MULTIPLIER_DAY +
-                     date->hour      * DATE_MULTIPLIER_HOUR +
-                     date->minute    * DATE_MULTIPLIER_MINUTE +
-                     date->second    * DATE_MULTIPLIER_SECOND;
-    if(date->microsecond != 0)
+    uint64_t value = time->year      * TIME_MULTIPLIER_YEAR +
+                     (time->month-1) * TIME_MULTIPLIER_MONTH +
+                     (time->day-1)   * TIME_MULTIPLIER_DAY +
+                     time->hour      * TIME_MULTIPLIER_HOUR +
+                     time->minute    * TIME_MULTIPLIER_MINUTE +
+                     time->second    * TIME_MULTIPLIER_SECOND;
+    if(time->microsecond != 0)
     {
         bits += 8;
-        value += date->microsecond * DATE_MULTIPLIER_MICROSECOND;
-        if(date->microsecond % DATE_MODULO_MICROSECOND != 0)
+        value += time->microsecond * TIME_MULTIPLIER_MICROSECOND;
+        if(time->microsecond % TIME_MODULO_MICROSECOND != 0)
         {
-            type = TYPE_DATE_64;
+            type = TYPE_TIME_64;
             bits += 16;
         }
         else
         {
-            type = TYPE_DATE_48;
-            value /= DATE_MODULO_MICROSECOND;
+            type = TYPE_TIME_48;
+            value /= TIME_MODULO_MICROSECOND;
         }
     }
     else
     {
-        value /= (DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND);
+        value /= (TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND);
     }
     return add_lowbytes(buffer, type, bits/8, value);
 }

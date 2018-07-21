@@ -39,7 +39,7 @@ typedef struct
 	uint8_t minute;
 	uint8_t second;
 	unsigned int microsecond;
-} cbe_date;
+} cbe_time;
 
 
 /**
@@ -164,14 +164,14 @@ bool cbe_add_float_64(cbe_buffer* const buffer, const double value);
 bool cbe_add_float_128(cbe_buffer* const buffer, const __float128 value);
 
 /**
- * Add a date value to the buffer.
- * The storage width depends on what sub-second precision is present in the date.
+ * Add a time value to the buffer.
+ * The storage width depends on what sub-second precision is present in the time.
  *
  * @param buffer The buffer to add to.
  * @param value The value to add.
  * @return true if the operation was successful.
  */
-bool cbe_add_date(cbe_buffer* const buffer, const cbe_date* const value);
+bool cbe_add_time(cbe_buffer* const buffer, const cbe_time* const value);
 
 /**
  * Add a UTF-8 encoded string value to the buffer.
@@ -405,7 +405,7 @@ typedef struct {
 	bool (*on_empty)(void);
 	bool (*on_bool)(bool value);
 	bool (*on_number)(cbe_number value);
-	bool (*on_date)(cbe_date* value);
+	bool (*on_time)(cbe_time* value);
 	bool (*on_end_container)(void);
 	bool (*on_list_start)(void);
 	bool (*on_map_start)(void);
@@ -423,7 +423,7 @@ typedef struct {
 	bool (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
 	bool (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
 #endif // CBE_HAS_DECIMAL_SUPPORT
-	bool (*on_array_date)(const uint64_t* start, const uint64_t* end);
+	bool (*on_array_time)(const uint64_t* start, const uint64_t* end);
 } cbe_decode_callbacks;
 
 

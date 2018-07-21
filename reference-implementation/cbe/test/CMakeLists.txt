@@ -36,7 +36,7 @@ add_executable(cbe_test
                    src/float_128.cpp
                    src/decimal_64.cpp
                    src/decimal_128.cpp
-                   src/date.cpp
+                   src/time.cpp
                    src/string.cpp
                    src/list.cpp
                    src/map.cpp

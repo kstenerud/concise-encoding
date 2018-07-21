@@ -156,32 +156,32 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 if(!callbacks->on_map_start()) return NULL;
                 break;
 
-            #define HANDLE_CASE_DATE(VALUE) \
+            #define HANDLE_CASE_TIME(VALUE) \
             { \
                 uint64_t encoded = VALUE; \
-                cbe_date date = \
+                cbe_time time = \
                 { \
-                    .year = encoded / DATE_MULTIPLIER_YEAR, \
-                    .month = (encoded / DATE_MULTIPLIER_MONTH) % DATE_MODULO_MONTH + 1, \
-                    .day = (encoded / DATE_MULTIPLIER_DAY) % DATE_MODULO_DAY + 1, \
-                    .hour = (encoded / DATE_MULTIPLIER_HOUR) % DATE_MODULO_HOUR, \
-                    .minute = (encoded / DATE_MULTIPLIER_MINUTE) % DATE_MODULO_MINUTE, \
-                    .second = (encoded / DATE_MULTIPLIER_SECOND) % DATE_MODULO_SECOND, \
-                    .microsecond = (encoded / DATE_MULTIPLIER_MICROSECOND) % (DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND), \
+                    .year = encoded / TIME_MULTIPLIER_YEAR, \
+                    .month = (encoded / TIME_MULTIPLIER_MONTH) % TIME_MODULO_MONTH + 1, \
+                    .day = (encoded / TIME_MULTIPLIER_DAY) % TIME_MODULO_DAY + 1, \
+                    .hour = (encoded / TIME_MULTIPLIER_HOUR) % TIME_MODULO_HOUR, \
+                    .minute = (encoded / TIME_MULTIPLIER_MINUTE) % TIME_MODULO_MINUTE, \
+                    .second = (encoded / TIME_MULTIPLIER_SECOND) % TIME_MODULO_SECOND, \
+                    .microsecond = (encoded / TIME_MULTIPLIER_MICROSECOND) % (TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND), \
                 }; \
-                if(!callbacks->on_date(&date)) return NULL; \
+                if(!callbacks->on_time(&time)) return NULL; \
             }
-            case TYPE_DATE_40:
-                REQUEST_BYTES("40-bit date", 40/8)
-                HANDLE_CASE_DATE(read_uint_40(buffer) * DATE_MODULO_MILLISECOND * DATE_MODULO_MICROSECOND)
+            case TYPE_TIME_40:
+                REQUEST_BYTES("40-bit time", 40/8)
+                HANDLE_CASE_TIME(read_uint_40(buffer) * TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND)
                 break;
-            case TYPE_DATE_48:
-                REQUEST_BYTES("48-bit date", 48/8)
-                HANDLE_CASE_DATE(read_uint_48(buffer) * DATE_MODULO_MICROSECOND)
+            case TYPE_TIME_48:
+                REQUEST_BYTES("48-bit time", 48/8)
+                HANDLE_CASE_TIME(read_uint_48(buffer) * TIME_MODULO_MICROSECOND)
                 break;
-            case TYPE_DATE_64:
-                REQUEST_BYTES("64-bit date", 64/8)
-                HANDLE_CASE_DATE(read_uint_64(buffer))
+            case TYPE_TIME_64:
+                REQUEST_BYTES("64-bit time", 64/8)
+                HANDLE_CASE_TIME(read_uint_64(buffer))
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
@@ -276,8 +276,8 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_ARRAY_DECIMAL_128:
                 HANDLE_CASE_ARRAY(_Decimal128, on_array_decimal_128);
                 break;
-            case TYPE_ARRAY_DATE:
-                HANDLE_CASE_ARRAY(uint64_t, on_array_date);
+            case TYPE_ARRAY_TIME:
+                HANDLE_CASE_ARRAY(uint64_t, on_array_time);
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {

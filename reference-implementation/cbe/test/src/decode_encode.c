@@ -51,9 +51,9 @@ static bool on_number(cbe_number value)
     return true;
 }
 
-bool on_date(cbe_date* value)
+bool on_time(cbe_time* value)
 {
-    return cbe_add_date(g_buffer, value);
+    return cbe_add_time(g_buffer, value);
 }
 
 bool on_end_container(void)
@@ -133,10 +133,10 @@ bool on_array_decimal_128(const _Decimal128* start, const _Decimal128* end)
 }
 #endif
 
-bool on_array_date(const uint64_t* start, const uint64_t* end)
+bool on_array_time(const uint64_t* start, const uint64_t* end)
 {
     // TODO
-    // return cbe_add_array_date(g_buffer, start, end - start);
+    // return cbe_add_array_time(g_buffer, start, end - start);
 }
 
 bool decode_encode(const uint8_t* src, int src_length, cbe_buffer* dst_buffer)
@@ -146,7 +146,7 @@ bool decode_encode(const uint8_t* src, int src_length, cbe_buffer* dst_buffer)
     callbacks.on_empty = on_empty;
     callbacks.on_bool = on_bool;
     callbacks.on_number = on_number;
-    callbacks.on_date = on_date;
+    callbacks.on_time = on_time;
     callbacks.on_end_container = on_end_container;
     callbacks.on_list_start = on_list_start;
     callbacks.on_map_start = on_map_start;
@@ -164,7 +164,7 @@ bool decode_encode(const uint8_t* src, int src_length, cbe_buffer* dst_buffer)
     callbacks.on_array_decimal_64 = on_array_decimal_64;
     callbacks.on_array_decimal_128 = on_array_decimal_128;
 #endif
-    callbacks.on_array_date = on_array_date;
+    callbacks.on_array_time = on_array_time;
 
     g_buffer = dst_buffer;
     return cbe_decode(&callbacks, src, src + src_length) != NULL;

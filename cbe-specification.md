@@ -47,7 +47,7 @@ Binary, stored in little endian byte order.
   * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
   * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits, DPD encoding.
-  * **Date**: UTC-based date with precision to the second, millisecond or microsecond.
+  * **Time**: UTC-based date + time with precision to the second, millisecond or microsecond.
 
 
 ### Array Types
@@ -96,9 +96,9 @@ All objects are composed of a type field and a possible payload.
 | ...  | ...                | ...                                               |
 |  67  | Integer value 103  |                                                   |
 |  68  | Empty (no data)    |                                                   |
-|  69  | Date               | [40-bit data]                                     |
-|  6a  | Date (millisecond) | [48-bit data]                                     |
-|  6b  | Date (microsecond) | [64-bit data]                                     |
+|  69  | Time (second)      | [40-bit data]                                     |
+|  6a  | Time (millisecond) | [48-bit data]                                     |
+|  6b  | Time (microsecond) | [64-bit data]                                     |
 |  6c  | List               | [object] ... [end of container]                   |
 |  6d  | Map                | [key object, value object] ... [end of container] |
 |  6e  | End of Container   |                                                   |
@@ -131,7 +131,7 @@ All objects are composed of a type field and a possible payload.
 |  89  | Array Float 128    | [length] [128-bit floats]                         |
 |  8a  | Array Decimal 64   | [length] [64-bit decimals]                        |
 |  8b  | Array Decimal 128  | [length] [128-bit decimals]                       |
-|  8c  | Array Date         | [length] [64-bit dates]                           |
+|  8c  | Array Time         | [length] [64-bit times]                           |
 |  8d  | Integer            | [16-bit two's complement signed integer]          |
 |  8e  | Integer            | [32-bit two's complement signed integer]          |
 |  8f  | Integer            | [64-bit two's complement signed integer]          |
@@ -218,14 +218,14 @@ Example:
     [94 D0 03 00 00 00 00 30 A2] = -7.50
 
 
-### Date Type
+### Time Type
 
-Dates follow the Gregorian calendar, are UTC based, and are mathematically packed into unsigned integers using base-10 multiplication. Their integer representation can be read directly off the buffer in little endian byte order.
+Date/time values follow the Gregorian calendar, are UTC based, and are mathematically packed into unsigned integers using base-10 multiplication. Their integer representation can be read directly off the buffer in little endian byte order.
 
-Encoded dates are comparable, but cannot be used arithmetically.
+Encoded times are comparable, but cannot be used arithmetically.
 
 
-#### 40-bit Date
+#### 40-bit Time
 
 | Field  | Min | Max   | Multiplier | Notes                              |
 | ------ | --- | ----- | ---------- | ---------------------------------- |
@@ -236,7 +236,7 @@ Encoded dates are comparable, but cannot be used arithmetically.
 | Minute | 0   |    59 |        61  |                                    |
 | Second | 0   |    60 |         1  | 0-60 to allow for leap seconds     |
 
-Date fields can be extracted as follows:
+Time fields can be extracted as follows:
 
 * second field = value % 61
 * minute field = (value / 61) % 60
@@ -401,7 +401,7 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they will cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
 
-  * Dates must be valid. For example: February 31st, while technically encodable, is not allowed.
+  * Times must be valid. For example: February 31st, while technically encodable, is not allowed.
   * Map keys must not be container types or the EMPTY type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the exact same value.
   * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY, are not allowed.
