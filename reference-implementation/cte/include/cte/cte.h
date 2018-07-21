@@ -25,7 +25,7 @@ typedef struct
 } cte_parse_callbacks;
 
 /**
- * Parse a JSON string.
+ * Parse a CTE string.
  *
  * @param input The string to parse.
  * @param callbacks The callbacks to call as the parser encounters entities.

@@ -24,8 +24,8 @@ add_executable(cte_test
                    src/main.cpp
                    src/managed_allocator.c
                    src/parse_test_helpers.c
-                   src/test_parse.cpp
-                   src/test_encode.cpp
+                   src/test_cte_parse.cpp
+                   src/test_cte_encode.cpp
                    src/readme_examples.cpp
                )
 

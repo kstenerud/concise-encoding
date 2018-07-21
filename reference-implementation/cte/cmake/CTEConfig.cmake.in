@@ -1,10 +1,10 @@
-get_filename_component(CTE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 
-list(APPEND CMAKE_MODULE_PATH ${CTE_CMAKE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${_CMAKE_DIR})
 
-if(NOT TARGET CTE::CTE)
-    include("${CTE_CMAKE_DIR}/CTETargets.cmake")
+if(NOT TARGET ::)
+    include("${_CMAKE_DIR}/Targets.cmake")
 endif()
 
-set(CTE_LIBRARIES CTE::CTE)
+set(_LIBRARIES ::)

@@ -4,7 +4,7 @@
 #include "managed_allocator.h"
 #include <stdarg.h>
 
-void expect_decoded(const char* json, ...)
+void expect_decoded(const char* cte, ...)
 {
     parse_test_context test_context =
     {
@@ -16,12 +16,12 @@ void expect_decoded(const char* json, ...)
     parse_test_context* context = &test_context;
     cte_parse_callbacks callbacks = parse_new_callbacks();
 
-    bool result = cte_parse_string(json, &callbacks, context);
+    bool result = cte_parse_string(cte, &callbacks, context);
     fflush(stdout);
     ASSERT_TRUE(result);
 
     va_list args;
-    va_start(args, json);
+    va_start(args, cte);
     int expected_arg_count = 0;
     for(;;expected_arg_count++)
     {
@@ -79,7 +79,7 @@ void expect_decoded(const char* json, ...)
     ASSERT_EQ(expected_arg_count, actual_arg_count);
 }
 
-void expect_decode_failure(const char* json)
+void expect_decode_failure(const char* cte)
 {
     parse_test_context test_context =
     {
@@ -91,7 +91,7 @@ void expect_decode_failure(const char* json)
     void* context = &test_context;
     cte_parse_callbacks callbacks = parse_new_callbacks();
 
-    bool result = cte_parse_string(json, &callbacks, context);
+    bool result = cte_parse_string(cte, &callbacks, context);
     fflush(stdout);
     ASSERT_FALSE(result);
 }

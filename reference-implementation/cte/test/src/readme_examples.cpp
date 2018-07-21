@@ -41,9 +41,9 @@ TEST(CTE_Examples, encode)
 typedef struct
 {
     int depth;
-} json_parse_context;
+} cte_parse_context;
 
-static void indent(json_parse_context* context)
+static void indent(cte_parse_context* context)
 {
     for(int i = 0; i < context->depth; i++)
     {
@@ -58,59 +58,59 @@ static void on_parse_error(void* context, const char* message)
 
 static void on_string(void* context, const char* str)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("\"%s\"\n", str);
 }
 
 static void on_null(void* context)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("null\n");
 }
     
 static void on_bool(void* context, bool value)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf(value ? "true\n" : "false\n");
 }
     
 static void on_int(void* context, int64_t value)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("%ld\n", value);
 }
     
 static void on_float(void* context, double value)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("%lg\n", value);
 }
 
 static void on_list_start(void* context)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("[\n");
-    ((json_parse_context*)context)->depth++;
+    ((cte_parse_context*)context)->depth++;
 }
     
 static void on_list_end(void* context)
 {
-    ((json_parse_context*)context)->depth--;
-    indent((json_parse_context*)context);
+    ((cte_parse_context*)context)->depth--;
+    indent((cte_parse_context*)context);
     printf("]\n");
 }
     
 static void on_map_start(void* context)
 {
-    indent((json_parse_context*)context);
+    indent((cte_parse_context*)context);
     printf("{\n");
-    ((json_parse_context*)context)->depth++;
+    ((cte_parse_context*)context)->depth++;
 }
     
 static void on_map_end(void* context)
 {
-    ((json_parse_context*)context)->depth--;
-    indent((json_parse_context*)context);
+    ((cte_parse_context*)context)->depth--;
+    indent((cte_parse_context*)context);
     printf("}\n");
 }
 
@@ -128,7 +128,7 @@ TEST(CTE_Examples, parse)
     callbacks.on_map_start = on_map_start;
     callbacks.on_map_end = on_map_end;
 
-    json_parse_context context = {0};
-    const char* json_string = "{\"null\":null,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}";
-    cte_parse_string(json_string, &callbacks, &context);
+    cte_parse_context context = {0};
+    const char* cte_string = "{\"null\":null,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}";
+    cte_parse_string(cte_string, &callbacks, &context);
 }
