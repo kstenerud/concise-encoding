@@ -3,43 +3,114 @@ Concise Text Encoding
 
 Work in progress...
 
-Number:
- * 123
- * -123
- * 123.45
- * d123.45
- * h8f91d778
- * o755
- * b10001011
+An object may be one of the following:
 
-Number Encoding Prefix:
- * (nothing) - base 10
- * b - base 2
- * o - base 8
- * h - base 16
- * d - decimal float
+  * Empty
+  * Boolean
+  * Number
+  * Time
+  * String
+  * List
+  * Map
+  * Array
 
-Empty: empty
+Containers may contain other objects.
 
-Boolean:
- * t
- * f
 
-Date: 1985-10-26T08:22:16.900142
+Data Types
+----------
 
-String: "in quotes"
- * \ + \r or \n or \r\n = ignore
- * \ + any other char = literal
 
-Map: {a: 1, b: 2}
+### Empty
 
-List: [a, b, c]
+Represents the absence of data.
 
-Array: type(a, b, c)
+    empty
 
-Types:
- * i8, i16, i32, i64, i128
- * f32, f64, f128
- * d64, d128
- * b
- * ts, tm, tu
+
+### Boolean
+
+Represents true or false
+
+    true
+    false
+
+
+### Number
+
+#### Integer
+
+##### Base 2
+
+    b10001011
+
+##### Base 8
+
+    o644
+
+##### Base 10
+
+    1000
+
+##### Base 16
+
+    h7ff0
+
+
+#### Float
+
+    123.45
+
+
+#### Decimal
+
+    d1000.55
+
+
+### Time
+
+    1985-10-26T08:22:16.900142
+
+
+### String
+
+    "A string"
+
+#### Escapes
+
+  * \\
+  * \"
+  * \r
+  * \n
+  * \t
+  * \000
+  * \xff
+  * \uffff
+
+
+### List
+
+    (object, object, object)
+
+### Map
+
+    [key: value, key: value]
+
+### Array
+
+    i32(1000, 2000, 3000)
+
+#### Types
+
+  * b
+  * i8
+  * i16
+  * i32
+  * i64
+  * i128
+  * f32
+  * f64
+  * f128
+  * d64
+  * d128
+  * t

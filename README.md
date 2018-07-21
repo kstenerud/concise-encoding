@@ -29,7 +29,7 @@ Binary, stored in little endian byte order.
   * **Integer**: Always signed, two's complement, in widths from 8 to 128 bits.
   * **Float**: IEEE 754 floating point, in widths from 32 to 128 bits.
   * **Decimal**: IEEE 754 decimal, in widths from 64 to 128 bits, DPD encoding.
-  * **Date**: UTC-based date with precision to the second, millisecond or microsecond.
+  * **Time**: UTC-based date + time with precision to the second, millisecond or microsecond.
 
 
 ### Array Types

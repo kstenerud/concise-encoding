@@ -55,9 +55,7 @@ VALUE_FALSE  f|false
 "f128(" { return TOKEN_ARRAY_FLOAT_128_START; }
 "d64("  { return TOKEN_ARRAY_DECIMAL_64_START; }
 "d128(" { return TOKEN_ARRAY_DECIMAL_128_START; }
-"ts("   { return TOKEN_ARRAY_TIME_SEC_START; }
-"tm("   { return TOKEN_ARRAY_TIME_MSEC_START; }
-"tu("   { return TOKEN_ARRAY_TIME_USEC_START; }
+"t("    { return TOKEN_ARRAY_TIME_START; }
 ")"     { return TOKEN_ARRAY_END; }
 
 {WHITESPACE}  {/* Ignored */}

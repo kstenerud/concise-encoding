@@ -46,7 +46,7 @@ void yyerror(const void *scanner, const cte_parse_callbacks* callbacks, void* co
 %token TOKEN_ARRAY_BOOLEAN_START TOKEN_ARRAY_INT_8_START TOKEN_ARRAY_INT_16_START TOKEN_ARRAY_INT_32_START
 %token TOKEN_ARRAY_INT_64_START TOKEN_ARRAY_INT_128_START TOKEN_ARRAY_FLOAT_32_START TOKEN_ARRAY_FLOAT_64_START
 %token TOKEN_ARRAY_FLOAT_128_START TOKEN_ARRAY_DECIMAL_64_START TOKEN_ARRAY_DECIMAL_128_START
-%token TOKEN_ARRAY_TIME_SEC_START TOKEN_ARRAY_TIME_MSEC_START TOKEN_ARRAY_TIME_USEC_START TOKEN_ARRAY_END
+%token TOKEN_ARRAY_TIME_START TOKEN_ARRAY_END
 
 %start object
 
@@ -103,9 +103,7 @@ array_start:
     | TOKEN_ARRAY_FLOAT_128_START   { callbacks->on_array_start(context, CTE_TYPE_FLOAT,   16); }
     | TOKEN_ARRAY_DECIMAL_64_START  { callbacks->on_array_start(context, CTE_TYPE_DECIMAL,  8); }
     | TOKEN_ARRAY_DECIMAL_128_START { callbacks->on_array_start(context, CTE_TYPE_DECIMAL, 16); }
-    | TOKEN_ARRAY_TIME_SEC_START    { callbacks->on_array_start(context, CTE_TYPE_TIME,     5); }
-    | TOKEN_ARRAY_TIME_MSEC_START   { callbacks->on_array_start(context, CTE_TYPE_TIME,     6); }
-    | TOKEN_ARRAY_TIME_USEC_START   { callbacks->on_array_start(context, CTE_TYPE_TIME,     8); }
+    | TOKEN_ARRAY_TIME_START        { callbacks->on_array_start(context, CTE_TYPE_TIME,     8); }
 
 array_end: TOKEN_ARRAY_END { callbacks->on_array_end(context); }
 
