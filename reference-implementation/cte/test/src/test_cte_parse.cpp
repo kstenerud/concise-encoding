@@ -158,6 +158,21 @@ TEST(CTE_Parse, integer)
     expect_decoded("-5123", TYPE_INT, (int64_t)-5123, 0);
 }
 
+TEST(CTE_Parse, int_2)
+{
+    expect_decoded("b1000", TYPE_INT, (int64_t)8, 0);
+}
+
+TEST(CTE_Parse, int_8)
+{
+    expect_decoded("o1000", TYPE_INT, (int64_t)512, 0);
+}
+
+TEST(CTE_Parse, int_16)
+{
+    expect_decoded("h1000", TYPE_INT, (int64_t)4096, 0);
+}
+
 TEST(CTE_Parse, float)
 {
     expect_decoded("1.1", TYPE_FLOAT, 1.1, 0);

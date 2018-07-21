@@ -24,7 +24,10 @@ static const char* string_unescape(char* str);
 WHITESPACE   [ \t\r\n]
 STRING_CHAR  [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
 TYPE_STRING  \"{STRING_CHAR}*\"
-TYPE_INTEGER [-+]?[0-9]+
+TYPE_INT_2   b[-+]?[0-7]+
+TYPE_INT_8   o[-+]?[0-7]+
+TYPE_INT_10  [-+]?[0-9]+
+TYPE_INT_16  h[-+]?[0-9a-fA-F]+
 TYPE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
 VALUE_EMPTY  empty
 VALUE_TRUE   t|true
@@ -44,8 +47,41 @@ VALUE_FALSE  f|false
 {VALUE_TRUE}  { yylval->bool_v = true; return TOKEN_BOOLEAN; }
 {VALUE_FALSE} { yylval->bool_v = false; return TOKEN_BOOLEAN; }
 
-{TYPE_INTEGER} {
+{TYPE_INT_2} {
+    int64_t value = strtoll(yytext+1, NULL, 2);
+    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
+    {
+        yylval->string_v = yytext;
+        return TOKEN_BAD_DATA;
+    }
+    yylval->int64_v = value;
+    return TOKEN_INTEGER;
+}
+
+{TYPE_INT_8} {
+    int64_t value = strtoll(yytext+1, NULL, 8);
+    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
+    {
+        yylval->string_v = yytext;
+        return TOKEN_BAD_DATA;
+    }
+    yylval->int64_v = value;
+    return TOKEN_INTEGER;
+}
+
+{TYPE_INT_10} {
     int64_t value = strtoll(yytext, NULL, 10);
+    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
+    {
+        yylval->string_v = yytext;
+        return TOKEN_BAD_DATA;
+    }
+    yylval->int64_v = value;
+    return TOKEN_INTEGER;
+}
+
+{TYPE_INT_16} {
+    int64_t value = strtoll(yytext+1, NULL, 16);
     if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
     {
         yylval->string_v = yytext;
