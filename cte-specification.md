@@ -7,12 +7,12 @@ Number:
  * 123
  * -123
  * 123.45
- * 123.45d
- * 8f91d778x
- * 755o
- * 10001011b
+ * d123.45
+ * h8f91d778
+ * o755
+ * b10001011
 
-Number Encoding Suffix:
+Number Encoding Prefix:
  * (nothing) - base 10
  * b - base 2
  * o - base 8

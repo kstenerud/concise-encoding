@@ -29,6 +29,8 @@ TYPE_INT_8   o[-+]?[0-7]+
 TYPE_INT_10  [-+]?[0-9]+
 TYPE_INT_16  h[-+]?[0-9a-fA-F]+
 TYPE_FLOAT   [-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
+TYPE_DECIMAL d[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?
+TYPE_TIME    [0-9]+-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?
 VALUE_EMPTY  empty
 VALUE_TRUE   t|true
 VALUE_FALSE  f|false
@@ -41,6 +43,22 @@ VALUE_FALSE  f|false
 "]" { return TOKEN_LIST_END; }
 "," { return TOKEN_ITEM_SEPARATOR; }
 ":" { return TOKEN_ASSIGNMENT_SEPARATOR; }
+
+"b("    { return TOKEN_ARRAY_BOOLEAN_START; }
+"i8("   { return TOKEN_ARRAY_INT_8_START; }
+"i16("  { return TOKEN_ARRAY_INT_16_START; }
+"i32("  { return TOKEN_ARRAY_INT_32_START; }
+"i64("  { return TOKEN_ARRAY_INT_64_START; }
+"i128(" { return TOKEN_ARRAY_INT_128_START; }
+"f32("  { return TOKEN_ARRAY_FLOAT_32_START; }
+"f64("  { return TOKEN_ARRAY_FLOAT_64_START; }
+"f128(" { return TOKEN_ARRAY_FLOAT_128_START; }
+"d64("  { return TOKEN_ARRAY_DECIMAL_64_START; }
+"d128(" { return TOKEN_ARRAY_DECIMAL_128_START; }
+"ts("   { return TOKEN_ARRAY_TIME_SEC_START; }
+"tm("   { return TOKEN_ARRAY_TIME_MSEC_START; }
+"tu("   { return TOKEN_ARRAY_TIME_USEC_START; }
+")"     { return TOKEN_ARRAY_END; }
 
 {WHITESPACE}  {/* Ignored */}
 {VALUE_EMPTY} { return TOKEN_EMPTY; }
@@ -100,6 +118,21 @@ VALUE_FALSE  f|false
     }
     yylval->float64_v = value;
 	return TOKEN_FLOAT;
+}
+
+{TYPE_DECIMAL} {
+#if CTE_HAS_DECIMAL_SUPPORT
+    // TODO
+    yylval->decimal64_v = 0;
+    return TOKEN_FLOAT;
+#else
+    // TODO: Error
+#endif
+}
+
+{TYPE_TIME} {
+    yylval->string_v = yytext;
+    return TOKEN_TIME;
 }
 
 {TYPE_STRING} {

@@ -8,7 +8,23 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+// C++ doesn't seem to have a POD implementation of decimal types.
+    #define CTE_HAS_DECIMAL_SUPPORT 0
+#else
+    #define CTE_HAS_DECIMAL_SUPPORT 1
+#endif
+
 const char* cte_version();
+
+typedef enum
+{
+    CTE_TYPE_BOOLEAN,
+    CTE_TYPE_INTEGER,
+    CTE_TYPE_FLOAT,
+    CTE_TYPE_DECIMAL,
+    CTE_TYPE_TIME,
+} cte_type;
 
 typedef struct
 {
@@ -17,11 +33,17 @@ typedef struct
     void (*on_boolean)     (void* context, bool value);
     void (*on_int)         (void* context, int64_t value);
     void (*on_float)       (void* context, double value);
+#if CTE_HAS_DECIMAL_SUPPORT
+    void (*on_decimal)     (void* context, _Decimal64 value);
+#endif
+    void (*on_time)        (void* context, const char* value);
     void (*on_string)      (void* context, const char* value);
     void (*on_list_start)  (void* context);
     void (*on_list_end)    (void* context);
     void (*on_map_start)   (void* context);
     void (*on_map_end)     (void* context);
+    void (*on_array_start) (void* context, cte_type type, int width);
+    void (*on_array_end)   (void* context);
 } cte_parse_callbacks;
 
 /**
