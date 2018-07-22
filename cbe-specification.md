@@ -16,23 +16,6 @@ Designed with the following points of focus:
 
 
 
-License
--------
-
-Copyright (c) 2018 Karl Stenerud. All rights reserved.
-
-Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
-License deed: https://creativecommons.org/licenses/by/4.0/
-
-
-
-Version History
----------------
-
-June 5, 2018: Version 1
-
-
-
 Types Overview
 --------------
 
@@ -475,3 +458,20 @@ Example:
 
     [43 42 45 01 6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
     CBE file containing an array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded to begin on a 4-byte boundary.
+
+
+
+Version History
+---------------
+
+June 5, 2018: Version 1
+
+
+
+License
+-------
+
+Copyright (c) 2018 Karl Stenerud. All rights reserved.
+
+Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
+License deed: https://creativecommons.org/licenses/by/4.0/
