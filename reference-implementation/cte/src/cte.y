@@ -35,7 +35,7 @@ void yyerror(const void *scanner, const cte_parse_callbacks* callbacks, void* co
     bool bool_v;
 }
 
-%type <string_v>    TOKEN_TIME, TOKEN_STRING TOKEN_UNEXPECTED TOKEN_BAD_DATA string
+%type <string_v>    TOKEN_TIME TOKEN_STRING TOKEN_UNEXPECTED TOKEN_BAD_DATA string
 %type <int64_v>     TOKEN_INTEGER
 %type <float64_v>   TOKEN_FLOAT
 %type <bool_v>      TOKEN_BOOLEAN
@@ -109,7 +109,8 @@ array_end: TOKEN_ARRAY_END { callbacks->on_array_end(context); }
 
 array_entries: /* empty */
     | array_object
-    | array_entries TOKEN_ITEM_SEPARATOR array_object
+    | array_entries array_object
+    | array_entries TOKEN_ITEM_SEPARATOR
 
 list:  list_start list_entries list_end
 
@@ -119,7 +120,8 @@ list_end: TOKEN_LIST_END { callbacks->on_list_end(context); }
 
 list_entries: /* empty */
     | object
-    | list_entries TOKEN_ITEM_SEPARATOR object
+    | list_entries object
+    | list_entries TOKEN_ITEM_SEPARATOR
 
 map: map_start map_entries map_end
 
@@ -131,7 +133,8 @@ map_tuple: object TOKEN_ASSIGNMENT_SEPARATOR object
 
 map_entries: /* empty */
     | map_tuple
-    | map_entries TOKEN_ITEM_SEPARATOR map_tuple
+    | map_entries map_tuple
+    | map_entries TOKEN_ITEM_SEPARATOR
 
 %%
 

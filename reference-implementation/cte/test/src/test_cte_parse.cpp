@@ -209,6 +209,18 @@ TEST(CTE_Parse, mixed)
         0);
 }
 
+TEST(CTE_Parse, list_commas)
+{
+    expect_decoded("[1, 2, ]", TYPE_LIST_START, TYPE_INT, 1, TYPE_INT, 2, TYPE_LIST_END, 0);
+    expect_decoded("[1, 2 3]", TYPE_LIST_START, TYPE_INT, 1, TYPE_INT, 2, TYPE_INT, 3, TYPE_LIST_END, 0);
+}
+
+TEST(CTE_Parse, map_commas)
+{
+    expect_decoded("{1: 10, 2: 20,}", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_MAP_END, 0);
+    expect_decoded("{1: 10, 2: 20  3: 30}", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_INT, 3, TYPE_INT, 30, TYPE_MAP_END, 0);
+}
+
 TEST(CTE_Parse, fail_parse)
 {
     expect_decode_failure("w{\"a\": [1, 2, 3]}");
@@ -219,12 +231,6 @@ TEST(CTE_Parse, fail_unbalanced_list)
     expect_decode_failure("[1, 2, 3");
 }
 
-TEST(CTE_Parse, fail_bad_list)
-{
-    expect_decode_failure("[1, 2, ]");
-    expect_decode_failure("[1, 2 3]");
-}
-
 TEST(CTE_Parse, fail_unbalanced_map)
 {
     expect_decode_failure("{1: 10, 2: 20, 3: 30");
@@ -232,11 +238,9 @@ TEST(CTE_Parse, fail_unbalanced_map)
 
 TEST(CTE_Parse, fail_bad_map)
 {
-    expect_decode_failure("{1: 10, 2: 20, 3: }");
     expect_decode_failure("{1: 10, 2: 20, 3}");
-    expect_decode_failure("{1: 10, 2: 20,}");
+    expect_decode_failure("{1: 10, 2: 20, 3: }");
     expect_decode_failure("{1: 10, 2: 20, 3  30}");
-    expect_decode_failure("{1: 10, 2: 20  3: 30}");
 }
 
 TEST(CTE_Parse, fail_bad_slash)
