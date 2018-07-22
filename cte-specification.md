@@ -142,6 +142,8 @@ Arrays must be prefixed by the type:
   * `d128`  (128-bit decimal floating point)
   * `t`     (time)
 
+Commas are optional. A trailing comma on the last entry is allowed.
+
 Example: An array of three 32-bit integers
 
     i32(1000000, 2000000, 3000000)
