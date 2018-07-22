@@ -127,7 +127,9 @@ Example:
 
 A typed array of scalar objects. Only scalar types are supported, and all members of the array must be of the same type and size.
 
-Arrays must be prefixed by the type:
+An array begins with an array type prefix, an opening parenthesis `(`, whitespace and/or comma separated contents, and a closing parenthesis `)`. A trailing comma on the last entry is allowed.
+
+#### Array Type Prefixes:
 
   * `b`     (boolean)
   * `i8`    (8-bit integer)
@@ -142,8 +144,6 @@ Arrays must be prefixed by the type:
   * `d128`  (128-bit decimal floating point)
   * `t`     (time)
 
-Commas are optional. A trailing comma on the last entry is allowed.
-
 Example: An array of three 32-bit integers
 
     i32(1000000, 2000000, 3000000)
@@ -156,7 +156,7 @@ Example: An array of three 32-bit integers
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
-Commas are optional. A trailing comma on the last entry is allowed.
+A list begins with an opening square bracket `[`, whitespace  and/or comma separated contents, and a closing bracket `]`. A trailing comma on the last entry is allowed.
 
 Example:
 
@@ -167,7 +167,9 @@ Example:
 
 A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be EMPTY. Values may be any mix of any type, including other containers. All keys in a map must be unique.
 
-Commas are optional. A trailing comma on the last entry is allowed.
+Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace and/or commas (either whitespace, or commas, or both). A comma is also allowed on the last entry.
+
+A map begins with an opening curly brace `{`, whitespace and/or comma separated key-value pairs, and a closing brace `}`.
 
 Example:
 
