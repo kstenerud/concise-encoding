@@ -3,14 +3,14 @@ Concise Binary Encoding and Concise Text Encoding
 
 A general purpose, compact representation of semi-structured hierarchical data, in a machine readable format, and in a compatible human readable format.
 
-Designed with the following points of focus:
+#### Designed with the following points of focus:
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
   * Supports hierarchical data structuring
   * Minimal complexity
 
-CTE adds the following design points:
+#### Concise Binary Encoding (CBE) adds the following design points:
 
   * Binary format to minimize parsing costs
   * Little endian byte ordering to allow native reading directly off the wire
