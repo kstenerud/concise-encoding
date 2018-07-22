@@ -32,6 +32,8 @@ For example:
         "array of int16": i16(1000, 2000, 3000),
     }
 
+Whitespace is generally ignored when parsing a CTE document, as are commas when parsing containers or arrays (commas only serve an aesthetic purpose).
+
 
 
 Supported Types
@@ -127,7 +129,7 @@ Example:
 
 A typed array of scalar objects. Only scalar types are supported, and all members of the array must be of the same type and size.
 
-An array begins with an array type prefix, an opening parenthesis `(`, whitespace and/or comma separated contents, and a closing parenthesis `)`. A trailing comma on the last entry is allowed.
+An array begins with an array type prefix, an opening parenthesis `(`, whitespace and/or comma separated contents, and finally a closing parenthesis `)`. A trailing comma on the last entry is allowed.
 
 #### Array Type Prefixes:
 
@@ -156,7 +158,7 @@ Example: An array of three 32-bit integers
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
-A list begins with an opening square bracket `[`, whitespace  and/or comma separated contents, and a closing bracket `]`. A trailing comma on the last entry is allowed.
+A list begins with an opening square bracket `[`, whitespace  and/or comma separated contents, and finally a closing bracket `]`. A trailing comma on the last entry is allowed.
 
 Example:
 
@@ -169,7 +171,7 @@ A map associates objects (keys) with other objects (values). Keys may be any mix
 
 Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace and/or commas (either whitespace, or commas, or both). A comma is also allowed on the last entry.
 
-A map begins with an opening curly brace `{`, whitespace and/or comma separated key-value pairs, and a closing brace `}`.
+A map begins with an opening curly brace `{`, whitespace and/or comma separated key-value pairs, and finally a closing brace `}`.
 
 Example:
 
