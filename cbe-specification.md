@@ -10,7 +10,7 @@ Designed with the following points of focus:
   * Supports hierarchical data structuring
   * Binary format to minimize parsing costs
   * Little endian byte ordering to allow native reading directly off the wire
-  * Compact data in ways that don't affect reading directly of the wire
+  * Data is compacted in ways that don't affect reading directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
 
@@ -39,7 +39,7 @@ Array types can hold multiple scalar values of the same type and size.
 
   * **Array**: Array of a scalar type
   * **Bitfield**: Packed "Array" of bits
-  * **String**: Array of UTF-8 encoded characters without BOM
+  * **String**: Array of UTF-8 encoded bytes without BOM
 
 
 ### Container Types
@@ -54,7 +54,7 @@ Containers can store any type, including other containers. They can also contain
 
 Types used in support of other types only. They cannot be used on their own.
 
-  * **Array Length**: Unsigned integer in widths from 8 to 64 bits.
+  * **Array Length**: Unsigned integer in widths from 6 to 62 bits.
 
 
 ### Other Types

@@ -109,14 +109,14 @@ An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must b
 
 The following escape sequences are allowed:
 
-  * \\      (literal backslash)
-  * \"      (double quote)
-  * \r      (carriage return)
-  * \n      (linefeed)
-  * \t      (tab)
-  * \000    (byte value in octal)
-  * \xff    (byte value in hexadecimal)
-  * \uffff  (unicode character)
+  * `\\`      (literal backslash)
+  * `\"`      (double quote)
+  * `\r`      (carriage return)
+  * `\n`      (linefeed)
+  * `\t`      (tab)
+  * `\000`    (byte value in octal)
+  * `\xff`    (byte value in hexadecimal)
+  * `\uffff`  (unicode character)
 
 Example:
 
@@ -129,18 +129,18 @@ A typed array of scalar objects. Only scalar types are supported, and all member
 
 Arrays must be prefixed by the type:
 
-  * b     (boolean)
-  * i8    (8-bit integer)
-  * i16   (16-bit integer)
-  * i32   (32-bit integer)
-  * i64   (64-bit integer)
-  * i128  (128-bit integer)
-  * f32   (32-bit binary floating point)
-  * f64   (64-bit binary floating point)
-  * f128  (128-bit binary floating point)
-  * d64   (64-bit decimal floating point)
-  * d128  (128-bit decimal floating point)
-  * t     (time)
+  * `b`     (boolean)
+  * `i8`    (8-bit integer)
+  * `i16`   (16-bit integer)
+  * `i32`   (32-bit integer)
+  * `i64`   (64-bit integer)
+  * `i128`  (128-bit integer)
+  * `f32`   (32-bit binary floating point)
+  * `f64`   (64-bit binary floating point)
+  * `f128`  (128-bit binary floating point)
+  * `d64`   (64-bit decimal floating point)
+  * `d128`  (128-bit decimal floating point)
+  * `t`     (time)
 
 Example: An array of three 32-bit integers
 
@@ -206,7 +206,7 @@ File Format
 
 A CTE file is simply a file containing a single CTE document. CTE files should use the extension "cte".
 
-For example: File "mydata.cte"
+For example: File `mydata.cte`
 
     {
         "first": 1,
@@ -218,7 +218,7 @@ For example: File "mydata.cte"
 Version History
 ---------------
 
-July xx, 2018: Version 1
+July 22, 2018: Version 1
 
 
 
