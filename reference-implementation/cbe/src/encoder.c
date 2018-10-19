@@ -5,6 +5,8 @@
 
 #define RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, REQUIRED_BYTES) \
     if((size_t)((BUFFER)->end - (BUFFER)->pos) < (REQUIRED_BYTES)) return false
+#define RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(BUFFER, REQUIRED_BYTES) \
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(BUFFER, ((REQUIRED_BYTES) + sizeof(cbe_encoded_type_field)))
 
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
@@ -32,14 +34,14 @@ static inline void add_primitive_int_8(cbe_buffer* const buffer, const int8_t va
     add_primitive_uint_8(buffer, (uint8_t)value);
 }
 #define DEFINE_PRIMITIVE_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE) \
-static inline void add_primitive_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
-{ \
-    /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
-    memset(buffer->pos, 0, sizeof(value)); \
-    safe_ ## DEFINITION_TYPE* safe = (safe_##DEFINITION_TYPE*)buffer->pos; \
-    safe->contents = value; \
-    buffer->pos += sizeof(value); \
-}
+    static inline void add_primitive_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
+    { \
+        /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
+        memset(buffer->pos, 0, sizeof(value)); \
+        safe_ ## DEFINITION_TYPE* safe = (safe_##DEFINITION_TYPE*)buffer->pos; \
+        safe->contents = value; \
+        buffer->pos += sizeof(value); \
+    }
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint16_t,        uint_16)
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint32_t,        uint_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint64_t,        uint_64)
@@ -52,6 +54,7 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(double,         float_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(__float128,   float_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal64,   decimal_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal128, decimal_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,         time_64)
 static inline void add_primitive_bytes(cbe_buffer* const buffer,
                                        const uint8_t* const bytes,
                                        const unsigned int byte_count)
@@ -60,7 +63,7 @@ static inline void add_primitive_bytes(cbe_buffer* const buffer,
     buffer->pos += byte_count;
 }
 
-static inline void add_primitive_type(cbe_buffer* const buffer, const type_field type)
+static inline void add_primitive_type(cbe_buffer* const buffer, const cbe_type_field type)
 {
     add_primitive_int_8(buffer, (int8_t)type);
 }
@@ -87,51 +90,49 @@ static inline void add_primitive_length(cbe_buffer* const buffer, const uint64_t
 
 static inline bool add_small(cbe_buffer* const buffer, const int8_t value)
 {
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, 0);
     add_primitive_type(buffer, value);
     return true;
 }
 
 #define DEFINE_ADD_SCALAR_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
-static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
-{ \
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value) + sizeof(CBE_TYPE)); \
-    add_primitive_type(buffer, CBE_TYPE); \
-    add_primitive_ ## DEFINITION_TYPE(buffer, value); \
-    return true; \
-}
+    static inline bool add_ ## DEFINITION_TYPE(cbe_buffer* const buffer, const DATA_TYPE value) \
+    { \
+        RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, sizeof(value)); \
+        add_primitive_type(buffer, CBE_TYPE); \
+        add_primitive_ ## DEFINITION_TYPE(buffer, value); \
+        return true; \
+    }
 DEFINE_ADD_SCALAR_FUNCTION(int16_t,          int_16, TYPE_INT_16)
 DEFINE_ADD_SCALAR_FUNCTION(int32_t,          int_32, TYPE_INT_32)
 DEFINE_ADD_SCALAR_FUNCTION(int64_t,          int_64, TYPE_INT_64)
 DEFINE_ADD_SCALAR_FUNCTION(__int128,        int_128, TYPE_INT_128)
 DEFINE_ADD_SCALAR_FUNCTION(float,          float_32, TYPE_FLOAT_32)
 DEFINE_ADD_SCALAR_FUNCTION(double,         float_64, TYPE_FLOAT_64)
-DEFINE_ADD_SCALAR_FUNCTION(__float128,   float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(__float128,    float_128, TYPE_FLOAT_128)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,   decimal_64, TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
+DEFINE_ADD_SCALAR_FUNCTION(uint64_t,        time_64, TYPE_TIME_64)
 
-static inline bool add_lowbytes(cbe_buffer* const buffer,
-                                const uint8_t type,
-                                const unsigned int byte_count,
-                                const uint64_t data)
+static inline bool add_time_40(cbe_buffer* const buffer, const uint64_t value)
 {
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, byte_count + sizeof(type));
-    add_primitive_type(buffer, type);
-    add_primitive_bytes(buffer, (uint8_t*)&data, byte_count);
+    unsigned int byte_count = 40/8;
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, byte_count);
+    add_primitive_type(buffer, TYPE_TIME_40);
+    add_primitive_bytes(buffer, (uint8_t*)&value, byte_count);
     return true;
 }
 
 static bool add_array(cbe_buffer* const buffer,
-                      const type_field array_type,
+                      const cbe_type_field array_type,
                       const uint8_t* const values,
                       const int entity_count,
                       const int entity_size)
 {
     const uint8_t type = array_type;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
-                                    sizeof(type) +
-                                    get_length_field_width(entity_count) +
-                                    entity_count * entity_size);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer,
+                                          get_length_field_width(entity_count) +
+                                          entity_count * entity_size);
     add_primitive_type(buffer, type);
     add_primitive_length(buffer, entity_count);
     add_primitive_bytes(buffer, values, entity_count * entity_size);
@@ -152,15 +153,14 @@ cbe_buffer cbe_new_buffer(uint8_t* const memory_start, uint8_t* const memory_end
 
 bool cbe_add_empty(cbe_buffer* const buffer)
 {
-    uint8_t value = TYPE_EMPTY;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
-    add_primitive_type(buffer, value);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, 0);
+    add_primitive_type(buffer, TYPE_EMPTY);
     return true;
 }
 
 bool cbe_add_boolean(cbe_buffer* const buffer, const bool value)
 {
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(value));
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, 0);
     add_primitive_type(buffer, value ? TYPE_TRUE : TYPE_FALSE);
     return true;
 }
@@ -241,57 +241,45 @@ bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value)
 
 bool cbe_add_time(cbe_buffer* const buffer, const cbe_time* const time)
 {
-    type_field type = TYPE_TIME_40;
-    int bits = 40;
-    uint64_t value = time->year      * TIME_MULTIPLIER_YEAR +
-                     (time->month-1) * TIME_MULTIPLIER_MONTH +
-                     (time->day-1)   * TIME_MULTIPLIER_DAY +
-                     time->hour      * TIME_MULTIPLIER_HOUR +
-                     time->minute    * TIME_MULTIPLIER_MINUTE +
-                     time->second    * TIME_MULTIPLIER_SECOND;
     if(time->microsecond != 0)
     {
-        bits += 8;
-        value += time->microsecond * TIME_MULTIPLIER_MICROSECOND;
-        if(time->microsecond % TIME_MODULO_MICROSECOND != 0)
-        {
-            type = TYPE_TIME_64;
-            bits += 16;
-        }
-        else
-        {
-            type = TYPE_TIME_48;
-            value /= TIME_MODULO_MICROSECOND;
-        }
+        uint64_t value = ((uint64_t)time->year   << TIME_64_BITSHIFT_YEAR)   |
+                         ((uint64_t)time->month  << TIME_64_BITSHIFT_MONTH)  |
+                         ((uint64_t)time->day    << TIME_64_BITSHIFT_DAY)    |
+                         ((uint64_t)time->hour   << TIME_64_BITSHIFT_HOUR)   |
+                         ((uint64_t)time->minute << TIME_64_BITSHIFT_MINUTE) |
+                         ((uint64_t)time->second << TIME_64_BITSHIFT_SECOND) |
+                         time->microsecond;
+        return add_time_64(buffer, value);
     }
-    else
-    {
-        value /= (TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND);
-    }
-    return add_lowbytes(buffer, type, bits/8, value);
+
+    uint64_t value = ((uint64_t)time->year   << TIME_40_BITSHIFT_YEAR)   |
+                     ((uint64_t)time->month  << TIME_40_BITSHIFT_MONTH)  |
+                     ((uint64_t)time->day    << TIME_40_BITSHIFT_DAY)    |
+                     ((uint64_t)time->hour   << TIME_40_BITSHIFT_HOUR)   |
+                     ((uint64_t)time->minute << TIME_40_BITSHIFT_MINUTE) |
+                     time->second;
+    return add_time_40(buffer, value);
 }
 
 bool cbe_start_list(cbe_buffer* const buffer)
 {
-    const uint8_t type = TYPE_LIST;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + sizeof(type));
-    add_primitive_type(buffer, type);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, sizeof(cbe_encoded_type_field));
+    add_primitive_type(buffer, TYPE_LIST);
     return true;
 }
 
 bool cbe_start_map(cbe_buffer* const buffer)
 {
-    const uint8_t type = TYPE_MAP;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + sizeof(type));
-    add_primitive_type(buffer, type);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, sizeof(cbe_encoded_type_field));
+    add_primitive_type(buffer, TYPE_MAP);
     return true;
 }
 
 bool cbe_end_container(cbe_buffer* const buffer)
 {
-    const uint8_t type = TYPE_END_CONTAINER;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type));
-    add_primitive_type(buffer, type);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, 0);
+    add_primitive_type(buffer, TYPE_END_CONTAINER);
     return true;
 }
 
@@ -303,8 +291,8 @@ bool cbe_add_string(cbe_buffer* const buffer, const char* const str, const int b
         return add_array(buffer, TYPE_ARRAY_STRING, (const uint8_t* const)str, byte_count, sizeof(*str));
     }
 
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, byte_count);
     const uint8_t type = TYPE_STRING_0 + byte_count;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer, sizeof(type) + byte_count);
     add_primitive_type(buffer, type);
     add_primitive_bytes(buffer, (uint8_t*)str, byte_count);
     return true;
@@ -368,10 +356,9 @@ bool cbe_add_bitfield(cbe_buffer* const buffer, const uint8_t* const packed_valu
     {
         byte_count++;
     }
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
-                                    sizeof(type) +
-                                    get_length_field_width(entity_count) +
-                                    byte_count);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer,
+                                          get_length_field_width(entity_count) +
+                                          byte_count);
     add_primitive_type(buffer, type);
     add_primitive_length(buffer, entity_count);
     add_primitive_bytes(buffer, packed_values, byte_count);
@@ -386,10 +373,9 @@ bool cbe_add_array_boolean(cbe_buffer* const buffer, const bool* const values, c
     {
         byte_count++;
     }
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM(buffer,
-                                    sizeof(type) +
-                                    get_length_field_width(entity_count) +
-                                    byte_count);
+    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer,
+                                          get_length_field_width(entity_count) +
+                                          byte_count);
     add_primitive_type(buffer, type);
     add_primitive_length(buffer, entity_count);
     for(int i = 0; i < entity_count;)

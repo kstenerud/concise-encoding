@@ -131,7 +131,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
     ro_buffer* buffer = &real_buffer;
     while(buffer->pos < buffer->end)
     {
-        type_field type = read_uint_8(buffer);
+        cbe_type_field type = read_uint_8(buffer);
         switch(type)
         {
             case TYPE_PADDING:
@@ -156,33 +156,40 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 if(!callbacks->on_map_start()) return NULL;
                 break;
 
-            #define HANDLE_CASE_TIME(VALUE) \
-            { \
-                uint64_t encoded = VALUE; \
-                cbe_time time = \
-                { \
-                    .year = encoded / TIME_MULTIPLIER_YEAR, \
-                    .month = (encoded / TIME_MULTIPLIER_MONTH) % TIME_MODULO_MONTH + 1, \
-                    .day = (encoded / TIME_MULTIPLIER_DAY) % TIME_MODULO_DAY + 1, \
-                    .hour = (encoded / TIME_MULTIPLIER_HOUR) % TIME_MODULO_HOUR, \
-                    .minute = (encoded / TIME_MULTIPLIER_MINUTE) % TIME_MODULO_MINUTE, \
-                    .second = (encoded / TIME_MULTIPLIER_SECOND) % TIME_MODULO_SECOND, \
-                    .microsecond = (encoded / TIME_MULTIPLIER_MICROSECOND) % (TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND), \
-                }; \
-                if(!callbacks->on_time(&time)) return NULL; \
-            }
             case TYPE_TIME_40:
+            {
                 REQUEST_BYTES("40-bit time", 40/8)
-                HANDLE_CASE_TIME(read_uint_40(buffer) * TIME_MODULO_MILLISECOND * TIME_MODULO_MICROSECOND)
+                uint64_t value = read_uint_40(buffer);
+                cbe_time time =
+                {
+                    .year   = value >> TIME_40_BITSHIFT_YEAR,
+                    .month  = (value >> TIME_40_BITSHIFT_MONTH)  & TIME_MASK_MONTH,
+                    .day    = (value >> TIME_40_BITSHIFT_DAY)    & TIME_MASK_DAY,
+                    .hour   = (value >> TIME_40_BITSHIFT_HOUR)   & TIME_MASK_HOUR,
+                    .minute = (value >> TIME_40_BITSHIFT_MINUTE) & TIME_MASK_MINUTE,
+                    .second = value & TIME_MASK_SECOND,
+                    .microsecond = 0,
+                };
+                if(!callbacks->on_time(&time)) return NULL;
                 break;
-            case TYPE_TIME_48:
-                REQUEST_BYTES("48-bit time", 48/8)
-                HANDLE_CASE_TIME(read_uint_48(buffer) * TIME_MODULO_MICROSECOND)
-                break;
+            }
             case TYPE_TIME_64:
+            {
                 REQUEST_BYTES("64-bit time", 64/8)
-                HANDLE_CASE_TIME(read_uint_64(buffer))
+                uint64_t value = read_uint_64(buffer);
+                cbe_time time =
+                {
+                    .year   = value >> TIME_64_BITSHIFT_YEAR,
+                    .month  = (value >> TIME_64_BITSHIFT_MONTH)  & TIME_MASK_MONTH,
+                    .day    = (value >> TIME_64_BITSHIFT_DAY)    & TIME_MASK_DAY,
+                    .hour   = (value >> TIME_64_BITSHIFT_HOUR)   & TIME_MASK_HOUR,
+                    .minute = (value >> TIME_64_BITSHIFT_MINUTE) & TIME_MASK_MINUTE,
+                    .second = (value >> TIME_64_BITSHIFT_SECOND) & TIME_MASK_SECOND,
+                    .microsecond = value & TIME_MASK_MICROSECOND,
+                };
+                if(!callbacks->on_time(&time)) return NULL;
                 break;
+            }
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
             case TYPE_STRING_4: case TYPE_STRING_5: case TYPE_STRING_6: case TYPE_STRING_7:
@@ -191,7 +198,9 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             {
                 uint64_t byte_count = type - TYPE_STRING_0;
                 REQUEST_BYTES("string", byte_count)
-                if(!callbacks->on_string((char*)buffer->pos, (char*)buffer->pos + byte_count)) return NULL;
+                char* string_start = (char*)buffer->pos;
+                char* string_end = string_start + byte_count;
+                if(!callbacks->on_string(string_start, string_end)) return NULL;
                 buffer->pos += byte_count;
                 break;
             }
@@ -240,7 +249,9 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 uint64_t length = get_array_length(buffer); \
                 uint64_t byte_count = length * sizeof(TYPE); \
                 REQUEST_BYTES(#TYPE " array", byte_count) \
-                if(!callbacks->HANDLER((TYPE*)buffer->pos, (TYPE*)(buffer->pos) + length)) return NULL; \
+                TYPE* array_start = (TYPE*)buffer->pos; \
+                TYPE* array_end = array_start + length; \
+                if(!callbacks->HANDLER(array_start, array_end)) return NULL; \
                 buffer->pos += byte_count; \
             }
             case TYPE_ARRAY_STRING:
@@ -276,7 +287,10 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_ARRAY_DECIMAL_128:
                 HANDLE_CASE_ARRAY(_Decimal128, on_array_decimal_128);
                 break;
-            case TYPE_ARRAY_TIME:
+            case TYPE_ARRAY_TIME_40:
+                HANDLE_CASE_ARRAY(uint64_t, on_array_time);
+                break;
+            case TYPE_ARRAY_TIME_64:
                 HANDLE_CASE_ARRAY(uint64_t, on_array_time);
                 break;
             case TYPE_ARRAY_BOOLEAN:

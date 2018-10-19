@@ -10,9 +10,9 @@ typedef enum
 {
     TYPE_SMALLINT_MIN      = -104,
     TYPE_SMALLINT_MAX      = 103,
-    TYPE_EMPTY             = 0x68,
-    TYPE_TIME_40           = 0x69,
-    TYPE_TIME_48           = 0x6a,
+    TYPE_FALSE             = 0x68,
+    TYPE_TRUE              = 0x69,
+    TYPE_TIME_40           = 0x6a,
     TYPE_TIME_64           = 0x6b,
     TYPE_LIST              = 0x6c,
     TYPE_MAP               = 0x6d,
@@ -46,20 +46,21 @@ typedef enum
     TYPE_ARRAY_FLOAT_128   = 0x89,
     TYPE_ARRAY_DECIMAL_64  = 0x8a,
     TYPE_ARRAY_DECIMAL_128 = 0x8b,
-    TYPE_ARRAY_TIME        = 0x8c,
-    TYPE_INT_16            = 0x8d,
-    TYPE_INT_32            = 0x8e,
-    TYPE_INT_64            = 0x8f,
-    TYPE_INT_128           = 0x90,
-    TYPE_FLOAT_32          = 0x91,
-    TYPE_FLOAT_64          = 0x92,
-    TYPE_FLOAT_128         = 0x93,
-    TYPE_DECIMAL_64        = 0x94,
-    TYPE_DECIMAL_128       = 0x95,
-    TYPE_FALSE             = 0x96,
-    TYPE_TRUE              = 0x97,
-} type_field;
+    TYPE_ARRAY_TIME_40     = 0x8c,
+    TYPE_ARRAY_TIME_64     = 0x8d,
+    TYPE_INT_16            = 0x8e,
+    TYPE_INT_32            = 0x8f,
+    TYPE_INT_64            = 0x90,
+    TYPE_INT_128           = 0x91,
+    TYPE_FLOAT_32          = 0x92,
+    TYPE_FLOAT_64          = 0x93,
+    TYPE_FLOAT_128         = 0x94,
+    TYPE_DECIMAL_64        = 0x95,
+    TYPE_DECIMAL_128       = 0x96,
+    TYPE_EMPTY             = 0x97,
+} cbe_type_field;
 
+typedef uint8_t cbe_encoded_type_field;
 
 typedef enum
 {
@@ -67,28 +68,44 @@ typedef enum
     LENGTH_FIELD_WIDTH_14_BIT = 1,
     LENGTH_FIELD_WIDTH_30_BIT = 2,
     LENGTH_FIELD_WIDTH_62_BIT = 3,
-} length_field_width;
+} cbe_length_field_width;
 
-#define MAX_VALUE_6_BIT  0x3f
-#define MAX_VALUE_14_BIT 0x3fff
-#define MAX_VALUE_30_BIT 0x3fffffff
+typedef enum
+{
+    MAX_VALUE_6_BIT  = 0x3f,
+    MAX_VALUE_14_BIT = 0x3fff,
+    MAX_VALUE_30_BIT = 0x3fffffff,
+} cbe_max_value;
 
-#define TIME_MODULO_MICROSECOND     1000UL
-#define TIME_MODULO_MILLISECOND     1000UL
-#define TIME_MODULO_SECOND            61UL
-#define TIME_MODULO_MINUTE            60UL
-#define TIME_MODULO_HOUR              24UL
-#define TIME_MODULO_DAY               31UL
-#define TIME_MODULO_MONTH             12UL
+typedef enum
+{
+    TIME_40_BITSHIFT_YEAR   = 26,
+    TIME_40_BITSHIFT_MONTH  = 22,
+    TIME_40_BITSHIFT_DAY    = 17,
+    TIME_40_BITSHIFT_HOUR   = 12,
+    TIME_40_BITSHIFT_MINUTE =  6,
+} cbe_time_40_bitshift;
 
-#define TIME_MULTIPLIER_MICROSECOND 1UL
-#define TIME_MULTIPLIER_MILLISECOND ((TIME_MULTIPLIER_MICROSECOND) * TIME_MODULO_MICROSECOND)
-#define TIME_MULTIPLIER_SECOND      ((TIME_MULTIPLIER_MILLISECOND) * TIME_MODULO_MILLISECOND)
-#define TIME_MULTIPLIER_MINUTE      ((TIME_MULTIPLIER_SECOND) * TIME_MODULO_SECOND)
-#define TIME_MULTIPLIER_HOUR        ((TIME_MULTIPLIER_MINUTE) * TIME_MODULO_MINUTE)
-#define TIME_MULTIPLIER_DAY         ((TIME_MULTIPLIER_HOUR)   * TIME_MODULO_HOUR)
-#define TIME_MULTIPLIER_MONTH       ((TIME_MULTIPLIER_DAY)    * TIME_MODULO_DAY)
-#define TIME_MULTIPLIER_YEAR        ((TIME_MULTIPLIER_MONTH)  * TIME_MODULO_MONTH)
+typedef enum
+{
+    TIME_64_BITSHIFT_YEAR   = 46,
+    TIME_64_BITSHIFT_MONTH  = 42,
+    TIME_64_BITSHIFT_DAY    = 37,
+    TIME_64_BITSHIFT_HOUR   = 32,
+    TIME_64_BITSHIFT_MINUTE = 26,
+    TIME_64_BITSHIFT_SECOND = 20,
+} cbe_time_64_bitshift;
+
+typedef enum
+{
+    TIME_MASK_MONTH       = 0x0f,
+    TIME_MASK_DAY         = 0x1f,
+    TIME_MASK_HOUR        = 0x1f,
+    TIME_MASK_MINUTE      = 0x3f,
+    TIME_MASK_SECOND      = 0x3f,
+    TIME_MASK_MICROSECOND = 0xfffff,
+} cbe_time_mask;
+
 
 // Force the compiler to generate handler code for unaligned accesses.
 #define DEFINE_SAFE_STRUCT(NAME, TYPE) typedef struct __attribute__((__packed__)) {TYPE contents;} NAME
@@ -106,6 +123,7 @@ DEFINE_SAFE_STRUCT(safe_float_128,   __float128);
 DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
 #endif
+DEFINE_SAFE_STRUCT(safe_time_64,     uint64_t);
 
 #ifdef __cplusplus 
 }
