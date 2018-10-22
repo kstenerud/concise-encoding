@@ -21,12 +21,12 @@ For example:
         "list":           [1, 2, "a string"],
         "sub-map":        {1: "one", 2: "two", 3: 3000},
         "boolean":        true,
-        "binary int":     b10001011,
-        "octal int":      o644,
+        "binary int":     10001011b,
+        "octal int":      644o,
         "decimal int":    -10000000,
-        "hex int":        hfffe0001,
+        "hex int":        fffe0001h,
         "float":          14.125,
-        "decimal":        d-1.02,
+        "decimal":        -1.02d,
         "time":           2018-07-01T10:53:22.001481,
         "empty":          empty,
         "array of int16": i16(1000, 2000, 3000),
@@ -66,9 +66,9 @@ With no prefix, base 10 is assumed.
 Example:
 
     900000
-    b-1100
-    o755
-    hdeadbeef
+    -1100b
+    755o
+    deadbeefh
 
 
 #### Binary Floating Point
@@ -89,17 +89,114 @@ Decimal floating values are differentiated from binary floating values by prefix
 
 Example:
 
-    d12.99
-    d-100.04
+    12.99d
+    -100.04d
 
 
 #### Time
 
-Represents a date & time, ISO 8601 extended format, with precision down to the microsecond. Do not surround with quotes. Only dates from 0 CE onwards are supported. To preserve compatibility with CBE, years beyond 564526 are not supported.
+Represents a date & time.
 
-Example:
+The date-time format is based on the ISO 8601 extended format, but is more restricted:
+
+ * Time zones are mandatory.
+ * Time intervals are not allowed.
+ * All times must contain both a date and time component.
+ * Only the fractional seconds field is optional. All other fields are mandatory.
+ * The allowed formats are more restricted.
+
+Like ISO 8601, the date and time components are separted by a capital T, and have optional fractional seconds.
+
+General format:
+
+    yyyy-mm-ddThh:mm:ss.ssssssZ
+    yyyy-dddThh:mm:ss.ssssssZ
+
+This allows date/time values to be parsed by a conforming iso8601 parser.
+
+##### Time Zone Designators
+
+The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the "Zulu time" designator "Z" to refer to UTC.
+
+| Field | Name      | Meaning          | Minimum | Maximum |
+| ----- | --------- | ---------------- | ------- | ------- |
+| +-    | Direction | Offset direction | -       | +       |
+| HH    | Hour      | Hour offset      | 00      | 23      |
+| MM    | Minute    | Minute offset    | 00      | 59      |
+
+Examples:
+
+    Z (offset 0)
+    +00:00 (offset 0)
+    -00:00 (offset 0)
+    -01:30 (1 hour and 30 minutes behind UTC)
+    +01:00 (1 hour ahead of UTC, such as Berlin in winter)
+
+##### Date Component
+
+Date fields are separated by dashes. Dates may be represented either in year-month-day format (YYYY-MM-DD) or in day-of-year format (YYYY-DDD).
+
+###### Eras and Zero Year
+
+Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash "-" prefix.
+
+The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
+
+###### Year-Month-Day Format
+
+    YYYY-MM-DD
+
+| Field | Name  | Meaning       | Minimum | Maximum |
+| ----- | ----- | ------------- | ------- | ------- |
+| YYYY  | Year  | Year          | -inf    | +inf    |
+| MM    | Month | Month of year | 01      | 12      |
+| DD    | Day   | Day of month  | 01      | 01      |
+
+The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
+
+###### Day-of-Year Format
+
+    YYYY-DDD
+
+| Field | Name  | Meaning       | Minimum | Maximum |
+| ----- | ----- | ------------- | ------- | ------- |
+| YYYY  | Year  | Year          | -inf    | +inf    |
+| DDD   | Day   | Day of year   | 001     | 366     |
+
+The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
+
+Use this format if it is undesirable calculate the Gregorian date representation.
+
+###### The Gregorian Calendar
+
+All dates in YYYY-MM-DD format are assumed to use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar is used, whereby the Gregorian calendar system is applied backwards preceeding its introduction. Care must be taken due to the 10 days stricken from the calendar in the Gregorian reform (October 4th - October 14th, 1582).
+
+
+##### Time Component
+
+The time component has mandatory hour, minute, and second fields, exactly two digits long, separated by colons.
+
+    HH:MM:SS
+
+A time component may also contain an optional field for fractional seconds, separated by a period. This field may be from 1 to 6 digits, supporting time to the microsecond.
+
+    HH:MM:SS.ssssss
+
+| Field  | Name     | Meaning           | Minimum | Maximum | Notes              |
+| ------ | -------- | ----------------- | ------- | ------- | ------------------ |
+| HH     | Hour     | Hour of day       | 00      | 23      |                    |
+| MM     | Minute   | Minute of hour    | 00      | 59      |                    |
+| SS     | Second   | Second of minute  | 00      | 60      | 60 for leap second |
+| ssssss | Fraction | Fractional second | (empty) | 999999  | optional field     |
+
+
+##### Examples
 
     2018-07-01T10:53:22.001481
+
+which is equivalent to:
+
+    2018-184T10:53:22.001481
 
 
 
