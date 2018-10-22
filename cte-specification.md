@@ -212,20 +212,20 @@ Array Types
 
 ### String
 
-An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes.
+An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes `"`.
 
 The following escape sequences are allowed:
 
-| Sequence            | Interpretation            |
-| ------------------- | ------------------------- |
-| `\\`                | literal backslash         |
-| `\"`                | double quote              |
-| `\r`                | carriage return           |
-| `\n`                | linefeed                  |
-| `\t`                | tab                       |
-| `\000` - `\777`     | byte value in octal       |
-| `\x00` - `\xff`     | byte value in hexadecimal |
-| `\u0000` - `\uffff` | unicode character         |
+| Sequence            | Interpretation                  |
+| ------------------- | ------------------------------- |
+| `\\`                | literal backslash               |
+| `\"`                | double quote                    |
+| `\r`                | carriage return                 |
+| `\n`                | linefeed                        |
+| `\t`                | horizontal tab                  |
+| `\000` - `\777`     | one octet, octal notation       |
+| `\x00` - `\xff`     | one octet, hexadecimal notation |
+| `\u0000` - `\uffff` | unicode character               |
 
 Example:
 
