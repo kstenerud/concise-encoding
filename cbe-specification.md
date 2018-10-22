@@ -32,7 +32,7 @@ Binary, stored in little endian byte order.
 | Integer  | Signed two's complement, from 8 to 128 bits          |
 | Float    | IEEE 754 floating point, from 32 to 128 bits         |
 | Decimal  | IEEE 754 densely packed decimal, from 64 to 128 bits |
-| Time     | UTC-based date & time, to the microsecond            |
+| Time     | UTC-based date & time, to the second or microsecond  |
 
 
 ### Array Types
