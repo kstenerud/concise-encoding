@@ -155,7 +155,7 @@ The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To maintain 
 | ----- | ------------- | ------- | ------- |
 | YYYY  | Year          | -inf    | +inf    |
 | MM    | Month of year | 01      | 12      |
-| DD    | Day of month  | 01      | 01      |
+| DD    | Day of month  | 01      | 31      |
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
 
