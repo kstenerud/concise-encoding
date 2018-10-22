@@ -210,19 +210,24 @@ Date/time values follow the Gregorian calendar, are UTC based, and are binary pa
 
 Encoded values are comparable, but cannot be used arithmetically.
 
+#### Eras and Zero Year
+
+The year field may refer to the AD or BC era. Positive valus represent the AD era, and negative values represent the BC era. As the Anno Domini system has no zero year (there is no 0 BC or 0 AD), the year 0 is invalid.
+
+Note: Some date systems attempt to maintain mathematical continuity in years by offsetting BC era years by 1 (such that 0 represents 1 BC, -1 represents 2 BC, etc). Take care to know the rules of the system you are converting to!
+
 
 #### Time (40 bit encoding)
 
-| Field  | Bits | Min   | Max  | Extract Algorithm  |
-| ------ | ---- | ----- | ---- | ------------------ |
-| Year   |   14 | -8192 | 8191 | value >> 26        |
-| Month  |    4 |     1 |   12 | (value >> 22) & 31 |
-| Day    |    5 |     1 |   31 | (value >> 17) & 31 |
-| Hour   |    5 |     0 |   23 | (value >> 12) & 31 |
-| Minute |    6 |     0 |   59 | (value >> 6) & 63  |
-| Second |    6 |     0 |   60 | value & 63         |
+| Field  | Bits | Min   | Max  | Extract Algorithm   |
+| ------ | ---- | ----- | ---- | ------------------- |
+| Year   |   14 | -8192 | 8191 | value >> 26         |
+| Day    |    9 |     1 |  366 | (value >> 17) & 511 |
+| Hour   |    5 |     0 |   23 | (value >> 12) & 31  |
+| Minute |    6 |     0 |   59 | (value >> 6) & 63   |
+| Second |    6 |     0 |   60 | value & 63          |
 
-Note: Seconds go from 0-60 to support leap seconds.
+Note: Day goes to 366 to support leap years, and second goes to 60 to support leap seconds.
 
 Example:
 
@@ -232,17 +237,16 @@ Example:
 
 #### Time (64 bit encoding)
 
-| Field       | Bits | Min     |Max     | Extract Algorithm  |
-| ----------- | ---- | ------- | ------ | ------------------ |
-| Year        |   18 | -131072 | 131071 | value >> 46        |
-| Month       |    4 |       1 |     12 | (value >> 42) & 31 |
-| Day         |    5 |       1 |     31 | (value >> 37) & 31 |
-| Hour        |    5 |       0 |     23 | (value >> 32) & 31 |
-| Minute      |    6 |       0 |     59 | (value >> 26) & 63 |
-| Second      |    6 |       0 |     60 | (value >> 20) & 63 |
-| Microsecond |   20 |       0 | 999999 | value & 1048575    |
+| Field       | Bits | Min     |Max     | Extract Algorithm   |
+| ----------- | ---- | ------- | ------ | ------------------- |
+| Year        |   18 | -131072 | 131071 | value >> 46         |
+| Day         |    9 |       1 |    366 | (value >> 37) & 511 |
+| Hour        |    5 |       0 |     23 | (value >> 32) & 31  |
+| Minute      |    6 |       0 |     59 | (value >> 26) & 63  |
+| Second      |    6 |       0 |     60 | (value >> 20) & 63  |
+| Microsecond |   20 |       0 | 999999 | value & 1048575     |
 
-Note: Seconds go from 0-60 to support leap seconds.
+Note: Day goes to 366 to support leap years, and second goes to 60 to support leap seconds.
 
 Example:
 

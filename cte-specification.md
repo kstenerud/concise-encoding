@@ -137,7 +137,7 @@ Examples:
 
 #### Date Component
 
-Date fields are separated by dashes. Dates may be represented either in year-month-day format (YYYY-MM-DD) or in day-of-year format (YYYY-DDD).
+Date fields are separated by dashes. Dates may be represented either in Gregotian date format (YYYY-MM-DD) or in ordinal date format (YYYY-DDD).
 
 To maintain compatibility with CBE (Concise Binary Encoding), only years from -131072 to 131071 are supported.
 
@@ -145,9 +145,9 @@ To maintain compatibility with CBE (Concise Binary Encoding), only years from -1
 
 Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash `-` prefix.
 
-The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (thus, the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). This matches the iso8601 approach. The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
+The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To maintain compatibility with the ISO 8601 format, all BC dates have an absolute year value that is one less than the BC year (thus, the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
 
-##### Year-Month-Day (YMD) Format
+##### Gregorian Date Format
 
     YYYY-MM-DD
 
@@ -159,9 +159,9 @@ The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep math
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
 
-YMD format is only valid for the Gregorian or proplectic Gregorian calendar system.
+All dates in Gregorian format must use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar must used when outputting in this format (whereby the Gregorian calendar system is applied backwards preceeding its introduction). Care must be taken due to the 10 days (October 4th - October 14th, 1582) stricken from the calendar in the Gregorian reform.
 
-##### Day-of-Year (DOY) Format
+##### Ordinal Date Format
 
     YYYY-DDD
 
@@ -172,11 +172,7 @@ YMD format is only valid for the Gregorian or proplectic Gregorian calendar syst
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
 
-Use this format if it is undesirable to calculate the Gregorian date representation.
-
-##### The Gregorian Calendar
-
-All dates in YMD format are assumed to use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar must used when outputting in this format (whereby the Gregorian calendar system is applied backwards preceeding its introduction). Care must be taken due to the 10 days (October 4th - October 14th, 1582) stricken from the calendar in the Gregorian reform.
+Use this format if it is undesirable to use the Gregorian date representation.
 
 
 #### Time Component
