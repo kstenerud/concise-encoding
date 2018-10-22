@@ -3,14 +3,13 @@ Concise Binary Encoding
 
 A general purpose, machine-readable, compact representation of semi-structured hierarchical data.
 
-Designed with the following points of focus:
+Designed with the following goals:
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
   * Supports hierarchical data structuring
   * Binary format to minimize parsing costs
   * Little endian byte ordering to allow native reading directly off the wire
-  * Data is compacted in ways that don't affect reading directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
 
@@ -32,7 +31,7 @@ Binary, stored in little endian byte order.
 | Integer  | Signed two's complement, from 8 to 128 bits          |
 | Float    | IEEE 754 floating point, from 32 to 128 bits         |
 | Decimal  | IEEE 754 densely packed decimal, from 64 to 128 bits |
-| Time     | UTC-based date & time, to the second or microsecond  |
+| Time     | UTC-based date & time, to the microsecond            |
 
 
 ### Array Types

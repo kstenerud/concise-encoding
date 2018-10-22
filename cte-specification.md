@@ -3,7 +3,7 @@ Concise Text Encoding
 
 A general purpose, human readable representation of semi-structured hierarchical data.
 
-Designed with the following points of focus:
+Designed with the following goals:
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
