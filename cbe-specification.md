@@ -208,26 +208,24 @@ Example:
 
 ### Time Type
 
-Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into unsigned integers. Their packed representation can be read directly off the buffer in little endian byte order.
-
-Encoded values are comparable, but cannot be used arithmetically.
+Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order, is comparable, but cannot be used arithmetically.
 
 #### Encoding
 
-| Field       | Bits | Min       |Max        | Extraction Algorithm              |
-| ----------- | ---- | --------- | --------- | --------------------------------- |
-| Year        |   18 | BC 131072 | AD 131072 | (18-bit sign-extend)(value >> 46) |
-| Day         |    9 |         1 |       366 | (value >> 37) & 511               |
-| Hour        |    5 |         0 |        23 | (value >> 32) & 31                |
-| Minute      |    6 |         0 |        59 | (value >> 26) & 63                |
-| Second      |    6 |         0 |        60 | (value >> 20) & 63                |
-| Microsecond |   20 |         0 |    999999 | value & 1048575                   |
+| Field       | Bits | Min     | Max    | Extraction Algorithm |
+| ----------- | ---- | ------- | ------ | -------------------- |
+| Year        |   18 | -131072 | 131071 | (value >> 46)        |
+| Day         |    9 |       1 |    366 | (value >> 37) & 511  |
+| Hour        |    5 |       0 |     23 | (value >> 32) & 31   |
+| Minute      |    6 |       0 |     59 | (value >> 26) & 63   |
+| Second      |    6 |       0 |     60 | (value >> 20) & 63   |
+| Microsecond |   20 |       0 | 999999 | value & 1048575      |
 
 Note: Day goes to 366 to support leap years, and second goes to 60 to support leap seconds.
 
 #### The Year Field
 
-The year field is interpreted as an 18-bit signed two's complement integer. Values <= 0 represent dates in the BC era. The Anno Domini system has no zero year (there is no 0 BC or 0 AD). Thus, encoded BC dates are offset by 1 (0 = 1 BC, -1 = 2 BC, and so on).
+The year field is interpreted as a signed two's complement integer. Values <= 0 represent dates in the BC era. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so BC era dates are offset by 1 (0 = 1 BC, -1 = 2 BC, and so on). This allows dates from 131073 BC to 131071 AD.
 
 Example:
 
