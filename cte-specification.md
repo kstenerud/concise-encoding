@@ -57,11 +57,12 @@ Represents two's complement signed integers up to a width of 128 bits.
 
 Integers can be specified in base 2, 8, 10, or 16. A type suffix character determines which base to interpret as:
 
-  * b: base 2 (binary)
-  * o: base 8 (octal)
-  * h: base 16 (hexadecimal)
-
-With no type suffix, base 10 is assumed.
+| Suffix | Name        | Base |
+| ------ | ----------- | ---- |
+| b      | Binary      |  2   |
+| o      | Octal       |  8   |
+| h      | Hexadecimal | 16   |
+| (none) | Decimal     | 10   |
 
 Examples:
 
@@ -128,11 +129,13 @@ The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM
 
 Examples:
 
-    Z (offset 0)
-    +00:00 (offset 0)
-    -00:00 (offset 0)
-    -01:30 (1 hour and 30 minutes behind UTC)
-    +01:00 (1 hour ahead of UTC, such as Berlin in winter)
+| Offset | Meaning                          |
+| ------ | -------------------------------- |
+| Z      | offset 0                         |
+| +00:00 | offset 0                         |
+| -00:00 | offset 0                         |
+| -01:30 | 1 hour and 30 minutes behind UTC |
+| +01:00 | 1 hour ahead of UTC              |
 
 ##### Date Component
 
