@@ -74,7 +74,7 @@ Examples:
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using "e" or "E".
+Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e` or `E`.
 
 Examples:
 
@@ -86,7 +86,7 @@ Examples:
 
 Represents ieee754 decimal floating point values with widths from 64 to 128. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary.
 
-Decimal floating values are differentiated from binary floating values by adding a "d" suffix.
+Decimal floating values are differentiated from binary floating values by adding a `d` suffix.
 
 Examples:
 
@@ -117,7 +117,7 @@ This allows date/time values to be parsed by a conforming iso8601 parser.
 
 #### Time Zone Designators
 
-The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator "Z" to refer to UTC. The timezone field must not be omitted.
+The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator `Z` to refer to UTC. The timezone field must not be omitted.
 
 | Field | Meaning          | Minimum | Maximum |
 | ----- | ---------------- | ------- | ------- |
@@ -143,7 +143,7 @@ To maintain compatibility with CBE (Concise Binary Encoding), only years from -1
 
 ##### Eras and Zero Year
 
-Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash "-" prefix.
+Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash `-` prefix.
 
 The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (thus, the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). This matches the iso8601 approach. The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
 
@@ -185,7 +185,7 @@ The time component has mandatory hour, minute, and second fields, exactly two di
 
     HH:MM:SS
 
-A time component may also contain an optional field for fractional seconds, separated by a period ".". The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
+A time component may also contain an optional field for fractional seconds, separated by a period `.`. The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
 
     HH:MM:SS.ssssss
 
@@ -322,7 +322,7 @@ Illegal encodings must not be used, as they may cause problems or even API viola
 File Format
 -----------
 
-A CTE file is simply a file containing a single CTE document. Recall that a CTE document consists of a single top-level object, and that you can store multiple objects by making the top level object a container. CTE files should be named using the extension "cte".
+A CTE file is simply a file containing a single CTE document. Recall that a CTE document consists of a single top-level object, and that you can store multiple objects by making the top level object a container. CTE files should be named using the extension `cte`.
 
 For example: File `mydata.cte`
 
