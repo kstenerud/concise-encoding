@@ -18,21 +18,21 @@ A CTE document consists of a single, top-level object. You can store multiple ob
 For example:
 
     {
-        "list":           [1, 2, "a string"],
-        "sub-map":        {1: "one", 2: "two", 3: 3000},
-        "boolean":        true,
-        "binary int":     10001011b,
-        "octal int":      644o,
-        "decimal int":    -10000000,
-        "hex int":        fffe0001h,
-        "float":          14.125,
-        "decimal":        -1.02d,
-        "time":           2018-07-01T10:53:22.001481,
-        "empty":          empty,
-        "array of int16": i16(1000, 2000, 3000),
+        "list":           [1 2 "a string"]
+        "sub-map":        {1: "one" 2: "two" 3: 3000}
+        "boolean":        true
+        "binary int":     10001011b
+        "octal int":      644o
+        "regular int":    -10000000
+        "hex int":        fffe0001h
+        "float":          14.125
+        "decimal":        -1.02d
+        "time":           2018-07-01T10:53:22.001481Z
+        "empty":          empty
+        "array of int16": i16(1000 2000 3000)
     }
 
-Whitespace is generally ignored when parsing a CTE document, as are commas when parsing containers or arrays (commas only serve an aesthetic purpose).
+Whitespace is used to separate elements in a container or array.
 
 
 
@@ -55,27 +55,29 @@ Example:
 
 Represents two's complement signed integers up to a width of 128 bits.
 
-Integers can be specified in base 2, 8, 10, or 16. A prefix character determines which base to interpret as:
+Integers can be specified in base 2, 8, 10, or 16. A type suffix character determines which base to interpret as:
 
   * b: base 2 (binary)
   * o: base 8 (octal)
   * h: base 16 (hexadecimal)
 
-With no prefix, base 10 is assumed.
+With no type suffix, base 10 is assumed.
 
-Example:
+Examples:
 
-    900000
-    -1100b
-    755o
-    deadbeefh
+| Notation  | Decimal Integer Value |
+| --------- | --------------------- |
+| 900000    | 900000                |
+| -1100b    | -12                   |
+| 755o      | 493                   |
+| deadbeefh | 3735928559            |
 
 
 #### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128. Supports exponential notation using "e" or "E".
+Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using "e" or "E".
 
-Example:
+Examples:
 
     1.25e+7
     -99.00001
@@ -85,9 +87,9 @@ Example:
 
 Represents ieee754 decimal floating point values with widths from 64 to 128. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary.
 
-Decimal floating values are differentiated from binary floating values by prefixing a "d".
+Decimal floating values are differentiated from binary floating values by adding a "d" suffix.
 
-Example:
+Examples:
 
     12.99d
     -100.04d
@@ -97,7 +99,7 @@ Example:
 
 Represents a date & time.
 
-The date-time format is based on the ISO 8601 extended format, but is more restricted:
+The date-time format is a restricted form of the ISO 8601 extended format:
 
  * Time zones are mandatory.
  * Time intervals are not allowed.
@@ -116,13 +118,13 @@ This allows date/time values to be parsed by a conforming iso8601 parser.
 
 ##### Time Zone Designators
 
-The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the "Zulu time" designator "Z" to refer to UTC.
+The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator "Z" to refer to UTC. The timezone field must not be omitted.
 
-| Field | Name      | Meaning          | Minimum | Maximum |
-| ----- | --------- | ---------------- | ------- | ------- |
-| +-    | Direction | Offset direction | -       | +       |
-| HH    | Hour      | Hour offset      | 00      | 23      |
-| MM    | Minute    | Minute offset    | 00      | 59      |
+| Field | Meaning          | Minimum | Maximum |
+| ----- | ---------------- | ------- | ------- |
+| +-    | Offset direction | -       | +       |
+| HH    | Hour offset      | 00      | 23      |
+| MM    | Minute offset    | 00      | 59      |
 
 Examples:
 
@@ -136,40 +138,44 @@ Examples:
 
 Date fields are separated by dashes. Dates may be represented either in year-month-day format (YYYY-MM-DD) or in day-of-year format (YYYY-DDD).
 
+To maintain compatibility with CBE (Concise Binary Encoding), only years from -131072 to 131071 are supported.
+
 ###### Eras and Zero Year
 
 Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash "-" prefix.
 
-The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
+The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (thus, the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). This matches the iso8601 approach. The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
 
-###### Year-Month-Day Format
+###### Year-Month-Day (YMD) Format
 
     YYYY-MM-DD
 
-| Field | Name  | Meaning       | Minimum | Maximum |
-| ----- | ----- | ------------- | ------- | ------- |
-| YYYY  | Year  | Year          | -inf    | +inf    |
-| MM    | Month | Month of year | 01      | 12      |
-| DD    | Day   | Day of month  | 01      | 01      |
+| Field | Meaning       | Minimum | Maximum |
+| ----- | ------------- | ------- | ------- |
+| YYYY  | Year          | -inf    | +inf    |
+| MM    | Month of year | 01      | 12      |
+| DD    | Day of month  | 01      | 01      |
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
 
-###### Day-of-Year Format
+YMD format is only valid for the Gregorian or proplectic Gregorian calendar system.
+
+###### Day-of-Year (DOY) Format
 
     YYYY-DDD
 
-| Field | Name  | Meaning       | Minimum | Maximum |
-| ----- | ----- | ------------- | ------- | ------- |
-| YYYY  | Year  | Year          | -inf    | +inf    |
-| DDD   | Day   | Day of year   | 001     | 366     |
+| Field | Meaning       | Minimum | Maximum |
+| ----- | ------------- | ------- | ------- |
+| YYYY  | Year          | -inf    | +inf    |
+| DDD   | Day of year   | 001     | 366     |
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
 
-Use this format if it is undesirable calculate the Gregorian date representation.
+Use this format if it is undesirable to calculate the Gregorian date representation.
 
 ###### The Gregorian Calendar
 
-All dates in YYYY-MM-DD format are assumed to use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar is used, whereby the Gregorian calendar system is applied backwards preceeding its introduction. Care must be taken due to the 10 days stricken from the calendar in the Gregorian reform (October 4th - October 14th, 1582).
+All dates in YMD format are assumed to use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar must used when outputting in this format (whereby the Gregorian calendar system is applied backwards preceeding its introduction). Care must be taken due to the 10 days (October 4th - October 14th, 1582) stricken from the calendar in the Gregorian reform.
 
 
 ##### Time Component
@@ -178,16 +184,16 @@ The time component has mandatory hour, minute, and second fields, exactly two di
 
     HH:MM:SS
 
-A time component may also contain an optional field for fractional seconds, separated by a period. This field may be from 1 to 6 digits, supporting time to the microsecond.
+A time component may also contain an optional field for fractional seconds, separated by a period ".". The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
 
     HH:MM:SS.ssssss
 
-| Field  | Name     | Meaning           | Minimum | Maximum | Notes              |
-| ------ | -------- | ----------------- | ------- | ------- | ------------------ |
-| HH     | Hour     | Hour of day       | 00      | 23      |                    |
-| MM     | Minute   | Minute of hour    | 00      | 59      |                    |
-| SS     | Second   | Second of minute  | 00      | 60      | 60 for leap second |
-| ssssss | Fraction | Fractional second | (empty) | 999999  | optional field     |
+| Field  | Meaning           | Minimum | Maximum | Notes              |
+| ------ | ----------------- | ------- | ------- | ------------------ |
+| HH     | Hour of day       | 00      | 23      |                    |
+| MM     | Minute of hour    | 00      | 59      |                    |
+| SS     | Second of minute  | 00      | 60      | 60 for leap second |
+| ssssss | Fractional second | 0       | 999999  | optional field     |
 
 
 ##### Examples
@@ -208,14 +214,16 @@ An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must b
 
 The following escape sequences are allowed:
 
-  * `\\`      (literal backslash)
-  * `\"`      (double quote)
-  * `\r`      (carriage return)
-  * `\n`      (linefeed)
-  * `\t`      (tab)
-  * `\000`    (byte value in octal)
-  * `\xff`    (byte value in hexadecimal)
-  * `\uffff`  (unicode character)
+| Sequence            | Interpretation            |
+| ------------------- | ------------------------- |
+| `\\`                | literal backslash         |
+| `\"`                | double quote              |
+| `\r`                | carriage return           |
+| `\n`                | linefeed                  |
+| `\t`                | tab                       |
+| `\000` - `\777`     | byte value in octal       |
+| `\x00` - `\xff`     | byte value in hexadecimal |
+| `\u0000` - `\uffff` | unicode character         |
 
 Example:
 
@@ -224,28 +232,30 @@ Example:
 
 #### Array
 
-A typed array of scalar objects. Only scalar types are supported, and all members of the array must be of the same type and size.
+A typed array of scalar objects. All members of the array must be of the same type, and fit within the specified size.
 
-An array begins with an array type prefix, an opening parenthesis `(`, whitespace and/or comma separated contents, and finally a closing parenthesis `)`. A trailing comma on the last entry is allowed.
+An array begins with an array type prefix, an opening parenthesis `(`, whitespace separated contents, and finally a closing parenthesis `)`.
 
 #### Array Type Prefixes:
 
-  * `b`     (boolean)
-  * `i8`    (8-bit integer)
-  * `i16`   (16-bit integer)
-  * `i32`   (32-bit integer)
-  * `i64`   (64-bit integer)
-  * `i128`  (128-bit integer)
-  * `f32`   (32-bit binary floating point)
-  * `f64`   (64-bit binary floating point)
-  * `f128`  (128-bit binary floating point)
-  * `d64`   (64-bit decimal floating point)
-  * `d128`  (128-bit decimal floating point)
-  * `t`     (time)
+| Type   | Meaning                        |
+| ------ | ------------------------------ |
+| `b`    | Boolean                        |
+| `i8`   | 8-bit integer                  |
+| `i16`  | 16-bit integer                 |
+| `i32`  | 32-bit integer                 |
+| `i64`  | 64-bit integer                 |
+| `i128` | 128-bit integer                |
+| `f32`  | 32-bit binary floating point   |
+| `f64`  | 64-bit binary floating point   |
+| `f128` | 128-bit binary floating point  |
+| `d64`  | 64-bit decimal floating point  |
+| `d128` | 128-bit decimal floating point |
+| `t`    | Time                           |
 
 Example: An array of three 32-bit integers
 
-    i32(1000000, 2000000, 3000000)
+    i32(1000000 2000000 3000000)
 
 
 
@@ -255,20 +265,20 @@ Example: An array of three 32-bit integers
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
-A list begins with an opening square bracket `[`, whitespace  and/or comma separated contents, and finally a closing bracket `]`. A trailing comma on the last entry is allowed.
+A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
 Example:
 
-    [1, "two", 3.1, {}, empty]
+    [1 "two" 3.1 {} empty]
 
 
 #### Map
 
 A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be EMPTY. Values may be any mix of any type, including other containers. All keys in a map must be unique.
 
-Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace and/or commas (either whitespace, or commas, or both). A comma is also allowed on the last entry.
+Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace.
 
-A map begins with an opening curly brace `{`, whitespace and/or comma separated key-value pairs, and finally a closing brace `}`.
+A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
 Example:
 
@@ -301,19 +311,20 @@ Illegal encodings must not be used, as they will cause problems or even API viol
   * Map keys must not be container types or the EMPTY type.
   * Maps must not contain duplicate keys.
   * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY, are not allowed.
+  * An array's elements must be small enough to fit in the array's designated element type.
 
 
 
 File Format
 -----------
 
-A CTE file is simply a file containing a single CTE document. CTE files should use the extension "cte".
+A CTE file is simply a file containing a single CTE document. CTE files should be named using the extension "cte".
 
 For example: File `mydata.cte`
 
     {
-        "first": 1,
-        "second": 2,
+        "first": 1
+        "second": 2
     }
 
 
