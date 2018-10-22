@@ -181,7 +181,7 @@ The time component has mandatory hour, minute, and second fields, exactly two di
 
     HH:MM:SS
 
-A time component may also contain an optional field for fractional seconds, separated by a period `.`. The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
+A time component may also contain an optional field for fractional seconds, separated by a period. The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
 
     HH:MM:SS.ssssss
 
@@ -307,7 +307,7 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
 
-  * Times must be valid. For example: February 31st, while technically encodable, is not allowed.
+  * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys.
   * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
