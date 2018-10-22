@@ -153,7 +153,7 @@ The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To maintain 
 
 | Field | Meaning       | Minimum | Maximum |
 | ----- | ------------- | ------- | ------- |
-| YYYY  | Year          | -inf    | +inf    |
+| YYYY  | Year          | -131072 | 131071  |
 | MM    | Month of year | 01      | 12      |
 | DD    | Day of month  | 01      | 31      |
 
@@ -167,7 +167,7 @@ All dates in Gregorian format must use the Gregorian calendar. For dates prior t
 
 | Field | Meaning       | Minimum | Maximum |
 | ----- | ------------- | ------- | ------- |
-| YYYY  | Year          | -inf    | +inf    |
+| YYYY  | Year          | -131072 | 131071  |
 | DDD   | Day of year   | 001     | 366     |
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
