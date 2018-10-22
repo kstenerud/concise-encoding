@@ -302,6 +302,22 @@ Example:
 
 
 
+Comments
+--------
+
+Comments may be placed anywhere an object can be placed. Any number of comments may occur in a row. Comments may also precede or follow the top level object in a document. A parser is not required to preserve comments.
+
+Comments can be preceeded by whitespace, begin with the sequence `//`, and terminate on a newline.
+
+Example:
+
+    {
+        // Name field must always be the full name
+        "name": "Joe Average"
+    }
+
+
+
 Illegal Encodings
 -----------------
 
