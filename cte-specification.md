@@ -53,23 +53,23 @@ Example:
 
 Represents two's complement signed integers up to a width of 128 bits.
 
-Integers can be specified in base 2, 8, 10, or 16. A type suffix character determines which base to interpret as:
+Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
 
 | Suffix | Name        | Base |
 | ------ | ----------- | ---- |
-| b      | Binary      |  2   |
-| o      | Octal       |  8   |
-| h      | Hexadecimal | 16   |
-| (none) | Decimal     | 10   |
+| b      | Binary      |   2  |
+| o      | Octal       |   8  |
+| h      | Hexadecimal |  16  |
+| (none) | Decimal     |  10  |
 
 Examples:
 
-| Notation  | Decimal Integer Value |
-| --------- | --------------------- |
-| 900000    | 900000                |
-| -1100b    | -12                   |
-| 755o      | 493                   |
-| deadbeefh | 3735928559            |
+| Notation  | Base | Decimal Integer Value |
+| --------- | ---- | --------------------- |
+| 900000    |  10  | 900000                |
+| -1100b    |   2  | -12                   |
+| 755o      |   8  | 493                   |
+| deadbeefh |  16  | 3735928559            |
 
 
 ### Binary Floating Point
