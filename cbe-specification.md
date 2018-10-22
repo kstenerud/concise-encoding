@@ -140,7 +140,6 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    FIXME
     [6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
     Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers begin on a 4-byte boundary.
 
@@ -175,7 +174,6 @@ Values from -105 to 104 are encoded in the type field, and may be read directly 
 
 Examples:
 
-    FIXME
     [60] = 96
     [00] = 0
     [ca] = -54
@@ -190,7 +188,6 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
-    FIXME
     [91 00 00 48 41] = 12.5
     [92 66 66 66 66 66 42 A0 40] = 1281.2
 
@@ -201,13 +198,12 @@ IEEE 754 decimal64 and decimal128 densely packed decimal types, used in financia
 
 Example:
 
-    FIXME
     [94 D0 03 00 00 00 00 30 A2] = -7.50
 
 
 ### Time Type
 
-Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order, is comparable, but cannot be used arithmetically.
+Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order. It is comparable, but cannot be used arithmetically.
 
 #### Encoding
 
@@ -228,8 +224,7 @@ The year field is interpreted as a signed two's complement integer. Values <= 0 
 
 Example:
 
-    FIXME
-    [6b ae a3 95 f2 b2 88 e6 00] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
+    [96 2e bc 0d 59 48 66 f0 01] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
 ### Array Type
@@ -264,7 +259,6 @@ To read the length:
 
 Examples:
 
-    FIXME
     [87 00] Array of 32-bit floats, length 0.
     [83 0c 18 fc 00 00 e8 03] Array of 16-bit integers, length 3, contents (-1000, 0, 1000).
     [88 a0 0f ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
@@ -283,7 +277,6 @@ Bitfields start at the low bit (0) of the first byte, and end on one of the bits
 
 For example:
 
-    FIXME
     [81 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
 
@@ -295,7 +288,6 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
 
 Examples:
 
-    FIXME
     [7b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [7d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [80 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
@@ -308,7 +300,7 @@ Original data:
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7  | 8      | 9  | 10 | 11 | 12 | 13 | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | -- | ------ | -- | -- | -- | -- | -- | ------------- |
-| 6d  | 75     | 61 | 6c | 70 | 68 | 61 | 01 | 74     | 62 | 65 | 74 | 61 | 02 | 6d            |
+| 6c  | 75     | 61 | 6c | 70 | 68 | 61 | 01 | 74     | 62 | 65 | 74 | 61 | 02 | 6d            |
 | Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
 
 First, extract data, including pointers to offset 2 ("alpha") and offset 9 ("beta").
@@ -317,7 +309,7 @@ Next, apply null termination by overwriting the type field of the next value fol
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7   | 8      | 9  | 10 | 11 | 12 | 13  | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | --- | ------ | -- | -- | -- | -- | --- | ------------- |
-| 6d  | 75     | 61 | 6c | 70 | 68 | 61 | 00  | 74     | 62 | 65 | 74 | 61 | 00  | 6d            |
+| 6c  | 75     | 61 | 6c | 70 | 68 | 61 | 00  | 74     | 62 | 65 | 74 | 61 | 00  | 6d            |
 | Map | String | a  | l  | p  | h  | a  | nul | String | b  | e  | t  | a  | nul | End container |
 
 
@@ -329,7 +321,6 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    FIXME
     [6b 01 8d 88 13 6d] = List containing integers (1, 5000)
 
 
@@ -339,13 +330,12 @@ A map associates objects (keys) with other objects (values). Keys may be scalar 
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
-    [6dc] [key 1] [value 1] [key 2] [value 2] ... [6d]
+    [6c] [key 1] [value 1] [key 2] [value 2] ... [6d]
 
 All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys in the same map.
 
 Example:
 
-    FIXME
     [6c 71 61 01 71 62 02 6d] = Map containg the key-value pairs ("a", 1) ("b", 2)
 
 
@@ -355,7 +345,7 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they will cause problems or even API violations in certain languages & platforms. A decoder may discard illegal encodings.
 
-  * Times must be valid. For example: February 31st, while technically encodable, is not allowed.
+  * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the EMPTY type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000).
   * An array's length field must match the length of its data.
@@ -426,7 +416,6 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    FIXME
     [43 42 45 01 6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
     CBE file containing an array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers start on a 4-byte boundary.
 
