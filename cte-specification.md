@@ -199,11 +199,11 @@ A time component may also contain an optional field for fractional seconds, sepa
 
 #### Examples
 
-    2018-07-01T10:53:22.001481
+    2018-07-01T10:53:22.001481Z
 
 which is equivalent to:
 
-    2018-184T10:53:22.001481
+    2018-184T10:53:22.001481Z
 
 
 
