@@ -36,12 +36,10 @@ Whitespace is used to separate elements in a container or array.
 
 
 
-Supported Types
----------------
+Scalar Types
+------------
 
-### Scalar Types
-
-#### Boolean
+### Boolean
 
 Supports the values true and false.
 
@@ -51,7 +49,7 @@ Example:
     false
 
 
-#### Integer
+### Integer
 
 Represents two's complement signed integers up to a width of 128 bits.
 
@@ -74,7 +72,7 @@ Examples:
 | deadbeefh | 3735928559            |
 
 
-#### Binary Floating Point
+### Binary Floating Point
 
 Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using "e" or "E".
 
@@ -84,7 +82,7 @@ Examples:
     -99.00001
 
 
-#### Decimal Floating Point
+### Decimal Floating Point
 
 Represents ieee754 decimal floating point values with widths from 64 to 128. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary.
 
@@ -96,7 +94,7 @@ Examples:
     -100.04d
 
 
-#### Time
+### Time
 
 Represents a date & time.
 
@@ -117,7 +115,7 @@ General format:
 
 This allows date/time values to be parsed by a conforming iso8601 parser.
 
-##### Time Zone Designators
+#### Time Zone Designators
 
 The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator "Z" to refer to UTC. The timezone field must not be omitted.
 
@@ -137,19 +135,19 @@ Examples:
 | -01:30 | 1 hour and 30 minutes behind UTC |
 | +01:00 | 1 hour ahead of UTC              |
 
-##### Date Component
+#### Date Component
 
 Date fields are separated by dashes. Dates may be represented either in year-month-day format (YYYY-MM-DD) or in day-of-year format (YYYY-DDD).
 
 To maintain compatibility with CBE (Concise Binary Encoding), only years from -131072 to 131071 are supported.
 
-###### Eras and Zero Year
+##### Eras and Zero Year
 
 Years may refer to the AD or BC era. AD years have no prefix, and BC years have a dash "-" prefix.
 
 The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To keep mathematical continuity in the date format, all BC dates have an absolute year value that is one less than the BC year (thus, the year 0000 refers to 1 BC, -0001 to 2 BC, and so on). This matches the iso8601 approach. The year 0000 (1 BC) may be represented with or without a dash prefix (both 0000 and -0000 are valid). All other BC years must have a dash prefix.
 
-###### Year-Month-Day (YMD) Format
+##### Year-Month-Day (YMD) Format
 
     YYYY-MM-DD
 
@@ -163,7 +161,7 @@ The year field must be 4 or more digits long (not including the optional dash fo
 
 YMD format is only valid for the Gregorian or proplectic Gregorian calendar system.
 
-###### Day-of-Year (DOY) Format
+##### Day-of-Year (DOY) Format
 
     YYYY-DDD
 
@@ -176,12 +174,12 @@ The year field must be 4 or more digits long (not including the optional dash fo
 
 Use this format if it is undesirable to calculate the Gregorian date representation.
 
-###### The Gregorian Calendar
+##### The Gregorian Calendar
 
 All dates in YMD format are assumed to use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar must used when outputting in this format (whereby the Gregorian calendar system is applied backwards preceeding its introduction). Care must be taken due to the 10 days (October 4th - October 14th, 1582) stricken from the calendar in the Gregorian reform.
 
 
-##### Time Component
+#### Time Component
 
 The time component has mandatory hour, minute, and second fields, exactly two digits long, separated by colons.
 
@@ -199,7 +197,7 @@ A time component may also contain an optional field for fractional seconds, sepa
 | ssssss | Fractional second | 0       | 999999  | optional field     |
 
 
-##### Examples
+#### Examples
 
     2018-07-01T10:53:22.001481
 
@@ -209,9 +207,10 @@ which is equivalent to:
 
 
 
-### Array Types
+Array Types
+-----------
 
-#### String
+### String
 
 An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes.
 
@@ -233,13 +232,13 @@ Example:
     "A string\twith\ttabs\nand\nnewlines"
 
 
-#### Array
+### Array
 
 A typed array of scalar objects. All members of the array must be of the same type, and fit within the specified size.
 
 An array begins with an array type prefix, an opening parenthesis `(`, whitespace separated contents, and finally a closing parenthesis `)`.
 
-#### Array Type Prefixes:
+### Array Type Prefixes:
 
 | Type   | Meaning                        |
 | ------ | ------------------------------ |
@@ -262,9 +261,10 @@ Example: An array of three 32-bit integers
 
 
 
-### Container Types
+Container Types
+---------------
 
-#### List
+### List
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
@@ -275,7 +275,7 @@ Example:
     [1 "two" 3.1 {} empty]
 
 
-#### Map
+### Map
 
 A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be EMPTY. Values may be any mix of any type, including other containers. All keys in a map must be unique.
 
@@ -293,9 +293,10 @@ Example:
 
 
 
-### Other Types
+Other Types
+-----------
 
-#### Empty
+### Empty
 
 Denotes the absence of data. Some languages implement this as the NULL value.
 
