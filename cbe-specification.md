@@ -78,14 +78,13 @@ All objects are composed of a type field and possibly a payload.
 |  00  | Integer value 0    |                                                |
 |  01  | Integer value 1    |                                                |
 | ...  | ...                | ...                                            |
-|  67  | Integer value 103  |                                                |
-|  68  | Boolean False      |                                                |
+|  68  | Integer value 104  |                                                |
 |  69  | Boolean True       |                                                |
-|  6a  | Time               | [40-bit y,m,d,h,m,s]                           |
-|  6b  | Time               | [64-bit y,m,d,h,m,s,us]                        |
-|  6c  | List               | [object] ... [end container]                   |
-|  6d  | Map                | [key object, value object] ... [end container] |
-|  6e  | End of Container   |                                                |
+|  6a  | Boolean False      |                                                |
+|  6b  | List               | [object] ... [end container]                   |
+|  6c  | Map                | [key object, value object] ... [end container] |
+|  6d  | End of Container   |                                                |
+|  6e  | Empty (no data)    |                                                |
 |  6f  | Padding            |                                                |
 |  70  | String: 0 bytes    |                                                |
 |  71  | String: 1 byte     | [1 octet of data]                              |
@@ -115,19 +114,18 @@ All objects are composed of a type field and possibly a payload.
 |  89  | Array: Float 128   | [length] [128-bit floats]                      |
 |  8a  | Array: Decimal 64  | [length] [64-bit decimals]                     |
 |  8b  | Array: Decimal 128 | [length] [128-bit decimals]                    |
-|  8c  | Array: Time 40     | [length] [40-bit times]                        |
-|  8d  | Array: Time 64     | [length] [64-bit times]                        |
-|  8e  | Integer            | [16-bit two's complement signed integer]       |
-|  8f  | Integer            | [32-bit two's complement signed integer]       |
-|  80  | Integer            | [64-bit two's complement signed integer]       |
-|  91  | Integer            | [128-bit two's complement signed integer]      |
-|  92  | Float              | [IEEE 754 binary32 floating point]             |
-|  93  | Float              | [IEEE 754 binary64 floating point]             |
-|  94  | Float              | [IEEE 754 binary128 floating point]            |
-|  95  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]   |
-|  96  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]  |
-|  97  | Empty (no data)    |                                                |
-|  98  | Integer value -104 |                                                |
+|  8c  | Array: Time        | [length] [64-bit times]                        |
+|  8d  | Integer            | [16-bit two's complement signed integer]       |
+|  8e  | Integer            | [32-bit two's complement signed integer]       |
+|  8f  | Integer            | [64-bit two's complement signed integer]       |
+|  90  | Integer            | [128-bit two's complement signed integer]      |
+|  91  | Float              | [IEEE 754 binary32 floating point]             |
+|  92  | Float              | [IEEE 754 binary64 floating point]             |
+|  93  | Float              | [IEEE 754 binary128 floating point]            |
+|  94  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]   |
+|  95  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]  |
+|  96  | Time               | [64-bit y,d,h,m,s,us]                          |
+|  97  | Integer value -105 |                                                |
 | ...  | ...                | ...                                            |
 |  fe  | Integer value -2   |                                                |
 |  ff  | Integer value -1   |                                                |
@@ -143,6 +141,7 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
+    FIXME
     [6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
     Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers begin on a 4-byte boundary.
 
@@ -155,7 +154,7 @@ Use this with care, as some languages may have restrictions on how it may be use
 
 Example:
 
-    [97] = No data
+    [6e] = No data
 
 
 ### Boolean Type
@@ -172,11 +171,12 @@ Examples:
 
 Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
 
-Values from -104 to 104 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
+Values from -105 to 104 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
 
 Examples:
 
+    FIXME
     [60] = 96
     [00] = 0
     [ca] = -54
@@ -191,6 +191,7 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
+    FIXME
     [91 00 00 48 41] = 12.5
     [92 66 66 66 66 66 42 A0 40] = 1281.2
 
@@ -201,12 +202,13 @@ IEEE 754 decimal64 and decimal128 densely packed decimal types, used in financia
 
 Example:
 
+    FIXME
     [94 D0 03 00 00 00 00 30 A2] = -7.50
 
 
 ### Time Type
 
-Date/time values follow the Gregorian calendar, are UTC based, and are binary packed into unsigned integers. Their packed representation can be read directly off the buffer in little endian byte order.
+Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into unsigned integers. Their packed representation can be read directly off the buffer in little endian byte order.
 
 Encoded values are comparable, but cannot be used arithmetically.
 
@@ -217,25 +219,7 @@ The year field may refer to the AD or BC era. Positive valus represent the AD er
 Note: Some date systems attempt to maintain mathematical continuity in years by offsetting BC era years by 1 (such that 0 represents 1 BC, -1 represents 2 BC, etc). Take care to know the rules of the system you are converting to!
 
 
-#### Time (40 bit encoding)
-
-| Field  | Bits | Min   | Max  | Extract Algorithm   |
-| ------ | ---- | ----- | ---- | ------------------- |
-| Year   |   14 | -8192 | 8191 | value >> 26         |
-| Day    |    9 |     1 |  366 | (value >> 17) & 511 |
-| Hour   |    5 |     0 |   23 | (value >> 12) & 31  |
-| Minute |    6 |     0 |   59 | (value >> 6) & 63   |
-| Second |    6 |     0 |   60 | value & 63          |
-
-Note: Day goes to 366 to support leap years, and second goes to 60 to support leap seconds.
-
-Example:
-
-    FIXME
-    [69 21 34 57 e1 0e] = 1955-11-05T08:21:00Z = Nov 5th, 1955 08:21:00 GMT
-
-
-#### Time (64 bit encoding)
+#### Encoding
 
 | Field       | Bits | Min     |Max     | Extract Algorithm   |
 | ----------- | ---- | ------- | ------ | ------------------- |
@@ -286,6 +270,7 @@ To read the length:
 
 Examples:
 
+    FIXME
     [87 00] Array of 32-bit floats, length 0.
     [83 0c 18 fc 00 00 e8 03] Array of 16-bit integers, length 3, contents (-1000, 0, 1000).
     [88 a0 0f ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
@@ -304,6 +289,7 @@ Bitfields start at the low bit (0) of the first byte, and end on one of the bits
 
 For example:
 
+    FIXME
     [81 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
 
@@ -315,6 +301,7 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
 
 Examples:
 
+    FIXME
     [7b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [7d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [80 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
@@ -348,6 +335,7 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
+    FIXME
     [6b 01 8d 88 13 6d] = List containing integers (1, 5000)
 
 
@@ -363,6 +351,7 @@ All keys in a map must be unique, even across type widths. For example, you cann
 
 Example:
 
+    FIXME
     [6c 71 61 01 71 62 02 6d] = Map containg the key-value pairs ("a", 1) ("b", 2)
 
 
@@ -443,6 +432,7 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
+    FIXME
     [43 42 45 01 6f 6f 6f 84 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
     CBE file containing an array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers start on a 4-byte boundary.
 
