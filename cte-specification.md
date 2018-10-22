@@ -137,7 +137,7 @@ Examples:
 
 #### Date Component
 
-Date fields are separated by dashes. Dates may be represented either in Gregotian date format (YYYY-MM-DD) or in ordinal date format (YYYY-DDD).
+Date fields are separated by dashes. Dates may be represented either in Gregorian date format (YYYY-MM-DD) or in ordinal date format (YYYY-DDD).
 
 To maintain compatibility with CBE (Concise Binary Encoding), only years from -131072 to 131071 are supported.
 
