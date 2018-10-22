@@ -212,25 +212,22 @@ Date/time values use an ordinal format (day-of-year rather than day-of-month), a
 
 Encoded values are comparable, but cannot be used arithmetically.
 
-#### Eras and Zero Year
-
-The year field may refer to the AD or BC era. Positive valus represent the AD era, and negative values represent the BC era. As the Anno Domini system has no zero year (there is no 0 BC or 0 AD), the year 0 is invalid.
-
-Note: Some date systems attempt to maintain mathematical continuity in years by offsetting BC era years by 1 (such that 0 represents 1 BC, -1 represents 2 BC, etc). Take care to know the rules of the system you are converting to!
-
-
 #### Encoding
 
-| Field       | Bits | Min     |Max     | Extract Algorithm   |
-| ----------- | ---- | ------- | ------ | ------------------- |
-| Year        |   18 | -131072 | 131071 | value >> 46         |
-| Day         |    9 |       1 |    366 | (value >> 37) & 511 |
-| Hour        |    5 |       0 |     23 | (value >> 32) & 31  |
-| Minute      |    6 |       0 |     59 | (value >> 26) & 63  |
-| Second      |    6 |       0 |     60 | (value >> 20) & 63  |
-| Microsecond |   20 |       0 | 999999 | value & 1048575     |
+| Field       | Bits | Min       |Max        | Extraction Algorithm              |
+| ----------- | ---- | --------- | --------- | --------------------------------- |
+| Year        |   18 | BC 131072 | AD 131072 | (18-bit sign-extend)(value >> 46) |
+| Day         |    9 |         1 |       366 | (value >> 37) & 511               |
+| Hour        |    5 |         0 |        23 | (value >> 32) & 31                |
+| Minute      |    6 |         0 |        59 | (value >> 26) & 63                |
+| Second      |    6 |         0 |        60 | (value >> 20) & 63                |
+| Microsecond |   20 |         0 |    999999 | value & 1048575                   |
 
 Note: Day goes to 366 to support leap years, and second goes to 60 to support leap seconds.
+
+#### The Year Field
+
+The year field is interpreted as an 18-bit signed two's complement integer. Values <= 0 represent dates in the BC era. The Anno Domini system has no zero year (there is no 0 BC or 0 AD). Thus, encoded BC dates are offset by 1 (0 = 1 BC, -1 = 2 BC, and so on).
 
 Example:
 
