@@ -240,9 +240,9 @@ An array begins with an array type prefix, an opening parenthesis `(`, whitespac
 
 ### Array Type Prefixes:
 
-| Type   | Meaning                        |
+| Type   | Element Data Type              |
 | ------ | ------------------------------ |
-| `b`    | Boolean                        |
+| `b`    | boolean                        |
 | `i8`   | 8-bit integer                  |
 | `i16`  | 16-bit integer                 |
 | `i32`  | 32-bit integer                 |
@@ -253,7 +253,7 @@ An array begins with an array type prefix, an opening parenthesis `(`, whitespac
 | `f128` | 128-bit binary floating point  |
 | `d64`  | 64-bit decimal floating point  |
 | `d128` | 128-bit decimal floating point |
-| `t`    | Time                           |
+| `t`    | time                           |
 
 Example: An array of three 32-bit integers
 
@@ -277,7 +277,7 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be EMPTY. Values may be any mix of any type, including other containers. All keys in a map must be unique.
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must be unique.
 
 Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace.
 
@@ -298,7 +298,7 @@ Other Types
 
 ### Empty
 
-Denotes the absence of data. Some languages implement this as the NULL value.
+Denotes the absence of data. Some languages implement this as the "null" value.
 
 Example:
 
@@ -309,12 +309,12 @@ Example:
 Illegal Encodings
 -----------------
 
-Illegal encodings must not be used, as they will cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
+Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
 
   * Times must be valid. For example: February 31st, while technically encodable, is not allowed.
-  * Map keys must not be container types or the EMPTY type.
+  * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys.
-  * An array's element type must be a scalar type. Arrays of arrays, containers, or EMPTY, are not allowed.
+  * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
   * An array's elements must be small enough to fit in the array's designated element type.
 
 
@@ -322,7 +322,7 @@ Illegal encodings must not be used, as they will cause problems or even API viol
 File Format
 -----------
 
-A CTE file is simply a file containing a single CTE document. CTE files should be named using the extension "cte".
+A CTE file is simply a file containing a single CTE document. Recall that a CTE document consists of a single top-level object, and that you can store multiple objects by making the top level object a container. CTE files should be named using the extension "cte".
 
 For example: File `mydata.cte`
 
