@@ -177,7 +177,7 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [8d 00 7f] = 127
+    [8d 7f 00] = 127
     [8e 40 42 0f 00] = 1,000,000
     [8f 00 f0 5a 2b 17 ff ff ff] = -1000000000000
 
@@ -203,7 +203,7 @@ Example:
 
 ### Time Type
 
-Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order. It is comparable, but cannot be used arithmetically.
+Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order. They are comparable, but cannot be used arithmetically.
 
 #### Encoding
 
@@ -220,7 +220,7 @@ Note: Day goes to 366 to support leap years, and second goes to 60 to support le
 
 #### The Year Field
 
-The year field is interpreted as a signed two's complement integer. Values <= 0 represent dates in the BC era. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so BC era dates are offset by 1 (0 = 1 BC, -1 = 2 BC, and so on). This allows dates from 131073 BC to 131071 AD.
+The year field is interpreted as a signed two's complement integer. Values <= 0 represent dates in the BC era. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so BC era dates are offset by 1 (0 = 1 BC, -1 = 2 BC, and so on). This allows for dates from 131073 BC to 131071 AD.
 
 Example:
 
@@ -326,13 +326,13 @@ Example:
 
 ### Map Type
 
-A map associates objects (keys) with other objects (values). Keys may be scalar or array types, and must not be EMPTY. Values may be of any type, including other containers.
+A map associates objects (keys) with other objects (values). Keys may be scalar or array types, and must not be `empty`. Values may be of any type, including other containers.
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
     [6c] [key 1] [value 1] [key 2] [value 2] ... [6d]
 
-All keys in a map must be unique, even across type widths. For example, you cannot store both 1000 (16-bit) and 1000 (32-bit) as keys in the same map.
+All keys in a map must be unique, even mathematically and across type widths. For example, you cannot store both 0x1000 (16-bit) and 0x00001000 (32-bit) as keys in the same map.
 
 Example:
 
@@ -346,7 +346,7 @@ Illegal Encodings
 Illegal encodings must not be used, as they will cause problems or even API violations in certain languages & platforms. A decoder may discard illegal encodings.
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
-  * Map keys must not be container types or the EMPTY type.
+  * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000).
   * An array's length field must match the length of its data.
 
@@ -364,7 +364,7 @@ For specialized applications, an encoder implementation may choose to preserve l
 Alignment
 ---------
 
-Applications may require data to be aligned in some cases. For example, some processors cannot read unaligned multibyte data types without compiler intervention. Others can read the data unaligned, but may take more processing time to do so. An encoder could be tuned to insert PADDING bytes when encoding certain types.
+Applications may require data to be aligned in some cases. For example, some processors cannot read unaligned multibyte data types without compiler intervention. Others can read the data unaligned, but may take more processing time to do so. An encoder could be tuned to insert `padding` bytes when encoding certain types.
 
 This can be especially beneficial for arrays, where the cost of a little upfront padding overhead makes the entire array more efficient to read on certain architectures.
 
@@ -374,7 +374,7 @@ This can be especially beneficial for arrays, where the cost of a little upfront
 | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --- |
 | 6f | 6f | 6f | 84 | 80 | 38 | 01 | 00 | ff | ff | ff | 7f | fe | ff | ff | 7f | ... |
 
-Alternatively, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
+As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
 
     read_data(buffer+3, buffer_length-3);
 
@@ -393,7 +393,7 @@ The CBE file format allows storing of CBE encoded data in a standard way.
 
 ### Naming
 
-CBE files should use the extension "cbe". For example: "mydata.cbe"
+CBE files should use the extension `cbe`. For example: `mydata.cbe`
 
 
 ### Contents
@@ -405,9 +405,9 @@ A CBE file is composed of a CBE header, followed by a CBE encoded object.
 
 ### Header
 
-The 4-byte header is composed of the characters 'C', 'B', 'E', and then a version number.
+The 4-byte header is composed of the characters `C`, `B`, `E`, and then a version number.
 
-For example, a file encoded in CBE format version 1 would begin with the header [43 42 45 01]
+For example, a file encoded in CBE format version 1 would begin with the header `[43 42 45 01]`
 
 
 ### Encoded Object

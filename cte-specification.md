@@ -125,6 +125,8 @@ The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM
 | HH    | Hour offset      | 00      | 23      |
 | MM    | Minute offset    | 00      | 59      |
 
+It's recommended to use the zero timezone whenever possible, and only use other timezones when there's a compelling reason to do so.
+
 Examples:
 
 | Offset | Meaning                          |
