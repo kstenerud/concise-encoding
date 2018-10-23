@@ -133,7 +133,7 @@ bool on_array_decimal_128(const _Decimal128* start, const _Decimal128* end)
 }
 #endif
 
-bool on_array_time(const uint64_t* start, const uint64_t* end)
+bool on_array_time(const int64_t* start, const int64_t* end)
 {
     // TODO
     // return cbe_add_array_time(g_buffer, start, end - start);

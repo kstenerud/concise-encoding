@@ -224,7 +224,7 @@ The year field is interpreted as a signed two's complement integer. Values <= 0 
 
 Example:
 
-    [96 2e bc 0d 59 48 66 f0 01] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
+    [96 2e bc 0d 59 68 65 f0 01] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
 ### Array Type

@@ -24,10 +24,10 @@ TEST(MapTest, length_ ## LENGTH) \
     expect_decode_encode(expected_memory); \
 }
 
-DEFINE_ADD_MAP_TEST(0, {0x6d, 0x6e})
-DEFINE_ADD_MAP_TEST(1, {0x6d, 1, 0x71, 'a', 0x6e})
-DEFINE_ADD_MAP_TEST(2, {0x6d, 1, 0x71, 'a', 2, 0x71, 'b', 0x6e})
-DEFINE_ADD_MAP_TEST(3, {0x6d, 1, 0x71, 'a', 2, 0x71, 'b', 3, 0x71, 'c', 0x6e})
+DEFINE_ADD_MAP_TEST(0, {0x6c, 0x6d})
+DEFINE_ADD_MAP_TEST(1, {0x6c, 1, 0x71, 'a', 0x6d})
+DEFINE_ADD_MAP_TEST(2, {0x6c, 1, 0x71, 'a', 2, 0x71, 'b', 0x6d})
+DEFINE_ADD_MAP_TEST(3, {0x6c, 1, 0x71, 'a', 2, 0x71, 'b', 3, 0x71, 'c', 0x6d})
 
 TEST(MapTest, failed)
 {

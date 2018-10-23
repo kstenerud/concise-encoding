@@ -8,15 +8,14 @@ extern "C" {
 
 typedef enum
 {
-    TYPE_SMALLINT_MIN      = -104,
-    TYPE_SMALLINT_MAX      = 103,
-    TYPE_FALSE             = 0x68,
+    TYPE_SMALLINT_MIN      = -105,
+    TYPE_SMALLINT_MAX      = 104,
     TYPE_TRUE              = 0x69,
-    TYPE_TIME_40           = 0x6a,
-    TYPE_TIME_64           = 0x6b,
-    TYPE_LIST              = 0x6c,
-    TYPE_MAP               = 0x6d,
-    TYPE_END_CONTAINER     = 0x6e,
+    TYPE_FALSE             = 0x6a,
+    TYPE_LIST              = 0x6b,
+    TYPE_MAP               = 0x6c,
+    TYPE_END_CONTAINER     = 0x6d,
+    TYPE_EMPTY             = 0x6e,
     TYPE_PADDING           = 0x6f,
     TYPE_STRING_0          = 0x70,
     TYPE_STRING_1          = 0x71,
@@ -46,18 +45,17 @@ typedef enum
     TYPE_ARRAY_FLOAT_128   = 0x89,
     TYPE_ARRAY_DECIMAL_64  = 0x8a,
     TYPE_ARRAY_DECIMAL_128 = 0x8b,
-    TYPE_ARRAY_TIME_40     = 0x8c,
-    TYPE_ARRAY_TIME_64     = 0x8d,
-    TYPE_INT_16            = 0x8e,
-    TYPE_INT_32            = 0x8f,
-    TYPE_INT_64            = 0x90,
-    TYPE_INT_128           = 0x91,
-    TYPE_FLOAT_32          = 0x92,
-    TYPE_FLOAT_64          = 0x93,
-    TYPE_FLOAT_128         = 0x94,
-    TYPE_DECIMAL_64        = 0x95,
-    TYPE_DECIMAL_128       = 0x96,
-    TYPE_EMPTY             = 0x97,
+    TYPE_ARRAY_TIME        = 0x8c,
+    TYPE_INT_16            = 0x8d,
+    TYPE_INT_32            = 0x8e,
+    TYPE_INT_64            = 0x8f,
+    TYPE_INT_128           = 0x90,
+    TYPE_FLOAT_32          = 0x91,
+    TYPE_FLOAT_64          = 0x92,
+    TYPE_FLOAT_128         = 0x93,
+    TYPE_DECIMAL_64        = 0x94,
+    TYPE_DECIMAL_128       = 0x95,
+    TYPE_TIME              = 0x96,
 } cbe_type_field;
 
 typedef uint8_t cbe_encoded_type_field;
@@ -79,27 +77,16 @@ typedef enum
 
 typedef enum
 {
-    TIME_40_BITSHIFT_YEAR   = 26,
-    TIME_40_BITSHIFT_MONTH  = 22,
-    TIME_40_BITSHIFT_DAY    = 17,
-    TIME_40_BITSHIFT_HOUR   = 12,
-    TIME_40_BITSHIFT_MINUTE =  6,
-} cbe_time_40_bitshift;
+    TIME_BITSHIFT_YEAR   = 46,
+    TIME_BITSHIFT_DAY    = 37,
+    TIME_BITSHIFT_HOUR   = 32,
+    TIME_BITSHIFT_MINUTE = 26,
+    TIME_BITSHIFT_SECOND = 20,
+} cbe_TIME_bitshift;
 
 typedef enum
 {
-    TIME_64_BITSHIFT_YEAR   = 46,
-    TIME_64_BITSHIFT_MONTH  = 42,
-    TIME_64_BITSHIFT_DAY    = 37,
-    TIME_64_BITSHIFT_HOUR   = 32,
-    TIME_64_BITSHIFT_MINUTE = 26,
-    TIME_64_BITSHIFT_SECOND = 20,
-} cbe_time_64_bitshift;
-
-typedef enum
-{
-    TIME_MASK_MONTH       = 0x0f,
-    TIME_MASK_DAY         = 0x1f,
+    TIME_MASK_DAY         = 0x1ff,
     TIME_MASK_HOUR        = 0x1f,
     TIME_MASK_MINUTE      = 0x3f,
     TIME_MASK_SECOND      = 0x3f,
@@ -123,7 +110,7 @@ DEFINE_SAFE_STRUCT(safe_float_128,   __float128);
 DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
 #endif
-DEFINE_SAFE_STRUCT(safe_time_64,     uint64_t);
+DEFINE_SAFE_STRUCT(safe_time,        int64_t);
 
 #ifdef __cplusplus 
 }

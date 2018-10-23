@@ -51,10 +51,10 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,          int_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,        int_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(float,          float_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(double,         float_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(__float128,   float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(__float128,    float_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal64,   decimal_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal128, decimal_128)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,         time_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,            time)
 static inline void add_primitive_bytes(cbe_buffer* const buffer,
                                        const uint8_t* const bytes,
                                        const unsigned int byte_count)
@@ -112,16 +112,7 @@ DEFINE_ADD_SCALAR_FUNCTION(double,         float_64, TYPE_FLOAT_64)
 DEFINE_ADD_SCALAR_FUNCTION(__float128,    float_128, TYPE_FLOAT_128)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,   decimal_64, TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
-DEFINE_ADD_SCALAR_FUNCTION(uint64_t,        time_64, TYPE_TIME_64)
-
-static inline bool add_time_40(cbe_buffer* const buffer, const uint64_t value)
-{
-    unsigned int byte_count = 40/8;
-    RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(buffer, byte_count);
-    add_primitive_type(buffer, TYPE_TIME_40);
-    add_primitive_bytes(buffer, (uint8_t*)&value, byte_count);
-    return true;
-}
+DEFINE_ADD_SCALAR_FUNCTION(uint64_t,           time, TYPE_TIME)
 
 static bool add_array(cbe_buffer* const buffer,
                       const cbe_type_field array_type,
@@ -241,25 +232,13 @@ bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value)
 
 bool cbe_add_time(cbe_buffer* const buffer, const cbe_time* const time)
 {
-    if(time->microsecond != 0)
-    {
-        uint64_t value = ((uint64_t)time->year   << TIME_64_BITSHIFT_YEAR)   |
-                         ((uint64_t)time->month  << TIME_64_BITSHIFT_MONTH)  |
-                         ((uint64_t)time->day    << TIME_64_BITSHIFT_DAY)    |
-                         ((uint64_t)time->hour   << TIME_64_BITSHIFT_HOUR)   |
-                         ((uint64_t)time->minute << TIME_64_BITSHIFT_MINUTE) |
-                         ((uint64_t)time->second << TIME_64_BITSHIFT_SECOND) |
-                         time->microsecond;
-        return add_time_64(buffer, value);
-    }
-
-    uint64_t value = ((uint64_t)time->year   << TIME_40_BITSHIFT_YEAR)   |
-                     ((uint64_t)time->month  << TIME_40_BITSHIFT_MONTH)  |
-                     ((uint64_t)time->day    << TIME_40_BITSHIFT_DAY)    |
-                     ((uint64_t)time->hour   << TIME_40_BITSHIFT_HOUR)   |
-                     ((uint64_t)time->minute << TIME_40_BITSHIFT_MINUTE) |
-                     time->second;
-    return add_time_40(buffer, value);
+    uint64_t value = ((int64_t)time->year    << TIME_BITSHIFT_YEAR)   |
+                     ((uint64_t)time->day    << TIME_BITSHIFT_DAY)    |
+                     ((uint64_t)time->hour   << TIME_BITSHIFT_HOUR)   |
+                     ((uint64_t)time->minute << TIME_BITSHIFT_MINUTE) |
+                     ((uint64_t)time->second << TIME_BITSHIFT_SECOND) |
+                     time->microsecond;
+    return add_time(buffer, value);
 }
 
 bool cbe_start_list(cbe_buffer* const buffer)

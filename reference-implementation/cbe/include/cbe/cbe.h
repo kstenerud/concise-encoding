@@ -32,9 +32,8 @@ typedef struct
 
 typedef struct
 {
-	unsigned int year;
-	uint8_t month;
-	uint8_t day;
+	int year;
+	unsigned int day;
 	uint8_t hour;
 	uint8_t minute;
 	uint8_t second;
@@ -423,7 +422,7 @@ typedef struct {
 	bool (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
 	bool (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
 #endif // CBE_HAS_DECIMAL_SUPPORT
-	bool (*on_array_time)(const uint64_t* start, const uint64_t* end);
+	bool (*on_array_time)(const int64_t* start, const int64_t* end);
 } cbe_decode_callbacks;
 
 

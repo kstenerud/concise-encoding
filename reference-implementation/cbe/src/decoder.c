@@ -155,36 +155,17 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_MAP:
                 if(!callbacks->on_map_start()) return NULL;
                 break;
-
-            case TYPE_TIME_40:
+            case TYPE_TIME:
             {
-                REQUEST_BYTES("40-bit time", 40/8)
-                uint64_t value = read_uint_40(buffer);
+                REQUEST_BYTES("time", 64/8)
+                int64_t value = read_int_64(buffer);
                 cbe_time time =
                 {
-                    .year   = value >> TIME_40_BITSHIFT_YEAR,
-                    .month  = (value >> TIME_40_BITSHIFT_MONTH)  & TIME_MASK_MONTH,
-                    .day    = (value >> TIME_40_BITSHIFT_DAY)    & TIME_MASK_DAY,
-                    .hour   = (value >> TIME_40_BITSHIFT_HOUR)   & TIME_MASK_HOUR,
-                    .minute = (value >> TIME_40_BITSHIFT_MINUTE) & TIME_MASK_MINUTE,
-                    .second = value & TIME_MASK_SECOND,
-                    .microsecond = 0,
-                };
-                if(!callbacks->on_time(&time)) return NULL;
-                break;
-            }
-            case TYPE_TIME_64:
-            {
-                REQUEST_BYTES("64-bit time", 64/8)
-                uint64_t value = read_uint_64(buffer);
-                cbe_time time =
-                {
-                    .year   = value >> TIME_64_BITSHIFT_YEAR,
-                    .month  = (value >> TIME_64_BITSHIFT_MONTH)  & TIME_MASK_MONTH,
-                    .day    = (value >> TIME_64_BITSHIFT_DAY)    & TIME_MASK_DAY,
-                    .hour   = (value >> TIME_64_BITSHIFT_HOUR)   & TIME_MASK_HOUR,
-                    .minute = (value >> TIME_64_BITSHIFT_MINUTE) & TIME_MASK_MINUTE,
-                    .second = (value >> TIME_64_BITSHIFT_SECOND) & TIME_MASK_SECOND,
+                    .year   = value >> TIME_BITSHIFT_YEAR,
+                    .day    = (value >> TIME_BITSHIFT_DAY)    & TIME_MASK_DAY,
+                    .hour   = (value >> TIME_BITSHIFT_HOUR)   & TIME_MASK_HOUR,
+                    .minute = (value >> TIME_BITSHIFT_MINUTE) & TIME_MASK_MINUTE,
+                    .second = (value >> TIME_BITSHIFT_SECOND) & TIME_MASK_SECOND,
                     .microsecond = value & TIME_MASK_MICROSECOND,
                 };
                 if(!callbacks->on_time(&time)) return NULL;
@@ -287,11 +268,8 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_ARRAY_DECIMAL_128:
                 HANDLE_CASE_ARRAY(_Decimal128, on_array_decimal_128);
                 break;
-            case TYPE_ARRAY_TIME_40:
-                HANDLE_CASE_ARRAY(uint64_t, on_array_time);
-                break;
-            case TYPE_ARRAY_TIME_64:
-                HANDLE_CASE_ARRAY(uint64_t, on_array_time);
+            case TYPE_ARRAY_TIME:
+                HANDLE_CASE_ARRAY(int64_t, on_array_time);
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {
