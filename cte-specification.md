@@ -337,7 +337,7 @@ Uppercase and lowercase
 
 Only the following may contain uppercase:
 
- * String contents: "A string may contain UPPERCASE. Escapes as well: \x3D"
+ * String contents: `"A string may contain UPPERCASE. Escapes as well: \x3D"`
  * Time values must be entirely in uppercase: `2018-07-01T10:53:22.001481Z`
 
 Everything else, including hexadecimal digits, must be entirely in lowercase.
@@ -347,16 +347,16 @@ Everything else, including hexadecimal digits, must be entirely in lowercase.
 Whitespace
 ----------
 
-Whitespace may occur between objects, and between array or container openings/closings (`[`, `]`, `{`, `}`, `(`, `)`).
+Whitespace may occur between objects, and between array or container openings/closings: `[`, `]`, `{`, `}`, `(`, `)`
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
  * `f32( 1.1   1.2     1.3   )` is equivalent to `f32(1.1 1.2 1.3)`
 
-Whitespace must NOT occur:
+#### Whitespace must NOT occur:
 
  * Between an array type specifier and the opening parenthesis (`i32 (` is invalid)
- * Between time fields (`2018-07-01 T 10:53:22.001481 Z` is invalid)
- * Anywhere inside a numeric value (`3f h`, `9.41 d`, `3 000`, `9.3 e+3` are all invalid)
+ * Splitting a time value (`2018-07-01 T 10:53:22.001481 Z` is invalid)
+ * Splitting a numeric value (`3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid)
 
 
 
@@ -370,7 +370,8 @@ Illegal encodings must not be used, as they may cause problems or even API viola
   * Maps must not contain duplicate keys (that includes mathematically equivalent keys).
   * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
   * An array's elements must be small enough to fit in the array's designated element type.
-  * Whitespace violations as described in the whitespace section.
+  * Uppercase text is not allowed, except in strings and time values.
+  * Whitespace must only occur as described in the whitespace section.
 
 
 
