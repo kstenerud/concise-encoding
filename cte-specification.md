@@ -3,7 +3,8 @@ Concise Text Encoding
 
 A general purpose, human readable representation of semi-structured hierarchical data.
 
-Designed with the following goals:
+Goals
+-----
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
@@ -13,9 +14,18 @@ Designed with the following goals:
   * Type compatible with CBE (Concise Binary Encoding)
 
 
+Structure
+---------
+
 A CTE document consists of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
-For example:
+Whitespace is used to separate elements in a container or array. Maps separate keys and values using a colon `:`, and key-value pairs with whitespace.
+
+Example:
+
+    "A single string object"
+
+A more complex example:
 
     {
         "list":           [1 2 "a string"]
@@ -32,8 +42,7 @@ For example:
         "array of int16": i16(1000 2000 3000)
     }
 
-Whitespace is used to separate elements in a container or array.
-
+Objects may be of any type described below.
 
 
 Scalar Types
@@ -48,25 +57,27 @@ Example:
     true
     false
 
+The shorthands `t` for true and `f` for false are also recognized.
+
 
 ### Integer
 
-Represents two's complement signed integers up to a width of 128 bits.
+Represents two's complement signed integers up to a width of 128 bits. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit. `1,,00,0`, while aesthetically questionable, is valid for parsing. Magnitude separators have no meaning to the parser, and are discarded.
 
 Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
 
-| Suffix | Name        | Base |
-| ------ | ----------- | ---- |
-| b      | Binary      |   2  |
-| o      | Octal       |   8  |
-| h      | Hexadecimal |  16  |
-| (none) | Decimal     |  10  |
+| Base | Name        | Suffix |
+| ---- | ----------- | ------ |
+|   2  | Binary      | b      |
+|   8  | Octal       | o      |
+|  10  | Decimal     | (none) |
+|  16  | Hexadecimal | h      |
 
 Examples:
 
 | Notation  | Base | Decimal Integer Value |
 | --------- | ---- | --------------------- |
-| 900000    |  10  | 900000                |
+| 900,000   |  10  | 900000                |
 | -1100b    |   2  | -12                   |
 | 755o      |   8  | 493                   |
 | deadbeefh |  16  | 3735928559            |
@@ -74,17 +85,17 @@ Examples:
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e` or `E`.
+Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. The radix character is `.`. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit before the radix.
 
 Examples:
 
     1.25e+7
-    -99.00001
+    -999,999,999.00001
 
 
 ### Decimal Floating Point
 
-Represents ieee754 decimal floating point values with widths from 64 to 128. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary.
+Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. The radix character is `.`. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit before the radix.
 
 Decimal floating values are differentiated from binary floating values by adding a `d` suffix.
 
@@ -106,7 +117,7 @@ The date-time format is a restricted form of the ISO 8601 extended format:
  * Only the fractional seconds field is optional. All other fields are mandatory.
  * The allowed formats are more restricted.
 
-Like ISO 8601, the date and time components are separted by a capital T, and have optional fractional seconds.
+Like ISO 8601, the date and time components are separted by a capital `T`, and have optional fractional seconds.
 
 General format:
 
@@ -125,7 +136,7 @@ The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM
 | HH    | Hour offset      | 00      | 23      |
 | MM    | Minute offset    | 00      | 59      |
 
-It's recommended to use the zero timezone whenever possible, and only use other timezones when there's a compelling reason to do so.
+It's recommended to always use the zero timezone, and only use other timezones when there's a compelling reason to do so.
 
 Examples:
 
@@ -161,7 +172,7 @@ The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To maintain 
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
 
-All dates in Gregorian format must use the Gregorian calendar. For dates prior to October 15th, 1582, the proplectic Gregorian calendar must used when outputting in this format (whereby the Gregorian calendar system is applied backwards preceeding its introduction). Care must be taken due to the 10 days (October 4th - October 14th, 1582) stricken from the calendar in the Gregorian reform.
+All dates in Gregorian format must use the Gregorian calendar. When outputting dates prior to October 15th, 1582, the proplectic Gregorian calendar must used (whereby the Gregorian calendar system is applied backwards preceding its introduction). Beware: Here be dragons!
 
 ##### Ordinal Date Format
 
@@ -174,7 +185,7 @@ All dates in Gregorian format must use the Gregorian calendar. For dates prior t
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
 
-Use this format if it is undesirable to use the Gregorian date representation.
+Use this format when it is undesirable to use the Gregorian date representation.
 
 
 #### Time Component
@@ -249,6 +260,7 @@ An array begins with an array type prefix, an opening parenthesis `(`, whitespac
 | `f32`  | 32-bit binary floating point   |
 | `f64`  | 64-bit binary floating point   |
 | `f128` | 128-bit binary floating point  |
+| `d32`  | 32-bit decimal floating point  |
 | `d64`  | 64-bit decimal floating point  |
 | `d128` | 128-bit decimal floating point |
 | `t`    | time                           |
@@ -275,7 +287,7 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must be unique.
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must have a unique value, even across data types (for example, 10 and 10d).
 
 Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace.
 
@@ -307,9 +319,9 @@ Example:
 Comments
 --------
 
-Comments may be placed anywhere an object can be placed. Any number of comments may occur in a row. Comments may also precede or follow the top level object in a document. A parser is not required to preserve comments.
+Comments may be placed anywhere an object can be placed. Any number of comments may occur in a row. A parser is free to discard comments.
 
-Comments can be preceeded by whitespace, begin with the sequence `//`, and terminate on a newline.
+Comments begin with the sequence `//` and terminate on a newline.
 
 Example:
 
@@ -320,16 +332,45 @@ Example:
 
 
 
+Uppercase and lowercase
+-----------------------
+
+Only the following may contain uppercase:
+
+ * String contents: "A string may contain UPPERCASE. Escapes as well: \x3D"
+ * Time values must be entirely in uppercase: `2018-07-01T10:53:22.001481Z`
+
+Everything else, including hexadecimal digits, must be entirely in lowercase.
+
+
+
+Whitespace
+----------
+
+Whitespace may occur between objects, and between array or container openings/closings (`[`, `]`, `{`, `}`, `(`, `)`).
+
+ * `[   1     2      3 ]` is equivalent to `[1 2 3]`
+ * `f32( 1.1   1.2     1.3   )` is equivalent to `f32(1.1 1.2 1.3)`
+
+Whitespace must NOT occur:
+
+ * Between an array type specifier and the opening parenthesis (`i32 (` is invalid)
+ * Between time fields (`2018-07-01 T 10:53:22.001481 Z` is invalid)
+ * Anywhere inside a numeric value (`3f h`, `9.41 d`, `3 000`, `9.3 e+3` are all invalid)
+
+
+
 Illegal Encodings
 -----------------
 
-Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings.
+Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A parser may discard illegal encodings.
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
-  * Maps must not contain duplicate keys.
+  * Maps must not contain duplicate keys (that includes mathematically equivalent keys).
   * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
   * An array's elements must be small enough to fit in the array's designated element type.
+  * Whitespace violations as described in the whitespace section.
 
 
 

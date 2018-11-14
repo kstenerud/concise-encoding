@@ -34,6 +34,7 @@ add_executable(cbe_test
                    src/float_32.cpp
                    src/float_64.cpp
                    src/float_128.cpp
+                   src/decimal_32.cpp
                    src/decimal_64.cpp
                    src/decimal_128.cpp
                    src/time.cpp

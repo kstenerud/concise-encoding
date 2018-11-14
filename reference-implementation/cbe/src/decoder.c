@@ -70,6 +70,7 @@ DEFINE_READ_FUNCTION(__int128,    int_128)
 DEFINE_READ_FUNCTION(float,       float_32)
 DEFINE_READ_FUNCTION(double,      float_64)
 DEFINE_READ_FUNCTION(__float128, float_128)
+DEFINE_READ_FUNCTION(_Decimal32,  decimal_32)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
 
@@ -175,7 +176,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
             case TYPE_STRING_4: case TYPE_STRING_5: case TYPE_STRING_6: case TYPE_STRING_7:
             case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
-            case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_MAX:
+            case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
             {
                 uint64_t byte_count = type - TYPE_STRING_0;
                 REQUEST_BYTES("string", byte_count)
@@ -216,6 +217,9 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 break;
             case TYPE_FLOAT_128:
                 HANDLE_CASE_SCALAR(FLOAT_128, float_128)
+                break;
+            case TYPE_DECIMAL_32:
+                HANDLE_CASE_SCALAR(DECIMAL_32, decimal_32)
                 break;
             case TYPE_DECIMAL_64:
                 HANDLE_CASE_SCALAR(DECIMAL_64, decimal_64)
@@ -261,6 +265,9 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 break;
             case TYPE_ARRAY_FLOAT_128:
                 HANDLE_CASE_ARRAY(__float128, on_array_float_128);
+                break;
+            case TYPE_ARRAY_DECIMAL_32:
+                HANDLE_CASE_ARRAY(_Decimal32, on_array_decimal_32);
                 break;
             case TYPE_ARRAY_DECIMAL_64:
                 HANDLE_CASE_ARRAY(_Decimal64, on_array_decimal_64);

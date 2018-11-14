@@ -15,6 +15,7 @@
 #define FITS_IN_INT_64(VALUE)     ((VALUE) == (int64_t)(VALUE))
 #define FITS_IN_FLOAT_32(VALUE)   ((VALUE) == (double)(float)(VALUE))
 #define FITS_IN_FLOAT_64(VALUE)   ((VALUE) == (double)(VALUE))
+#define FITS_IN_DECIMAL_32(VALUE) ((VALUE) == (_Decimal32)(VALUE))
 #define FITS_IN_DECIMAL_64(VALUE) ((VALUE) == (_Decimal64)(VALUE))
 
 static inline unsigned int get_length_field_width(const uint64_t length)
@@ -52,6 +53,7 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(__int128,        int_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(float,          float_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(double,         float_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(__float128,    float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal32,   decimal_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal64,   decimal_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(_Decimal128, decimal_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,            time)
@@ -110,6 +112,7 @@ DEFINE_ADD_SCALAR_FUNCTION(__int128,        int_128, TYPE_INT_128)
 DEFINE_ADD_SCALAR_FUNCTION(float,          float_32, TYPE_FLOAT_32)
 DEFINE_ADD_SCALAR_FUNCTION(double,         float_64, TYPE_FLOAT_64)
 DEFINE_ADD_SCALAR_FUNCTION(__float128,    float_128, TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(_Decimal32,   decimal_32, TYPE_DECIMAL_32)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,   decimal_64, TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
 DEFINE_ADD_SCALAR_FUNCTION(uint64_t,           time, TYPE_TIME)
@@ -219,13 +222,20 @@ bool cbe_add_float_128(cbe_buffer* const buffer, const __float128 value)
     return add_float_128(buffer, value);
 }
 
+bool cbe_add_decimal_32(cbe_buffer* const buffer, const _Decimal32 value)
+{
+    return add_decimal_32(buffer, value);
+}
+
 bool cbe_add_decimal_64(cbe_buffer* const buffer, const _Decimal64 value)
 {
+    if(FITS_IN_DECIMAL_32(value)) return add_decimal_32(buffer, value);
     return add_decimal_64(buffer, value);
 }
 
 bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value)
 {
+    if(FITS_IN_DECIMAL_32(value)) return add_decimal_32(buffer, value);
     if(FITS_IN_DECIMAL_64(value)) return add_decimal_64(buffer, value);
     return add_decimal_128(buffer, value);
 }
@@ -264,7 +274,7 @@ bool cbe_end_container(cbe_buffer* const buffer)
 
 bool cbe_add_string(cbe_buffer* const buffer, const char* const str, const int byte_count)
 {
-    const int small_length_max = TYPE_STRING_MAX - TYPE_STRING_0;
+    const int small_length_max = TYPE_STRING_15 - TYPE_STRING_0;
     if(byte_count > small_length_max)
     {
         return add_array(buffer, TYPE_ARRAY_STRING, (const uint8_t* const)str, byte_count, sizeof(*str));
@@ -315,6 +325,11 @@ bool cbe_add_array_float_64(cbe_buffer* const buffer, const double* const values
 bool cbe_add_array_float_128(cbe_buffer* const buffer, const __float128* const values, const int entity_count)
 {
     return add_array(buffer, TYPE_ARRAY_FLOAT_128, (const uint8_t* const)values, entity_count, sizeof(*values));
+}
+
+bool cbe_add_array_decimal_32(cbe_buffer* const buffer, const _Decimal32* const values, const int entity_count)
+{
+    return add_array(buffer, TYPE_ARRAY_DECIMAL_32, (const uint8_t* const)values, entity_count, sizeof(*values));
 }
 
 bool cbe_add_array_decimal_64(cbe_buffer* const buffer, const _Decimal64* const values, const int entity_count)

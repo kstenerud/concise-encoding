@@ -175,62 +175,115 @@ bool cte_parse_string(const char* const input, const cte_parse_callbacks* const 
 
 static const char* string_unescape(char* str)
 {
-    char* write_pos = str;
     char* read_pos = str;
-    const char* const end_pos = str + strlen(str);
-    while(*read_pos != 0)
+    char* read_end = read_pos + strlen(read_pos);
+    char* write_pos = str;
+
+    for(; read_pos < read_end; read_pos++)
     {
-        char ch = *read_pos++;
-        if(ch == '\\')
+        switch(*read_pos)
         {
-            const char* const checkpoint = read_pos - 1;
-            ch = *read_pos++;
-            switch(ch)
+            case '"':
+            *write_pos = 0;
+                return NULL;
+            case '\\':
             {
-                case 0:
-                    return checkpoint;
-                case 'r': *write_pos++ = '\r'; break;
-                case 'n': *write_pos++ = '\n'; break;
-                case 't': *write_pos++ = '\t'; break;
-                case 'f': *write_pos++ = '\f'; break;
-                case 'b': *write_pos++ = '\b'; break;
-                case '\\': *write_pos++ = '\\'; break;
-                case '\"': *write_pos++ = '\"'; break;
-                case '/': *write_pos++ = '/'; break;
-                case 'u':
+                uint8_t* escape_pos = read_pos;
+                int remaining_bytes = read_end - read_pos;
+                if(remaining_bytes < 1)
                 {
-                    if(read_pos + 4 > end_pos)
-                    {
-                        return checkpoint;
-                    }
-                    char oldch = read_pos[4];
-                    read_pos[4] = 0;
-                    unsigned int codepoint = strtoul(read_pos, NULL, 16);
-                    read_pos[4] = oldch;
-                    read_pos += 4;
-                    if(codepoint <= 0x7f)
-                    {
-                        *write_pos++ = (char)codepoint;
-                        break;
-                    }
-                    if(codepoint <= 0x7ff)
-                    {
-                        *write_pos++ = (char)((codepoint >> 6) | 0xc0);
-                        *write_pos++ = (char)((codepoint & 0x3f) | 0x80);
-                        break;
-                    }
-                    *write_pos++ = (char)((codepoint >> 12) | 0xe0);
-                    *write_pos++ = (char)(((codepoint >> 6) & 0x3f) | 0x80);
-                    *write_pos++ = (char)((codepoint & 0x3f) | 0x80);
-                    break;
+                    return escape_pos;
                 }
-                default:
-                    return checkpoint;
+
+                read_pos++;
+                switch(*read_pos)
+                {
+                    case 'r': *write_pos++ = '\r'; break;
+                    case 'n': *write_pos++ = '\n'; break;
+                    case 't': *write_pos++ = '\t'; break;
+                    case '\\': *write_pos++ = '\\'; break;
+                    case '\"': *write_pos++ = '\"'; break;
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+                    {
+                        uint8_t number_buffer[4] = {*read_pos, 0, 0, 0};
+                        read_pos++;
+                        if(is_octal_character(*read_pos))
+                        {
+                            number_buffer[1] = *read_pos;
+                            read_pos++;
+                        }
+                        if(is_octal_character(*read_pos))
+                        {
+                            number_buffer[2] = *read_pos;
+                            read_pos++;
+                        }
+                        *write_pos++ = (uint8_t)strtoul((char*)number_buffer, NULL, 8);
+                        read_pos--;
+                        break;
+                    }
+                    case 'x':
+                    {
+                        if(remaining_bytes < 2)
+                        {
+                            return escape_pos;
+                        }
+                        read_pos++;
+                        if(!is_hex_character(*read_pos))
+                        {
+                            return escape_pos;
+                        }
+                        uint8_t number_buffer[3] = {*read_pos, 0, 0};
+                        read_pos += 1;
+                        if(is_hex_character(*read_pos))
+                        {
+                            number_buffer[1] = *read_pos;
+                            read_pos += 1;
+                        }
+                        *write_pos++ = (uint8_t)strtoul((char*)number_buffer, NULL, 16);
+                        read_pos--;
+                        break;
+                    }
+                    case 'u':
+                    {
+                        if(remaining_bytes < 5)
+                        {
+                            return escape_pos;
+                        }
+                        if(!is_hex_character(read_pos[1])
+                        || !is_hex_character(read_pos[2])
+                        || !is_hex_character(read_pos[3])
+                        || !is_hex_character(read_pos[4]))
+                        {
+                            return escape_pos;
+                        }
+                        uint8_t number_buffer[5] = {read_pos[1], read_pos[2], read_pos[3], read_pos[4], 0};
+                        read_pos += 4;
+                        unsigned int codepoint = strtoul((char*)number_buffer, NULL, 16);
+                        if(codepoint <= 0x7f)
+                        {
+                            *write_pos++ = (uint8_t)codepoint;
+                        }
+                        else if(codepoint <= 0x7ff)
+                        {
+                            *write_pos++ = (uint8_t)((codepoint >> 6) | 0xc0);
+                            *write_pos++ = (uint8_t)((codepoint & 0x3f) | 0x80);
+                        }
+                        else
+                        {
+                            *write_pos++ = (uint8_t)((codepoint >> 12) | 0xe0);
+                            *write_pos++ = (uint8_t)(((codepoint >> 6) & 0x3f) | 0x80);
+                            *write_pos++ = (uint8_t)((codepoint & 0x3f) | 0x80);
+                        }
+                        break;
+                    }
+                    default:
+                        return escape_pos;
+                }
+                break;
             }
-        }
-        else
-        {
-            *write_pos++ = ch;
+            default:
+                *write_pos++ = *read_pos;
+                break;
         }
     }
     *write_pos = 0;

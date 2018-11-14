@@ -2,7 +2,7 @@
 
 TEST(EmptyTest, empty)
 {
-    std::vector<uint8_t> expected_memory = {0x6e};
+    std::vector<uint8_t> expected_memory = {0x94};
 
     expect_memory_after_operation([](cbe_buffer* buffer) {
         return cbe_add_empty(buffer);

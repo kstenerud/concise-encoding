@@ -310,6 +310,16 @@ bool cbe_add_array_float_128(cbe_buffer* const buffer, const __float128* const v
 
 #if CBE_HAS_DECIMAL_SUPPORT
 /**
+ * Add a 32 bit decimal value to the buffer.
+ * Note that this will add a narrower type if it will fit.
+ *
+ * @param buffer The buffer to add to.
+ * @param value The value to add.
+ * @return true if the operation was successful.
+ */
+bool cbe_add_decimal_32(cbe_buffer* const buffer, const _Decimal32 value);
+
+/**
  * Add a 64 bit decimal value to the buffer.
  * Note that this will add a narrower type if it will fit.
  *
@@ -328,6 +338,16 @@ bool cbe_add_decimal_64(cbe_buffer* const buffer, const _Decimal64 value);
  * @return true if the operation was successful.
  */
 bool cbe_add_decimal_128(cbe_buffer* const buffer, const _Decimal128 value);
+
+/**
+ * Add an array of 32-bit decimal values to the buffer.
+ *
+ * @param buffer The buffer to add to.
+ * @param value The values to add.
+ * @param entity_count The number of values to add.
+ * @return true if the operation was successful.
+ */
+bool cbe_add_array_decimal_32(cbe_buffer* const buffer, const _Decimal32* const values, const int entity_count);
 
 /**
  * Add an array of 64-bit decimal values to the buffer.
@@ -366,6 +386,7 @@ typedef enum
 	CBE_NUMERIC_FLOAT_32,
 	CBE_NUMERIC_FLOAT_64,
 	CBE_NUMERIC_FLOAT_128,
+	CBE_NUMERIC_DECIMAL_32,
 	CBE_NUMERIC_DECIMAL_64,
 	CBE_NUMERIC_DECIMAL_128,
 } cbe_numeric_type;
@@ -387,6 +408,7 @@ typedef struct
 		double float_64;
 		__float128 float_128;
 #if CBE_HAS_DECIMAL_SUPPORT
+		_Decimal32 decimal_32;
 		_Decimal64 decimal_64;
 		_Decimal128 decimal_128;
 #endif // CBE_HAS_DECIMAL_SUPPORT
@@ -419,6 +441,7 @@ typedef struct {
 	bool (*on_array_float_64)(const double* start, const double* end);
 	bool (*on_array_float_128)(const __float128* start, const __float128* end);
 #if CBE_HAS_DECIMAL_SUPPORT
+	bool (*on_array_decimal_32)(const _Decimal32* start, const _Decimal32* end);
 	bool (*on_array_decimal_64)(const _Decimal64* start, const _Decimal64* end);
 	bool (*on_array_decimal_128)(const _Decimal128* start, const _Decimal128* end);
 #endif // CBE_HAS_DECIMAL_SUPPORT
