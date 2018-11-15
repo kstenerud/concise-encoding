@@ -189,10 +189,10 @@ All dates in Gregorian format must use the Gregorian calendar. When outputting d
 
     YYYY-DDD
 
-| Field | Meaning       | Minimum | Maximum |
-| ----- | ------------- | ------- | ------- |
-| YYYY  | Year          | -131072 | 131071  |
-| DDD   | Day of year   | 001     | 366     |
+| Field | Meaning       | Minimum | Maximum | Notes              |
+| ----- | ------------- | ------- | ------- | ------------------ |
+| YYYY  | Year          | -131072 | 131071  |                    |
+| DDD   | Day of year   | 001     | 366     | 366 for leap years |
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the day field must be exactly 3 digits long.
 
