@@ -62,7 +62,7 @@ The shorthands `t` for true and `f` for false are also recognized.
 
 ### Integer
 
-Represents two's complement signed integers up to a width of 128 bits. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit. `1,,00,0`, while aesthetically questionable, is valid for parsing. Magnitude separators have no meaning to the parser, and are discarded.
+Represents two's complement signed integers up to a width of 128 bits.
 
 Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
 
@@ -77,7 +77,7 @@ Examples:
 
 | Notation  | Base | Decimal Integer Value |
 | --------- | ---- | --------------------- |
-| 900,000   |  10  | 900000                |
+| 900000    |  10  | 900000                |
 | -1100b    |   2  | -12                   |
 | 755o      |   8  | 493                   |
 | deadbeefh |  16  | 3735928559            |
@@ -85,17 +85,17 @@ Examples:
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. The radix character is `.`. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit before the radix.
+Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. The radix character is `.`.
 
 Examples:
 
     1.25e+7
-    -999,999,999.00001
+    -9.00001
 
 
 ### Decimal Floating Point
 
-Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. The radix character is `.`. Any number of magnitude separators `,` may be present anywhere following the first digit and prior to the last digit before the radix.
+Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. The radix character is `.`.
 
 Decimal floating values are differentiated from binary floating values by adding a `d` suffix.
 
