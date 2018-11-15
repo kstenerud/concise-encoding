@@ -380,12 +380,12 @@ Whitespace
 
 While there are many whitespace characters within the Unicode set, only the following are valid whitespace characters for a CTE document:
 
-| Code Point | ASCII | Name                 |
-| ---------- | ----- | -------------------- |
-| U+0009     | HT    | character tabulation |
-| U+000A     | LF    | line feed            |
-| U+000D     | CR    | carriage return      |
-| U+0020     | SP    | space                |
+| Code Point | Name                 |
+| ---------- | -------------------- |
+| U+0009     | character tabulation |
+| U+000A     | line feed            |
+| U+000D     | carriage return      |
+| U+0020     | space                |
 
 #### Whitespace may occur:
 
