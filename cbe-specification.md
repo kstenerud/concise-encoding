@@ -10,58 +10,16 @@ Goals
   * Supports the most common data types
   * Supports hierarchical data structuring
   * Binary format to minimize parsing costs
-  * Little endian byte ordering to allow native reading directly off the wire
+  * Little endian byte ordering to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
 
 
 
-Types Overview
---------------
+Structure
+---------
 
-Many common data types and structures are supported:
-
-
-### Scalar Types
-
-Binary, stored in little endian byte order.
-
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Boolean  | True or false                                        |
-| Integer  | Signed two's complement, from 8 to 128 bits          |
-| Float    | IEEE 754 floating point, from 32 to 128 bits         |
-| Decimal  | IEEE 754 densely packed decimal, from 64 to 128 bits |
-| Time     | UTC-based date & time, to the microsecond            |
-
-
-### Array Types
-
-Array types can hold multiple scalar values of the same type and size.
-
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Array    | Array of a scalar type                               |
-| Bitfield | Packed "array" of bits                               |
-| String   | Array of UTF-8 encoded bytes (no BOM)                |
-
-
-### Container Types
-
-Containers can store any type, including other containers and mixed types.
-
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| List     | A list containing any types                          |
-| Map      | Scalar or array types for keys, any types for values |
-
-
-### Other Types
-
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Empty    | Denotes the absence of data                          |
-| Padding  | Used to align data in a CPU friendly manner.         |
+A CBE document is a binary encoded document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
 
 
@@ -71,7 +29,7 @@ Encoding
 All objects are composed of a type field and possibly a payload.
 
 
-### Type Field
+#### Type Field
 
 | Code | Type               | Payload                                        |
 | ---- | ------------------ | ---------------------------------------------- |
@@ -119,7 +77,7 @@ All objects are composed of a type field and possibly a payload.
 |  8d  | String: 13 bytes   | [13 octets of data]                            |
 |  8e  | String: 14 bytes   | [14 octets of data]                            |
 |  8f  | String: 15 bytes   | [15 octets of data]                            |
-|  90  | String             | [length] [UTF-8 encoded string]                |
+|  90  | String             | [byte length] [UTF-8 encoded string]           |
 |  91  | List               | [object] ... [end container]                   |
 |  92  | Map                | [key object, value object] ... [end container] |
 |  93  | End of Container   |                                                |
@@ -134,31 +92,10 @@ All objects are composed of a type field and possibly a payload.
 
 
 
-Types
------
+Scalar Types
+------------
 
-### Padding
-
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads off the buffer.
-
-Example:
-
-    [95 95 95 76 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
-    Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers begin on a 4-byte boundary.
-
-
-### Empty Type
-
-Represents the absence of data. Some languages implement this as the NULL value.
-
-Use this with care, as some languages may have restrictions on how it may be used in data structures.
-
-Example:
-
-    [94] = No data
-
-
-### Boolean Type
+### Boolean
 
 True or false.
 
@@ -168,9 +105,9 @@ Examples:
     [96] = false
 
 
-### Integer Type
+### Integer
 
-Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
+Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
 
 Values from -104 to 103 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
@@ -185,9 +122,9 @@ Examples:
     [6a 00 f0 5a 2b 17 ff ff ff] = -1000000000000
 
 
-### Floating Point Type
+### Binary Floating Point
 
-IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read directly off the buffer in little endian byte order.
+IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
 
 Examples:
 
@@ -195,18 +132,20 @@ Examples:
     [6d 66 66 66 66 66 42 A0 40] = 1281.2
 
 
-### Decimal Type
+### Decimal Floating Point
 
-IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bits wide, used in financial applications where emulation of decimal rounding is necessary. They can be read directly off the buffer in little endian byte order.
+IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bits wide. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. They can be read directly from the buffer in little endian byte order.
 
 Example:
 
     [70 D0 03 00 00 00 00 30 A2] = -7.50
 
 
-### Time Type
+### Time
 
-Date/time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly off the buffer in little endian byte order. They are comparable, but cannot be used arithmetically.
+Represents a date & time.
+
+Date-time values use an ordinal format (day-of-year rather than day-of-month), are UTC based, and are binary packed into a signed 64-bit integer. The packed representation can be read directly from the buffer in little endian byte order and can be compared, but cannot be used arithmetically.
 
 #### Encoding
 
@@ -230,7 +169,11 @@ Example:
     [72 2e bc 0d 59 68 65 f0 01] = 1985-10-26T08:22:16.900142Z = Oct 26th, 1985 8:22:16.900142 GMT
 
 
-### Array Type
+
+Array Types
+-----------
+
+### Standard Array
 
 An array of scalar values. All elements are of the same type and width.
 
@@ -238,27 +181,26 @@ An array of scalar values. All elements are of the same type and width.
 
 The elements themselves do *NOT* contain a type field; only a payload. The content type is inferred from the array type.
 
-The string and bitfield arrays are handled a little differently, and will be discussed separately.
+The string and bitfield arrays are handled a little differently, and are discussed separately.
 
 #### Array Length Field
 
-The array length field is an unsigned integer that represents the number of elements in the array, not the byte count (the only exception to this is the string type - see below).
+The array length field is a little endian encoded unsigned integer that represents the number of *elements* in the array, not the byte count (the only exception to this is the string type, which is discussed separately).
 
 The two lowest bits are the width code, and determine the full field width:
 
 | Code |  Width  | Bit Layout        |
 | ---- | ------- | ----------------- |
-|   0  |  6 bits | 00LLLLLL          |
-|   1  | 14 bits | 10LLLLLL +  8 x L |
-|   2  | 30 bits | 01LLLLLL + 24 x L |
-|   3  | 62 bits | 11LLLLLL + 56 x L |
-
-Legend: LSB to the left, MSB to the right, L = length bit
+|   0  |  6 bits | LLLLLL00          |
+|   1  | 14 bits | LLLLLL01 +  8 x L |
+|   2  | 30 bits | LLLLLL10 + 24 x L |
+|   3  | 62 bits | LLLLLL11 + 56 x L |
 
 To read the length:
 
-  * Read the first byte and mask the lower 2 bits to get the width subfield ( width = byte & 3 ).
-  * Read from the same location as an unsigned integer of the correct width and shift "right" by 2 ( length = value >> 2 ).
+  * Read the first byte and mask the lower 2 bits to get the width code subfield ( width_code = first_byte & 3 ).
+  * If the width code > 0, read from the same location as an unsigned integer of the corresponding width (16, 32, 64 bits).
+  * Shift "right" unsigned by 2 ( length = value >> 2 ) to get the final value.
 
 Examples:
 
@@ -267,27 +209,11 @@ Examples:
     [7a a0 0f ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
 
 
-#### Special Case: Boolean Array
-
-Boolean arrays are encoded as little endian bitfields (least significant bit first). The length of the array is in bits.
-
-Bitfields start at the low bit (0) of the first byte, and end on one of the bits in byte (n/8)-1 (remember: array unit is bits, not bytes). Bits in the higher positions above the last bit of the last byte are cleared.
-
-|     |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
-| --- | -------- | -------- | --- | ------------ |
-| Bit | 01234567 | 01234567 | ... | 01234xxx     |
-|     | <- LSB   |          |     | MSB ->       |
-
-For example:
-
-    [73 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
-
-
-### String Type
+### String
 
 Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), NOT the character length.
 
-For byte lengths from 0 to 15, there are special top-level inferred-length string types. For larger strings, use the general (0x80) string type.
+For byte lengths from 0 to 15, there are special top-level inferred-length string types (0x80 - 0x8f). For longer strings, use the general (0x90) string type.
 
 Examples:
 
@@ -295,7 +221,7 @@ Examples:
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [90 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
-Implementations requiring null-terminated strings can modify the underlying buffer after extracting values and offsets.
+For implementations requiring null-terminated strings, one possible option would be to modify the underlying buffer after extracting values and offsets.
 
 Example: Map containing {"alpha": 1, "beta": 2}
 
@@ -306,9 +232,9 @@ Original data:
 | 92  | 85     | 61 | 6c | 70 | 68 | 61 | 01 | 84     | 62 | 65 | 74 | 61 | 02 | 93            |
 | Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
 
-First, extract data, including pointers to offset 2 ("alpha") and offset 9 ("beta").
+First, extract data (values `1` and `2`), including pointers to offset 2 ("alpha") and offset 9 ("beta").
 
-Next, apply null termination by overwriting the type field of the next value following the string:
+Next, apply null termination by overwriting the type field of the next value following each string:
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7   | 8      | 9  | 10 | 11 | 12 | 13  | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | --- | ------ | -- | -- | -- | -- | --- | ------------- |
@@ -316,9 +242,32 @@ Next, apply null termination by overwriting the type field of the next value fol
 | Map | String | a  | l  | p  | h  | a  | nul | String | b  | e  | t  | a  | nul | End container |
 
 
-### List Type
+### Boolean Array
 
-Lists are generalized object containers that can contain any type, including other containers. Elements of a list don't have to be all of the same type.
+Boolean arrays are encoded as little endian bitfields (least significant bit is in the first byte). The length field represents the number of bits (not bytes) in the array.
+
+Bitfields start at the low bit (0) of the first byte, and end on one of the bits in byte (n/8)-1. Bits in the higher positions above the last bit of the last byte are cleared.
+
+The common convention is to represent byte values with the MSB to the "left". However, bitfields are "logically" understood to be LSB-first bit arrays (whereby the lowest bit of the first byte is the first entry in the array).
+
+
+| Bit Ordering  |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
+| ------------- | -------- | -------- | --- | ------------ |
+| Common        | 76543210 | 76543210 | ... | ___43210     |
+| Logical       | 01234567 | 01234567 | ... | 01234___     |
+
+For example, an encoded bit array and its logical representation:
+
+    [73 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
+
+
+
+Container Types
+---------------
+
+### List
+
+A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
 List elements are stored using regular object encoding (type field + possible payload), and the list is terminated by an "end of container" marker.
 
@@ -327,15 +276,17 @@ Example:
     [91 01 68 88 13 93] = List containing integers (1, 5000)
 
 
-### Map Type
+### Map
 
-A map associates objects (keys) with other objects (values). Keys may be scalar or array types, and must not be `empty`. Values may be of any type, including other containers.
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+
+ * 2000 (16-bit integer)
+ * 2000 (32-bit integer)
+ * 2000.0 (32-bit float)
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
     [91] [key 1] [value 1] [key 2] [value 2] ... [93]
-
-All keys in a map must be unique, even mathematically and across type widths. For example, you cannot store both 0x1000 (16-bit) and 0x00001000 (32-bit) as keys in the same map.
 
 Example:
 
@@ -343,10 +294,35 @@ Example:
 
 
 
+Other Types
+-----------
+
+### Empty
+
+Represents the absence of data. Some languages implement this as the NULL value.
+
+Use this with care, as some languages may have restrictions on how it may be used in data structures.
+
+Example:
+
+    [94] = No data
+
+
+### Padding
+
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads from the buffer on the receiving end.
+
+Example:
+
+    [95 95 95 76 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
+    Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers begin on a 4-byte boundary.
+
+
+
 Illegal Encodings
 -----------------
 
-Illegal encodings must not be used, as they will cause problems or even API violations in certain languages & platforms. A decoder may discard illegal encodings.
+Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings, or may even abort processing.
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
@@ -358,9 +334,9 @@ Illegal encodings must not be used, as they will cause problems or even API viol
 Smallest Possible Size
 ----------------------
 
-Preservation of the original data width information is not considered important by default (with the exception of arrays). Encoders are encouraged to find the smallest width of the same data type that stores a value without loss.
+Preservation of the original numeric data type information is not considered important by default (with the exception of arrays). Encoders are encouraged to find the smallest type and width that stores a numeric value without data loss.
 
-For specialized applications, an encoder implementation may choose to preserve larger type widths as a tradeoff in processing cost vs data size.
+For specialized applications, an encoder implementation may choose to preserve larger types and widths as a tradeoff in processing cost vs data size.
 
 
 
@@ -406,7 +382,7 @@ A CBE file is composed of a CBE header, followed by a CBE encoded object.
     [CBE header] [CBE encoded object]
 
 
-### Header
+### CBE Header
 
 The 4-byte header is composed of the characters `C`, `B`, `E`, and then a version number.
 

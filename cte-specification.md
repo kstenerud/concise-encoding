@@ -14,12 +14,13 @@ Goals
   * Type compatible with CBE (Concise Binary Encoding)
 
 
+
 Structure
 ---------
 
-A CTE document consists of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
+A CTE document is a UTF-8 encoded text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
-Whitespace is used to separate elements in a container or array. Maps separate keys and values using a colon `:`, and key-value pairs with whitespace.
+Whitespace is used to separate elements in a container or array. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
 Example:
 
@@ -28,10 +29,11 @@ Example:
 A more complex example:
 
     {
+        # A comment
         "list":           [1 2 "a string"]
         "sub-map":        {1: "one" 2: "two" 3: 3000}
         "boolean":        true
-        "binary int":     10001011b
+        "binary int":     -10001011b
         "octal int":      644o
         "regular int":    -10000000
         "hex int":        fffe0001h
@@ -45,24 +47,25 @@ A more complex example:
 Objects may be of any type described below.
 
 
+
 Scalar Types
 ------------
 
 ### Boolean
 
-Supports the values true and false.
+Supports the values `true` and `false`, and their aliases `t` and `f`.
 
 Example:
 
     true
     false
-
-The shorthands `t` for true and `f` for false are also recognized.
+    t
+    f
 
 
 ### Integer
 
-Represents two's complement signed integers up to a width of 128 bits.
+Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-`.
 
 Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
 
@@ -82,34 +85,40 @@ Examples:
 | 755o      |   8  | 493                   |
 | deadbeefh |  16  | 3735928559            |
 
+Numbers must be written in lower case.
+
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. The radix character is `.`.
+Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`. The radix character is `.`.
 
 Examples:
 
     1.25e+7
     -9.00001
 
+Numbers must be written in lower case.
+
 
 ### Decimal Floating Point
 
-Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. The radix character is `.`.
+Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Negative values are prefixed with a dash `-`. The radix character is `.`.
 
-Decimal floating values are differentiated from binary floating values by adding a `d` suffix.
+Decimal floating point values are differentiated from binary floating point values by adding a `d` suffix.
 
 Examples:
 
     12.99d
     -100.04d
 
+Numbers must be written in lower case.
+
 
 ### Time
 
 Represents a date & time.
 
-The date-time format is a restricted form of the ISO 8601 extended format:
+The date-time format is a restricted form of the ISO 8601 extended date format:
 
  * Time zones are mandatory.
  * Time intervals are not allowed.
@@ -117,7 +126,7 @@ The date-time format is a restricted form of the ISO 8601 extended format:
  * Only the fractional seconds field is optional. All other fields are mandatory.
  * The allowed formats are more restricted.
 
-Like ISO 8601, the date and time components are separted by a capital `T`, and have optional fractional seconds.
+Like ISO 8601, the date and time components are separted by a capital `T`.
 
 General format:
 
@@ -128,7 +137,7 @@ This allows date/time values to be parsed by a conforming iso8601 parser.
 
 #### Time Zone Designators
 
-The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator `Z` to refer to UTC. The timezone field must not be omitted.
+The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator `Z` (capitalized) to refer to UTC. The timezone field must not be omitted.
 
 | Field | Meaning          | Minimum | Maximum |
 | ----- | ---------------- | ------- | ------- |
@@ -137,6 +146,8 @@ The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM
 | MM    | Minute offset    | 00      | 59      |
 
 It's recommended to always use the zero timezone, and only use other timezones when there's a compelling reason to do so.
+
+A parser is not required to preserve the supplied time zone (it may, for example, convert all dates to be UTC-based).
 
 Examples:
 
@@ -152,7 +163,7 @@ Examples:
 
 Date fields are separated by dashes. Dates may be represented either in Gregorian date format (YYYY-MM-DD) or in ordinal date format (YYYY-DDD).
 
-To maintain compatibility with CBE (Concise Binary Encoding), only years from -131072 to 131071 are supported.
+To maintain compatibility with Concise Binary Encoding, only year values from -131072 (which equals -131073 after zero year adjustment) to 131071 are supported.
 
 ##### Eras and Zero Year
 
@@ -172,7 +183,7 @@ The Anno Domini system has no zero year (there is no 0 BC or 0 AD). To maintain 
 
 The year field must be 4 or more digits long (not including the optional dash for era), and the month and day fields must be exactly 2 digits long.
 
-All dates in Gregorian format must use the Gregorian calendar. When outputting dates prior to October 15th, 1582, the proplectic Gregorian calendar must used (whereby the Gregorian calendar system is applied backwards preceding its introduction). Beware: Here be dragons!
+All dates in Gregorian format must use the Gregorian calendar. When outputting dates prior to October 15th, 1582, the proplectic Gregorian calendar must be used (whereby the Gregorian calendar system is applied backwards preceding its introduction). Beware: Here be dragons!
 
 ##### Ordinal Date Format
 
@@ -194,7 +205,7 @@ The time component has mandatory hour, minute, and second fields, exactly two di
 
     HH:MM:SS
 
-A time component may also contain an optional field for fractional seconds, separated by a period. The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
+A time component may also contain an optional field for fractional seconds, separated by a period `.`. The fractional second field may be from 1 to 6 digits, supporting time down to the microsecond.
 
     HH:MM:SS.ssssss
 
@@ -223,7 +234,7 @@ Array Types
 
 An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes `"`.
 
-The following escape sequences are allowed:
+The following escape sequences are allowed, and must be in lower case:
 
 | Sequence            | Interpretation                  |
 | ------------------- | ------------------------------- |
@@ -247,7 +258,7 @@ A typed array of scalar objects. All members of the array must be of the same ty
 
 An array begins with an array type prefix, an opening parenthesis `(`, whitespace separated contents, and finally a closing parenthesis `)`.
 
-### Array Type Prefixes:
+### Array Type Prefixes (always lower case):
 
 | Type   | Element Data Type              |
 | ------ | ------------------------------ |
@@ -287,7 +298,11 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types, and must not be the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must have a unique value, even across data types (for example, 10 and 10d).
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+
+ * 2000
+ * 2000.0
+ * 2000.0d
 
 Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace.
 
@@ -308,7 +323,9 @@ Other Types
 
 ### Empty
 
-Denotes the absence of data. Some languages implement this as the "null" value.
+Denotes the absence of data. Some languages implement this as the "null" value. It must be in lower case (`Empty`, `EMPTY`, `eMPty` are invalid).
+
+Use this with care, as some languages may have restrictions on how it may be used in data structures.
 
 Example:
 
@@ -319,58 +336,88 @@ Example:
 Comments
 --------
 
-Comments may be placed anywhere an object can be placed. Any number of comments may occur in a row. A parser is free to discard comments.
+Comments may be placed before or after any object (including array elements). Any number of comments may occur in a row. A parser is free to discard comments.
 
-Comments begin with the sequence `//` and terminate on a newline.
+A comment begins with a `#` character and terminates on the next newline character (U+000A).
 
 Example:
 
+    # Comment before top level object
     {
-        // Name field must always be the full name
-        "name": "Joe Average"
+        # Comment before the "name" object.
+        # And another comment.
+        "name": "Joe Average" # Comment before the "email" object.
+        "email": # Comment before the "joe@average.org" object.
+        "joe@average.org"
+        "numbers" # after numbers
+        :
+        # before the array
+        i32( # before 1
+            1 # before 2
+            2
+            # after 2
+            )
     }
+    # Comments at the
+    # end of the document.
 
 
 
-Uppercase and lowercase
------------------------
+Letter Case
+-----------
 
-Only the following may contain uppercase:
+A CTE document must be in lower case, except for the following:
 
- * String contents: `"A string may contain UPPERCASE, but escape sequences may not: \x3d"`
- * Time values must be entirely in uppercase: `2018-07-01T10:53:22.001481Z`
+ * String contents: `"A string may contain UPPER CASE, but escape sequences may not: \x3d"`
+ * Time values must be in upper case: `2018-07-01T10:53:22.001481Z`
 
-Everything else, including hexadecimal digits and escape sequences, must be entirely in lowercase.
+Everything else, including hexadecimal digits and escape sequences, must be lower case.
 
 
 
 Whitespace
 ----------
 
-Whitespace may occur between objects, and between array or container openings/closings: `[`, `]`, `{`, `}`, `(`, `)`
+While there are many whitespace characters within the Unicode set, only the following are valid whitespace characters for a CTE document:
+
+| Code Point | ASCII | Name                 |
+| ---------- | ----- | -------------------- |
+| U+0009     | HT    | character tabulation |
+| U+000A     | LF    | line feed            |
+| U+000D     | CR    | carriage return      |
+| U+0020     | SP    | space                |
+
+#### Whitespace may occur:
+
+ * Before an object (including at the beginning of a document)
+ * After an object (including at the end of a document)
+ * Between array or container openings & closings: `[`, `]`, `{`, `}`, `(`, `)`
+
+Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
  * `f32( 1.1   1.2     1.3   )` is equivalent to `f32(1.1 1.2 1.3)`
+ * `{ 1:"one" 2 : "two" 3: "three" 4 :"four"}`
 
 #### Whitespace must NOT occur:
 
- * Between an array type specifier and the opening parenthesis (`i32 (` is invalid)
- * Splitting a time value (`2018-07-01 T 10:53:22.001481 Z` is invalid)
- * Splitting a numeric value (`3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid)
+ * Between an array type specifier and the opening parenthesis: `i32 (` is invalid
+ * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid
+ * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid
 
 
 
 Illegal Encodings
 -----------------
 
-Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A parser may discard illegal encodings.
+Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A parser may discard illegal encodings, or may even abort processing.
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys (that includes mathematically equivalent keys).
   * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
   * An array's elements must be small enough to fit in the array's designated element type.
-  * Uppercase text is not allowed, except in strings and time values.
+  * Upper case text is not allowed, except in strings and time values.
   * Whitespace must only occur as described in the whitespace section.
 
 
@@ -382,7 +429,10 @@ A CTE file is simply a file containing a single CTE document. Recall that a CTE 
 
 For example: File `mydata.cte`
 
+    # This is an example CTE document!
+    # Remember: Any number of comments can appear in a row.
     {
+        # Here are some mapped values...
         "first": 1
         "second": 2
     }
