@@ -337,10 +337,10 @@ Uppercase and lowercase
 
 Only the following may contain uppercase:
 
- * String contents: `"A string may contain UPPERCASE. Escapes as well: \x3D"`
+ * String contents: `"A string may contain UPPERCASE, but escape sequences may not: \x3d"`
  * Time values must be entirely in uppercase: `2018-07-01T10:53:22.001481Z`
 
-Everything else, including hexadecimal digits, must be entirely in lowercase.
+Everything else, including hexadecimal digits and escape sequences, must be entirely in lowercase.
 
 
 
