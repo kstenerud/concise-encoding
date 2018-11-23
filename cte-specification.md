@@ -18,7 +18,7 @@ Goals
 Structure
 ---------
 
-A CTE document is a UTF-8 encoded text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
+A CTE document is a UTF-8 encoded text document consisting of a single, top-level object. As the document can only be UTF-8, there is no byte order mark (BOM). You can store multiple objects in a document by making the top level object a container.
 
 Whitespace is used to separate elements in a container or array. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
@@ -234,7 +234,7 @@ Array Types
 
 An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes `"`.
 
-The following escape sequences are allowed, and must be in lower case:
+The following escape sequences are allowed inside a string's contents, and must be in lower case:
 
 | Sequence            | Interpretation                  |
 | ------------------- | ------------------------------- |
@@ -254,20 +254,30 @@ Example:
 
 ### Array
 
-A typed array of scalar objects. All members of the array must be of the same type, and fit within the specified size.
+A typed array of scalar objects. All elements of the array must be of the same type and width.
 
 An array begins with an array type prefix, an opening parenthesis `(`, whitespace separated contents, and finally a closing parenthesis `)`.
 
-### Array Type Prefixes (always lower case):
+#### Data Fitting
+
+All elements of an array must fit within the element type and width of the array. If a value cannot be stored in the array's element type and width without losing data, it is invalid.
+
+Examples of invalid values:
+
+ * 1.5 in an integer array
+ * 1000 in an 8-bit integer array,
+ * 1.000481175553291 in a 32-bit binary float array.
+
+#### Array Type Prefixes (always lower case):
 
 | Type   | Element Data Type              |
 | ------ | ------------------------------ |
 | `b`    | boolean                        |
-| `i8`   | 8-bit integer                  |
-| `i16`  | 16-bit integer                 |
-| `i32`  | 32-bit integer                 |
-| `i64`  | 64-bit integer                 |
-| `i128` | 128-bit integer                |
+| `i8`   | 8-bit signed integer           |
+| `i16`  | 16-bit signed integer          |
+| `i32`  | 32-bit signed integer          |
+| `i64`  | 64-bit signed integer          |
+| `i128` | 128-bit signed integer         |
 | `f32`  | 32-bit binary floating point   |
 | `f64`  | 64-bit binary floating point   |
 | `f128` | 128-bit binary floating point  |
@@ -366,9 +376,9 @@ Example:
 Letter Case
 -----------
 
-A CTE document must be in lower case, except for the following:
+A CTE document must be entirely in lower case, with the following exceptions:
 
- * String contents: `"A string may contain UPPER CASE, but escape sequences may not: \x3d"`
+ * String contents: `"A string may contain UPPER CASE. Escape sequences, however, must be lower case: \x3d"`
  * Time values must be in upper case: `2018-07-01T10:53:22.001481Z`
 
 Everything else, including hexadecimal digits and escape sequences, must be lower case.
@@ -378,14 +388,14 @@ Everything else, including hexadecimal digits and escape sequences, must be lowe
 Whitespace
 ----------
 
-While there are many whitespace characters within the Unicode set, only the following are valid whitespace characters for a CTE document:
+While there are many characters classified as "whitespace" within the Unicode set, only the following are valid whitespace characters in a CTE document:
 
-| Code Point | Name                 |
-| ---------- | -------------------- |
-| U+0009     | character tabulation |
-| U+000A     | line feed            |
-| U+000D     | carriage return      |
-| U+0020     | space                |
+| Code Point | Name            |
+| ---------- | --------------- |
+| U+0009     | horizontal tab  |
+| U+000A     | line feed       |
+| U+000D     | carriage return |
+| U+0020     | space           |
 
 #### Whitespace may occur:
 
