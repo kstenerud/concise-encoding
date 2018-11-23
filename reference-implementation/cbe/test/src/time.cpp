@@ -41,46 +41,30 @@ static inline unsigned int to_doy(int year, unsigned int month, unsigned int day
     return days;
 }
 
-inline void expect_memory_after_add_time(const cbe_time* const time, std::vector<uint8_t> const& expected_memory)
+inline void expect_memory_after_add_time(const int64_t time, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_operation([&](cbe_buffer* buffer)
+    expect_memory_after_operation([&](cbe_encode_context* context)
     {
-        return cbe_add_time(buffer, time);
+        return cbe_add_time(context, time);
     }, expected_memory);
 }
 
 #define DEFINE_ADD_TIME_TEST(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC, ...) \
 TEST(TimeTest, time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-    cbe_time time = \
-    { \
-        .year = YEAR, \
-        .day = to_doy(YEAR, MONTH, DAY), \
-        .hour = HOUR, \
-        .minute = MINUTE, \
-        .second = SECOND, \
-        .microsecond = USEC \
-    }; \
+    int64_t time = cbe_new_time(YEAR, to_doy(YEAR, MONTH, DAY), HOUR, MINUTE, SECOND, USEC); \
     std::vector<uint8_t> expected_memory = __VA_ARGS__; \
-    expect_memory_after_add_time(&time, expected_memory); \
+    expect_memory_after_add_time(time, expected_memory); \
     expect_decode_encode(expected_memory); \
 }
 
 #define DEFINE_FAILED_ADD_TIME_TEST(SIZE, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC) \
 TEST(TimeTest, failed_time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-    cbe_time time = \
+    int64_t time = cbe_new_time(YEAR, to_doy(YEAR, MONTH, DAY), HOUR, MINUTE, SECOND, USEC); \
+    expect_failed_operation_decrementing(SIZE, [&](cbe_encode_context* context) \
     { \
-        .year = YEAR, \
-        .day = to_doy(YEAR, MONTH, DAY), \
-        .hour = HOUR, \
-        .minute = MINUTE, \
-        .second = SECOND, \
-        .microsecond = USEC \
-    }; \
-    expect_failed_operation_decrementing(SIZE, [&](cbe_buffer* buffer) \
-    { \
-        return cbe_add_time(buffer, &time); \
+        return cbe_add_time(context, time); \
     }); \
 }
 

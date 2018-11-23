@@ -2,17 +2,17 @@
 
 static void expect_memory_after_add_map(int length, std::vector<uint8_t> expected_memory)
 {
-    expect_memory_after_operation([=](cbe_buffer* buffer)
+    expect_memory_after_operation([=](cbe_encode_context* context)
     {
-        if(!cbe_start_map(buffer)) return false;
+        if(!cbe_start_map(context)) return false;
         for(int i = 0; i < length; i++)
         {
             char stringbuffer[2] = {0};
             stringbuffer[0] = 'a' + i;
-            if(!cbe_add_int_8(buffer, i + 1)) return false;
-            if(!cbe_add_string(buffer, stringbuffer, strlen(stringbuffer))) return false;
+            if(!cbe_add_int_8(context, i + 1)) return false;
+            if(!cbe_add_string(context, stringbuffer)) return false;
         }
-        return cbe_end_container(buffer);
+        return cbe_end_container(context);
     }, expected_memory);
 }
 
@@ -31,11 +31,11 @@ DEFINE_ADD_MAP_TEST(3, {0x92, 1, 0x81, 'a', 2, 0x81, 'b', 3, 0x81, 'c', 0x93})
 
 TEST(MapTest, failed)
 {
-    expect_failed_operation_decrementing(3, [&](cbe_buffer* buffer)
+    expect_failed_operation_decrementing(3, [&](cbe_encode_context* context)
     {
-        cbe_start_list(buffer);
-        cbe_add_int_8(buffer, 0);
-        cbe_add_int_8(buffer, 0);
-        return cbe_end_container(buffer);
+        cbe_start_list(context);
+        cbe_add_int_8(context, 0);
+        cbe_add_int_8(context, 0);
+        return cbe_end_container(context);
     });
 }

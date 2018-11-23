@@ -6,9 +6,9 @@
 #include <cbe/cbe.h>
 #include "decode_encode.h"
 
-static cbe_buffer create_buffer(uint8_t* memory, int size)
+static cbe_encode_context create_encode_context(uint8_t* memory, int size)
 {
-    return cbe_new_buffer(memory, memory + size);
+    return cbe_new_encode_context(memory, memory + size);
 }
 
 template<typename T>
@@ -22,7 +22,7 @@ static std::vector<T> make_values_of_length(int length)
     return vec;
 }
 
-inline void expect_memory_after_operation(std::function<bool(cbe_buffer* buffer)> operation,
+inline void expect_memory_after_operation(std::function<bool(cbe_encode_context* context)> operation,
                                           std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
@@ -32,27 +32,27 @@ inline void expect_memory_after_operation(std::function<bool(cbe_buffer* buffer)
     int expected_size = expected_memory.size();
     uint8_t* expected_pos = data + expected_size;
 
-    cbe_buffer buffer = create_buffer(data, memory_size);
-    bool success = operation(&buffer);
+    cbe_encode_context context = create_encode_context(data, memory_size);
+    bool success = operation(&context);
     fflush(stdout);
 
     std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
     EXPECT_TRUE(success);
-    EXPECT_EQ(expected_pos, buffer.pos);
+    EXPECT_EQ(expected_pos, context.pos);
     EXPECT_EQ(expected_memory, actual_memory);
 }
 
-inline void expect_failed_operation(const int buffer_size, std::function<bool(cbe_buffer* buffer)> operation)
+inline void expect_failed_operation(const int buffer_size, std::function<bool(cbe_encode_context* context)> operation)
 {
     uint8_t data[buffer_size];
     memset(data, 0xf7, buffer_size);
-    cbe_buffer buffer = create_buffer(data, buffer_size);
-    bool success = operation(&buffer);
+    cbe_encode_context context = create_encode_context(data, buffer_size);
+    bool success = operation(&context);
     fflush(stdout);
     EXPECT_FALSE(success);
 }
 
-inline void expect_failed_operation_decrementing(const int buffer_size, std::function<bool(cbe_buffer* buffer)> operation)
+inline void expect_failed_operation_decrementing(const int buffer_size, std::function<bool(cbe_encode_context* context)> operation)
 {
     for(int size = buffer_size; size >= 0; size--)
     {
@@ -63,7 +63,7 @@ inline void expect_failed_operation_decrementing(const int buffer_size, std::fun
 // Internal
 
 template <typename T>
-inline bool add_value(cbe_buffer* buffer, T value)
+inline bool add_value(cbe_encode_context* context, T value)
 {
     int status;
     std::string type_name = typeid(T).name();
@@ -80,9 +80,9 @@ inline bool add_value(cbe_buffer* buffer, T value)
 
 #define DEFINE_ADD_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool add_value<SCALAR_TYPE>(cbe_buffer* buffer, SCALAR_TYPE value) \
+inline bool add_value<SCALAR_TYPE>(cbe_encode_context* context, SCALAR_TYPE value) \
 { \
-    return FUNCTION_TO_CALL(buffer, value); \
+    return FUNCTION_TO_CALL(context, value); \
 }
 DEFINE_ADD_VALUE_FUNCTION(bool,        cbe_add_boolean)
 DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_add_int_8)
@@ -98,9 +98,9 @@ DEFINE_ADD_VALUE_FUNCTION(__float128, cbe_add_float_128)
 
 #define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
 template <> \
-inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_buffer* buffer, std::vector<VECTOR_TYPE> value) \
+inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_encode_context* context, std::vector<VECTOR_TYPE> value) \
 { \
-    return FUNCTION_TO_CALL(buffer, value.data(), value.size()); \
+    return FUNCTION_TO_CALL(context, value.data(), value.data() + value.size()); \
 }
 DEFINE_ADD_VECTOR_FUNCTION(int8_t,      cbe_add_array_int_8)
 DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_add_array_int_16)
@@ -114,15 +114,14 @@ DEFINE_ADD_VECTOR_FUNCTION(__float128, cbe_add_array_float_128)
 // DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_add_array_decimal_128)
 
 template <>
-inline bool add_value<std::string>(cbe_buffer* buffer, std::string value)
+inline bool add_value<std::string>(cbe_encode_context* context, std::string value)
 {
-    const char* const str = value.c_str();
-    return cbe_add_string(buffer, str, strlen(str));
+    return cbe_add_string(context, value.c_str());
 }
 
 
 template <>
-inline bool add_value<std::vector<bool>>(cbe_buffer* buffer, std::vector<bool> entries)
+inline bool add_value<std::vector<bool>>(cbe_encode_context* context, std::vector<bool> entries)
 {
     bool array[entries.size()];
     int index = 0;
@@ -130,7 +129,7 @@ inline bool add_value<std::vector<bool>>(cbe_buffer* buffer, std::vector<bool> e
     {
         array[index++] = entry;
     }
-    return cbe_add_array_boolean(buffer, array, entries.size());
+    return cbe_add_array_boolean(context, array, array+sizeof(array));
 }
 
 
@@ -146,14 +145,14 @@ static void add_bytes(std::vector<uint8_t>& bytes, T value)
 template<typename T>
 inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_operation([&](cbe_buffer* buffer) {return add_value(buffer, writeValue);}, expected_memory);
+    expect_memory_after_operation([&](cbe_encode_context* context) {return add_value(context, writeValue);}, expected_memory);
 }
 
 inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_operation([=](cbe_buffer* buffer)
+    expect_memory_after_operation([=](cbe_encode_context* context)
     {
-        return decode_encode(expected_memory.data(), expected_memory.size(), buffer);
+        return decode_encode(expected_memory.data(), expected_memory.size(), context);
     },
      expected_memory);
 }
@@ -161,18 +160,18 @@ inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
 template<typename T>
 inline void expect_add_value_fail(const int buffer_size, T writeValue)
 {
-    expect_failed_operation(buffer_size, [&](cbe_buffer* buffer) \
+    expect_failed_operation(buffer_size, [&](cbe_encode_context* context) \
     { \
-        return add_value(buffer, writeValue); \
+        return add_value(context, writeValue); \
     }); \
 }
 
 template<typename T>
 inline void expect_add_value_fail_decrementing(const int buffer_size, T writeValue)
 {
-    expect_failed_operation_decrementing(buffer_size, [&](cbe_buffer* buffer) \
+    expect_failed_operation_decrementing(buffer_size, [&](cbe_encode_context* context) \
     { \
-        return add_value(buffer, writeValue); \
+        return add_value(context, writeValue); \
     }); \
 }
 
