@@ -127,7 +127,7 @@ bool cte_add_boolean(cte_encode_context* const context, const bool value)
     return add_object(context, value ? "t" : "f");
 }
 
-bool cte_add_integer(cte_encode_context* const context, const int64_t value)
+bool cte_add_int_64(cte_encode_context* const context, const int64_t value)
 {
     if(context->next_object_is_map_key) return false;
     char buffer[21];
@@ -135,7 +135,7 @@ bool cte_add_integer(cte_encode_context* const context, const int64_t value)
     return add_object(context, buffer);
 }
 
-bool cte_add_float(cte_encode_context* const context, const double value)
+bool cte_add_float_64(cte_encode_context* const context, const double value)
 {
     if(context->next_object_is_map_key) return false;
     char fmt[10];

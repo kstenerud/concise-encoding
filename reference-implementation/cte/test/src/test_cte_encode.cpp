@@ -55,15 +55,15 @@ TEST(CTE_Encode, NAME) \
 DEFINE_ENCODE_TEST(empty, "empty", { ASSERT_TRUE(cte_add_empty(&context)); })
 DEFINE_ENCODE_TEST(false, "f", { ASSERT_TRUE(cte_add_boolean(&context, false)); })
 DEFINE_ENCODE_TEST(true, "t", { ASSERT_TRUE(cte_add_boolean(&context, true)); })
-DEFINE_ENCODE_TEST(int_1000, "1000", { ASSERT_TRUE(cte_add_integer(&context, 1000)); })
-DEFINE_ENCODE_TEST(int_9223372036854775807, "9223372036854775807", { ASSERT_TRUE(cte_add_integer(&context, 9223372036854775807L)); })
-DEFINE_ENCODE_TEST(int_n9223372036854775807, "-9223372036854775807", { ASSERT_TRUE(cte_add_integer(&context, -9223372036854775807L)); })
-DEFINE_ENCODE_TEST(float_1_1, "1.1", { ASSERT_TRUE(cte_add_float(&context, 1.1)); })
-DEFINE_ENCODE_TEST(float_924_5122045, "924.5122045", { ASSERT_TRUE(cte_add_float(&context, 924.5122045)); })
+DEFINE_ENCODE_TEST(int_1000, "1000", { ASSERT_TRUE(cte_add_int_64(&context, 1000)); })
+DEFINE_ENCODE_TEST(int_9223372036854775807, "9223372036854775807", { ASSERT_TRUE(cte_add_int_64(&context, 9223372036854775807L)); })
+DEFINE_ENCODE_TEST(int_n9223372036854775807, "-9223372036854775807", { ASSERT_TRUE(cte_add_int_64(&context, -9223372036854775807L)); })
+DEFINE_ENCODE_TEST(float_1_1, "1.1", { ASSERT_TRUE(cte_add_float_64(&context, 1.1)); })
+DEFINE_ENCODE_TEST(float_924_5122045, "924.5122045", { ASSERT_TRUE(cte_add_float_64(&context, 924.5122045)); })
 DEFINE_ENCODE_TEST(string, "\"a string\"", { ASSERT_TRUE(cte_add_string(&context, "a string")); })
 DEFINE_ENCODE_TEST(escaped, "\"q\\\"s\\\\b\\bf\\fn\\nr\\rt\\t\"", { ASSERT_TRUE(cte_add_string(&context, "q\"s\\b\bf\fn\nr\rt\t")); })
 
-DEFINE_ENCODE_FLOAT_TEST(float_limit_10, 10, "1.012345679", { ASSERT_TRUE(cte_add_float(&context, 1.0123456789)); })
+DEFINE_ENCODE_FLOAT_TEST(float_limit_10, 10, "1.012345679", { ASSERT_TRUE(cte_add_float_64(&context, 1.0123456789)); })
 
 DEFINE_ENCODE_TEST(substring, "\"a string\"",
 {
@@ -74,9 +74,9 @@ DEFINE_ENCODE_TEST(substring, "\"a string\"",
 DEFINE_ENCODE_TEST(list, "[1,2,3]",
 {
     ASSERT_TRUE(cte_start_list(&context));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
-    ASSERT_TRUE(cte_add_integer(&context, 2));
-    ASSERT_TRUE(cte_add_integer(&context, 3));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 2));
+    ASSERT_TRUE(cte_add_int_64(&context, 3));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
@@ -91,7 +91,7 @@ DEFINE_ENCODE_TEST(empty_list, "[]",
 DEFINE_ENCODE_TEST(single_list, "[1]",
 {
     ASSERT_TRUE(cte_start_list(&context));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
@@ -100,11 +100,11 @@ DEFINE_ENCODE_TEST(map, "{\"a\":1,\"b\":2,\"c\":3}",
 {
     ASSERT_TRUE(cte_start_map(&context));
     ASSERT_TRUE(cte_add_string(&context, "a"));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
     ASSERT_TRUE(cte_add_string(&context, "b"));
-    ASSERT_TRUE(cte_add_integer(&context, 2));
+    ASSERT_TRUE(cte_add_int_64(&context, 2));
     ASSERT_TRUE(cte_add_string(&context, "c"));
-    ASSERT_TRUE(cte_add_integer(&context, 3));
+    ASSERT_TRUE(cte_add_int_64(&context, 3));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
@@ -120,7 +120,7 @@ DEFINE_ENCODE_TEST(single_map, "{\"a\":1}",
 {
     ASSERT_TRUE(cte_start_map(&context));
     ASSERT_TRUE(cte_add_string(&context, "a"));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
@@ -131,19 +131,19 @@ DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1
     ASSERT_TRUE(cte_add_string(&context, "empty"));
     ASSERT_TRUE(cte_add_empty(&context));
     ASSERT_TRUE(cte_add_string(&context, "one"));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
     ASSERT_TRUE(cte_add_string(&context, "list"));
         ASSERT_TRUE(cte_start_list(&context));
-        ASSERT_TRUE(cte_add_integer(&context, 1));
-        ASSERT_TRUE(cte_add_integer(&context, 2));
-        ASSERT_TRUE(cte_add_integer(&context, 3));
+        ASSERT_TRUE(cte_add_int_64(&context, 1));
+        ASSERT_TRUE(cte_add_int_64(&context, 2));
+        ASSERT_TRUE(cte_add_int_64(&context, 3));
             ASSERT_TRUE(cte_start_map(&context));
             ASSERT_TRUE(cte_add_string(&context, "a"));
-            ASSERT_TRUE(cte_add_integer(&context, 1));
+            ASSERT_TRUE(cte_add_int_64(&context, 1));
             ASSERT_TRUE(cte_add_string(&context, "b"));
-            ASSERT_TRUE(cte_add_integer(&context, 2));
+            ASSERT_TRUE(cte_add_int_64(&context, 2));
             ASSERT_TRUE(cte_add_string(&context, "c"));
-            ASSERT_TRUE(cte_add_integer(&context, 3));
+            ASSERT_TRUE(cte_add_int_64(&context, 3));
             ASSERT_TRUE(cte_end_container(&context));
         ASSERT_TRUE(cte_end_container(&context));
     ASSERT_TRUE(cte_add_string(&context, "true"));
@@ -154,17 +154,17 @@ DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1
 
 DEFINE_ENCODE_FAIL_TEST(fail_int_size_0,0,
 {
-    ASSERT_FALSE(cte_add_integer(&context, 1));
+    ASSERT_FALSE(cte_add_int_64(&context, 1));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_int_size_1,1,
 {
-    ASSERT_FALSE(cte_add_integer(&context, 10));
+    ASSERT_FALSE(cte_add_int_64(&context, 10));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_float_size_1,1,
 {
-    ASSERT_FALSE(cte_add_float(&context, 0.1));
+    ASSERT_FALSE(cte_add_float_64(&context, 0.1));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_string_size_10,10,
@@ -242,13 +242,13 @@ DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_boolean,100,
 DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_integer,100,
 {
     ASSERT_TRUE(cte_start_map(&context));
-    ASSERT_FALSE(cte_add_integer(&context, 1));
+    ASSERT_FALSE(cte_add_int_64(&context, 1));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_float,100,
 {
     ASSERT_TRUE(cte_start_map(&context));
-    ASSERT_FALSE(cte_add_float(&context, 0.1));
+    ASSERT_FALSE(cte_add_float_64(&context, 0.1));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_map,100,
@@ -266,9 +266,9 @@ DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_list,100,
 DEFINE_ENCODE_INDENTATION_TEST(indent_list, 2, "[\n  1,\n  2,\n  3\n]",
 {
     ASSERT_TRUE(cte_start_list(&context));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
-    ASSERT_TRUE(cte_add_integer(&context, 2));
-    ASSERT_TRUE(cte_add_integer(&context, 3));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 2));
+    ASSERT_TRUE(cte_add_int_64(&context, 3));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));
 })
@@ -277,10 +277,10 @@ DEFINE_ENCODE_INDENTATION_TEST(indent_map_list, 4, "{\n    \"number\": 1,\n    \
 {
     ASSERT_TRUE(cte_start_map(&context));
     ASSERT_TRUE(cte_add_string(&context, "number"));
-    ASSERT_TRUE(cte_add_integer(&context, 1));
+    ASSERT_TRUE(cte_add_int_64(&context, 1));
     ASSERT_TRUE(cte_add_string(&context, "list"));
     ASSERT_TRUE(cte_start_list(&context));
-    ASSERT_TRUE(cte_add_integer(&context, 10));
+    ASSERT_TRUE(cte_add_int_64(&context, 10));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_TRUE(cte_end_container(&context));
     ASSERT_NE(nullptr, cte_end_encoding(&context));

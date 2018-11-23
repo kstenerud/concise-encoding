@@ -25,27 +25,23 @@ void yyerror(const void *scanner, const cte_parse_callbacks* callbacks, void* co
 
 %union {
     char* string_v;
-    int64_t int64_v;
-    double float64_v;
-#if CTE_HAS_DECIMAL_SUPPORT
-     _Decimal64 decimal64_v;
-#else
-     float decimal64_v;
-#endif
+    __int128_t int128_v;
+    __float128 float128_v;
+     _Decimal128 decimal128_v;
     bool bool_v;
 }
 
 %type <string_v>    TOKEN_TIME TOKEN_STRING TOKEN_UNEXPECTED TOKEN_BAD_DATA string
-%type <int64_v>     TOKEN_INTEGER
-%type <float64_v>   TOKEN_FLOAT
+%type <int128_v>     TOKEN_INTEGER
+%type <float128_v>   TOKEN_FLOAT
 %type <bool_v>      TOKEN_BOOLEAN
-%type <decimal64_v> TOKEN_DECIMAL
+%type <decimal128_v> TOKEN_DECIMAL
 
 %token TOKEN_BOOLEAN TOKEN_INTEGER TOKEN_FLOAT TOKEN_DECIMAL TOKEN_STRING TOKEN_TIME TOKEN_EMPTY TOKEN_UNEXPECTED TOKEN_BAD_DATA
-%token TOKEN_MAP_START TOKEN_MAP_END TOKEN_LIST_START TOKEN_LIST_END TOKEN_ITEM_SEPARATOR TOKEN_ASSIGNMENT_SEPARATOR
+%token TOKEN_MAP_START TOKEN_MAP_END TOKEN_LIST_START TOKEN_LIST_END TOKEN_ASSIGNMENT_SEPARATOR
 %token TOKEN_ARRAY_BOOLEAN_START TOKEN_ARRAY_INT_8_START TOKEN_ARRAY_INT_16_START TOKEN_ARRAY_INT_32_START
 %token TOKEN_ARRAY_INT_64_START TOKEN_ARRAY_INT_128_START TOKEN_ARRAY_FLOAT_32_START TOKEN_ARRAY_FLOAT_64_START
-%token TOKEN_ARRAY_FLOAT_128_START TOKEN_ARRAY_DECIMAL_64_START TOKEN_ARRAY_DECIMAL_128_START
+%token TOKEN_ARRAY_FLOAT_128_START TOKEN_ARRAY_DECIMAL_32_START TOKEN_ARRAY_DECIMAL_64_START TOKEN_ARRAY_DECIMAL_128_START
 %token TOKEN_ARRAY_TIME_START TOKEN_ARRAY_END
 
 %start object
@@ -54,13 +50,9 @@ void yyerror(const void *scanner, const cte_parse_callbacks* callbacks, void* co
 
 array_object:
       TOKEN_BOOLEAN    { callbacks->on_boolean(context, $1); }
-    | TOKEN_INTEGER    { callbacks->on_int(context, $1); }
-    | TOKEN_FLOAT      { callbacks->on_float(context, $1); }
-    | TOKEN_DECIMAL    {
-      #if CTE_HAS_DECIMAL_SUPPORT
-          callbacks->on_decimal(context, $1);
-      #endif
-      }
+    | TOKEN_INTEGER    { callbacks->on_int_64(context, $1); }
+    | TOKEN_FLOAT      { callbacks->on_float_64(context, $1); }
+    | TOKEN_DECIMAL    { callbacks->on_decimal_64(context, $1); }
     | TOKEN_TIME       { callbacks->on_time(context, $1); }
 
 object:
@@ -73,44 +65,42 @@ object:
     | TOKEN_UNEXPECTED {
         char buff[1000];
         snprintf(buff, sizeof(buff), "Unexpected token: %s", $1);
-        callbacks->on_parse_error(context, buff);
+        buff[sizeof(buff)-1] = 0;
+        callbacks->on_error(context, buff);
         return -1;
     }
     | TOKEN_BAD_DATA {
         char buff[1000];
         snprintf(buff, sizeof(buff), "Bad encoding: %s", $1);
-        callbacks->on_parse_error(context, buff);
+        buff[sizeof(buff)-1] = 0;
+        callbacks->on_error(context, buff);
         return -1;
     }
 
-string: TOKEN_STRING {
-		char* str = $1;
-		str[strlen(str)-1] = 0;
-		$$ = str + 1;
-	}
+string: TOKEN_STRING
 
 array:  array_start array_entries array_end
 
 array_start:
-      TOKEN_ARRAY_BOOLEAN_START     { callbacks->on_array_start(context, CTE_TYPE_BOOLEAN,  1); }
-    | TOKEN_ARRAY_INT_8_START       { callbacks->on_array_start(context, CTE_TYPE_INTEGER,  1); }
-    | TOKEN_ARRAY_INT_16_START      { callbacks->on_array_start(context, CTE_TYPE_INTEGER,  2); }
-    | TOKEN_ARRAY_INT_32_START      { callbacks->on_array_start(context, CTE_TYPE_INTEGER,  4); }
-    | TOKEN_ARRAY_INT_64_START      { callbacks->on_array_start(context, CTE_TYPE_INTEGER,  8); }
-    | TOKEN_ARRAY_INT_128_START     { callbacks->on_array_start(context, CTE_TYPE_INTEGER, 16); }
-    | TOKEN_ARRAY_FLOAT_32_START    { callbacks->on_array_start(context, CTE_TYPE_FLOAT,    4); }
-    | TOKEN_ARRAY_FLOAT_64_START    { callbacks->on_array_start(context, CTE_TYPE_FLOAT,    8); }
-    | TOKEN_ARRAY_FLOAT_128_START   { callbacks->on_array_start(context, CTE_TYPE_FLOAT,   16); }
-    | TOKEN_ARRAY_DECIMAL_64_START  { callbacks->on_array_start(context, CTE_TYPE_DECIMAL,  8); }
-    | TOKEN_ARRAY_DECIMAL_128_START { callbacks->on_array_start(context, CTE_TYPE_DECIMAL, 16); }
-    | TOKEN_ARRAY_TIME_START        { callbacks->on_array_start(context, CTE_TYPE_TIME,     8); }
+      TOKEN_ARRAY_BOOLEAN_START     { callbacks->on_array_start_boolean(context); }
+    | TOKEN_ARRAY_INT_8_START       { callbacks->on_array_start_int_8(context); }
+    | TOKEN_ARRAY_INT_16_START      { callbacks->on_array_start_int_16(context); }
+    | TOKEN_ARRAY_INT_32_START      { callbacks->on_array_start_int_32(context); }
+    | TOKEN_ARRAY_INT_64_START      { callbacks->on_array_start_int_64(context); }
+    | TOKEN_ARRAY_INT_128_START     { callbacks->on_array_start_int_128(context); }
+    | TOKEN_ARRAY_FLOAT_32_START    { callbacks->on_array_start_float_32(context); }
+    | TOKEN_ARRAY_FLOAT_64_START    { callbacks->on_array_start_float_64(context); }
+    | TOKEN_ARRAY_FLOAT_128_START   { callbacks->on_array_start_float_128(context); }
+    | TOKEN_ARRAY_DECIMAL_32_START  { callbacks->on_array_start_decimal_32(context); }
+    | TOKEN_ARRAY_DECIMAL_64_START  { callbacks->on_array_start_decimal_64(context); }
+    | TOKEN_ARRAY_DECIMAL_128_START { callbacks->on_array_start_decimal_128(context); }
+    | TOKEN_ARRAY_TIME_START        { callbacks->on_array_start_time(context); }
 
 array_end: TOKEN_ARRAY_END { callbacks->on_array_end(context); }
 
 array_entries: /* empty */
     | array_object
     | array_entries array_object
-    | array_entries TOKEN_ITEM_SEPARATOR
 
 list:  list_start list_entries list_end
 
@@ -121,7 +111,6 @@ list_end: TOKEN_LIST_END { callbacks->on_list_end(context); }
 list_entries: /* empty */
     | object
     | list_entries object
-    | list_entries TOKEN_ITEM_SEPARATOR
 
 map: map_start map_entries map_end
 
@@ -134,7 +123,6 @@ map_tuple: object TOKEN_ASSIGNMENT_SEPARATOR object
 map_entries: /* empty */
     | map_tuple
     | map_entries map_tuple
-    | map_entries TOKEN_ITEM_SEPARATOR
 
 %%
 

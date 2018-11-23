@@ -73,53 +73,53 @@ void parse_add_bool(parse_test_context* context, bool value)
     parse_add_type(context, TYPE_BOOLEAN);
 }
 
-static void on_parse_error(void* context, const char* message)
+static void on_error(void* context, const char* message)
 {
     printf("Error: %s\n", message);
     parse_add_string((parse_test_context*)context, TYPE_ERROR, message);
 }
 
-static void on_string(void* context, const char* str)
+static bool on_string(void* context, const char* str)
 {
     parse_add_string((parse_test_context*)context, TYPE_STRING, str);
 }
 
-static void on_empty(void* context)
+static bool on_empty(void* context)
 {
     parse_add_type((parse_test_context*)context, TYPE_EMPTY);
 }
     
-static void on_bool(void* context, bool value)
+static bool on_bool(void* context, bool value)
 {
     parse_add_bool((parse_test_context*)context, value);
 }
     
-static void on_int(void* context, int64_t value)
+static bool on_int_64(void* context, int64_t value)
 {
     parse_add_int((parse_test_context*)context, value);
 }
     
-static void on_float(void* context, double value)
+static bool on_float_64(void* context, double value)
 {
     parse_add_float((parse_test_context*)context, value);
 }
 
-static void on_list_start(void* context)
+static bool on_list_start(void* context)
 {
     parse_add_type((parse_test_context*)context, TYPE_LIST_START);
 }
     
-static void on_list_end(void* context)
+static bool on_list_end(void* context)
 {
     parse_add_type((parse_test_context*)context, TYPE_LIST_END);
 }
     
-static void on_map_start(void* context)
+static bool on_map_start(void* context)
 {
     parse_add_type((parse_test_context*)context, TYPE_MAP_START);
 }
     
-static void on_map_end(void* context)
+static bool on_map_end(void* context)
 {
     parse_add_type((parse_test_context*)context, TYPE_MAP_END);
 }
@@ -130,10 +130,10 @@ cte_parse_callbacks parse_new_callbacks()
     // sorry, unimplemented: non-trivial designated initializers not supported
         callbacks.on_empty = on_empty;
         callbacks.on_boolean = on_bool;
-        callbacks.on_int = on_int;
-        callbacks.on_float = on_float;
+        callbacks.on_int_64 = on_int_64;
+        callbacks.on_float_64 = on_float_64;
         callbacks.on_string = on_string;
-        callbacks.on_parse_error = on_parse_error;
+        callbacks.on_error = on_error;
         callbacks.on_list_start = on_list_start;
         callbacks.on_list_end = on_list_end;
         callbacks.on_map_start = on_map_start;
