@@ -1,8 +1,18 @@
+// TODO: partial packet handling
+// TODO: EOD signaling
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "cbe/cbe.h"
 #include "cbe_internal.h"
+
+typedef struct
+{
+    cbe_decode_callbacks* callbacks;
+    void* user_context;
+} cbe_real_decode_context;
 
 typedef struct
 {
@@ -38,21 +48,6 @@ static inline int8_t read_int_8(ro_buffer* const buffer)
     return (int8_t)*buffer->pos++;
 }
 
-#define DEFINE_READ_UINT_IRREGULAR_FUNCTION(WIDTH) \
-static inline uint64_t read_uint_ ## WIDTH(ro_buffer* const buffer) \
-{ \
-    const int byte_count = WIDTH/8; \
-    uint64_t value = 0; \
-    for(const uint8_t* pos = buffer->pos + byte_count - 1; pos >= buffer->pos; pos--) \
-    { \
-        value = (value << 8) | *pos; \
-    } \
-    buffer->pos += byte_count; \
-    return value; \
-}
-DEFINE_READ_UINT_IRREGULAR_FUNCTION(40)
-DEFINE_READ_UINT_IRREGULAR_FUNCTION(48)
-
 #define DEFINE_READ_FUNCTION(TYPE, TYPE_SUFFIX) \
 static inline TYPE read_ ## TYPE_SUFFIX(ro_buffer* const buffer) \
 { \
@@ -69,7 +64,7 @@ DEFINE_READ_FUNCTION(int64_t,     int_64)
 DEFINE_READ_FUNCTION(__int128,    int_128)
 DEFINE_READ_FUNCTION(float,       float_32)
 DEFINE_READ_FUNCTION(double,      float_64)
-DEFINE_READ_FUNCTION(__float128, float_128)
+DEFINE_READ_FUNCTION(__float128,  float_128)
 DEFINE_READ_FUNCTION(_Decimal32,  decimal_32)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
@@ -115,20 +110,37 @@ static void report_error(cbe_decode_callbacks* callbacks, void* context, char* f
     va_end(args);
 }
 
-#define REQUEST_BYTES(TYPE, BYTE_COUNT) \
-if(buffer->pos + (BYTE_COUNT) > buffer->end) \
-{ \
-    report_error(callbacks, context, "Type %s requires %d bytes, but only %d bytes available", \
-                            TYPE, \
-                            BYTE_COUNT, \
-                            (int)(buffer->end - buffer->pos)); \
-    return NULL; \
+cbe_decode_context* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context)
+{
+    cbe_real_decode_context* context = malloc(sizeof(*context));
+    context->callbacks = callbacks;
+    context->user_context = user_context;
+    return (cbe_decode_context*)context;
 }
 
-const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const data_start, const uint8_t* const data_end, void* context)
+void* cbe_decode_get_user_context(cbe_decode_context* context_ptr)
 {
+    cbe_real_decode_context* context = (cbe_real_decode_context*)context_ptr;
+    return context->user_context;
+}
+
+const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end)
+{
+    // TODO: Deal with stream feeding
+    cbe_real_decode_context* context = (cbe_real_decode_context*)context_ptr;
     ro_buffer real_buffer = new_buffer(data_start, data_end);
     ro_buffer* buffer = &real_buffer;
+
+    #define REQUEST_BYTES(TYPE, BYTE_COUNT) \
+    if(buffer->pos + (BYTE_COUNT) > buffer->end) \
+    { \
+        report_error(context->callbacks, context, "Type %s requires %d bytes, but only %d bytes available", \
+                                TYPE, \
+                                BYTE_COUNT, \
+                                (int)(buffer->end - buffer->pos)); \
+        return NULL; \
+    }
+
     while(buffer->pos < buffer->end)
     {
         cbe_type_field type = read_uint_8(buffer);
@@ -138,22 +150,22 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 // Ignore
                 break;
             case TYPE_EMPTY:
-                if(!callbacks->on_empty(context)) return NULL;
+                if(!context->callbacks->on_empty(context_ptr)) return NULL;
                 break;
             case TYPE_FALSE:
-                if(!callbacks->on_boolean(context, false)) return NULL;
+                if(!context->callbacks->on_boolean(context_ptr, false)) return NULL;
                 break;
             case TYPE_TRUE:
-                if(!callbacks->on_boolean(context, true)) return NULL;
+                if(!context->callbacks->on_boolean(context_ptr, true)) return NULL;
                 break;
             case TYPE_END_CONTAINER:
-                if(!callbacks->on_end_container(context)) return NULL;
+                if(!context->callbacks->on_end_container(context_ptr)) return NULL;
                 break;
             case TYPE_LIST:
-                if(!callbacks->on_list_start(context)) return NULL;
+                if(!context->callbacks->on_list_start(context_ptr)) return NULL;
                 break;
             case TYPE_MAP:
-                if(!callbacks->on_map_start(context)) return NULL;
+                if(!context->callbacks->on_map_start(context_ptr)) return NULL;
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
@@ -165,7 +177,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 REQUEST_BYTES("string", byte_count)
                 char* string_start = (char*)buffer->pos;
                 char* string_end = string_start + byte_count;
-                if(!callbacks->on_string(context, string_start, string_end)) return NULL;
+                if(!context->callbacks->on_string(context_ptr, string_start, string_end)) return NULL;
                 buffer->pos += byte_count;
                 break;
             }
@@ -173,7 +185,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
             { \
                 REQUEST_BYTES(#NAME_FRAGMENT, sizeof(TYPE)) \
-                if(!callbacks->on_ ## NAME_FRAGMENT(context, read_ ## NAME_FRAGMENT(buffer))) return NULL; \
+                if(!context->callbacks->on_ ## NAME_FRAGMENT(context_ptr, read_ ## NAME_FRAGMENT(buffer))) return NULL; \
             }
             case TYPE_INT_16:
                 HANDLE_CASE_SCALAR(int16_t, int_16)
@@ -217,7 +229,7 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                 REQUEST_BYTES(#TYPE " array", byte_count) \
                 TYPE* array_start = (TYPE*)buffer->pos; \
                 TYPE* array_end = array_start + length; \
-                if(!callbacks->HANDLER(context, array_start, array_end)) return NULL; \
+                if(!context->callbacks->HANDLER(context_ptr, array_start, array_end)) return NULL; \
                 buffer->pos += byte_count; \
             }
             case TYPE_ARRAY_STRING:
@@ -269,44 +281,19 @@ const uint8_t* cbe_decode(cbe_decode_callbacks* callbacks, const uint8_t* const 
                     byte_count++;
                 }
                 REQUEST_BYTES("bitfield", byte_count) \
-                if(!callbacks->on_bitfield(context, buffer->pos, length)) return NULL;
+                if(!context->callbacks->on_bitfield(context_ptr, buffer->pos, length)) return NULL;
                 buffer->pos += byte_count;
                 break;
             }
             default:
-                if(!callbacks->on_int_8(context, type)) return NULL;
+                if(!context->callbacks->on_int_8(context_ptr, type)) return NULL;
                 break;
         }
     }
     return buffer->pos;
 }
 
-int cbe_get_time_year(int64_t time)
+void cbe_decode_end(cbe_decode_context* context)
 {
-    return time >> TIME_BITSHIFT_YEAR;
-}
-
-int cbe_get_time_day(int64_t time)
-{
-    return (time >> TIME_BITSHIFT_DAY) & TIME_MASK_DAY;
-}
-
-int cbe_get_time_hour(int64_t time)
-{
-    return (time >> TIME_BITSHIFT_HOUR) & TIME_MASK_HOUR;
-}
-
-int cbe_get_time_minute(int64_t time)
-{
-    return (time >> TIME_BITSHIFT_MINUTE) & TIME_MASK_MINUTE;
-}
-
-int cbe_get_time_second(int64_t time)
-{
-    return (time >> TIME_BITSHIFT_SECOND) & TIME_MASK_SECOND;
-}
-
-int cbe_get_time_microsecond(int64_t time)
-{
-    return time & TIME_MASK_MICROSECOND;
+    free(context);
 }

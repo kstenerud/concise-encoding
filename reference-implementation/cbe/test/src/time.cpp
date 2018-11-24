@@ -45,7 +45,7 @@ inline void expect_memory_after_add_time(const int64_t time, std::vector<uint8_t
 {
     expect_memory_after_operation([&](cbe_encode_context* context)
     {
-        return cbe_add_time(context, time);
+        return cbe_encode_add_time(context, time);
     }, expected_memory);
 }
 
@@ -64,7 +64,7 @@ TEST(TimeTest, failed_time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ 
     int64_t time = cbe_new_time(YEAR, to_doy(YEAR, MONTH, DAY), HOUR, MINUTE, SECOND, USEC); \
     expect_failed_operation_decrementing(SIZE, [&](cbe_encode_context* context) \
     { \
-        return cbe_add_time(context, time); \
+        return cbe_encode_add_time(context, time); \
     }); \
 }
 

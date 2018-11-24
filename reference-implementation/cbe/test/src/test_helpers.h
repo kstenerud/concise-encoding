@@ -6,10 +6,6 @@
 #include <cbe/cbe.h>
 #include "decode_encode.h"
 
-static cbe_encode_context create_encode_context(uint8_t* memory, int size)
-{
-    return cbe_new_encode_context(memory, memory + size);
-}
 
 template<typename T>
 static std::vector<T> make_values_of_length(int length)
@@ -30,15 +26,14 @@ inline void expect_memory_after_operation(std::function<bool(cbe_encode_context*
     uint8_t* data = memory.data();
     memset(data, 0xf7, memory_size);
     int expected_size = expected_memory.size();
-    uint8_t* expected_pos = data + expected_size;
 
-    cbe_encode_context context = create_encode_context(data, memory_size);
-    bool success = operation(&context);
+    cbe_encode_context* context = cbe_encode_begin(data, data+memory_size);
+    bool success = operation(context);
     fflush(stdout);
 
     std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
     EXPECT_TRUE(success);
-    EXPECT_EQ(expected_pos, context.pos);
+    EXPECT_EQ(expected_size, cbe_encode_get_buffer_offset(context));
     EXPECT_EQ(expected_memory, actual_memory);
 }
 
@@ -46,8 +41,8 @@ inline void expect_failed_operation(const int buffer_size, std::function<bool(cb
 {
     uint8_t data[buffer_size];
     memset(data, 0xf7, buffer_size);
-    cbe_encode_context context = create_encode_context(data, buffer_size);
-    bool success = operation(&context);
+    cbe_encode_context* context = cbe_encode_begin(data, data+buffer_size);
+    bool success = operation(context);
     fflush(stdout);
     EXPECT_FALSE(success);
 }
@@ -84,17 +79,17 @@ inline bool add_value<SCALAR_TYPE>(cbe_encode_context* context, SCALAR_TYPE valu
 { \
     return FUNCTION_TO_CALL(context, value); \
 }
-DEFINE_ADD_VALUE_FUNCTION(bool,        cbe_add_boolean)
-DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_add_int_8)
-DEFINE_ADD_VALUE_FUNCTION(int16_t,     cbe_add_int_16)
-DEFINE_ADD_VALUE_FUNCTION(int32_t,     cbe_add_int_32)
-DEFINE_ADD_VALUE_FUNCTION(int64_t,     cbe_add_int_64)
-DEFINE_ADD_VALUE_FUNCTION(__int128,    cbe_add_int_128)
-DEFINE_ADD_VALUE_FUNCTION(float,       cbe_add_float_32)
-DEFINE_ADD_VALUE_FUNCTION(double,      cbe_add_float_64)
-DEFINE_ADD_VALUE_FUNCTION(__float128, cbe_add_float_128)
-// DEFINE_ADD_VALUE_FUNCTION(_Decimal64,  cbe_add_decimal_64)
-// DEFINE_ADD_VALUE_FUNCTION(_Decimal128, cbe_add_decimal_128)
+DEFINE_ADD_VALUE_FUNCTION(bool,        cbe_encode_add_boolean)
+DEFINE_ADD_VALUE_FUNCTION(int8_t,      cbe_encode_add_int_8)
+DEFINE_ADD_VALUE_FUNCTION(int16_t,     cbe_encode_add_int_16)
+DEFINE_ADD_VALUE_FUNCTION(int32_t,     cbe_encode_add_int_32)
+DEFINE_ADD_VALUE_FUNCTION(int64_t,     cbe_encode_add_int_64)
+DEFINE_ADD_VALUE_FUNCTION(__int128,    cbe_encode_add_int_128)
+DEFINE_ADD_VALUE_FUNCTION(float,       cbe_encode_add_float_32)
+DEFINE_ADD_VALUE_FUNCTION(double,      cbe_encode_add_float_64)
+DEFINE_ADD_VALUE_FUNCTION(__float128, cbe_encode_add_float_128)
+// DEFINE_ADD_VALUE_FUNCTION(_Decimal64,  cbe_encode_add_decimal_64)
+// DEFINE_ADD_VALUE_FUNCTION(_Decimal128, cbe_encode_add_decimal_128)
 
 #define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
 template <> \
@@ -102,21 +97,21 @@ inline bool add_value<std::vector<VECTOR_TYPE>>(cbe_encode_context* context, std
 { \
     return FUNCTION_TO_CALL(context, value.data(), value.data() + value.size()); \
 }
-DEFINE_ADD_VECTOR_FUNCTION(int8_t,      cbe_add_array_int_8)
-DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_add_array_int_16)
-DEFINE_ADD_VECTOR_FUNCTION(int32_t,     cbe_add_array_int_32)
-DEFINE_ADD_VECTOR_FUNCTION(int64_t,     cbe_add_array_int_64)
-DEFINE_ADD_VECTOR_FUNCTION(__int128,    cbe_add_array_int_128)
-DEFINE_ADD_VECTOR_FUNCTION(float,       cbe_add_array_float_32)
-DEFINE_ADD_VECTOR_FUNCTION(double,      cbe_add_array_float_64)
-DEFINE_ADD_VECTOR_FUNCTION(__float128, cbe_add_array_float_128)
-// DEFINE_ADD_VECTOR_FUNCTION(_Decimal64,  cbe_add_array_decimal_64)
-// DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_add_array_decimal_128)
+DEFINE_ADD_VECTOR_FUNCTION(int8_t,      cbe_encode_add_array_int_8)
+DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_encode_add_array_int_16)
+DEFINE_ADD_VECTOR_FUNCTION(int32_t,     cbe_encode_add_array_int_32)
+DEFINE_ADD_VECTOR_FUNCTION(int64_t,     cbe_encode_add_array_int_64)
+DEFINE_ADD_VECTOR_FUNCTION(__int128,    cbe_encode_add_array_int_128)
+DEFINE_ADD_VECTOR_FUNCTION(float,       cbe_encode_add_array_float_32)
+DEFINE_ADD_VECTOR_FUNCTION(double,      cbe_encode_add_array_float_64)
+DEFINE_ADD_VECTOR_FUNCTION(__float128, cbe_encode_add_array_float_128)
+// DEFINE_ADD_VECTOR_FUNCTION(_Decimal64,  cbe_encode_add_array_decimal_64)
+// DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_encode_add_array_decimal_128)
 
 template <>
 inline bool add_value<std::string>(cbe_encode_context* context, std::string value)
 {
-    return cbe_add_string(context, value.c_str());
+    return cbe_encode_add_string(context, value.c_str());
 }
 
 
@@ -129,7 +124,7 @@ inline bool add_value<std::vector<bool>>(cbe_encode_context* context, std::vecto
     {
         array[index++] = entry;
     }
-    return cbe_add_array_boolean(context, array, array+sizeof(array));
+    return cbe_encode_add_array_boolean(context, array, array+sizeof(array));
 }
 
 

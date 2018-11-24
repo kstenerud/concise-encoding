@@ -4,11 +4,11 @@ static void expect_memory_after_add_list(int length, std::vector<uint8_t> expect
 {
     expect_memory_after_operation([=](cbe_encode_context* context)
     {
-        if(!cbe_start_list(context)) return false;
+        if(!cbe_encode_start_list(context)) return false;
         for(int i = 0; i < length; i++)
         {
             int value = 10; // Any old number
-            if(!cbe_add_int_8(context, value)) return false;
+            if(!cbe_encode_add_int_8(context, value)) return false;
         }
         return cbe_end_container(context);
     }, expected_memory);
@@ -33,8 +33,8 @@ TEST(ListTest, failed)
 {
     expect_failed_operation_decrementing(2, [&](cbe_encode_context* context)
     {
-        cbe_start_list(context);
-        cbe_add_int_8(context, 0);
+        cbe_encode_start_list(context);
+        cbe_encode_add_int_8(context, 0);
         return cbe_end_container(context);
     });
 }
