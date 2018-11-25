@@ -147,7 +147,7 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
         {
             case TYPE_PADDING:
                 // Ignore
-                break;
+                continue;
             case TYPE_EMPTY:
                 if(!context->callbacks->on_empty(context_ptr)) return false;
                 break;
