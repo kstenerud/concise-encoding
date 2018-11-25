@@ -132,6 +132,7 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
     context->current_buffer = new_buffer(data_start, data_end);
     ro_buffer* buffer = &context->current_buffer;
     context->current_object = buffer->pos;
+    int document_depth = 0;
 
     #define REQUEST_BYTES(TYPE, BYTE_COUNT) \
     if(buffer->pos + (BYTE_COUNT) > buffer->end) \
@@ -158,12 +159,15 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
                 break;
             case TYPE_END_CONTAINER:
                 if(!context->callbacks->on_end_container(context_ptr)) return false;
+                document_depth--;
                 break;
             case TYPE_LIST:
                 if(!context->callbacks->on_list_start(context_ptr)) return false;
+                document_depth++;
                 break;
             case TYPE_MAP:
                 if(!context->callbacks->on_map_start(context_ptr)) return false;
+                document_depth++;
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
@@ -288,6 +292,10 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
                 break;
         }
         context->current_object = buffer->pos;
+        if(document_depth <= 0)
+        {
+            break;
+        }
     }
     return buffer->pos;
 }
