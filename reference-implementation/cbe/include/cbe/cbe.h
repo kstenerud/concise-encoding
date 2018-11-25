@@ -93,14 +93,22 @@ void* cbe_decode_get_user_context(cbe_decode_context* context);
 
 /**
  * Decode part of a CBE document.
- * TODO: Does the return value still make sense?
+ * Returns false if it hasn't reached the end of the document (which means you must feed it more data).
  *
  * @param callbacks The callbacks to call as it decodes objects.
  * @param data_start The start of the document.
  * @param data_end The end (start + length) of the document.
- * @return Pointer to one past the last byte read, or NULL on error.
+ * @return true if the document was fully decoded.
  */
-const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end);
+bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end);
+
+/**
+ * Get the current write offset into the decode buffer.
+ *
+ * @param context The decoder context.
+ * @return The current offset.
+ */
+int cbe_decode_get_buffer_offset(cbe_decode_context* context);
 
 /**
  * End a decoding process, freeing up any resources used.

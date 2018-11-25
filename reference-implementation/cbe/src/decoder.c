@@ -10,16 +10,18 @@
 
 typedef struct
 {
-    cbe_decode_callbacks* callbacks;
-    void* user_context;
-} cbe_real_decode_context;
+    const uint8_t* start;
+    const uint8_t* end;
+    const uint8_t* pos;
+} ro_buffer;
 
 typedef struct
 {
-    const uint8_t* const start;
-    const uint8_t* const end;
-    const uint8_t* pos;
-} ro_buffer;
+    cbe_decode_callbacks* callbacks;
+    ro_buffer current_buffer;
+    const uint8_t* current_object;
+    void* user_context;
+} cbe_real_decode_context;
 
 ro_buffer new_buffer(const uint8_t* const memory_start, const uint8_t* const memory_end)
 {
@@ -100,15 +102,15 @@ static inline uint64_t get_array_length(ro_buffer* const buffer)
     }
 }
 
-static void report_error(cbe_decode_callbacks* callbacks, void* context, char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    char buff[200];
-    vsprintf(buff, fmt, args);
-    callbacks->on_error(context, buff);
-    va_end(args);
-}
+// static void report_error(cbe_decode_callbacks* callbacks, void* context, char* fmt, ...)
+// {
+//     va_list args;
+//     va_start(args, fmt);
+//     char buff[200];
+//     vsprintf(buff, fmt, args);
+//     callbacks->on_error(context, buff);
+//     va_end(args);
+// }
 
 cbe_decode_context* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context)
 {
@@ -124,21 +126,17 @@ void* cbe_decode_get_user_context(cbe_decode_context* context_ptr)
     return context->user_context;
 }
 
-const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end)
+bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end)
 {
-    // TODO: Deal with stream feeding
     cbe_real_decode_context* context = (cbe_real_decode_context*)context_ptr;
-    ro_buffer real_buffer = new_buffer(data_start, data_end);
-    ro_buffer* buffer = &real_buffer;
+    context->current_buffer = new_buffer(data_start, data_end);
+    ro_buffer* buffer = &context->current_buffer;
+    context->current_object = buffer->pos;
 
     #define REQUEST_BYTES(TYPE, BYTE_COUNT) \
     if(buffer->pos + (BYTE_COUNT) > buffer->end) \
     { \
-        report_error(context->callbacks, context, "Type %s requires %d bytes, but only %d bytes available", \
-                                TYPE, \
-                                BYTE_COUNT, \
-                                (int)(buffer->end - buffer->pos)); \
-        return NULL; \
+        return false; \
     }
 
     while(buffer->pos < buffer->end)
@@ -150,22 +148,22 @@ const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* c
                 // Ignore
                 break;
             case TYPE_EMPTY:
-                if(!context->callbacks->on_empty(context_ptr)) return NULL;
+                if(!context->callbacks->on_empty(context_ptr)) return false;
                 break;
             case TYPE_FALSE:
-                if(!context->callbacks->on_boolean(context_ptr, false)) return NULL;
+                if(!context->callbacks->on_boolean(context_ptr, false)) return false;
                 break;
             case TYPE_TRUE:
-                if(!context->callbacks->on_boolean(context_ptr, true)) return NULL;
+                if(!context->callbacks->on_boolean(context_ptr, true)) return false;
                 break;
             case TYPE_END_CONTAINER:
-                if(!context->callbacks->on_end_container(context_ptr)) return NULL;
+                if(!context->callbacks->on_end_container(context_ptr)) return false;
                 break;
             case TYPE_LIST:
-                if(!context->callbacks->on_list_start(context_ptr)) return NULL;
+                if(!context->callbacks->on_list_start(context_ptr)) return false;
                 break;
             case TYPE_MAP:
-                if(!context->callbacks->on_map_start(context_ptr)) return NULL;
+                if(!context->callbacks->on_map_start(context_ptr)) return false;
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
@@ -177,7 +175,7 @@ const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* c
                 REQUEST_BYTES("string", byte_count)
                 char* string_start = (char*)buffer->pos;
                 char* string_end = string_start + byte_count;
-                if(!context->callbacks->on_string(context_ptr, string_start, string_end)) return NULL;
+                if(!context->callbacks->on_string(context_ptr, string_start, string_end)) return false;
                 buffer->pos += byte_count;
                 break;
             }
@@ -185,7 +183,7 @@ const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* c
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
             { \
                 REQUEST_BYTES(#NAME_FRAGMENT, sizeof(TYPE)) \
-                if(!context->callbacks->on_ ## NAME_FRAGMENT(context_ptr, read_ ## NAME_FRAGMENT(buffer))) return NULL; \
+                if(!context->callbacks->on_ ## NAME_FRAGMENT(context_ptr, read_ ## NAME_FRAGMENT(buffer))) return false; \
             }
             case TYPE_INT_16:
                 HANDLE_CASE_SCALAR(int16_t, int_16)
@@ -229,7 +227,7 @@ const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* c
                 REQUEST_BYTES(#TYPE " array", byte_count) \
                 TYPE* array_start = (TYPE*)buffer->pos; \
                 TYPE* array_end = array_start + length; \
-                if(!context->callbacks->HANDLER(context_ptr, array_start, array_end)) return NULL; \
+                if(!context->callbacks->HANDLER(context_ptr, array_start, array_end)) return false; \
                 buffer->pos += byte_count; \
             }
             case TYPE_ARRAY_STRING:
@@ -281,16 +279,23 @@ const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* c
                     byte_count++;
                 }
                 REQUEST_BYTES("bitfield", byte_count) \
-                if(!context->callbacks->on_bitfield(context_ptr, buffer->pos, length)) return NULL;
+                if(!context->callbacks->on_bitfield(context_ptr, buffer->pos, length)) return false;
                 buffer->pos += byte_count;
                 break;
             }
             default:
-                if(!context->callbacks->on_int_8(context_ptr, type)) return NULL;
+                if(!context->callbacks->on_int_8(context_ptr, type)) return false;
                 break;
         }
+        context->current_object = buffer->pos;
     }
     return buffer->pos;
+}
+
+int cbe_decode_get_buffer_offset(cbe_decode_context* context_ptr)
+{
+    cbe_real_decode_context* context = (cbe_real_decode_context*)context_ptr;
+    return context->current_object - context->current_buffer.start;
 }
 
 void cbe_decode_end(cbe_decode_context* context)

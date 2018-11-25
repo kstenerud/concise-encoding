@@ -167,7 +167,7 @@ bool decode_encode(const uint8_t* src, int src_length, cbe_encode_context* dst_b
 
     g_buffer = dst_buffer;
     cbe_decode_context* context = cbe_decode_begin(&callbacks, NULL);
-    const uint8_t* result = cbe_decode_feed(context, src, src + src_length);
+    bool is_completed = cbe_decode_feed(context, src, src + src_length);
     cbe_decode_end(context);
-    return result != NULL;
+    return is_completed;
 }
