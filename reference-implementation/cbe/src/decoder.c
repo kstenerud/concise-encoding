@@ -147,6 +147,7 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
         {
             case TYPE_PADDING:
                 // Ignore and restart loop because padding doesn't count as document content.
+                // Otherwise the document depth test would exit the decode loop.
                 continue;
             case TYPE_EMPTY:
                 if(!context->callbacks->on_empty(context_ptr)) return false;
