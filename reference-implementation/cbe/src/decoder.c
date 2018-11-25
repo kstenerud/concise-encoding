@@ -297,7 +297,7 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
             break;
         }
     }
-    return buffer->pos;
+    return true;
 }
 
 int cbe_decode_get_buffer_offset(cbe_decode_context* context_ptr)
