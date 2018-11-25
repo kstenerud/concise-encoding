@@ -23,67 +23,92 @@ extern "C" {
  */
 const char* cbe_version();
 
-/**
- * Create a new time value, encoding the fields into a 64-bit unsigned integer.
- * Note: This function does NOT validate input! Make sure your source values are correct!
- *
- * @param year The year (-131072 - 131071). Note: 1 = 1 AD, 0 = 1 BC, -1 = 2 BC, ...
- * @param day The day of the year, allowing for leap year (1 - 366).
- * @param hour The hour of the day (0 - 23).
- * @param minute The minute of the hour (0 - 59).
- * @param second The second of the minute, allowing for leap second (0 - 60).
- * @param microsecond The microsecond of the second (0 - 999999).
- * @return A new time value.
- */
-int64_t cbe_new_time(int year, int day, int hour, int minute, int second, int microsecond);
+
+
+// ------------
+// Decoding API
+// ------------
+
+typedef struct {} cbe_decode_context;
 
 /**
- * Get the year component from a time value.
+ * Callback structure for use with cbe_decode().
  *
- * @param time The time value.
- * @return the year component.
+ * cbe_decode() will call these callbacks as it decodes objects in the document.
  */
-int cbe_time_get_year(int64_t time);
+typedef struct
+{
+	bool (*on_error)             (cbe_decode_context* context, const char* message);
+	bool (*on_empty)             (cbe_decode_context* context);
+	bool (*on_boolean)           (cbe_decode_context* context, bool value);
+	bool (*on_int_8)             (cbe_decode_context* context, int8_t value);
+	bool (*on_int_16)            (cbe_decode_context* context, int16_t value);
+	bool (*on_int_32)            (cbe_decode_context* context, int32_t value);
+	bool (*on_int_64)            (cbe_decode_context* context, int64_t value);
+	bool (*on_int_128)           (cbe_decode_context* context, __int128 value);
+	bool (*on_float_32)          (cbe_decode_context* context, float value);
+	bool (*on_float_64)          (cbe_decode_context* context, double value);
+	bool (*on_float_128)         (cbe_decode_context* context, __float128 value);
+	bool (*on_decimal_32)        (cbe_decode_context* context, _Decimal32 value);
+	bool (*on_decimal_64)        (cbe_decode_context* context, _Decimal64 value);
+	bool (*on_decimal_128)       (cbe_decode_context* context, _Decimal128 value);
+	bool (*on_time)              (cbe_decode_context* context, int64_t value);
+	bool (*on_end_container)     (cbe_decode_context* context);
+	bool (*on_list_start)        (cbe_decode_context* context);
+	bool (*on_map_start)         (cbe_decode_context* context);
+	bool (*on_bitfield)          (cbe_decode_context* context, const uint8_t* start, const uint64_t bit_count);
+	bool (*on_string)            (cbe_decode_context* context, const char* start, const char* end);
+	bool (*on_array_int_8)       (cbe_decode_context* context, const int8_t* start, const int8_t* end);
+	bool (*on_array_int_16)      (cbe_decode_context* context, const int16_t* start, const int16_t* end);
+	bool (*on_array_int_32)      (cbe_decode_context* context, const int32_t* start, const int32_t* end);
+	bool (*on_array_int_64)      (cbe_decode_context* context, const int64_t* start, const int64_t* end);
+	bool (*on_array_int_128)     (cbe_decode_context* context, const __int128* start, const __int128* end);
+	bool (*on_array_float_32)    (cbe_decode_context* context, const float* start, const float* end);
+	bool (*on_array_float_64)    (cbe_decode_context* context, const double* start, const double* end);
+	bool (*on_array_float_128)   (cbe_decode_context* context, const __float128* start, const __float128* end);
+	bool (*on_array_decimal_32)  (cbe_decode_context* context, const _Decimal32* start, const _Decimal32* end);
+	bool (*on_array_decimal_64)  (cbe_decode_context* context, const _Decimal64* start, const _Decimal64* end);
+	bool (*on_array_decimal_128) (cbe_decode_context* context, const _Decimal128* start, const _Decimal128* end);
+	bool (*on_array_time)        (cbe_decode_context* context, const int64_t* start, const int64_t* end);
+} cbe_decode_callbacks;
+
 
 /**
- * Get the day component from a time value.
+ * Begin a new decoding process.
  *
- * @param time The time value.
- * @return the day component.
+ * @param callbacks The callbacks to call while decoding the document.
+ * @param user_context Whatever data you want to be available to the callbacks.
+ * @return The context of the new decode process.
  */
-int cbe_time_get_day(int64_t time);
+cbe_decode_context* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context);
 
 /**
- * Get the hour component from a time value.
+ * Get the user context information from a decode context.
+ * This is meant to be called by a decode callback function.
  *
- * @param time The time value.
- * @return the hour component.
+ * @param context The decode context.
+ * @return The user context.
  */
-int cbe_time_get_hour(int64_t time);
+void* cbe_decode_get_user_context(cbe_decode_context* context);
 
 /**
- * Get the minute component from a time value.
+ * Decode part of a CBE document.
+ * TODO: Does the return value still make sense?
  *
- * @param time The time value.
- * @return the minute component.
+ * @param callbacks The callbacks to call as it decodes objects.
+ * @param data_start The start of the document.
+ * @param data_end The end (start + length) of the document.
+ * @return Pointer to one past the last byte read, or NULL on error.
  */
-int cbe_time_get_minute(int64_t time);
+const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end);
 
 /**
- * Get the second component from a time value.
+ * End a decoding process, freeing up any resources used.
+ * Note: This does NOT free the user context or callback structure.
  *
- * @param time The time value.
- * @return the second component.
+ * @param context The context of the decode process to end.
  */
-int cbe_time_get_second(int64_t time);
-
-/**
- * Get the microsecond component from a time value.
- *
- * @param time The time value.
- * @return the microsecond component.
- */
-int cbe_time_get_microsecond(int64_t time);
+void cbe_decode_end(cbe_decode_context* context);
 
 
 
@@ -450,90 +475,71 @@ bool cbe_encode_add_array_decimal_128(cbe_encode_context* const context, const _
 
 
 
-// ------------
-// Decoding API
-// ------------
-
-typedef struct {} cbe_decode_context;
+// --------
+// Time API
+// --------
 
 /**
- * Callback structure for use with cbe_decode().
+ * Create a new time value, encoding the fields into a 64-bit unsigned integer.
+ * Note: This function does NOT validate input! Make sure your source values are correct!
  *
- * cbe_decode() will call these callbacks as it decodes objects in the document.
+ * @param year The year (-131072 - 131071). Note: 1 = 1 AD, 0 = 1 BC, -1 = 2 BC, ...
+ * @param day The day of the year, allowing for leap year (1 - 366).
+ * @param hour The hour of the day (0 - 23).
+ * @param minute The minute of the hour (0 - 59).
+ * @param second The second of the minute, allowing for leap second (0 - 60).
+ * @param microsecond The microsecond of the second (0 - 999999).
+ * @return A new time value.
  */
-typedef struct
-{
-	bool (*on_error)             (cbe_decode_context* context, const char* message);
-	bool (*on_empty)             (cbe_decode_context* context);
-	bool (*on_boolean)           (cbe_decode_context* context, bool value);
-	bool (*on_int_8)             (cbe_decode_context* context, int8_t value);
-	bool (*on_int_16)            (cbe_decode_context* context, int16_t value);
-	bool (*on_int_32)            (cbe_decode_context* context, int32_t value);
-	bool (*on_int_64)            (cbe_decode_context* context, int64_t value);
-	bool (*on_int_128)           (cbe_decode_context* context, __int128 value);
-	bool (*on_float_32)          (cbe_decode_context* context, float value);
-	bool (*on_float_64)          (cbe_decode_context* context, double value);
-	bool (*on_float_128)         (cbe_decode_context* context, __float128 value);
-	bool (*on_decimal_32)        (cbe_decode_context* context, _Decimal32 value);
-	bool (*on_decimal_64)        (cbe_decode_context* context, _Decimal64 value);
-	bool (*on_decimal_128)       (cbe_decode_context* context, _Decimal128 value);
-	bool (*on_time)              (cbe_decode_context* context, int64_t value);
-	bool (*on_end_container)     (cbe_decode_context* context);
-	bool (*on_list_start)        (cbe_decode_context* context);
-	bool (*on_map_start)         (cbe_decode_context* context);
-	bool (*on_bitfield)          (cbe_decode_context* context, const uint8_t* start, const uint64_t bit_count);
-	bool (*on_string)            (cbe_decode_context* context, const char* start, const char* end);
-	bool (*on_array_int_8)       (cbe_decode_context* context, const int8_t* start, const int8_t* end);
-	bool (*on_array_int_16)      (cbe_decode_context* context, const int16_t* start, const int16_t* end);
-	bool (*on_array_int_32)      (cbe_decode_context* context, const int32_t* start, const int32_t* end);
-	bool (*on_array_int_64)      (cbe_decode_context* context, const int64_t* start, const int64_t* end);
-	bool (*on_array_int_128)     (cbe_decode_context* context, const __int128* start, const __int128* end);
-	bool (*on_array_float_32)    (cbe_decode_context* context, const float* start, const float* end);
-	bool (*on_array_float_64)    (cbe_decode_context* context, const double* start, const double* end);
-	bool (*on_array_float_128)   (cbe_decode_context* context, const __float128* start, const __float128* end);
-	bool (*on_array_decimal_32)  (cbe_decode_context* context, const _Decimal32* start, const _Decimal32* end);
-	bool (*on_array_decimal_64)  (cbe_decode_context* context, const _Decimal64* start, const _Decimal64* end);
-	bool (*on_array_decimal_128) (cbe_decode_context* context, const _Decimal128* start, const _Decimal128* end);
-	bool (*on_array_time)        (cbe_decode_context* context, const int64_t* start, const int64_t* end);
-} cbe_decode_callbacks;
-
+int64_t cbe_new_time(int year, int day, int hour, int minute, int second, int microsecond);
 
 /**
- * Begin a new decoding process.
+ * Get the year component from a time value.
  *
- * @param callbacks The callbacks to call while decoding the document.
- * @param user_context Whatever data you want to be available to the callbacks.
- * @return The context of the new decode process.
+ * @param time The time value.
+ * @return the year component.
  */
-cbe_decode_context* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context);
+int cbe_time_get_year(int64_t time);
 
 /**
- * Get the user context information from a decode context.
- * This is meant to be called by a decode callback function.
+ * Get the day component from a time value.
  *
- * @param context The decode context.
- * @return The user context.
+ * @param time The time value.
+ * @return the day component.
  */
-void* cbe_decode_get_user_context(cbe_decode_context* context);
+int cbe_time_get_day(int64_t time);
 
 /**
- * Decode part of a CBE document.
- * TODO: Does the return value still make sense?
+ * Get the hour component from a time value.
  *
- * @param callbacks The callbacks to call as it decodes objects.
- * @param data_start The start of the document.
- * @param data_end The end (start + length) of the document.
- * @return Pointer to one past the last byte read, or NULL on error.
+ * @param time The time value.
+ * @return the hour component.
  */
-const uint8_t* cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_start, const uint8_t* const data_end);
+int cbe_time_get_hour(int64_t time);
 
 /**
- * End a decoding process, freeing up any resources used.
- * Note: This does NOT free the user context or callback structure.
+ * Get the minute component from a time value.
  *
- * @param context The context of the decode process to end.
+ * @param time The time value.
+ * @return the minute component.
  */
-void cbe_decode_end(cbe_decode_context* context);
+int cbe_time_get_minute(int64_t time);
+
+/**
+ * Get the second component from a time value.
+ *
+ * @param time The time value.
+ * @return the second component.
+ */
+int cbe_time_get_second(int64_t time);
+
+/**
+ * Get the microsecond component from a time value.
+ *
+ * @param time The time value.
+ * @return the microsecond component.
+ */
+int cbe_time_get_microsecond(int64_t time);
 
 
 #ifdef __cplusplus 
