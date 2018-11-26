@@ -17,19 +17,20 @@ extern "C" {
 
 typedef enum
 {
-    CBE_TYPE_BOOLEAN,
-    CBE_TYPE_INT_8,
-    CBE_TYPE_INT_16,
-    CBE_TYPE_INT_32,
-    CBE_TYPE_INT_64,
-    CBE_TYPE_INT_128,
-    CBE_TYPE_FLOAT_32,
-    CBE_TYPE_FLOAT_64,
-    CBE_TYPE_FLOAT_128,
-    CBE_TYPE_DECIMAL_32,
-    CBE_TYPE_DECIMAL_64,
-    CBE_TYPE_DECIMAL_128,
-    CBE_TYPE_TIME,
+	// enum & 0xff = sizeof(type)
+    CBE_TYPE_BOOLEAN_8    = 0x000 + sizeof(bool),
+    CBE_TYPE_INT_8        = 0x100 + sizeof(int8_t),
+    CBE_TYPE_INT_16       = 0x200 + sizeof(int16_t),
+    CBE_TYPE_INT_32       = 0x300 + sizeof(int32_t),
+    CBE_TYPE_INT_64       = 0x400 + sizeof(int64_t),
+    CBE_TYPE_INT_128      = 0x500 + sizeof(__int128),
+    CBE_TYPE_FLOAT_32     = 0x600 + sizeof(float),
+    CBE_TYPE_FLOAT_64     = 0x700 + sizeof(double),
+    CBE_TYPE_FLOAT_128    = 0x800 + sizeof(__float128),
+    CBE_TYPE_DECIMAL_32   = 0x900 + sizeof(_Decimal32),
+    CBE_TYPE_DECIMAL_64   = 0xa00 + sizeof(_Decimal64),
+    CBE_TYPE_DECIMAL_128  = 0xb00 + sizeof(_Decimal128),
+    CBE_TYPE_TIME_64      = 0xc00 + sizeof(int64_t),
 } cbe_data_type;
 
 

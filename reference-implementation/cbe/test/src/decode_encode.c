@@ -81,7 +81,7 @@ bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const
     }
     switch(data_type)
     {
-        case CBE_TYPE_BOOLEAN:
+        case CBE_TYPE_BOOLEAN_8:
             break;
         case CBE_TYPE_INT_8:
             return cbe_encode_add_array_int_8(g_encode_process, (int8_t*)elements, element_count); \
@@ -105,7 +105,7 @@ bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const
             HANDLE_ARRAY(decimal_64, _Decimal64);
         case CBE_TYPE_DECIMAL_128:
             HANDLE_ARRAY(decimal_128, _Decimal128);
-        case CBE_TYPE_TIME:
+        case CBE_TYPE_TIME_64:
             HANDLE_ARRAY(time, int64_t);
     }
 }

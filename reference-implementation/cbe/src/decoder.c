@@ -275,7 +275,7 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                 HANDLE_CASE_ARRAY(_Decimal128, CBE_TYPE_DECIMAL_128);
                 break;
             case TYPE_ARRAY_TIME:
-                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_TIME);
+                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_TIME_64);
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {
