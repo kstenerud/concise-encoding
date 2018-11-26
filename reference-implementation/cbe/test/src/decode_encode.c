@@ -3,28 +3,28 @@
 #include <memory.h>
 #include "decode_encode.h"
 
-static cbe_encode_context* g_encode_context;
+static cbe_encode_process* g_encode_process;
 
-static bool on_error(cbe_decode_context* context, const char* message)
+static bool on_error(cbe_decode_process* process, const char* message)
 {
     // TODO: Store this somewhere for the tests to pick up?
     return false;
 }
 
-static bool on_empty(cbe_decode_context* context)
+static bool on_empty(cbe_decode_process* decode_process)
 {
-    return cbe_encode_add_empty(g_encode_context);
+    return cbe_encode_add_empty(g_encode_process);
 }
 
-static bool on_boolean(cbe_decode_context* context, bool value)
+static bool on_boolean(cbe_decode_process* decode_process, bool value)
 {
-    return cbe_encode_add_boolean(g_encode_context, value);
+    return cbe_encode_add_boolean(g_encode_process, value);
 }
 
 #define DEFINE_ADD_PRIMITIVE(TYPE, NAME_FRAGMENT) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_context* context, TYPE value) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) \
 { \
-    cbe_encode_add_ ## NAME_FRAGMENT(g_encode_context, value); \
+    cbe_encode_add_ ## NAME_FRAGMENT(g_encode_process, value); \
 }
 
 DEFINE_ADD_PRIMITIVE(int8_t,     int_8)
@@ -39,44 +39,44 @@ DEFINE_ADD_PRIMITIVE(_Decimal32, decimal_32)
 DEFINE_ADD_PRIMITIVE(_Decimal64, decimal_64)
 DEFINE_ADD_PRIMITIVE(_Decimal128, decimal_128)
 
-bool on_time(cbe_decode_context* context, int64_t value)
+bool on_time(cbe_decode_process* decode_process, int64_t value)
 {
-    return cbe_encode_add_time(g_encode_context, value);
+    return cbe_encode_add_time(g_encode_process, value);
 }
 
-bool on_end_container(cbe_decode_context* context)
+bool on_end_container(cbe_decode_process* decode_process)
 {
-    return cbe_end_container(g_encode_context);
+    return cbe_end_container(g_encode_process);
 }
 
-bool on_list_start(cbe_decode_context* context)
+bool on_list_start(cbe_decode_process* decode_process)
 {
-    return cbe_encode_start_list(g_encode_context);
+    return cbe_encode_start_list(g_encode_process);
 }
 
-bool on_map_start(cbe_decode_context* context)
+bool on_map_start(cbe_decode_process* decode_process)
 {
-    return cbe_encode_start_map(g_encode_context);
+    return cbe_encode_start_map(g_encode_process);
 }
 
-bool on_bitfield(cbe_decode_context* context, const uint8_t* start, const uint64_t length)
+bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count)
 {
-    return cbe_encode_add_bitfield(g_encode_context, start, length);
+    return cbe_encode_add_bitfield(g_encode_process, elements, element_count);
 }
 
-bool on_string(cbe_decode_context* context, const char* start, const char* end)
+bool on_string(cbe_decode_process* decode_process, const char* string_start, const int64_t byte_count)
 {
-    return cbe_encode_add_substring(g_encode_context, start, end);
+    return cbe_encode_add_substring(g_encode_process, string_start, byte_count);
 }
 
-bool on_array(cbe_decode_context* context, cbe_data_type data_type, const void* start, uint64_t element_count)
+bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const void* elements, int64_t element_count)
 {
     #define HANDLE_ARRAY(NAME, TYPE) \
     { \
-        void* copy = malloc(element_count * sizeof(TYPE)); \
-        memcpy(copy, start, element_count * sizeof(TYPE)); \
-        bool result = cbe_encode_add_array_ ## NAME(g_encode_context, (TYPE*)start, ((TYPE*)start) + element_count); \
-        free(copy); \
+        void* elements_copy = malloc(element_count * sizeof(TYPE)); \
+        memcpy(elements_copy, elements, element_count * sizeof(TYPE)); \
+        bool result = cbe_encode_add_array_ ## NAME(g_encode_process, (TYPE*)elements_copy, element_count); \
+        free(elements_copy); \
         return result; \
     }
     switch(data_type)
@@ -84,7 +84,7 @@ bool on_array(cbe_decode_context* context, cbe_data_type data_type, const void* 
         case CBE_TYPE_BOOLEAN:
             break;
         case CBE_TYPE_INT_8:
-            return cbe_encode_add_array_int_8(g_encode_context, (int8_t*)start, ((int8_t*)start) + element_count); \
+            return cbe_encode_add_array_int_8(g_encode_process, (int8_t*)elements, element_count); \
         case CBE_TYPE_INT_16:
             HANDLE_ARRAY(int_16, int16_t);
         case CBE_TYPE_INT_32:
@@ -110,7 +110,7 @@ bool on_array(cbe_decode_context* context, cbe_data_type data_type, const void* 
     }
 }
 
-bool decode_encode(const uint8_t* src, int src_length, cbe_encode_context* dst_buffer)
+bool decode_encode(const uint8_t* document, int byte_count, cbe_encode_process* encode_process)
 {
     cbe_decode_callbacks callbacks;
     callbacks.on_error = on_error;
@@ -135,9 +135,9 @@ bool decode_encode(const uint8_t* src, int src_length, cbe_encode_context* dst_b
     callbacks.on_string = on_string;
     callbacks.on_array = on_array;
 
-    g_encode_context = dst_buffer;
-    cbe_decode_context* context = cbe_decode_begin(&callbacks, NULL);
-    bool is_completed = cbe_decode_feed(context, src, src + src_length);
-    cbe_decode_end(context);
+    g_encode_process = encode_process;
+    cbe_decode_process* decode_process = cbe_decode_begin(&callbacks, NULL);
+    bool is_completed = cbe_decode_feed(decode_process, document, byte_count);
+    cbe_decode_end(decode_process);
     return is_completed;
 }

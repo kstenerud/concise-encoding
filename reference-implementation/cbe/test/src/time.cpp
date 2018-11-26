@@ -43,9 +43,9 @@ static inline unsigned int to_doy(int year, unsigned int month, unsigned int day
 
 inline void expect_memory_after_add_time(const int64_t time, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_operation([&](cbe_encode_context* context)
+    expect_memory_after_operation([&](cbe_encode_process* encode_process)
     {
-        return cbe_encode_add_time(context, time);
+        return cbe_encode_add_time(encode_process, time);
     }, expected_memory);
 }
 
@@ -62,9 +62,9 @@ TEST(TimeTest, time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINU
 TEST(TimeTest, failed_time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
     int64_t time = cbe_new_time(YEAR, to_doy(YEAR, MONTH, DAY), HOUR, MINUTE, SECOND, USEC); \
-    expect_failed_operation_decrementing(SIZE, [&](cbe_encode_context* context) \
+    expect_failed_operation_decrementing(SIZE, [&](cbe_encode_process* encode_process) \
     { \
-        return cbe_encode_add_time(context, time); \
+        return cbe_encode_add_time(encode_process, time); \
     }); \
 }
 
