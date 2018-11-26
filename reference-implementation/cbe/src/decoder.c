@@ -223,56 +223,63 @@ bool cbe_decode_feed(cbe_decode_context* context_ptr, const uint8_t* const data_
             case TYPE_TIME:
                 HANDLE_CASE_SCALAR(int64_t, time)
                 break;
+            case TYPE_ARRAY_STRING:
+            {
+                REQUEST_BYTES("string", get_array_length_field_width(buffer));
+                uint64_t byte_count = get_array_length(buffer);
+                REQUEST_BYTES("string", byte_count);
+                char* array_start = (char*)buffer->pos;
+                char* array_end = array_start + byte_count;
+                if(!context->callbacks->on_string(context_ptr, array_start, array_end)) return false;
+                buffer->pos += byte_count;
+                break;
+            }
 
-            #define HANDLE_CASE_ARRAY(TYPE, HANDLER) \
+            #define HANDLE_CASE_ARRAY(TYPE, CBE_TYPE) \
             { \
                 REQUEST_BYTES(#TYPE " array", get_array_length_field_width(buffer)) \
-                uint64_t length = get_array_length(buffer); \
-                uint64_t byte_count = length * sizeof(TYPE); \
+                uint64_t element_count = get_array_length(buffer); \
+                uint64_t byte_count = element_count * sizeof(TYPE); \
                 REQUEST_BYTES(#TYPE " array", byte_count) \
-                TYPE* array_start = (TYPE*)buffer->pos; \
-                TYPE* array_end = array_start + length; \
-                if(!context->callbacks->HANDLER(context_ptr, array_start, array_end)) return false; \
+                if(!context->callbacks->on_array(context_ptr, CBE_TYPE, (void*)buffer->pos, element_count)) return false; \
                 buffer->pos += byte_count; \
             }
-            case TYPE_ARRAY_STRING:
-                HANDLE_CASE_ARRAY(char, on_string);
-                break;
+
             case TYPE_ARRAY_INT_8:
-                HANDLE_CASE_ARRAY(int8_t, on_array_int_8);
+                HANDLE_CASE_ARRAY(int8_t, CBE_TYPE_INT_8);
                 break;
             case TYPE_ARRAY_INT_16:
-                HANDLE_CASE_ARRAY(int16_t, on_array_int_16);
+                HANDLE_CASE_ARRAY(int16_t, CBE_TYPE_INT_16);
                 break;
             case TYPE_ARRAY_INT_32:
-                HANDLE_CASE_ARRAY(int32_t, on_array_int_32);
+                HANDLE_CASE_ARRAY(int32_t, CBE_TYPE_INT_32);
                 break;
             case TYPE_ARRAY_INT_64:
-                HANDLE_CASE_ARRAY(int64_t, on_array_int_64);
+                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_INT_64);
                 break;
             case TYPE_ARRAY_INT_128:
-                HANDLE_CASE_ARRAY(__int128, on_array_int_128);
+                HANDLE_CASE_ARRAY(__int128, CBE_TYPE_INT_128);
                 break;
             case TYPE_ARRAY_FLOAT_32:
-                HANDLE_CASE_ARRAY(float, on_array_float_32);
+                HANDLE_CASE_ARRAY(float, CBE_TYPE_FLOAT_32);
                 break;
             case TYPE_ARRAY_FLOAT_64:
-                HANDLE_CASE_ARRAY(double, on_array_float_64);
+                HANDLE_CASE_ARRAY(double, CBE_TYPE_FLOAT_64);
                 break;
             case TYPE_ARRAY_FLOAT_128:
-                HANDLE_CASE_ARRAY(__float128, on_array_float_128);
+                HANDLE_CASE_ARRAY(__float128, CBE_TYPE_FLOAT_128);
                 break;
             case TYPE_ARRAY_DECIMAL_32:
-                HANDLE_CASE_ARRAY(_Decimal32, on_array_decimal_32);
+                HANDLE_CASE_ARRAY(_Decimal32, CBE_TYPE_DECIMAL_32);
                 break;
             case TYPE_ARRAY_DECIMAL_64:
-                HANDLE_CASE_ARRAY(_Decimal64, on_array_decimal_64);
+                HANDLE_CASE_ARRAY(_Decimal64, CBE_TYPE_DECIMAL_64);
                 break;
             case TYPE_ARRAY_DECIMAL_128:
-                HANDLE_CASE_ARRAY(_Decimal128, on_array_decimal_128);
+                HANDLE_CASE_ARRAY(_Decimal128, CBE_TYPE_DECIMAL_128);
                 break;
             case TYPE_ARRAY_TIME:
-                HANDLE_CASE_ARRAY(int64_t, on_array_time);
+                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_TIME);
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {

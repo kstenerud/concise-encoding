@@ -15,6 +15,24 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum
+{
+    CBE_TYPE_BOOLEAN,
+    CBE_TYPE_INT_8,
+    CBE_TYPE_INT_16,
+    CBE_TYPE_INT_32,
+    CBE_TYPE_INT_64,
+    CBE_TYPE_INT_128,
+    CBE_TYPE_FLOAT_32,
+    CBE_TYPE_FLOAT_64,
+    CBE_TYPE_FLOAT_128,
+    CBE_TYPE_DECIMAL_32,
+    CBE_TYPE_DECIMAL_64,
+    CBE_TYPE_DECIMAL_128,
+    CBE_TYPE_TIME,
+} cbe_data_type;
+
+
 
 /**
  * Get the current library version as a semantic version (e.g. "1.5.2").
@@ -58,18 +76,7 @@ typedef struct
 	bool (*on_map_start)         (cbe_decode_context* context);
 	bool (*on_bitfield)          (cbe_decode_context* context, const uint8_t* start, const uint64_t bit_count);
 	bool (*on_string)            (cbe_decode_context* context, const char* start, const char* end);
-	bool (*on_array_int_8)       (cbe_decode_context* context, const int8_t* start, const int8_t* end);
-	bool (*on_array_int_16)      (cbe_decode_context* context, const int16_t* start, const int16_t* end);
-	bool (*on_array_int_32)      (cbe_decode_context* context, const int32_t* start, const int32_t* end);
-	bool (*on_array_int_64)      (cbe_decode_context* context, const int64_t* start, const int64_t* end);
-	bool (*on_array_int_128)     (cbe_decode_context* context, const __int128* start, const __int128* end);
-	bool (*on_array_float_32)    (cbe_decode_context* context, const float* start, const float* end);
-	bool (*on_array_float_64)    (cbe_decode_context* context, const double* start, const double* end);
-	bool (*on_array_float_128)   (cbe_decode_context* context, const __float128* start, const __float128* end);
-	bool (*on_array_decimal_32)  (cbe_decode_context* context, const _Decimal32* start, const _Decimal32* end);
-	bool (*on_array_decimal_64)  (cbe_decode_context* context, const _Decimal64* start, const _Decimal64* end);
-	bool (*on_array_decimal_128) (cbe_decode_context* context, const _Decimal128* start, const _Decimal128* end);
-	bool (*on_array_time)        (cbe_decode_context* context, const int64_t* start, const int64_t* end);
+	bool (*on_array)             (cbe_decode_context* context, cbe_data_type type, const void* start, uint64_t element_count);
 } cbe_decode_callbacks;
 
 
@@ -480,6 +487,16 @@ bool cbe_encode_add_array_decimal_64(cbe_encode_context* const context, const _D
  * @return true if there was enough room in the buffer to store the object.
  */
 bool cbe_encode_add_array_decimal_128(cbe_encode_context* const context, const _Decimal128* const start, const _Decimal128* const end);
+
+/**
+ * Add an array of 64-bit time values to the document.
+ *
+ * @param context The encoding context.
+ * @param start The start of the array.
+ * @param end The end of the array.
+ * @return true if there was enough room in the buffer to store the object.
+ */
+bool cbe_encode_add_array_time(cbe_encode_context* const context, const int64_t* const start, const int64_t* const end);
 
 
 

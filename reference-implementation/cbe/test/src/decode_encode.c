@@ -68,65 +68,37 @@ bool on_string(cbe_decode_context* context, const char* start, const char* end)
     return cbe_encode_add_substring(g_buffer, start, end);
 }
 
-bool on_array_int_8(cbe_decode_context* context, const int8_t* start, const int8_t* end)
+bool on_array(cbe_decode_context* context, cbe_data_type data_type, const void* start, uint64_t element_count)
 {
-    return cbe_encode_add_array_int_8(g_buffer, start, end);
-}
-
-bool on_array_int_16(cbe_decode_context* context, const int16_t* start, const int16_t* end)
-{
-    return cbe_encode_add_array_int_16(g_buffer, start, end);
-}
-
-bool on_array_int_32(cbe_decode_context* context, const int32_t* start, const int32_t* end)
-{
-    return cbe_encode_add_array_int_32(g_buffer, start, end);
-}
-
-bool on_array_int_64(cbe_decode_context* context, const int64_t* start, const int64_t* end)
-{
-    return cbe_encode_add_array_int_64(g_buffer, start, end);
-}
-
-bool on_array_int_128(cbe_decode_context* context, const __int128* start, const __int128* end)
-{
-    return cbe_encode_add_array_int_128(g_buffer, start, end);
-}
-
-bool on_array_float_32(cbe_decode_context* context, const float* start, const float* end)
-{
-    return cbe_encode_add_array_float_32(g_buffer, start, end);
-}
-
-bool on_array_float_64(cbe_decode_context* context, const double* start, const double* end)
-{
-    return cbe_encode_add_array_float_64(g_buffer, start, end);
-}
-
-bool on_array_float_128(cbe_decode_context* context, const __float128* start, const __float128* end)
-{
-    return cbe_encode_add_array_float_128(g_buffer, start, end);
-}
-
-bool on_array_decimal_32(cbe_decode_context* context, const _Decimal32* start, const _Decimal32* end)
-{
-    return cbe_encode_add_array_decimal_32(g_buffer, start, end);
-}
-
-bool on_array_decimal_64(cbe_decode_context* context, const _Decimal64* start, const _Decimal64* end)
-{
-    return cbe_encode_add_array_decimal_64(g_buffer, start, end);
-}
-
-bool on_array_decimal_128(cbe_decode_context* context, const _Decimal128* start, const _Decimal128* end)
-{
-    return cbe_encode_add_array_decimal_128(g_buffer, start, end);
-}
-
-bool on_array_time(cbe_decode_context* context, const int64_t* start, const int64_t* end)
-{
-    // TODO
-    // return cbe_encode_add_array_time(g_buffer, start, end);
+    switch(data_type)
+    {
+        case CBE_TYPE_BOOLEAN:
+            break;
+        case CBE_TYPE_INT_8:
+            return cbe_encode_add_array_int_8(g_buffer, (int8_t*)start, ((int8_t*)start) + element_count);
+        case CBE_TYPE_INT_16:
+            return cbe_encode_add_array_int_16(g_buffer, (int16_t*)start, ((int16_t*)start) + element_count);
+        case CBE_TYPE_INT_32:
+            return cbe_encode_add_array_int_32(g_buffer, (int32_t*)start, ((int32_t*)start) + element_count);
+        case CBE_TYPE_INT_64:
+            return cbe_encode_add_array_int_64(g_buffer, (int64_t*)start, ((int64_t*)start) + element_count);
+        case CBE_TYPE_INT_128:
+            return cbe_encode_add_array_int_128(g_buffer, (__int128*)start, ((__int128*)start) + element_count);
+        case CBE_TYPE_FLOAT_32:
+            return cbe_encode_add_array_float_32(g_buffer, (float*)start, ((float*)start) + element_count);
+        case CBE_TYPE_FLOAT_64:
+            return cbe_encode_add_array_float_64(g_buffer, (double*)start, ((double*)start) + element_count);
+        case CBE_TYPE_FLOAT_128:
+            return cbe_encode_add_array_float_128(g_buffer, (__float128*)start, ((__float128*)start) + element_count);
+        case CBE_TYPE_DECIMAL_32:
+            return cbe_encode_add_array_decimal_32(g_buffer, (_Decimal32*)start, ((_Decimal32*)start) + element_count);
+        case CBE_TYPE_DECIMAL_64:
+            return cbe_encode_add_array_decimal_64(g_buffer, (_Decimal64*)start, ((_Decimal64*)start) + element_count);
+        case CBE_TYPE_DECIMAL_128:
+            return cbe_encode_add_array_decimal_128(g_buffer, (_Decimal128*)start, ((_Decimal128*)start) + element_count);
+        case CBE_TYPE_TIME:
+            return cbe_encode_add_array_time(g_buffer, (int64_t*)start, ((int64_t*)start) + element_count);
+    }
 }
 
 bool decode_encode(const uint8_t* src, int src_length, cbe_encode_context* dst_buffer)
@@ -152,18 +124,7 @@ bool decode_encode(const uint8_t* src, int src_length, cbe_encode_context* dst_b
     callbacks.on_map_start = on_map_start;
     callbacks.on_bitfield = on_bitfield;
     callbacks.on_string = on_string;
-    callbacks.on_array_int_8 = on_array_int_8;
-    callbacks.on_array_int_16 = on_array_int_16;
-    callbacks.on_array_int_32 = on_array_int_32;
-    callbacks.on_array_int_64 = on_array_int_64;
-    callbacks.on_array_int_128 = on_array_int_128;
-    callbacks.on_array_float_32 = on_array_float_32;
-    callbacks.on_array_float_64 = on_array_float_64;
-    callbacks.on_array_float_128 = on_array_float_128;
-    callbacks.on_array_decimal_32 = on_array_decimal_32;
-    callbacks.on_array_decimal_64 = on_array_decimal_64;
-    callbacks.on_array_decimal_128 = on_array_decimal_128;
-    callbacks.on_array_time = on_array_time;
+    callbacks.on_array = on_array;
 
     g_buffer = dst_buffer;
     cbe_decode_context* context = cbe_decode_begin(&callbacks, NULL);

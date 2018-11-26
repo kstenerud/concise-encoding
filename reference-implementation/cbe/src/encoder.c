@@ -395,6 +395,12 @@ bool cbe_encode_add_array_decimal_128(cbe_encode_context* const encode_context, 
     return add_array(context, TYPE_ARRAY_DECIMAL_128, (const uint8_t* const)start, end - start, sizeof(*start));
 }
 
+bool cbe_encode_add_array_time(cbe_encode_context* const encode_context, const int64_t* const start, const int64_t* const end)
+{
+    cbe_real_encode_context* context = (cbe_real_encode_context*)encode_context;
+    return add_array(context, TYPE_ARRAY_TIME, (const uint8_t* const)start, end - start, sizeof(*start));
+}
+
 bool cbe_encode_add_bitfield(cbe_encode_context* const encode_context, const uint8_t* const packed_values, const int entity_count)
 {
     cbe_real_encode_context* context = (cbe_real_encode_context*)encode_context;
