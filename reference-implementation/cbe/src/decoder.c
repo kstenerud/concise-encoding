@@ -102,13 +102,13 @@ static inline uint64_t get_array_length(ro_buffer* const buffer)
     }
 }
 
-// static void report_error(cbe_decode_callbacks* callbacks, void* user_context, char* fmt, ...)
+// static void report_error(cbe_decode_process* process, void* user_context, char* fmt, ...)
 // {
 //     va_list args;
 //     va_start(args, fmt);
 //     char buff[200];
 //     vsprintf(buff, fmt, args);
-//     callbacks->on_error(process, buff);
+//     process->callbacks->on_error(process, buff);
 //     va_end(args);
 // }
 
