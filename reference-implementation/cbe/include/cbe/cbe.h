@@ -363,10 +363,10 @@ bool cbe_end_container(cbe_encode_context* const context);
  *
  * @param context The encoding context.
  * @param packed_values The values to add, pre-packed into bytes.
- * @param entity_count The number of bits to add.
+ * @param element_count The number of bits to add.
  * @return true if there was enough room in the buffer to store the object.
  */
-bool cbe_encode_add_bitfield(cbe_encode_context* const context, const uint8_t* const packed_values, const int entity_count);
+bool cbe_encode_add_bitfield(cbe_encode_context* const context, const uint8_t* const packed_values, const int element_count);
 
 /**
  * Add a bitfield to the document.

@@ -128,16 +128,16 @@ DEFINE_ADD_SCALAR_FUNCTION(uint64_t,           time, TYPE_TIME)
 static bool add_array(cbe_real_encode_context* const context,
                       const cbe_type_field array_type,
                       const uint8_t* const values,
-                      const int entity_count,
-                      const int entity_size)
+                      const int element_count,
+                      const int element_size)
 {
     const uint8_t type = array_type;
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(context,
-                                          get_length_field_width(entity_count) +
-                                          entity_count * entity_size);
+                                          get_length_field_width(element_count) +
+                                          element_count * element_size);
     add_primitive_type(context, type);
-    add_primitive_length(context, entity_count);
-    add_primitive_bytes(context, values, entity_count * entity_size);
+    add_primitive_length(context, element_count);
+    add_primitive_bytes(context, values, element_count * element_size);
     return true;
 }
 
@@ -401,20 +401,20 @@ bool cbe_encode_add_array_time(cbe_encode_context* const encode_context, const i
     return add_array(context, TYPE_ARRAY_TIME, (const uint8_t* const)start, end - start, sizeof(*start));
 }
 
-bool cbe_encode_add_bitfield(cbe_encode_context* const encode_context, const uint8_t* const packed_values, const int entity_count)
+bool cbe_encode_add_bitfield(cbe_encode_context* const encode_context, const uint8_t* const packed_values, const int element_count)
 {
     cbe_real_encode_context* context = (cbe_real_encode_context*)encode_context;
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
-    int byte_count = entity_count / 8;
-    if(entity_count & 7)
+    int byte_count = element_count / 8;
+    if(element_count & 7)
     {
         byte_count++;
     }
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(context,
-                                          get_length_field_width(entity_count) +
+                                          get_length_field_width(element_count) +
                                           byte_count);
     add_primitive_type(context, type);
-    add_primitive_length(context, entity_count);
+    add_primitive_length(context, element_count);
     add_primitive_bytes(context, packed_values, byte_count);
     return true;
 }
@@ -422,23 +422,23 @@ bool cbe_encode_add_bitfield(cbe_encode_context* const encode_context, const uin
 bool cbe_encode_add_array_boolean(cbe_encode_context* const encode_context, const bool* const start, const bool* const end)
 {
     cbe_real_encode_context* context = (cbe_real_encode_context*)encode_context;
-    const int entity_count = end - start;
+    const int element_count = end - start;
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
-    int byte_count = entity_count / 8;
-    if(entity_count & 7)
+    int byte_count = element_count / 8;
+    if(element_count & 7)
     {
         byte_count++;
     }
     RETURN_FALSE_IF_NOT_ENOUGH_ROOM_TYPED(context,
-                                          get_length_field_width(entity_count) +
+                                          get_length_field_width(element_count) +
                                           byte_count);
     add_primitive_type(context, type);
-    add_primitive_length(context, entity_count);
-    for(int i = 0; i < entity_count;)
+    add_primitive_length(context, element_count);
+    for(int i = 0; i < element_count;)
     {
         uint8_t bit_pos = 1;
         uint8_t next_byte = 0;
-        for(int j = 0; j < 8 && i < entity_count; j++)
+        for(int j = 0; j < 8 && i < element_count; j++)
         {
             if(start[i])
             {
