@@ -506,7 +506,7 @@ bool cbe_encode_add_array_time(cbe_encode_process* const encode_process, const i
 // --------
 
 /**
- * Create a new time value, encoding the fields into a 64-bit unsigned integer.
+ * Create a new time value, encoding the fields into a 64-bit signed integer.
  * Note: This function does NOT validate input! Make sure your source values are correct!
  *
  * @param year The year (-131072 - 131071). Note: 1 = 1 AD, 0 = 1 BC, -1 = 2 BC, ...
