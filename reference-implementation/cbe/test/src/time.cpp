@@ -18,25 +18,18 @@ static int g_days_to_the_month[] =
     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30, // December
 };
 
+static inline int is_leap_year(int year)
+{
+    return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
+}
+
 static inline unsigned int to_doy(int year, unsigned int month, unsigned int day)
 {
-    // Etremely naive converter, only good for modern dates.
+    // Extremely naive converter, only good for modern dates.
     unsigned int days = g_days_to_the_month[month] + day;
-    if(month <= 2)
+    if(is_leap_year(year))
     {
-        return days;
-    }
-    if(year % 400 == 0)
-    {
-        return days + 1;
-    }
-    if(year % 100 == 0)
-    {
-        return days;
-    }
-    if(year % 4 == 0)
-    {
-        return days + 1;
+        days++;
     }
     return days;
 }
