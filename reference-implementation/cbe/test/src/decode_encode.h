@@ -6,7 +6,9 @@ extern "C" {
 
 #include <cbe/cbe.h>
 
-bool decode_encode(const uint8_t* src, int src_length, cbe_encode_process* encode_process);
+cbe_decode_process* new_decode_encode_process(cbe_decode_callbacks* callbacks, cbe_encode_process* encode_process);
+
+cbe_encode_status decode_encode(const uint8_t* src, int src_length, cbe_encode_process* encode_process);
 
 
 #ifdef __cplusplus

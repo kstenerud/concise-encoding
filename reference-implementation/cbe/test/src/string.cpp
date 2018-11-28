@@ -32,17 +32,16 @@ static void expect_memory_string(int length, std::vector<uint8_t> length_field_v
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
     uint8_t type = 0x90;
-    // TODO: Update this to use arrays
     expected_memory.insert(expected_memory.begin(), length_field_values.begin(), length_field_values.end());
     expected_memory.insert(expected_memory.begin(), type);
     expect_memory_after_add_value(str, expected_memory);
     expect_decode_encode(expected_memory);
 }
 
-static void expect_failed_string(int buffer_length, int string_length)
+static void expect_incomplete_add_string(int buffer_length, int string_length)
 {
     std::string str = make_string_with_length(string_length);
-
+    expect_add_value_incomplete(buffer_length, str);
 }
 
 #define DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(LENGTH) \
@@ -57,10 +56,10 @@ TEST(StringTest, length_ ## LENGTH) \
     expect_memory_string(LENGTH, __VA_ARGS__); \
 }
 
-#define DEFINE_FAILED_ADD_STRING_TEST(SIZE) \
-TEST(StringTest, failed_length_ ## SIZE) \
+#define DEFINE_ADD_STRING_INCOMPLETE_TEST(SIZE) \
+TEST(StringTest, incomplete_length_ ## SIZE) \
 { \
-    expect_failed_string(SIZE - 1, SIZE); \
+    expect_incomplete_add_string(SIZE - 1, SIZE); \
 }
 
 DEFINE_ADD_STRING_INFERRED_LENGTH_TEST(0)
@@ -89,21 +88,21 @@ DEFINE_ADD_STRING_TEST(    65, {0x05, 0x01});
 DEFINE_ADD_STRING_TEST(0x3fff, {0xfd, 0xff});
 DEFINE_ADD_STRING_TEST(0x4000, {0x02, 0x00, 0x01, 0x00});
 
-DEFINE_FAILED_ADD_STRING_TEST(1)
-DEFINE_FAILED_ADD_STRING_TEST(2)
-DEFINE_FAILED_ADD_STRING_TEST(3)
-DEFINE_FAILED_ADD_STRING_TEST(4)
-DEFINE_FAILED_ADD_STRING_TEST(5)
-DEFINE_FAILED_ADD_STRING_TEST(6)
-DEFINE_FAILED_ADD_STRING_TEST(7)
-DEFINE_FAILED_ADD_STRING_TEST(8)
-DEFINE_FAILED_ADD_STRING_TEST(9)
-DEFINE_FAILED_ADD_STRING_TEST(10)
-DEFINE_FAILED_ADD_STRING_TEST(11)
-DEFINE_FAILED_ADD_STRING_TEST(12)
-DEFINE_FAILED_ADD_STRING_TEST(13)
-DEFINE_FAILED_ADD_STRING_TEST(14)
-DEFINE_FAILED_ADD_STRING_TEST(15)
-DEFINE_FAILED_ADD_STRING_TEST(16)
-DEFINE_FAILED_ADD_STRING_TEST(17)
-DEFINE_FAILED_ADD_STRING_TEST(0x1000)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(1)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(2)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(3)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(4)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(5)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(6)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(7)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(8)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(9)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(10)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(11)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(12)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(13)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(14)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(15)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(16)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(17)
+DEFINE_ADD_STRING_INCOMPLETE_TEST(0x1000)

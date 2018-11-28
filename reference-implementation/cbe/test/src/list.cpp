@@ -4,13 +4,14 @@ static void expect_memory_after_add_list(int length, std::vector<uint8_t> expect
 {
     expect_memory_after_operation([=](cbe_encode_process* encode_process)
     {
-        if(!cbe_encode_start_list(encode_process)) return false;
+        cbe_encode_status status;
+        if((status = cbe_encode_begin_list(encode_process)) != CBE_ENCODE_STATUS_OK) return status;
         for(int i = 0; i < length; i++)
         {
             int value = 10; // Any old number
-            if(!cbe_encode_add_int_8(encode_process, value)) return false;
+            if((status = cbe_encode_add_int_8(encode_process, value)) != CBE_ENCODE_STATUS_OK) return status;
         }
-        return cbe_end_container(encode_process);
+        return cbe_encode_end_container(encode_process);
     }, expected_memory);
 }
 
@@ -29,12 +30,13 @@ DEFINE_ADD_LIST_TEST(3, {0x91, 10, 10, 10, 0x93})
 DEFINE_ADD_LIST_TEST(4, {0x91, 10, 10, 10, 10, 0x93})
 DEFINE_ADD_LIST_TEST(5, {0x91, 10, 10, 10, 10, 10, 0x93})
 
-TEST(ListTest, failed)
+TEST(ListTest, incomplete)
 {
-    expect_failed_operation_decrementing(2, [&](cbe_encode_process* encode_process)
+    expect_incomplete_operation_decrementing(2, [&](cbe_encode_process* encode_process)
     {
-        cbe_encode_start_list(encode_process);
-        cbe_encode_add_int_8(encode_process, 0);
-        return cbe_end_container(encode_process);
+        cbe_encode_status status;
+        if((status = cbe_encode_begin_list(encode_process)) != CBE_ENCODE_STATUS_OK) return status;
+        if((status = cbe_encode_add_int_8(encode_process, 0)) != CBE_ENCODE_STATUS_OK) return status;
+        return cbe_encode_end_container(encode_process);
     });
 }

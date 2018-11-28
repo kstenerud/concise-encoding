@@ -77,24 +77,6 @@ typedef enum
     MAX_VALUE_30_BIT = 0x3fffffff,
 } cbe_max_value;
 
-typedef enum
-{
-    TIME_BITSHIFT_YEAR   = 46,
-    TIME_BITSHIFT_DAY    = 37,
-    TIME_BITSHIFT_HOUR   = 32,
-    TIME_BITSHIFT_MINUTE = 26,
-    TIME_BITSHIFT_SECOND = 20,
-} cbe_TIME_bitshift;
-
-typedef enum
-{
-    TIME_MASK_DAY         = 0x1ff,
-    TIME_MASK_HOUR        = 0x1f,
-    TIME_MASK_MINUTE      = 0x3f,
-    TIME_MASK_SECOND      = 0x3f,
-    TIME_MASK_MICROSECOND = 0xfffff,
-} cbe_time_mask;
-
 
 // Force the compiler to generate handler code for unaligned accesses.
 #define DEFINE_SAFE_STRUCT(NAME, TYPE) typedef struct __attribute__((__packed__)) {TYPE contents;} NAME
@@ -111,7 +93,7 @@ DEFINE_SAFE_STRUCT(safe_float_128,   __float128);
 DEFINE_SAFE_STRUCT(safe_decimal_32,  _Decimal32);
 DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
-DEFINE_SAFE_STRUCT(safe_time,        int64_t);
+DEFINE_SAFE_STRUCT(safe_time,        smalltime);
 
 #ifdef __cplusplus 
 }

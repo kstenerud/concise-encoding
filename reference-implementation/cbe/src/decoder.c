@@ -1,6 +1,4 @@
-// TODO: partial packet handling
-// TODO: EOD signaling
-
+#include <memory.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -20,6 +18,7 @@ typedef struct
     cbe_decode_callbacks* callbacks;
     ro_buffer current_buffer;
     const uint8_t* current_object;
+    int document_depth;
     void* user_context;
 } cbe_real_decode_process;
 
@@ -70,7 +69,7 @@ DEFINE_READ_FUNCTION(__float128,  float_128)
 DEFINE_READ_FUNCTION(_Decimal32,  decimal_32)
 DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
-DEFINE_READ_FUNCTION(int64_t,     time)
+DEFINE_READ_FUNCTION(smalltime,   time)
 
 static inline int get_array_length_field_width(const ro_buffer* const buffer)
 {
@@ -102,19 +101,10 @@ static inline uint64_t get_array_length(ro_buffer* const buffer)
     }
 }
 
-// static void report_error(cbe_decode_process* process, void* user_context, char* fmt, ...)
-// {
-//     va_list args;
-//     va_start(args, fmt);
-//     char buff[200];
-//     vsprintf(buff, fmt, args);
-//     process->callbacks->on_error(process, buff);
-//     va_end(args);
-// }
-
 cbe_decode_process* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context)
 {
     cbe_real_decode_process* process = malloc(sizeof(*process));
+    memset(process, 0, sizeof(*process));
     process->callbacks = callbacks;
     process->user_context = user_context;
     return (cbe_decode_process*)process;
@@ -126,18 +116,17 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process)
     return process->user_context;
 }
 
-bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count)
+cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count)
 {
     cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     process->current_buffer = new_buffer(data_start, data_start + byte_count);
     ro_buffer* buffer = &process->current_buffer;
     process->current_object = buffer->pos;
-    int document_depth = 0;
 
     #define REQUEST_BYTES(TYPE, BYTE_COUNT) \
     if(buffer->pos + (BYTE_COUNT) > buffer->end) \
     { \
-        return false; \
+        return CBE_DECODE_STATUS_NEED_MORE_DATA; \
     }
 
     while(buffer->pos < buffer->end)
@@ -150,25 +139,43 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                 // Otherwise the document depth test would exit the decode loop.
                 continue;
             case TYPE_EMPTY:
-                if(!process->callbacks->on_empty(decode_process)) return false;
+                if(!process->callbacks->on_empty(decode_process))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 break;
             case TYPE_FALSE:
-                if(!process->callbacks->on_boolean(decode_process, false)) return false;
+                if(!process->callbacks->on_boolean(decode_process, false))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 break;
             case TYPE_TRUE:
-                if(!process->callbacks->on_boolean(decode_process, true)) return false;
+                if(!process->callbacks->on_boolean(decode_process, true))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 break;
             case TYPE_END_CONTAINER:
-                if(!process->callbacks->on_end_container(decode_process)) return false;
-                document_depth--;
+                if(!process->callbacks->on_end_container(decode_process))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
+                process->document_depth--;
                 break;
             case TYPE_LIST:
-                if(!process->callbacks->on_list_start(decode_process)) return false;
-                document_depth++;
+                if(!process->callbacks->on_begin_list(decode_process))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
+                process->document_depth++;
                 break;
             case TYPE_MAP:
-                if(!process->callbacks->on_map_start(decode_process)) return false;
-                document_depth++;
+                if(!process->callbacks->on_begin_map(decode_process))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
+                process->document_depth++;
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
@@ -178,7 +185,10 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
             {
                 uint64_t string_byte_count = type - TYPE_STRING_0;
                 REQUEST_BYTES("string", string_byte_count)
-                if(!process->callbacks->on_string(decode_process, (char*)buffer->pos, string_byte_count)) return false;
+                if(!process->callbacks->on_string(decode_process, (char*)buffer->pos, string_byte_count))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 buffer->pos += string_byte_count;
                 break;
             }
@@ -186,7 +196,10 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
             { \
                 REQUEST_BYTES(#NAME_FRAGMENT, sizeof(TYPE)) \
-                if(!process->callbacks->on_ ## NAME_FRAGMENT(decode_process, read_ ## NAME_FRAGMENT(buffer))) return false; \
+                if(!process->callbacks->on_ ## NAME_FRAGMENT(decode_process, read_ ## NAME_FRAGMENT(buffer))) \
+                { \
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK; \
+                } \
             }
             case TYPE_INT_16:
                 HANDLE_CASE_SCALAR(int16_t, int_16)
@@ -219,14 +232,17 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                 HANDLE_CASE_SCALAR(_Decimal128, decimal_128)
                 break;
             case TYPE_TIME:
-                HANDLE_CASE_SCALAR(int64_t, time)
+                HANDLE_CASE_SCALAR(smalltime, time)
                 break;
             case TYPE_ARRAY_STRING:
             {
                 REQUEST_BYTES("string", get_array_length_field_width(buffer));
                 uint64_t string_byte_count = get_array_length(buffer);
                 REQUEST_BYTES("string", string_byte_count);
-                if(!process->callbacks->on_string(decode_process, (char*)buffer->pos, string_byte_count)) return false;
+                if(!process->callbacks->on_string(decode_process, (char*)buffer->pos, string_byte_count))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 buffer->pos += string_byte_count;
                 break;
             }
@@ -237,7 +253,10 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                 uint64_t element_count = get_array_length(buffer); \
                 uint64_t array_byte_count = element_count * sizeof(TYPE); \
                 REQUEST_BYTES(#TYPE " array", array_byte_count) \
-                if(!process->callbacks->on_array(decode_process, CBE_TYPE, (void*)buffer->pos, element_count)) return false; \
+                if(!process->callbacks->on_array(decode_process, CBE_TYPE, (void*)buffer->pos, element_count)) \
+                { \
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK; \
+                } \
                 buffer->pos += array_byte_count; \
             }
 
@@ -275,7 +294,7 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                 HANDLE_CASE_ARRAY(_Decimal128, CBE_TYPE_DECIMAL_128);
                 break;
             case TYPE_ARRAY_TIME:
-                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_TIME_64);
+                HANDLE_CASE_ARRAY(smalltime, CBE_TYPE_TIME_64);
                 break;
             case TYPE_ARRAY_BOOLEAN:
             {
@@ -287,21 +306,27 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
                     array_byte_count++;
                 }
                 REQUEST_BYTES("bitfield", array_byte_count) \
-                if(!process->callbacks->on_bitfield(decode_process, buffer->pos, length)) return false;
+                if(!process->callbacks->on_bitfield(decode_process, buffer->pos, length))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 buffer->pos += array_byte_count;
                 break;
             }
             default:
-                if(!process->callbacks->on_int_8(decode_process, type)) return false;
+                if(!process->callbacks->on_int_8(decode_process, type))
+                {
+                    return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+                }
                 break;
         }
         process->current_object = buffer->pos;
-        if(document_depth <= 0)
+        if(process->document_depth <= 0)
         {
             break;
         }
     }
-    return true;
+    return CBE_DECODE_STATUS_OK;
 }
 
 int64_t cbe_decode_get_buffer_offset(cbe_decode_process* decode_process)

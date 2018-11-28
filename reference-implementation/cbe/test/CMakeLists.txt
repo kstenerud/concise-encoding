@@ -43,6 +43,9 @@ add_executable(cbe_test
                    src/map.cpp
                    src/array.cpp
                    src/empty.cpp
+                   src/encode_piecemeal.cpp
+                   src/decode_piecemeal.cpp
+                   src/invalid_document.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)

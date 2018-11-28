@@ -10,5 +10,5 @@ DEFINE_ENCODE_DECODE_ENCODE_TEST(Int8Test, _n105, (int8_t)-105, {0x68, 0x97, 0xf
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int8Test, _127,  (int8_t) 127, {0x68, 0x7f, 0x00})
 DEFINE_ENCODE_DECODE_ENCODE_TEST(Int8Test, _n128, (int8_t)-128, {0x68, 0x80, 0xff})
 
-DEFINE_FAILED_ADD_TEST(Int8Test, add_fail_8, 1, 125)
-DEFINE_FAILED_ADD_TEST(Int8Test, add_fail_small, 0, 10)
+DEFINE_ADD_INCOMPLETE_TEST(Int8Test, add_incomplete_8, 1, 125)
+DEFINE_ADD_INCOMPLETE_TEST(Int8Test, add_incomplete_small, 0, 10)

@@ -1,3 +1,4 @@
+// TODO: Check remaining status codes
 #pragma once
 
 #ifdef __cplusplus
@@ -14,10 +15,11 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <smalltime/smalltime.h>
 
 typedef enum
 {
-	// enum & 0xff = sizeof(type)
+	// enum value & 0xff == sizeof(type)
     CBE_TYPE_BOOLEAN_8    = 0x000 + sizeof(bool),
     CBE_TYPE_INT_8        = 0x100 + sizeof(int8_t),
     CBE_TYPE_INT_16       = 0x200 + sizeof(int16_t),
@@ -30,7 +32,7 @@ typedef enum
     CBE_TYPE_DECIMAL_32   = 0x900 + sizeof(_Decimal32),
     CBE_TYPE_DECIMAL_64   = 0xa00 + sizeof(_Decimal64),
     CBE_TYPE_DECIMAL_128  = 0xb00 + sizeof(_Decimal128),
-    CBE_TYPE_TIME_64      = 0xc00 + sizeof(int64_t),
+    CBE_TYPE_TIME_64      = 0xc00 + sizeof(smalltime),
 } cbe_data_type;
 
 
@@ -51,13 +53,37 @@ const char* cbe_version();
 typedef struct {} cbe_decode_process;
 
 /**
- * Callback structure for use with cbe_decode().
+ * Status codes that can be returned by encoder functions.
+ */
+typedef enum
+{
+	CBE_DECODE_STATUS_OK,
+
+	/**
+	 * Returned when a callback returned false, stopping the decode process.
+	 * The process may be resumed after fixing whatever problem caused the
+	 * callback to return false.
+	 */
+	CBE_DECODE_STATUS_STOPPED_IN_CALLBACK,
+
+	/**
+	 * Returned when the decoder has reached the end of the buffer and needs
+	 * more data to finish decoding the document.
+	 */
+	CBE_DECODE_STATUS_NEED_MORE_DATA,
+} cbe_decode_status;
+
+/**
+ * Callbacks for use with cbe_decode().
  *
  * cbe_decode() will call these callbacks as it decodes objects in the document.
+ *
+ * Note: It's on the client to check for properly balanced containers (list, map).
+ *
+ * Callback functions return true if processing should continue.
  */
 typedef struct
 {
-	bool (*on_error)             (cbe_decode_process* decode_process, const char* message);
 	bool (*on_empty)             (cbe_decode_process* decode_process);
 	bool (*on_boolean)           (cbe_decode_process* decode_process, bool value);
 	bool (*on_int_8)             (cbe_decode_process* decode_process, int8_t value);
@@ -71,10 +97,10 @@ typedef struct
 	bool (*on_decimal_32)        (cbe_decode_process* decode_process, _Decimal32 value);
 	bool (*on_decimal_64)        (cbe_decode_process* decode_process, _Decimal64 value);
 	bool (*on_decimal_128)       (cbe_decode_process* decode_process, _Decimal128 value);
-	bool (*on_time)              (cbe_decode_process* decode_process, int64_t value);
+	bool (*on_time)              (cbe_decode_process* decode_process, smalltime value);
 	bool (*on_end_container)     (cbe_decode_process* decode_process);
-	bool (*on_list_start)        (cbe_decode_process* decode_process);
-	bool (*on_map_start)         (cbe_decode_process* decode_process);
+	bool (*on_begin_list)        (cbe_decode_process* decode_process);
+	bool (*on_begin_map)         (cbe_decode_process* decode_process);
 	bool (*on_bitfield)          (cbe_decode_process* decode_process, const uint8_t* start, const int64_t bit_count);
 	bool (*on_string)            (cbe_decode_process* decode_process, const char* start, const int64_t byte_count);
 	bool (*on_array)             (cbe_decode_process* decode_process, cbe_data_type type, const void* start, int64_t element_count);
@@ -106,9 +132,9 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process);
  * @param encode_process The decode process.
  * @param data_start The start of the document.
  * @param byte_count The number of bytes in the document fragment.
- * @return true if the document was fully decoded.
+ * @return The current decoder status.
  */
-bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count);
+cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count);
 
 /**
  * Get the current write offset into the decode buffer.
@@ -119,7 +145,7 @@ bool cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const da
 int64_t cbe_decode_get_buffer_offset(cbe_decode_process* decode_process);
 
 /**
- * End a decoding process, freeing up any resources used.
+ * End a decoding process, freeing up any decoder resources used.
  * Note: This does NOT free the user context or callback structure.
  *
  * @param encode_process The decode process.
@@ -133,6 +159,38 @@ void cbe_decode_end(cbe_decode_process* decode_process);
 // ------------
 
 typedef struct {} cbe_encode_process;
+
+/**
+ * Status codes that can be returned by encoder functions.
+ */
+typedef enum
+{
+	CBE_ENCODE_STATUS_OK,
+
+	/**
+	 * Returned upon ending a document if the document's maps & lists
+	 * are not properly terminated by a corresponding "end container",
+	 * or if you've added too many "end container" objects.
+	 */
+	CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS,
+
+	/**
+	 * Returned when attempting to add a key of an invalid type to a map.
+	 */
+	CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE,
+
+	/**
+	 * Returned when terminating a map without adding a corresponding value
+	 * to the last key.
+	 */
+	CBE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY,
+
+	/**
+	 * Returned when the encoder has reached the end of the buffer and needs
+	 * more room to encode this object.
+	 */
+	CBE_ENCODE_STATUS_NEED_MORE_ROOM,
+} cbe_encode_status;
 
 /**
  * Begin a new encoding process.
@@ -161,47 +219,67 @@ void cbe_encode_set_buffer(cbe_encode_process* encode_process, uint8_t* const do
 int64_t cbe_encode_get_buffer_offset(cbe_encode_process* encode_process);
 
 /**
- * End an encoding process, freeing up any resources used.
- * Note: This does NOT free the user-supplied encode buffer.
+ * Get the document depth. This is the total depth of lists or maps that
+ * haven't yet been terminated with an "end container". When you have
+ * completed your document, it should be 0.
+ *
+ * A negative value indicates that you've added too many "end container"
+ * objects, and the document is now invalid. Note: Adding more containers
+ * to "balance it out" won't help; your code has a bug, and must be fixed.
  *
  * @param encode_process The encode process.
+ * @return the document depth.
  */
-void cbe_encode_end(cbe_encode_process* encode_process);
+int cbe_encode_get_document_depth(cbe_encode_process* encode_process);
+
+/**
+ * End an encoding process, freeing up any encoder resources used.
+ * Note: This does NOT free the user-supplied encode buffer.
+ *
+ * If the document is not valid (too many or not enough "end container"
+ *  objects), this method will still free resources, and then return false.
+ * The proces has been ended. The document is invalid, and cannot be fixed;
+ * your code has a bug.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_end(cbe_encode_process* encode_process);
 
 /**
  * Add an empty object to the document.
  *
  * @param encode_process The encode process.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_empty(cbe_encode_process* const encode_process);
+cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const encode_process);
 
 /**
  * Add a boolean value to the document.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_boolean(cbe_encode_process* const encode_process, const bool value);
+cbe_encode_status cbe_encode_add_boolean(cbe_encode_process* const encode_process, const bool value);
 
 /**
  * Add an integer value to the document.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int(cbe_encode_process* const encode_process, const int value);
+cbe_encode_status cbe_encode_add_int(cbe_encode_process* const encode_process, const int value);
 
 /**
  * Add an integer value to the document.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int_8(cbe_encode_process* const encode_process, const int8_t value);
+cbe_encode_status cbe_encode_add_int_8(cbe_encode_process* const encode_process, const int8_t value);
 
 /**
  * Add a 16 bit integer value to the document.
@@ -209,9 +287,9 @@ bool cbe_encode_add_int_8(cbe_encode_process* const encode_process, const int8_t
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int_16(cbe_encode_process* const encode_process, const int16_t value);
+cbe_encode_status cbe_encode_add_int_16(cbe_encode_process* const encode_process, const int16_t value);
 
 /**
  * Add a 32 bit integer value to the document.
@@ -219,9 +297,9 @@ bool cbe_encode_add_int_16(cbe_encode_process* const encode_process, const int16
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int_32(cbe_encode_process* const encode_process, const int32_t value);
+cbe_encode_status cbe_encode_add_int_32(cbe_encode_process* const encode_process, const int32_t value);
 
 /**
  * Add a 64 bit integer value to the document.
@@ -229,9 +307,9 @@ bool cbe_encode_add_int_32(cbe_encode_process* const encode_process, const int32
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int_64(cbe_encode_process* const encode_process, const int64_t value);
+cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const encode_process, const int64_t value);
 
 /**
  * Add a 128 bit integer value to the document.
@@ -239,9 +317,9 @@ bool cbe_encode_add_int_64(cbe_encode_process* const encode_process, const int64
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_int_128(cbe_encode_process* const encode_process, const __int128 value);
+cbe_encode_status cbe_encode_add_int_128(cbe_encode_process* const encode_process, const __int128 value);
 
 /**
  * Add a 32 bit floating point value to the document.
@@ -249,9 +327,9 @@ bool cbe_encode_add_int_128(cbe_encode_process* const encode_process, const __in
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_float_32(cbe_encode_process* const encode_process, const float value);
+cbe_encode_status cbe_encode_add_float_32(cbe_encode_process* const encode_process, const float value);
 
 /**
  * Add a 64 bit floating point value to the document.
@@ -259,9 +337,9 @@ bool cbe_encode_add_float_32(cbe_encode_process* const encode_process, const flo
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_float_64(cbe_encode_process* const encode_process, const double value);
+cbe_encode_status cbe_encode_add_float_64(cbe_encode_process* const encode_process, const double value);
 
 /**
  * Add a 128 bit floating point value to the document.
@@ -269,9 +347,9 @@ bool cbe_encode_add_float_64(cbe_encode_process* const encode_process, const dou
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_float_128(cbe_encode_process* const encode_process, const __float128 value);
+cbe_encode_status cbe_encode_add_float_128(cbe_encode_process* const encode_process, const __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.
@@ -279,9 +357,9 @@ bool cbe_encode_add_float_128(cbe_encode_process* const encode_process, const __
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_decimal_32(cbe_encode_process* const encode_process, const _Decimal32 value);
+cbe_encode_status cbe_encode_add_decimal_32(cbe_encode_process* const encode_process, const _Decimal32 value);
 
 /**
  * Add a 64 bit decimal value to the document.
@@ -289,9 +367,9 @@ bool cbe_encode_add_decimal_32(cbe_encode_process* const encode_process, const _
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_decimal_64(cbe_encode_process* const encode_process, const _Decimal64 value);
+cbe_encode_status cbe_encode_add_decimal_64(cbe_encode_process* const encode_process, const _Decimal64 value);
 
 /**
  * Add a 128 bit decimal value to the document.
@@ -299,9 +377,9 @@ bool cbe_encode_add_decimal_64(cbe_encode_process* const encode_process, const _
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_decimal_128(cbe_encode_process* const encode_process, const _Decimal128 value);
+cbe_encode_status cbe_encode_add_decimal_128(cbe_encode_process* const encode_process, const _Decimal128 value);
 
 /**
  * Add a time value to the document.
@@ -309,9 +387,9 @@ bool cbe_encode_add_decimal_128(cbe_encode_process* const encode_process, const 
  *
  * @param encode_process The encode process.
  * @param value The value to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_time(cbe_encode_process* const encode_process, const int64_t value);
+cbe_encode_status cbe_encode_add_time(cbe_encode_process* const encode_process, const smalltime value);
 
 /**
  * Add a UTF-8 encoded null-terminated string value to the document.
@@ -319,9 +397,9 @@ bool cbe_encode_add_time(cbe_encode_process* const encode_process, const int64_t
  *
  * @param encode_process The encode process.
  * @param str The null-terminated string to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_string(cbe_encode_process* const encode_process, const char* const str);
+cbe_encode_status cbe_encode_add_string(cbe_encode_process* const encode_process, const char* const str);
 
 /**
  * Add a substring of a UTF-8 encoded string value to the document.
@@ -330,33 +408,36 @@ bool cbe_encode_add_string(cbe_encode_process* const encode_process, const char*
  * @param encode_process The encode process.
  * @param string_start The start of the substring to add.
  * @param byte_count The length of the substring in bytes.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_substring(cbe_encode_process* const encode_process, const char* const string_start, const int64_t byte_count);
+cbe_encode_status cbe_encode_add_substring(cbe_encode_process* const encode_process, const char* const string_start, const int64_t byte_count);
 
 /**
- * Begin a list in the document.
+ * Begin a list in the document. Must be matched by an end container.
  *
  * @param encode_process The encode process.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_start_list(cbe_encode_process* const encode_process);
+cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const encode_process);
 
 /**
- * Begin a map in the document.
+ * Begin a map in the document. Must be matched by an end container.
+ *
+ * Map entries must be added in pairs. Every even item is a key, and every
+ * odd item is a corresponding value.
  *
  * @param encode_process The encode process.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_start_map(cbe_encode_process* const encode_process);
+cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const encode_process);
 
 /**
- * End the current container in the document.
+ * End the current container (list or map) in the document.
  *
  * @param encode_process The encode process.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_end_container(cbe_encode_process* const encode_process);
+cbe_encode_status cbe_encode_end_container(cbe_encode_process* const encode_process);
 
 /**
  * Add a bitfield to the document.
@@ -365,9 +446,9 @@ bool cbe_end_container(cbe_encode_process* const encode_process);
  * @param encode_process The encode process.
  * @param packed_values The values to add, pre-packed into bytes.
  * @param element_count The number of bits to add.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_bitfield(cbe_encode_process* const encode_process, const uint8_t* const packed_values, const int64_t element_count);
+cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_process, const uint8_t* const packed_values, const int64_t element_count);
 
 /**
  * Add a bitfield to the document.
@@ -375,9 +456,9 @@ bool cbe_encode_add_bitfield(cbe_encode_process* const encode_process, const uin
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_boolean(cbe_encode_process* const encode_process, const bool* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_boolean(cbe_encode_process* const encode_process, const bool* const elements, const int64_t element_count);
 
 /**
  * Add an array of 8-bit integers to the document.
@@ -385,9 +466,9 @@ bool cbe_encode_add_array_boolean(cbe_encode_process* const encode_process, cons
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_int_8(cbe_encode_process* const encode_process, const int8_t* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_int_8(cbe_encode_process* const encode_process, const int8_t* const elements, const int64_t element_count);
 
 /**
  * Add an array of 16-bit integers to the document.
@@ -395,9 +476,9 @@ bool cbe_encode_add_array_int_8(cbe_encode_process* const encode_process, const 
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_int_16(cbe_encode_process* const encode_process, const int16_t* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_int_16(cbe_encode_process* const encode_process, const int16_t* const elements, const int64_t element_count);
 
 /**
  * Add an array of 32-bit integers to the document.
@@ -405,9 +486,9 @@ bool cbe_encode_add_array_int_16(cbe_encode_process* const encode_process, const
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_int_32(cbe_encode_process* const encode_process, const int32_t* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_int_32(cbe_encode_process* const encode_process, const int32_t* const elements, const int64_t element_count);
 
 /**
  * Add an array of 64-bit integers to the document.
@@ -415,9 +496,9 @@ bool cbe_encode_add_array_int_32(cbe_encode_process* const encode_process, const
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_int_64(cbe_encode_process* const encode_process, const int64_t* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_int_64(cbe_encode_process* const encode_process, const int64_t* const elements, const int64_t element_count);
 
 /**
  * Add an array of 128-bit integers to the document.
@@ -425,9 +506,9 @@ bool cbe_encode_add_array_int_64(cbe_encode_process* const encode_process, const
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_int_128(cbe_encode_process* const encode_process, const __int128* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_int_128(cbe_encode_process* const encode_process, const __int128* const elements, const int64_t element_count);
 
 /**
  * Add an array of 32-bit floating point values to the document.
@@ -435,9 +516,9 @@ bool cbe_encode_add_array_int_128(cbe_encode_process* const encode_process, cons
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_float_32(cbe_encode_process* const encode_process, const float* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_float_32(cbe_encode_process* const encode_process, const float* const elements, const int64_t element_count);
 
 /**
  * Add an array of 64-bit floating point values to the document.
@@ -445,9 +526,9 @@ bool cbe_encode_add_array_float_32(cbe_encode_process* const encode_process, con
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_float_64(cbe_encode_process* const encode_process, const double* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_float_64(cbe_encode_process* const encode_process, const double* const elements, const int64_t element_count);
 
 /**
  * Add an array of 128-bit floating point values to the document.
@@ -455,9 +536,9 @@ bool cbe_encode_add_array_float_64(cbe_encode_process* const encode_process, con
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_float_128(cbe_encode_process* const encode_process, const __float128* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_float_128(cbe_encode_process* const encode_process, const __float128* const elements, const int64_t element_count);
 
 /**
  * Add an array of 32-bit decimal values to the document.
@@ -465,9 +546,9 @@ bool cbe_encode_add_array_float_128(cbe_encode_process* const encode_process, co
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_decimal_32(cbe_encode_process* const encode_process, const _Decimal32* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_decimal_32(cbe_encode_process* const encode_process, const _Decimal32* const elements, const int64_t element_count);
 
 /**
  * Add an array of 64-bit decimal values to the document.
@@ -475,9 +556,9 @@ bool cbe_encode_add_array_decimal_32(cbe_encode_process* const encode_process, c
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_decimal_64(cbe_encode_process* const encode_process, const _Decimal64* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_decimal_64(cbe_encode_process* const encode_process, const _Decimal64* const elements, const int64_t element_count);
 
 /**
  * Add an array of 64-bit decimal values to the document.
@@ -485,9 +566,9 @@ bool cbe_encode_add_array_decimal_64(cbe_encode_process* const encode_process, c
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_decimal_128(cbe_encode_process* const encode_process, const _Decimal128* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_decimal_128(cbe_encode_process* const encode_process, const _Decimal128* const elements, const int64_t element_count);
 
 /**
  * Add an array of 64-bit time values to the document.
@@ -495,77 +576,10 @@ bool cbe_encode_add_array_decimal_128(cbe_encode_process* const encode_process, 
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
- * @return true if there was enough room in the buffer to store the object.
+ * @return The current encoder status.
  */
-bool cbe_encode_add_array_time(cbe_encode_process* const encode_process, const int64_t* const elements, const int64_t element_count);
+cbe_encode_status cbe_encode_add_array_time(cbe_encode_process* const encode_process, const smalltime* const elements, const int64_t element_count);
 
-
-
-// --------
-// Time API
-// --------
-
-/**
- * Create a new time value, encoding the fields into a 64-bit signed integer.
- * Note: This function does NOT validate input! Make sure your source values are correct!
- *
- * @param year The year (-131072 - 131071). Note: 1 = 1 AD, 0 = 1 BC, -1 = 2 BC, ...
- * @param day The day of the year, allowing for leap year (1 - 366).
- * @param hour The hour of the day (0 - 23).
- * @param minute The minute of the hour (0 - 59).
- * @param second The second of the minute, allowing for leap second (0 - 60).
- * @param microsecond The microsecond of the second (0 - 999999).
- * @return A new time value.
- */
-int64_t cbe_new_time(int year, int day, int hour, int minute, int second, int microsecond);
-
-/**
- * Get the year component from a time value.
- *
- * @param time The time value.
- * @return the year component.
- */
-int cbe_time_get_year(int64_t time);
-
-/**
- * Get the day component from a time value.
- *
- * @param time The time value.
- * @return the day component.
- */
-int cbe_time_get_day(int64_t time);
-
-/**
- * Get the hour component from a time value.
- *
- * @param time The time value.
- * @return the hour component.
- */
-int cbe_time_get_hour(int64_t time);
-
-/**
- * Get the minute component from a time value.
- *
- * @param time The time value.
- * @return the minute component.
- */
-int cbe_time_get_minute(int64_t time);
-
-/**
- * Get the second component from a time value.
- *
- * @param time The time value.
- * @return the second component.
- */
-int cbe_time_get_second(int64_t time);
-
-/**
- * Get the microsecond component from a time value.
- *
- * @param time The time value.
- * @return the microsecond component.
- */
-int cbe_time_get_microsecond(int64_t time);
 
 
 #ifdef __cplusplus 

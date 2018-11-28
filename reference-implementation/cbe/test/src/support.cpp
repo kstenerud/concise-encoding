@@ -8,5 +8,5 @@ TEST(SupportTest, create_buffer)
     cbe_encode_process* encode_process = cbe_encode_begin(memory, sizeof(memory));
     fflush(stdout);
     EXPECT_EQ(expected_offset, cbe_encode_get_buffer_offset(encode_process));
-    cbe_encode_end(encode_process);
+    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process));
 }
