@@ -53,7 +53,7 @@ static cbe_decode_process* begin_decode_process(cbe_decode_callbacks* callbacks)
 }
 
 #define DEFINE_STOP_TEST(TYPE, VALUE) \
-TEST(DecodeInvalid, StopInCallback_ ## TYPE) \
+TEST(Decode, StopInCallback_ ## TYPE) \
 { \
     cbe_decode_callbacks callbacks; \
     cbe_decode_process* decode_process = begin_decode_process(&callbacks); \
@@ -80,7 +80,7 @@ DEFINE_STOP_TEST(time, 1);
 DEFINE_STOP_TEST(string, "1");
 
 #define DEFINE_ARRAY_STOP_TEST(TYPE, FUNCTION) \
-TEST(DecodeInvalid, StopInCallback_ ## TYPE) \
+TEST(Decode, StopInCallback_ ## TYPE) \
 { \
     cbe_decode_callbacks callbacks; \
     cbe_decode_process* decode_process = begin_decode_process(&callbacks); \
