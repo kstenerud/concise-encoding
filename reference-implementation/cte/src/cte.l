@@ -1,6 +1,6 @@
 %{
 
-#include "cte/cte.h"
+#include "cte_internal.h"
 #include "parser.h"
 #include <limits.h>
 #include <math.h>
@@ -160,27 +160,45 @@ VALUE_FALSE  f|false
 
 %%
 
-void yyerror (const void* const scanner, const cte_parse_callbacks* const callbacks, void* context, const char* const msg)
+void yyerror(const void* const scanner, const cte_real_decode_process* decode_process, const char *msg)
 {
     (void)scanner;
-	callbacks->on_error(context, msg);
+	decode_process->callbacks->on_error((cte_decode_process*)decode_process, msg);
 }
 
-bool cte_parse_string(const char* const input, const cte_parse_callbacks* const callbacks, void* context)
+cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user_context)
 {
-    yyscan_t scanner;
-
-    if(yylex_init(&scanner) != 0)
+    cte_real_decode_process* process = malloc(sizeof(*process));
+    memset(process, 0, sizeof(*process));
+    process->callbacks = callbacks;
+    process->user_context = user_context;
+    if(yylex_init(&process->scanner) != 0)
     {
-    	callbacks->on_error(context, "Could not init scanner");
-    	return false;
+        callbacks->on_error((cte_decode_process*)process, "Could not init scanner");
+        return NULL;
     }
+    return (cte_decode_process*)process;
+}
 
-    yy_scan_string(input, scanner);
-    bool result = yyparse(scanner, callbacks, context) == 0;
-    yylex_destroy(scanner);
+cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char* const data_start, const int64_t byte_count)
+{
+    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
+    yy_scan_bytes((const char* const)data_start, byte_count, process->scanner);
+    bool result = yyparse(process->scanner, process) == 0;
+    return result ? CTE_DECODE_STATUS_OK : 9999; // TODO
+}
 
-    return result;
+void* cte_decode_get_user_context(cte_decode_process* decode_process)
+{
+    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
+    return process->user_context;
+}
+
+void cte_decode_end(cte_decode_process* decode_process)
+{
+    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
+    yylex_destroy(process->scanner);
+    free(process);
 }
 
 static bool is_hex_character(int ch)

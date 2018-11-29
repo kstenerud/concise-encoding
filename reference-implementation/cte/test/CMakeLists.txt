@@ -23,8 +23,8 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 add_executable(cte_test
                    src/main.cpp
                    src/managed_allocator.c
-                   src/parse_test_helpers.c
-                   src/test_cte_parse.cpp
+                   src/decode_test_helpers.c
+                   src/test_cte_decode.cpp
                    src/test_cte_encode.cpp
                    src/readme_examples.cpp
                )

@@ -1,13 +1,19 @@
 #include "cte/cte.h"
 #include "cte_version.h"
+#include "cte_internal.h"
 #include <memory.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
-static inline bool has_room_for_bytes(cte_encode_context* context, int byte_count)
+#define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
+    if((size_t)((PROCESS)->end - (PROCESS)->pos) < (size_t)(REQUIRED_BYTES)) \
+        return CTE_ENCODE_STATUS_NEED_MORE_ROOM
+
+static inline cte_real_encode_process* get_real_process(cte_encode_process* encode_process)
 {
-    return context->pos + byte_count <= context->end;
+    return (cte_real_encode_process*)encode_process;
 }
 
 const char* cte_version()
@@ -15,134 +21,139 @@ const char* cte_version()
     return CTE_VERSION;
 }
 
-cte_encode_context cte_new_encode_context_with_config(uint8_t* const memory_start,
-                                                          uint8_t* const memory_end,
-                                                          int indent_spaces,
-                                                          int float_digits_precision)
+cte_encode_process* cte_encode_begin_with_config(
+                        uint8_t* const document_buffer,
+                        int64_t byte_count,
+                        int indent_spaces,
+                        int float_digits_precision)
 {
-    cte_encode_context context =
+    cte_real_encode_process* process = malloc(sizeof(*process));
+    memset(process, 0, sizeof(*process));
+    process->start = document_buffer;
+    process->pos = document_buffer;
+    process->end = document_buffer + byte_count;
+    process->indent_spaces = indent_spaces;
+    process->float_digits_precision = float_digits_precision;
+    process->container_level = 0;
+    process->is_first_in_document = true;
+    process->is_first_in_container = false;
+    process->next_object_is_map_key = false;
+    return (cte_encode_process*)process;
+}
+
+cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byte_count)
+{
+    return cte_encode_begin_with_config(document_buffer,
+                                        byte_count,
+                                        DEFAULT_INDENT_SPACES,
+                                        DEFAULT_FLOAT_DIGITS_PRECISION);
+}
+
+static void add_bytes(cte_real_encode_process* const process, const char* bytes, size_t length)
+{
+    memcpy(process->pos, bytes, length);
+    process->pos += length;
+}
+
+static cte_encode_status add_indentation(cte_real_encode_process* const process)
+{
+    if(process->indent_spaces <= 0)
     {
-        .start = memory_start,
-        .pos = memory_start,
-        .end = memory_end,
-        .indent_spaces = indent_spaces,
-        .float_digits_precision = float_digits_precision,
-        .container_level = 0,
-        .is_first_in_document = true,
-        .is_first_in_container = false,
-        .next_object_is_map_key = false,
-    };
-    return context;
-
-}
-
-cte_encode_context cte_new_encode_context(uint8_t* const memory_start, uint8_t* const memory_end)
-{
-    return cte_new_encode_context_with_config(memory_start,
-                                                memory_end,
-                                                DEFAULT_INDENT_SPACES,
-                                                DEFAULT_FLOAT_DIGITS_PRECISION);
-}
-
-static void add_bytes(cte_encode_context* const context, const char* bytes, size_t length)
-{
-    memcpy(context->pos, bytes, length);
-    context->pos += length;
-}
-
-static bool add_indentation(cte_encode_context* const context)
-{
-    if(context->indent_spaces <= 0)
-    {
-        return true;
+        return CTE_ENCODE_STATUS_OK;
     }
 
-    int num_spaces = context->indent_spaces * context->container_level;
-    if(!has_room_for_bytes(context, num_spaces + 1)) return false;
-    *context->pos++ = '\n';
-    memset(context->pos, ' ', num_spaces);
-    context->pos += num_spaces;
-    return true;
+    int num_spaces = process->indent_spaces * process->container_level;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, num_spaces + 1);
+    *process->pos++ = '\n';
+    memset(process->pos, ' ', num_spaces);
+    process->pos += num_spaces;
+    return CTE_ENCODE_STATUS_OK;
 }
 
-static bool begin_new_object(cte_encode_context* const context)
+static cte_encode_status begin_new_object(cte_real_encode_process* const process)
 {
-    if(context->is_first_in_document)
+    if(process->is_first_in_document)
     {
-        context->is_first_in_document = false;
-        return true;
+        process->is_first_in_document = false;
+        return CTE_ENCODE_STATUS_OK;
     }
 
-    bool is_in_map = context->is_inside_map[context->container_level];
-    bool next_object_is_map_key = context->next_object_is_map_key;
+    bool is_in_map = process->is_inside_map[process->container_level];
+    bool next_object_is_map_key = process->next_object_is_map_key;
+    cte_encode_status status = CTE_ENCODE_STATUS_OK;
 
     if(is_in_map)
     {
-        context->next_object_is_map_key = !next_object_is_map_key;
+        process->next_object_is_map_key = !next_object_is_map_key;
     }
 
-    if(context->is_first_in_container)
+    if(process->is_first_in_container)
     {
-        if(!add_indentation(context)) return false;
-        context->is_first_in_container = false;
-        return true;
+        if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
+        process->is_first_in_container = false;
+        return status;
     }
 
-    if(!has_room_for_bytes(context, 1)) return false;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
 
     if(!is_in_map || next_object_is_map_key)
     {
-        *context->pos++ = ',';
-        if(!add_indentation(context)) return false;
-        return true;
+        *process->pos++ = ',';
+        if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
+        return status;
     }
 
-    *context->pos++ = ':';
-    if(context->indent_spaces > 0)
+    *process->pos++ = ':';
+    if(process->indent_spaces > 0)
     {
-        if(!has_room_for_bytes(context, 1)) return false;
-        *context->pos++ = ' ';
+        STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+        *process->pos++ = ' ';
     }
-    return true;
+    return status;
 }
 
-static bool add_object(cte_encode_context* const context, const char* encoded_object)
+static cte_encode_status add_object(cte_real_encode_process* const process, const char* encoded_object)
 {
-    if(!begin_new_object(context)) return false;
+    cte_encode_status status = CTE_ENCODE_STATUS_OK;
+    if((status = begin_new_object(process)) != CTE_ENCODE_STATUS_OK) return status;
     int length = strlen(encoded_object);
-    if(!has_room_for_bytes(context, length)) return false;
-    add_bytes(context, encoded_object, length);
-    return true;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, length);
+    add_bytes(process, encoded_object, length);
+    return status;
 }
 
-bool cte_add_empty(cte_encode_context* const context)
+cte_encode_status cte_encode_add_empty(cte_encode_process* const encode_process)
 {
-    if(context->next_object_is_map_key) return false;
-    return add_object(context, "empty");
+    cte_real_encode_process* process = get_real_process(encode_process);
+    if(process->next_object_is_map_key) return 9999;
+    return add_object(process, "empty");
 }
 
-bool cte_add_boolean(cte_encode_context* const context, const bool value)
+cte_encode_status cte_encode_add_boolean(cte_encode_process* const encode_process, const bool value)
 {
-    if(context->next_object_is_map_key) return false;
-    return add_object(context, value ? "t" : "f");
+    cte_real_encode_process* process = get_real_process(encode_process);
+    if(process->next_object_is_map_key) return 9999;
+    return add_object(process, value ? "t" : "f");
 }
 
-bool cte_add_int_64(cte_encode_context* const context, const int64_t value)
+cte_encode_status cte_encode_add_int_64(cte_encode_process* const encode_process, const int64_t value)
 {
-    if(context->next_object_is_map_key) return false;
+    cte_real_encode_process* process = get_real_process(encode_process);
+    if(process->next_object_is_map_key) return 9999;
     char buffer[21];
     sprintf(buffer, "%ld", value);
-    return add_object(context, buffer);
+    return add_object(process, buffer);
 }
 
-bool cte_add_float_64(cte_encode_context* const context, const double value)
+cte_encode_status cte_encode_add_float_64(cte_encode_process* const encode_process, const double value)
 {
-    if(context->next_object_is_map_key) return false;
+    cte_real_encode_process* process = get_real_process(encode_process);
+    if(process->next_object_is_map_key) return 9999;
     char fmt[10];
-    sprintf(fmt, "%%.%dlg", context->float_digits_precision);
-    char buffer[context->float_digits_precision + 2];
+    sprintf(fmt, "%%.%dlg", process->float_digits_precision);
+    char buffer[process->float_digits_precision + 2];
     sprintf(buffer, fmt, value);
-    return add_object(context, buffer);
+    return add_object(process, buffer);
 }
 
 static char get_escape_char(char ch)
@@ -160,96 +171,104 @@ static char get_escape_char(char ch)
     }
 }
 
-static bool add_substring_with_escaping(cte_encode_context* const context, const char* const start, const char* const end)
+static cte_encode_status add_substring_with_escaping(cte_real_encode_process* const process, const char* const start, const int64_t byte_count)
 {
+    const char* end = start + byte_count;
     for(const char* src = start; src < end; src++)
     {
         char ch = *src;
         char escape_ch = get_escape_char(ch);
         if(escape_ch != 0)
         {
-            if(!has_room_for_bytes(context, 2)) return false;
-            *context->pos++ = '\\';
-            *context->pos++ = escape_ch;
+            STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 2);
+            *process->pos++ = '\\';
+            *process->pos++ = escape_ch;
         }
         else
         {
-            if(!has_room_for_bytes(context, 1)) return false;
-            *context->pos++ = ch;
+            STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+            *process->pos++ = ch;
         }
     }
-    return true;
+    return CTE_ENCODE_STATUS_OK;
 }
 
-bool cte_add_substring(cte_encode_context* const context, const char* const start, const char* const end)
+cte_encode_status cte_encode_add_substring(cte_encode_process* const encode_process, const char* const start, const int64_t byte_count)
 {
-    size_t byte_count = end - start;
-    if(!add_object(context, "\"")) return false;
-    if(!has_room_for_bytes(context, byte_count + 1)) return false;
-    add_substring_with_escaping(context, start, end);
-    add_bytes(context, "\"", 1);
-    return true;
+    cte_real_encode_process* process = get_real_process(encode_process);
+    cte_encode_status status = CTE_ENCODE_STATUS_OK;
+    if((status = add_object(process, "\"")) != CTE_ENCODE_STATUS_OK) return status;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count + 1);
+    add_substring_with_escaping(process, start, byte_count);
+    add_bytes(process, "\"", 1);
+    return status;
 }
 
-bool cte_add_string(cte_encode_context* const context, const char* const str)
+cte_encode_status cte_encode_add_string(cte_encode_process* const encode_process, const char* const str)
 {
-    return cte_add_substring(context, str, str + strlen(str));
+    return cte_encode_add_substring(encode_process, str, strlen(str));
 }
 
-static bool start_container(cte_encode_context* const context, bool is_map)
+static cte_encode_status start_container(cte_real_encode_process* const process, bool is_map)
 {
-    if(context->next_object_is_map_key) return false;
-    begin_new_object(context);
-    if(!has_room_for_bytes(context, 1)) return false;
-    add_bytes(context, is_map ? "{" : "[", 1);
-    context->container_level++;
-    context->is_first_in_container = true;
-    context->is_inside_map[context->container_level] = is_map;
-    context->next_object_is_map_key = is_map;
-    return true;
+    if(process->next_object_is_map_key) return 9999;
+    begin_new_object(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+    add_bytes(process, is_map ? "{" : "[", 1);
+    process->container_level++;
+    process->is_first_in_container = true;
+    process->is_inside_map[process->container_level] = is_map;
+    process->next_object_is_map_key = is_map;
+    return CTE_ENCODE_STATUS_OK;
 
 }
 
-bool cte_start_list(cte_encode_context* const context)
+cte_encode_status cte_encode_begin_list(cte_encode_process* const encode_process)
 {
-    return start_container(context, false);
+    cte_real_encode_process* process = get_real_process(encode_process);
+    return start_container(process, false);
 }
 
-bool cte_start_map(cte_encode_context* const context)
+cte_encode_status cte_encode_begin_map(cte_encode_process* const encode_process)
 {
-    return start_container(context, true);
+    cte_real_encode_process* process = get_real_process(encode_process);
+    return start_container(process, true);
 }
 
-bool cte_end_container(cte_encode_context* const context)
+cte_encode_status cte_encode_end_container(cte_encode_process* const encode_process)
 {
-    if(context->container_level <= 0)
+    cte_real_encode_process* process = get_real_process(encode_process);
+    cte_encode_status status = CTE_ENCODE_STATUS_OK;
+    if(process->container_level <= 0)
     {
-        return false;
+        return 9999;
     }
-    bool is_in_map = context->is_inside_map[context->container_level];
-    if(is_in_map && !context->next_object_is_map_key)
+    bool is_in_map = process->is_inside_map[process->container_level];
+    if(is_in_map && !process->next_object_is_map_key)
     {
-        return false;
+        return 9999;
     }
 
-    context->container_level--;
-    if(!add_indentation(context)) return false;
-    if(!has_room_for_bytes(context, 1)) return false;
-    add_bytes(context, is_in_map ? "}" : "]", 1);
-    context->next_object_is_map_key = context->is_inside_map[context->container_level];
-    return true;
+    process->container_level--;
+    if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+    add_bytes(process, is_in_map ? "}" : "]", 1);
+    process->next_object_is_map_key = process->is_inside_map[process->container_level];
+    return status;
 }
 
-const char* cte_end_encoding(cte_encode_context* const context)
+cte_encode_status cte_encode_end(cte_encode_process* const encode_process)
 {
-    while(context->container_level > 0)
+    cte_real_encode_process* process = get_real_process(encode_process);
+    while(process->container_level > 0)
     {
-        if(!cte_end_container(context))
+        if(!cte_encode_end_container(encode_process))
         {
-            return NULL;
+            return 9999;
         }
     }
-    if(!has_room_for_bytes(context, 1)) return NULL;
-    *context->pos = 0;
-    return (const char*)context->pos;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+    *process->pos = 0;
+    // return (const char*)process->pos;
+    return CTE_ENCODE_STATUS_OK;
 }

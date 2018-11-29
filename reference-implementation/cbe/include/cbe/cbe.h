@@ -210,7 +210,7 @@ typedef enum
  *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
- * @return The process of the new encode process.
+ * @return The new encode process.
  */
 cbe_encode_process* cbe_encode_begin(uint8_t* const document_buffer, int64_t byte_count);
 

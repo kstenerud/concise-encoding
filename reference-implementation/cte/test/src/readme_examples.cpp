@@ -6,34 +6,34 @@ TEST(CTE_Examples, encode)
 {
     int indent_spaces = 4;
     uint8_t buffer[1000];
-    cte_encode_context context = cte_new_encode_context_with_config(buffer,
-                                                                        buffer + sizeof(buffer),
-                                                                        indent_spaces,
-                                                                        DEFAULT_FLOAT_DIGITS_PRECISION);
+    cte_encode_process* process = cte_encode_begin_with_config(buffer,
+                                                                sizeof(buffer),
+                                                                indent_spaces,
+                                                                DEFAULT_FLOAT_DIGITS_PRECISION);
 
-    cte_start_map(&context);
-    cte_add_string(&context, "null");
-    cte_add_empty(&context);
-    cte_add_string(&context, "one");
-    cte_add_int_64(&context, 1);
-    cte_add_string(&context, "list");
-        cte_start_list(&context);
-        cte_add_int_64(&context, 1);
-        cte_add_int_64(&context, 2);
-        cte_add_int_64(&context, 3);
-            cte_start_map(&context);
-            cte_add_string(&context, "a");
-            cte_add_int_64(&context, 1);
-            cte_add_string(&context, "b");
-            cte_add_int_64(&context, 2);
-            cte_add_string(&context, "c");
-            cte_add_int_64(&context, 3);
-            cte_end_container(&context);
-        cte_end_container(&context);
-    cte_add_string(&context, "true");
-    cte_add_boolean(&context, true);
-    cte_end_container(&context);
-    cte_end_encoding(&context);
+    cte_encode_begin_map(process);
+    cte_encode_add_string(process, "null");
+    cte_encode_add_empty(process);
+    cte_encode_add_string(process, "one");
+    cte_encode_add_int_64(process, 1);
+    cte_encode_add_string(process, "list");
+        cte_encode_begin_list(process);
+        cte_encode_add_int_64(process, 1);
+        cte_encode_add_int_64(process, 2);
+        cte_encode_add_int_64(process, 3);
+            cte_encode_begin_map(process);
+            cte_encode_add_string(process, "a");
+            cte_encode_add_int_64(process, 1);
+            cte_encode_add_string(process, "b");
+            cte_encode_add_int_64(process, 2);
+            cte_encode_add_string(process, "c");
+            cte_encode_add_int_64(process, 3);
+            cte_encode_end_container(process);
+        cte_encode_end_container(process);
+    cte_encode_add_string(process, "true");
+    cte_encode_add_boolean(process, true);
+    cte_encode_end_container(process);
+    cte_encode_end(process);
 
     printf("%s\n", buffer);
 }
@@ -41,9 +41,14 @@ TEST(CTE_Examples, encode)
 typedef struct
 {
     int depth;
-} cte_parse_context;
+} decode_context;
 
-static void indent(cte_parse_context* context)
+static decode_context* get_context(cte_decode_process* process)
+{
+    return (decode_context*)cte_decode_get_user_context(process);
+}
+
+static void indent(decode_context* context)
 {
     for(int i = 0; i < context->depth; i++)
     {
@@ -51,35 +56,36 @@ static void indent(cte_parse_context* context)
     }
 }
 
-static void on_error(void* context, const char* message)
+static void on_error(cte_decode_process* decode_process, const char* message)
 {
     printf("Error: %s\n", message);
 }
 
-static bool on_string(void* context, const char* str)
+static bool on_string(cte_decode_process* decode_process, const char* str)
 {
-    indent((cte_parse_context*)context);
+
+    indent(get_context(decode_process));
     printf("\"%s\"\n", str);
     return true;
 }
 
-static bool on_empty(void* context)
+static bool on_empty(cte_decode_process* decode_process)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     printf("empty\n");
     return true;
 }
     
-static bool on_boolean(void* context, bool value)
+static bool on_boolean(cte_decode_process* decode_process, bool value)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     printf(value ? "true\n" : "false\n");
     return true;
 }
     
-static bool on_int_64(void* context, int64_t value)
+static bool on_int_64(cte_decode_process* decode_process, int64_t value)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     if(value <= INT64_MAX)
     {
         printf("%ld\n", (int64_t)value);
@@ -91,60 +97,63 @@ static bool on_int_64(void* context, int64_t value)
     return true;
 }
     
-static bool on_float_64(void* context, double value)
+static bool on_float_64(cte_decode_process* decode_process, double value)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     printf("%lg\n", value);
     return true;
 }
 
-static bool on_list_start(void* context)
+static bool on_list_begin(cte_decode_process* decode_process)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     printf("[\n");
-    ((cte_parse_context*)context)->depth++;
+    (get_context(decode_process))->depth++;
     return true;
 }
     
-static bool on_list_end(void* context)
+static bool on_list_end(cte_decode_process* decode_process)
 {
-    ((cte_parse_context*)context)->depth--;
-    indent((cte_parse_context*)context);
+    (get_context(decode_process))->depth--;
+    indent(get_context(decode_process));
     printf("]\n");
     return true;
 }
     
-static bool on_map_start(void* context)
+static bool on_map_begin(cte_decode_process* decode_process)
 {
-    indent((cte_parse_context*)context);
+    indent(get_context(decode_process));
     printf("{\n");
-    ((cte_parse_context*)context)->depth++;
+    (get_context(decode_process))->depth++;
     return true;
 }
     
-static bool on_map_end(void* context)
+static bool on_map_end(cte_decode_process* decode_process)
 {
-    ((cte_parse_context*)context)->depth--;
-    indent((cte_parse_context*)context);
+    (get_context(decode_process))->depth--;
+    indent(get_context(decode_process));
     printf("}\n");
     return true;
 }
 
-TEST(CTE_Examples, parse)
+TEST(CTE_Examples, decode)
 {
-    cte_parse_callbacks callbacks;
+    cte_decode_callbacks callbacks;
     callbacks.on_empty = on_empty;
     callbacks.on_boolean = on_boolean;
     callbacks.on_int_64 = on_int_64;
     callbacks.on_float_64 = on_float_64;
     callbacks.on_string = on_string;
     callbacks.on_error = on_error;
-    callbacks.on_list_start = on_list_start;
+    callbacks.on_list_begin = on_list_begin;
     callbacks.on_list_end = on_list_end;
-    callbacks.on_map_start = on_map_start;
+    callbacks.on_map_begin = on_map_begin;
     callbacks.on_map_end = on_map_end;
 
-    cte_parse_context context = {0};
-    const char* cte_string = "{\"null\":null,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":true}";
-    cte_parse_string(cte_string, &callbacks, &context);
+    decode_context context = {0};
+    const char* cte_string = "{\"null\":empty \"one\":1 \"list\":[1 2 3 {\"a\":1 \"b\":2 \"c\":3}] \"true\":true}";
+
+    cte_decode_process* decode_process = cte_decode_begin(&callbacks, &context);
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte_string, strlen(cte_string)));
+    cte_decode_end(decode_process);
 }
