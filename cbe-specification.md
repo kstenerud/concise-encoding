@@ -343,7 +343,7 @@ Illegal encodings must not be used, as they may cause problems or even API viola
   * Containers must be properly terminated with `end container` tags. Extra `end container` tags are also invalid.
   * All map keys must have corresponding values.
   * Map keys must not be container types or the `empty` type.
-  * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000).
+  * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
   * An array's length field must match the length of its data.
 
 
