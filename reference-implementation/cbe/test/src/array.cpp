@@ -51,9 +51,6 @@ DEFINE_ARRAY_TEST_SET(ArrayFloat128Test, __float128, 0x7b)
 DEFINE_ARRAY_TEST_SET(ArrayDecimal32Test, _Decimal32, 0x7c)
 DEFINE_ARRAY_TEST_SET(ArrayDecimal64Test, _Decimal64, 0x7d)
 DEFINE_ARRAY_TEST_SET(ArrayDecimal128Test, _Decimal128, 0x7e)
-// TODO: This won't work because typedef doesn't make a real type :/
-// SEE: test_helpers.h DEFINE_ADD_VALUE_FUNCTION for time
-// DEFINE_ARRAY_TEST_SET(ArrayTimeTest, smalltime, 0x7f)
 
 static void expect_memory_after_add_array_boolean(std::vector<bool> entities, std::vector<uint8_t> expected_memory)
 {

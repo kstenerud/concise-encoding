@@ -7,8 +7,7 @@
 #include "decode_encode.h"
 
 
-template<typename T>
-static std::vector<T> make_values_of_length(int length)
+template<typename T> static inline std::vector<T> make_values_of_length(int length)
 {
     std::vector<T> vec;
     for(int i = 0; i < length; i++)
@@ -18,8 +17,9 @@ static std::vector<T> make_values_of_length(int length)
     return vec;
 }
 
-inline void expect_memory_after_operation(std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation,
-                                          std::vector<uint8_t> const& expected_memory)
+static inline void expect_memory_after_operation(
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation,
+                        std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
     std::array<uint8_t, memory_size> memory;
@@ -38,7 +38,9 @@ inline void expect_memory_after_operation(std::function<cbe_encode_status(cbe_en
     EXPECT_EQ(expected_memory, actual_memory);
 }
 
-inline void expect_incomplete_operation(const int buffer_size, std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
+static inline void expect_incomplete_operation(
+                        const int buffer_size,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
 {
     uint8_t data[buffer_size];
     memset(data, 0xf7, buffer_size);
@@ -48,7 +50,9 @@ inline void expect_incomplete_operation(const int buffer_size, std::function<cbe
     fflush(stdout);
 }
 
-inline void expect_incomplete_operation_decrementing(const int buffer_size, std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
+static inline void expect_incomplete_operation_decrementing(
+                        const int buffer_size,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
 {
     for(int size = buffer_size; size >= 0; size--)
     {
@@ -56,10 +60,11 @@ inline void expect_incomplete_operation_decrementing(const int buffer_size, std:
     }
 }
 
-inline void expect_piecemeal_operation(const int buffer_cutoff,
-                                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
-                                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
-                                        std::vector<uint8_t> const& expected_memory)
+static inline void expect_piecemeal_operation(
+                        const int buffer_cutoff,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
+                        std::vector<uint8_t> const& expected_memory)
 {
     const int memory_size = 100000;
     std::array<uint8_t, memory_size> memory;
@@ -84,12 +89,12 @@ inline void expect_piecemeal_operation(const int buffer_cutoff,
     EXPECT_EQ(expected_memory, actual_memory);
 }
 
-inline void expect_piecemeal_operation_decrementing(
-                                        const int buffer_cutoff_high,
-                                        const int buffer_cutoff_low,
-                                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
-                                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
-                                        std::vector<uint8_t> const& expected_memory)
+static inline void expect_piecemeal_operation_decrementing(
+                        const int buffer_cutoff_high,
+                        const int buffer_cutoff_low,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
+                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
+                        std::vector<uint8_t> const& expected_memory)
 {
     for(int size = buffer_cutoff_high; size >= buffer_cutoff_low; size--)
     {
@@ -99,8 +104,7 @@ inline void expect_piecemeal_operation_decrementing(
 
 // Internal
 
-template <typename T>
-inline cbe_encode_status add_value(cbe_encode_process* encode_process, T value)
+template <typename T> static inline cbe_encode_status add_value(cbe_encode_process* encode_process, T value)
 {
     int status;
     std::string type_name = typeid(T).name();
@@ -116,8 +120,7 @@ inline cbe_encode_status add_value(cbe_encode_process* encode_process, T value)
 }
 
 #define DEFINE_ADD_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
-template <> \
-inline cbe_encode_status add_value<SCALAR_TYPE>(cbe_encode_process* encode_process, SCALAR_TYPE value) \
+template <> inline cbe_encode_status add_value<SCALAR_TYPE>(cbe_encode_process* encode_process, SCALAR_TYPE value) \
 { \
     return FUNCTION_TO_CALL(encode_process, value); \
 }
@@ -133,12 +136,9 @@ DEFINE_ADD_VALUE_FUNCTION(__float128,  cbe_encode_add_float_128)
 DEFINE_ADD_VALUE_FUNCTION(_Decimal32,  cbe_encode_add_decimal_32)
 DEFINE_ADD_VALUE_FUNCTION(_Decimal64,  cbe_encode_add_decimal_64)
 DEFINE_ADD_VALUE_FUNCTION(_Decimal128, cbe_encode_add_decimal_128)
-// TODO: Disabled due to typedef problems with int64_t
-// DEFINE_ADD_VALUE_FUNCTION(smalltime,   cbe_encode_add_time)
 
 #define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
-template <> \
-inline cbe_encode_status add_value<std::vector<VECTOR_TYPE>>(cbe_encode_process* encode_process, std::vector<VECTOR_TYPE> value) \
+template <> inline cbe_encode_status add_value<std::vector<VECTOR_TYPE>>(cbe_encode_process* encode_process, std::vector<VECTOR_TYPE> value) \
 { \
     return FUNCTION_TO_CALL(encode_process, value.data(), value.size()); \
 }
@@ -153,18 +153,13 @@ DEFINE_ADD_VECTOR_FUNCTION(__float128,  cbe_encode_add_array_float_128)
 DEFINE_ADD_VECTOR_FUNCTION(_Decimal32,  cbe_encode_add_array_decimal_32)
 DEFINE_ADD_VECTOR_FUNCTION(_Decimal64,  cbe_encode_add_array_decimal_64)
 DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_encode_add_array_decimal_128)
-// TODO: Disabled due to typedef problems with int64_t
-// DEFINE_ADD_VECTOR_FUNCTION(smalltime,   cbe_encode_add_array_time)
 
-template <>
-inline cbe_encode_status add_value<std::string>(cbe_encode_process* encode_process, std::string value)
+template <> inline cbe_encode_status add_value<std::string>(cbe_encode_process* encode_process, std::string value)
 {
     return cbe_encode_add_string(encode_process, value.c_str());
 }
 
-
-template <>
-inline cbe_encode_status add_value<std::vector<bool>>(cbe_encode_process* encode_process, std::vector<bool> entries)
+template <> inline cbe_encode_status add_value<std::vector<bool>>(cbe_encode_process* encode_process, std::vector<bool> entries)
 {
     bool array[entries.size()];
     int index = 0;
@@ -178,20 +173,18 @@ inline cbe_encode_status add_value<std::vector<bool>>(cbe_encode_process* encode
 
 // Test functions
 
-template<typename T>
-static void add_bytes(std::vector<uint8_t>& bytes, T value)
+template<typename T> static inline void add_bytes(std::vector<uint8_t>& bytes, T value)
 {
     int8_t* ptr = (int8_t*)&value;
     bytes.insert(bytes.end(), ptr, ptr+sizeof(value));
 }
 
-template<typename T>
-inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
+template<typename T> static inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
 {
     expect_memory_after_operation([&](cbe_encode_process* encode_process) {return add_value(encode_process, writeValue);}, expected_memory);
 }
 
-inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
+static inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
 {
     expect_memory_after_operation([=](cbe_encode_process* encode_process)
     {
@@ -200,8 +193,7 @@ inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
      expected_memory);
 }
 
-template<typename T>
-inline void expect_add_value_incomplete(const int buffer_size, T writeValue)
+template<typename T> static inline void expect_add_value_incomplete(const int buffer_size, T writeValue)
 {
     expect_incomplete_operation(buffer_size, [&](cbe_encode_process* encode_process) \
     { \
@@ -209,8 +201,7 @@ inline void expect_add_value_incomplete(const int buffer_size, T writeValue)
     }); \
 }
 
-template<typename T>
-inline void expect_add_value_incomplete_decrementing(const int buffer_size, T writeValue)
+template<typename T> static inline void expect_add_value_incomplete_decrementing(const int buffer_size, T writeValue)
 {
     expect_incomplete_operation_decrementing(buffer_size, [&](cbe_encode_process* encode_process) \
     { \
