@@ -1,7 +1,4 @@
 #include <memory.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "cbe/cbe.h"
 #include "cbe_internal.h"

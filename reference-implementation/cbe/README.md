@@ -3,15 +3,13 @@ Reference Implementation for Concise Binary Encoding
 
 A C implementation to demonstrate a simple CBE codec.
 
-Everything except decimal types are tested.
-
-No heap allocation is performed by this library.
+The only heap allocations occur when starting a new process.
 
 
 Assumptions
 -----------
 
- * Assumes densely packed decimal encoding for C decimal types (decimal32, decimal64, decimal128). This is the default for gcc and other compilers using decNumber.
+ * Assumes densely packed decimal encoding for C decimal types (_Decimal32, _Decimal64, _Decimal128). This is the default for gcc and other compilers using decNumber.
  * Assumes a little endian host.
 
 
@@ -28,11 +26,11 @@ Requirements
 C Library Dependencies
 ----------------------
 
+ * decimal/decimal: For C++ decimal float types
  * stdbool.h: For bool type
  * stdint.h: Fot int types
  * memory.h: For memset()
- * stdarg.h: For variable arguments
- * stdio.h: For vsprintf()
+ * stdlib.h: For malloc() and free()
 
 
 
