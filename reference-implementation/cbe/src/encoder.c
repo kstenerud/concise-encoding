@@ -4,18 +4,36 @@
 #include "cbe_internal.h"
 
 
+#define MAX_CONTAINER_DEPTH 500
+
 typedef struct
 {
     const uint8_t* start;
     const uint8_t* end;
     uint8_t* pos;
-    int document_depth;
+    int container_level;
+    bool next_object_is_map_key;
+    bool is_inside_map[MAX_CONTAINER_DEPTH];
 } cbe_real_encode_process;
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
-    if((size_t)((PROCESS)->end - (PROCESS)->pos) < (REQUIRED_BYTES)) return CBE_ENCODE_STATUS_NEED_MORE_ROOM
+    if((size_t)((PROCESS)->end - (PROCESS)->pos) < (REQUIRED_BYTES)) \
+        return CBE_ENCODE_STATUS_NEED_MORE_ROOM
+
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(PROCESS, REQUIRED_BYTES) \
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, ((REQUIRED_BYTES) + sizeof(cbe_encoded_type_field)))
+
+#define STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(PROCESS) \
+    if((PROCESS)->container_level + 1 >= MAX_CONTAINER_DEPTH) \
+        return CBE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED
+
+#define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
+    if((PROCESS)->is_inside_map[(PROCESS)->container_level] && !(PROCESS)->next_object_is_map_key) \
+        return CBE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY
+
+#define STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(PROCESS) \
+    if((PROCESS)->is_inside_map[process->container_level] && (PROCESS)->next_object_is_map_key) \
+        return CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE
 
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
@@ -26,6 +44,11 @@ typedef struct
 #define FITS_IN_FLOAT_64(VALUE)   ((VALUE) == (double)(VALUE))
 #define FITS_IN_DECIMAL_32(VALUE) ((VALUE) == (_Decimal32)(VALUE))
 #define FITS_IN_DECIMAL_64(VALUE) ((VALUE) == (_Decimal64)(VALUE))
+
+static inline void swap_map_key_value_status(cbe_real_encode_process* process)
+{
+    process->next_object_is_map_key = !process->next_object_is_map_key;
+}
 
 static inline unsigned int get_length_field_width(const uint64_t length)
 {
@@ -103,6 +126,7 @@ static inline cbe_encode_status add_small(cbe_real_encode_process* const process
 {
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, 0);
     add_primitive_type(process, value);
+    swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -112,6 +136,7 @@ static inline cbe_encode_status add_small(cbe_real_encode_process* const process
         STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, sizeof(value)); \
         add_primitive_type(process, CBE_TYPE); \
         add_primitive_ ## DEFINITION_TYPE(process, value); \
+        swap_map_key_value_status(process); \
         return CBE_ENCODE_STATUS_OK; \
     }
 DEFINE_ADD_SCALAR_FUNCTION(int16_t,          int_16, TYPE_INT_16)
@@ -132,13 +157,12 @@ static cbe_encode_status add_array(cbe_real_encode_process* const process,
                       const int64_t element_count,
                       const int element_size)
 {
-    const uint8_t type = array_type;
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process,
-                                          get_length_field_width(element_count) +
-                                          element_count * element_size);
-    add_primitive_type(process, type);
+    int64_t byte_count = element_count * element_size;
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, get_length_field_width(element_count) + byte_count);
+    add_primitive_type(process, (uint8_t)array_type);
     add_primitive_length(process, element_count);
-    add_primitive_bytes(process, values, element_count * element_size);
+    add_primitive_bytes(process, values, byte_count);
+    swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -165,22 +189,27 @@ int64_t cbe_encode_get_buffer_offset(cbe_encode_process* encode_process)
     return process->pos - process->start;
 }
 
-int cbe_encode_get_document_depth(cbe_encode_process* encode_process)
+int cbe_encode_get_container_level(cbe_encode_process* encode_process)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    return process->document_depth;    
+    return process->container_level;    
 }
 
 cbe_encode_status cbe_encode_end(cbe_encode_process* encode_process)
 {
-    int document_depth = cbe_encode_get_document_depth(encode_process);
+    int container_level = cbe_encode_get_container_level(encode_process);
     free(encode_process);
-    return document_depth == 0 ? CBE_ENCODE_STATUS_OK : CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS;
+    if(container_level != 0)
+    {
+        return CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS;
+    }
+    return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const encode_process)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, 0);
     add_primitive_type(process, TYPE_EMPTY);
     return CBE_ENCODE_STATUS_OK;
@@ -296,27 +325,41 @@ cbe_encode_status cbe_encode_add_time(cbe_encode_process* const encode_process, 
 cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const encode_process)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, sizeof(cbe_encoded_type_field));
     add_primitive_type(process, TYPE_LIST);
-    process->document_depth++;
+    process->container_level++;
+    process->is_inside_map[process->container_level] = false;
+    process->next_object_is_map_key = false;
     return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const encode_process)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, sizeof(cbe_encoded_type_field));
     add_primitive_type(process, TYPE_MAP);
-    process->document_depth++;
+    process->container_level++;
+    process->is_inside_map[process->container_level] = true;
+    process->next_object_is_map_key = true;
     return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_end_container(cbe_encode_process* const encode_process)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    if(process->container_level - 1 < 0)
+    {
+        return CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS;
+    }
+    STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_TYPED(process, 0);
     add_primitive_type(process, TYPE_END_CONTAINER);
-    process->document_depth--;
+    process->container_level--;
+    process->next_object_is_map_key = process->is_inside_map[process->container_level];
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -338,84 +381,98 @@ cbe_encode_status cbe_encode_add_substring(cbe_encode_process* const encode_proc
     const uint8_t type = TYPE_STRING_0 + byte_count;
     add_primitive_type(process, type);
     add_primitive_bytes(process, (uint8_t*)start, byte_count);
+    swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_add_array_int_8(cbe_encode_process* const encode_process, const int8_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_8, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_16(cbe_encode_process* const encode_process, const int16_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_16, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_32(cbe_encode_process* const encode_process, const int32_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_64(cbe_encode_process* const encode_process, const int64_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_128(cbe_encode_process* const encode_process, const __int128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_32(cbe_encode_process* const encode_process, const float* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_64(cbe_encode_process* const encode_process, const double* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_128(cbe_encode_process* const encode_process, const __float128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_32(cbe_encode_process* const encode_process, const _Decimal32* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_64(cbe_encode_process* const encode_process, const _Decimal64* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_128(cbe_encode_process* const encode_process, const _Decimal128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_time(cbe_encode_process* const encode_process, const smalltime* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_TIME, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_process, const uint8_t* const packed_values, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
     int64_t byte_count = element_count / 8;
     if(element_count & 7)
@@ -434,6 +491,7 @@ cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_proce
 cbe_encode_status cbe_encode_add_array_boolean(cbe_encode_process* const encode_process, const bool* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
+    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
     int64_t byte_count = element_count / 8;
     if(element_count & 7)

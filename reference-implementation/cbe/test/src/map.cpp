@@ -30,6 +30,12 @@ DEFINE_ADD_MAP_TEST(1, {0x92, 1, 0x81, 'a', 0x93})
 DEFINE_ADD_MAP_TEST(2, {0x92, 1, 0x81, 'a', 2, 0x81, 'b', 0x93})
 DEFINE_ADD_MAP_TEST(3, {0x92, 1, 0x81, 'a', 2, 0x81, 'b', 3, 0x81, 'c', 0x93})
 
+TEST(MapTest, string_key) \
+{
+    std::vector<uint8_t> expected_memory = {0x92, 0x81, 'a', 0x02, 0x93};
+    expect_decode_encode(expected_memory);
+}
+
 TEST(MapTest, incomplete)
 {
     expect_incomplete_operation_decrementing(3, [&](cbe_encode_process* encode_process)

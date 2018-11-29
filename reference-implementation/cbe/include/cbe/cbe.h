@@ -57,6 +57,9 @@ typedef struct {} cbe_decode_process;
  */
 typedef enum
 {
+	/**
+	 * Returned when the document has been successfully decoded.
+	 */
 	CBE_DECODE_STATUS_OK,
 
 	/**
@@ -127,7 +130,11 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process);
 
 /**
  * Decode part of a CBE document.
- * Returns false if it hasn't reached the end of the document (which means you must feed it more data).
+ *
+ * Possible status codes:
+ * - CBE_DECODE_STATUS_OK: the document has been completely decoded.
+ * - CBE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
+ * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
  * @param encode_process The decode process.
  * @param data_start The start of the document.
@@ -165,17 +172,19 @@ typedef struct {} cbe_encode_process;
  */
 typedef enum
 {
+	/**
+	 * Returned when a function completes successfully.
+	 */
 	CBE_ENCODE_STATUS_OK,
 
 	/**
-	 * Returned upon ending a document if the document's maps & lists
-	 * are not properly terminated by a corresponding "end container",
-	 * or if you've added too many "end container" objects.
+	 * Returned if the function would result in more container ends than
+	 * starts, or the document would be completed with containers still open.
 	 */
 	CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS,
 
 	/**
-	 * Returned when attempting to add a key of an invalid type to a map.
+	 * Returned when attempting to add an invalid key type to a map.
 	 */
 	CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE,
 
@@ -184,6 +193,11 @@ typedef enum
 	 * to the last key.
 	 */
 	CBE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY,
+
+	/**
+	 * Returned when max container depth (default 500) is exceeded.
+	 */
+	CBE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED,
 
 	/**
 	 * Returned when the encoder has reached the end of the buffer and needs
@@ -235,11 +249,10 @@ int cbe_encode_get_document_depth(cbe_encode_process* encode_process);
 /**
  * End an encoding process, freeing up any encoder resources used.
  * Note: This does NOT free the user-supplied encode buffer.
+ * Note: Resources will be freed and process terminated EVEN ON ERROR.
  *
- * If the document is not valid (too many or not enough "end container"
- *  objects), this method will still free resources, and then return false.
- * The proces has been ended. The document is invalid, and cannot be fixed;
- * your code has a bug.
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS: we're still in a container.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -249,6 +262,10 @@ cbe_encode_status cbe_encode_end(cbe_encode_process* encode_process);
 /**
  * Add an empty object to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
@@ -256,6 +273,9 @@ cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const encode_process)
 
 /**
  * Add a boolean value to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -266,6 +286,9 @@ cbe_encode_status cbe_encode_add_boolean(cbe_encode_process* const encode_proces
 /**
  * Add an integer value to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -274,6 +297,9 @@ cbe_encode_status cbe_encode_add_int(cbe_encode_process* const encode_process, c
 
 /**
  * Add an integer value to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -285,6 +311,9 @@ cbe_encode_status cbe_encode_add_int_8(cbe_encode_process* const encode_process,
  * Add a 16 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -294,6 +323,9 @@ cbe_encode_status cbe_encode_add_int_16(cbe_encode_process* const encode_process
 /**
  * Add a 32 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -305,6 +337,9 @@ cbe_encode_status cbe_encode_add_int_32(cbe_encode_process* const encode_process
  * Add a 64 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -314,6 +349,9 @@ cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const encode_process
 /**
  * Add a 128 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -325,6 +363,9 @@ cbe_encode_status cbe_encode_add_int_128(cbe_encode_process* const encode_proces
  * Add a 32 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -334,6 +375,9 @@ cbe_encode_status cbe_encode_add_float_32(cbe_encode_process* const encode_proce
 /**
  * Add a 64 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -345,6 +389,9 @@ cbe_encode_status cbe_encode_add_float_64(cbe_encode_process* const encode_proce
  * Add a 128 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -354,6 +401,9 @@ cbe_encode_status cbe_encode_add_float_128(cbe_encode_process* const encode_proc
 /**
  * Add a 32 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -365,6 +415,9 @@ cbe_encode_status cbe_encode_add_decimal_32(cbe_encode_process* const encode_pro
  * Add a 64 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -374,6 +427,9 @@ cbe_encode_status cbe_encode_add_decimal_64(cbe_encode_process* const encode_pro
 /**
  * Add a 128 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -385,6 +441,9 @@ cbe_encode_status cbe_encode_add_decimal_128(cbe_encode_process* const encode_pr
  * Add a time value to the document.
  * Use cbe_new_time() to generate a time value.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
@@ -394,6 +453,9 @@ cbe_encode_status cbe_encode_add_time(cbe_encode_process* const encode_process, 
 /**
  * Add a UTF-8 encoded null-terminated string value to the document.
  * Do not include a byte order marker (BOM)
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
  * @param str The null-terminated string to add.
@@ -405,6 +467,9 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const encode_process
  * Add a substring of a UTF-8 encoded string value to the document.
  * Do not include a byte order marker (BOM)
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
  * @param encode_process The encode process.
  * @param string_start The start of the substring to add.
  * @param byte_count The length of the substring in bytes.
@@ -414,6 +479,11 @@ cbe_encode_status cbe_encode_add_substring(cbe_encode_process* const encode_proc
 
 /**
  * Begin a list in the document. Must be matched by an end container.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -426,6 +496,11 @@ cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const encode_process
  * Map entries must be added in pairs. Every even item is a key, and every
  * odd item is a corresponding value.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
+ *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
@@ -433,6 +508,12 @@ cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const encode_process)
 
 /**
  * End the current container (list or map) in the document.
+ * If calling this function would result in too many end containers,
+ * the operation is aborted and returns CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS: we're not in a container.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -442,6 +523,10 @@ cbe_encode_status cbe_encode_end_container(cbe_encode_process* const encode_proc
 /**
  * Add a bitfield to the document.
  * A bitfield is a packed array of bits, with low bits filled first.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param packed_values The values to add, pre-packed into bytes.
@@ -453,6 +538,10 @@ cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_proce
 /**
  * Add a bitfield to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -462,6 +551,10 @@ cbe_encode_status cbe_encode_add_array_boolean(cbe_encode_process* const encode_
 
 /**
  * Add an array of 8-bit integers to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -473,6 +566,10 @@ cbe_encode_status cbe_encode_add_array_int_8(cbe_encode_process* const encode_pr
 /**
  * Add an array of 16-bit integers to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -482,6 +579,10 @@ cbe_encode_status cbe_encode_add_array_int_16(cbe_encode_process* const encode_p
 
 /**
  * Add an array of 32-bit integers to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -493,6 +594,10 @@ cbe_encode_status cbe_encode_add_array_int_32(cbe_encode_process* const encode_p
 /**
  * Add an array of 64-bit integers to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -502,6 +607,10 @@ cbe_encode_status cbe_encode_add_array_int_64(cbe_encode_process* const encode_p
 
 /**
  * Add an array of 128-bit integers to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -513,6 +622,10 @@ cbe_encode_status cbe_encode_add_array_int_128(cbe_encode_process* const encode_
 /**
  * Add an array of 32-bit floating point values to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -522,6 +635,10 @@ cbe_encode_status cbe_encode_add_array_float_32(cbe_encode_process* const encode
 
 /**
  * Add an array of 64-bit floating point values to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -533,6 +650,10 @@ cbe_encode_status cbe_encode_add_array_float_64(cbe_encode_process* const encode
 /**
  * Add an array of 128-bit floating point values to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -542,6 +663,10 @@ cbe_encode_status cbe_encode_add_array_float_128(cbe_encode_process* const encod
 
 /**
  * Add an array of 32-bit decimal values to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -553,6 +678,10 @@ cbe_encode_status cbe_encode_add_array_decimal_32(cbe_encode_process* const enco
 /**
  * Add an array of 64-bit decimal values to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -563,6 +692,10 @@ cbe_encode_status cbe_encode_add_array_decimal_64(cbe_encode_process* const enco
 /**
  * Add an array of 64-bit decimal values to the document.
  *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ *
  * @param encode_process The encode process.
  * @param elements The array's elements.
  * @param element_count The number of elements in the array.
@@ -572,6 +705,10 @@ cbe_encode_status cbe_encode_add_array_decimal_128(cbe_encode_process* const enc
 
 /**
  * Add an array of 64-bit time values to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
