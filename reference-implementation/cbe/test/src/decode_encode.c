@@ -35,37 +35,37 @@ DEFINE_ADD_PRIMITIVE(_Decimal64,  decimal_64)
 DEFINE_ADD_PRIMITIVE(_Decimal128, decimal_128)
 DEFINE_ADD_PRIMITIVE(smalltime,   time)
 
-bool on_end_container(cbe_decode_process* decode_process)
+static bool on_end_container(cbe_decode_process* decode_process)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_end_container(encode_process) == CBE_ENCODE_STATUS_OK;
 }
 
-bool on_begin_list(cbe_decode_process* decode_process)
+static bool on_begin_list(cbe_decode_process* decode_process)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_begin_list(encode_process) == CBE_ENCODE_STATUS_OK;
 }
 
-bool on_begin_map(cbe_decode_process* decode_process)
+static bool on_begin_map(cbe_decode_process* decode_process)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_begin_map(encode_process) == CBE_ENCODE_STATUS_OK;
 }
 
-bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count)
+static bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_add_bitfield(encode_process, elements, element_count) == CBE_ENCODE_STATUS_OK;
 }
 
-bool on_string(cbe_decode_process* decode_process, const char* string_start, const int64_t byte_count)
+static bool on_string(cbe_decode_process* decode_process, const char* string_start, const int64_t byte_count)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_add_substring(encode_process, string_start, byte_count) == CBE_ENCODE_STATUS_OK;
 }
 
-bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const void* elements, int64_t element_count)
+static bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const void* elements, int64_t element_count)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     #define HANDLE_ARRAY(NAME, TYPE) \

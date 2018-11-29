@@ -46,6 +46,7 @@ add_executable(cbe_test
                    src/encode_piecemeal.cpp
                    src/decode_piecemeal.cpp
                    src/invalid_document.cpp
+                   src/stop_in_callback.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)

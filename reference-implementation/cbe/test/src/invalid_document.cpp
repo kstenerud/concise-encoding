@@ -2,7 +2,7 @@
 
 TEST(DecodeInvalid, ListNoEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -12,7 +12,7 @@ TEST(DecodeInvalid, ListNoEnd)
 
 TEST(DecodeInvalid, MapNoEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -22,7 +22,7 @@ TEST(DecodeInvalid, MapNoEnd)
 
 TEST(DecodeInvalid, ListMapNoEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -33,7 +33,7 @@ TEST(DecodeInvalid, ListMapNoEnd)
 
 TEST(DecodeInvalid, ListMapNoEnd2)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -45,7 +45,7 @@ TEST(DecodeInvalid, ListMapNoEnd2)
 
 TEST(DecodeInvalid, ListTooManyEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -57,7 +57,7 @@ TEST(DecodeInvalid, ListTooManyEnd)
 
 TEST(DecodeInvalid, MapTooManyEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -69,7 +69,7 @@ TEST(DecodeInvalid, MapTooManyEnd)
 
 TEST(DecodeInvalid, ListMapTooManyEnd)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -83,7 +83,7 @@ TEST(DecodeInvalid, ListMapTooManyEnd)
 
 TEST(DecodeInvalid, UnclosedList)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -93,7 +93,7 @@ TEST(DecodeInvalid, UnclosedList)
 
 TEST(DecodeInvalid, UnclosedMap)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -103,7 +103,7 @@ TEST(DecodeInvalid, UnclosedMap)
 
 TEST(DecodeInvalid, EmptyKey)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -113,7 +113,7 @@ TEST(DecodeInvalid, EmptyKey)
 
 TEST(DecodeInvalid, ListKey)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -123,7 +123,7 @@ TEST(DecodeInvalid, ListKey)
 
 TEST(DecodeInvalid, MapKey)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
@@ -133,7 +133,7 @@ TEST(DecodeInvalid, MapKey)
 
 TEST(DecodeInvalid, BitfieldKey)
 {
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
     uint8_t bitfield[1];
 
@@ -145,7 +145,7 @@ TEST(DecodeInvalid, BitfieldKey)
 #define DEFINE_ARRAY_KEY_TEST(TYPE, FUNCTION) \
 TEST(DecodeInvalid, ArrayKey_ ## TYPE) \
 { \
-    const int memory_size = 100000; \
+    const int memory_size = 1000; \
     std::array<uint8_t, memory_size> memory; \
     int element_count = 10; \
     TYPE array[element_count]; \
@@ -170,7 +170,7 @@ DEFINE_ARRAY_KEY_TEST(smalltime,   cbe_encode_add_array_time)
 #define DEFINE_MISSING_MAP_VALUE_TEST(NAME, TYPE, VALUE) \
 TEST(DecodeInvalid, MissingMapValue_ ## NAME) \
 { \
-    const int memory_size = 100000; \
+    const int memory_size = 1000; \
     std::array<uint8_t, memory_size> memory; \
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size()); \
 	EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_map(encode_process)); \
@@ -195,7 +195,7 @@ DEFINE_MISSING_MAP_VALUE_TEST(long_string, string, "this is a longer string for 
 
 TEST(DecodeInvalid, MissingMapValue_Depth) \
 { \
-    const int memory_size = 100000;
+    const int memory_size = 1000;
     std::array<uint8_t, memory_size> memory;
 	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
 	EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_map(encode_process));
