@@ -525,7 +525,6 @@ cbe_encode_status cbe_encode_end_container(cbe_encode_process* const encode_proc
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param packed_values The values to add, pre-packed into bytes.
@@ -539,7 +538,6 @@ cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_proce
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -553,7 +551,6 @@ cbe_encode_status cbe_encode_add_array_boolean(cbe_encode_process* const encode_
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -567,7 +564,6 @@ cbe_encode_status cbe_encode_add_array_int_8(cbe_encode_process* const encode_pr
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -581,7 +577,6 @@ cbe_encode_status cbe_encode_add_array_int_16(cbe_encode_process* const encode_p
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -595,7 +590,6 @@ cbe_encode_status cbe_encode_add_array_int_32(cbe_encode_process* const encode_p
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -609,7 +603,6 @@ cbe_encode_status cbe_encode_add_array_int_64(cbe_encode_process* const encode_p
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -623,7 +616,6 @@ cbe_encode_status cbe_encode_add_array_int_128(cbe_encode_process* const encode_
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -637,7 +629,6 @@ cbe_encode_status cbe_encode_add_array_float_32(cbe_encode_process* const encode
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -651,7 +642,6 @@ cbe_encode_status cbe_encode_add_array_float_64(cbe_encode_process* const encode
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -665,7 +655,6 @@ cbe_encode_status cbe_encode_add_array_float_128(cbe_encode_process* const encod
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -679,7 +668,6 @@ cbe_encode_status cbe_encode_add_array_decimal_32(cbe_encode_process* const enco
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -693,7 +681,6 @@ cbe_encode_status cbe_encode_add_array_decimal_64(cbe_encode_process* const enco
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.
@@ -707,7 +694,6 @@ cbe_encode_status cbe_encode_add_array_decimal_128(cbe_encode_process* const enc
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
  *
  * @param encode_process The encode process.
  * @param elements The array's elements.

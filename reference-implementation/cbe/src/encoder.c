@@ -388,91 +388,78 @@ cbe_encode_status cbe_encode_add_substring(cbe_encode_process* const encode_proc
 cbe_encode_status cbe_encode_add_array_int_8(cbe_encode_process* const encode_process, const int8_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_8, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_16(cbe_encode_process* const encode_process, const int16_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_16, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_32(cbe_encode_process* const encode_process, const int32_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_64(cbe_encode_process* const encode_process, const int64_t* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_int_128(cbe_encode_process* const encode_process, const __int128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_INT_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_32(cbe_encode_process* const encode_process, const float* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_64(cbe_encode_process* const encode_process, const double* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_float_128(cbe_encode_process* const encode_process, const __float128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_FLOAT_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_32(cbe_encode_process* const encode_process, const _Decimal32* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_32, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_64(cbe_encode_process* const encode_process, const _Decimal64* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_64, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_decimal_128(cbe_encode_process* const encode_process, const _Decimal128* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_DECIMAL_128, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_array_time(cbe_encode_process* const encode_process, const smalltime* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     return add_array(process, TYPE_ARRAY_TIME, (const uint8_t* const)start, element_count, sizeof(*start));
 }
 
 cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_process, const uint8_t* const packed_values, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
     int64_t byte_count = element_count / 8;
     if(element_count & 7)
@@ -491,7 +478,6 @@ cbe_encode_status cbe_encode_add_bitfield(cbe_encode_process* const encode_proce
 cbe_encode_status cbe_encode_add_array_boolean(cbe_encode_process* const encode_process, const bool* const start, const int64_t element_count)
 {
     cbe_real_encode_process* process = (cbe_real_encode_process*)encode_process;
-    STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     const uint8_t type = TYPE_ARRAY_BOOLEAN;
     int64_t byte_count = element_count / 8;
     if(element_count & 7)

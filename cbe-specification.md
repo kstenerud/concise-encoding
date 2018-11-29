@@ -291,7 +291,9 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers.
+
+All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)

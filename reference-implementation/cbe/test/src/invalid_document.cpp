@@ -131,42 +131,6 @@ TEST(DecodeInvalid, MapKey)
 	EXPECT_EQ(CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE, cbe_encode_begin_map(encode_process));
 }
 
-TEST(DecodeInvalid, BitfieldKey)
-{
-    const int memory_size = 1000;
-    std::array<uint8_t, memory_size> memory;
-    uint8_t bitfield[1];
-
-	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
-	EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_map(encode_process));
-	EXPECT_EQ(CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE, cbe_encode_add_bitfield(encode_process, bitfield, 4));
-}
-
-#define DEFINE_ARRAY_KEY_TEST(TYPE, FUNCTION) \
-TEST(DecodeInvalid, ArrayKey_ ## TYPE) \
-{ \
-    const int memory_size = 1000; \
-    std::array<uint8_t, memory_size> memory; \
-    int element_count = 10; \
-    TYPE array[element_count]; \
-	cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size()); \
-	EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_map(encode_process)); \
-	EXPECT_EQ(CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE, FUNCTION(encode_process, array, element_count)); \
-}
-DEFINE_ARRAY_KEY_TEST(bool,        cbe_encode_add_array_boolean)
-DEFINE_ARRAY_KEY_TEST(int8_t,      cbe_encode_add_array_int_8)
-DEFINE_ARRAY_KEY_TEST(int16_t,     cbe_encode_add_array_int_16)
-DEFINE_ARRAY_KEY_TEST(int32_t,     cbe_encode_add_array_int_32)
-DEFINE_ARRAY_KEY_TEST(int64_t,     cbe_encode_add_array_int_64)
-DEFINE_ARRAY_KEY_TEST(__int128,    cbe_encode_add_array_int_128)
-DEFINE_ARRAY_KEY_TEST(float,       cbe_encode_add_array_float_32)
-DEFINE_ARRAY_KEY_TEST(double,      cbe_encode_add_array_float_64)
-DEFINE_ARRAY_KEY_TEST(__float128,  cbe_encode_add_array_float_128)
-DEFINE_ARRAY_KEY_TEST(_Decimal32,  cbe_encode_add_array_decimal_32)
-DEFINE_ARRAY_KEY_TEST(_Decimal64,  cbe_encode_add_array_decimal_64)
-DEFINE_ARRAY_KEY_TEST(_Decimal128, cbe_encode_add_array_decimal_128)
-DEFINE_ARRAY_KEY_TEST(smalltime,   cbe_encode_add_array_time)
-
 #define DEFINE_MISSING_MAP_VALUE_TEST(NAME, TYPE, VALUE) \
 TEST(DecodeInvalid, MissingMapValue_ ## NAME) \
 { \
