@@ -11,7 +11,7 @@ Goals
   * Supports hierarchical data structuring
   * Human readable format
   * Minimal complexity
-  * Type compatible with CBE (Concise Binary Encoding)
+  * Type compatible with [Concise Binary Encoding (CBE)](cbe-specification.md)
 
 
 

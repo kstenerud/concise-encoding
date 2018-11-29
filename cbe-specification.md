@@ -13,6 +13,7 @@ Goals
   * Little endian byte ordering to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
+  * Type compatible with [Concise Text Encoding (CTE)](cte-specification.md)
 
 
 
