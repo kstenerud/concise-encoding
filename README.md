@@ -11,6 +11,7 @@ Goals
   * Supports the most common data types
   * Supports hierarchical data structuring
   * Minimal complexity
+  * Type compatibility between CBE and CTE
 
 #### Goals: Concise Binary Encoding (CBE):
 
@@ -21,7 +22,6 @@ Goals
 #### Goals: Concise Text Encoding (CTE):
 
   * Human readable format
-  * Type compatible with CBE
 
 
 
