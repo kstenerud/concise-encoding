@@ -77,17 +77,17 @@ array:  array_start array_entries array_end
 array_start:
       TOKEN_ARRAY_BOOLEAN_START     { process->parse_callbacks.on_array_begin(process, CTE_TYPE_BOOLEAN_8); }
     | TOKEN_ARRAY_INT_8_START       { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_INT_16_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_INT_32_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_INT_64_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_INT_128_START     { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_FLOAT_32_START    { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_FLOAT_64_START    { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_FLOAT_128_START   { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_DECIMAL_32_START  { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_DECIMAL_64_START  { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_DECIMAL_128_START { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
-    | TOKEN_ARRAY_TIME_START        { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8); }
+    | TOKEN_ARRAY_INT_16_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_16); }
+    | TOKEN_ARRAY_INT_32_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_32); }
+    | TOKEN_ARRAY_INT_64_START      { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_64); }
+    | TOKEN_ARRAY_INT_128_START     { process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_128); }
+    | TOKEN_ARRAY_FLOAT_32_START    { process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_32); }
+    | TOKEN_ARRAY_FLOAT_64_START    { process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_64); }
+    | TOKEN_ARRAY_FLOAT_128_START   { process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_128); }
+    | TOKEN_ARRAY_DECIMAL_32_START  { process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_32); }
+    | TOKEN_ARRAY_DECIMAL_64_START  { process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_64); }
+    | TOKEN_ARRAY_DECIMAL_128_START { process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_128); }
+    | TOKEN_ARRAY_TIME_START        { process->parse_callbacks.on_array_begin(process, CTE_TYPE_TIME_64); }
 
 array_end: TOKEN_ARRAY_END { process->parse_callbacks.on_array_end(process); }
 
