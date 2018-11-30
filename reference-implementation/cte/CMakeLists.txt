@@ -16,6 +16,8 @@ flex_target(FlexScanner src/cte.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.c)
 add_flex_bison_dependency(FlexScanner BisonParser)
 
 add_library(cte
+    src/decoder.c
+    src/encoder.c
     src/library.c
     ${BISON_BisonParser_OUTPUTS}
     ${FLEX_FlexScanner_OUTPUTS}

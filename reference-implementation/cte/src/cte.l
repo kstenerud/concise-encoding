@@ -2,12 +2,6 @@
 
 #include "cte_internal.h"
 #include "parser.h"
-#include <limits.h>
-#include <math.h>
-
-// Unquotes and unescapes a string in-place (modifies the original string)
-// Returns NULL if successful, or else a pointer to the offending escape sequence.
-static char* string_unquote_unescape(char* str);
 
 %}
 
@@ -60,98 +54,20 @@ VALUE_FALSE  f|false
 "t("    { return TOKEN_ARRAY_TIME_START; }
 ")"     { return TOKEN_ARRAY_END; }
 
-{COMMENT}  {/* Ignored */}
-{WHITESPACE}  {/* Ignored */}
-{VALUE_EMPTY} { return TOKEN_EMPTY; }
-{VALUE_TRUE}  { yylval->bool_v = true; return TOKEN_BOOLEAN; }
-{VALUE_FALSE} { yylval->bool_v = false; return TOKEN_BOOLEAN; }
-
-{TYPE_INT_2} {
-    // TODO: parse 128 bit integer
-    int64_t value = strtoll(yytext, NULL, 2);
-    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
-    {
-        yylval->string_v = yytext;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->int128_v = value;
-    return TOKEN_INTEGER;
-}
-
-{TYPE_INT_8} {
-    // TODO: parse 128 bit integer
-    int64_t value = strtoll(yytext, NULL, 8);
-    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
-    {
-        yylval->string_v = yytext;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->int128_v = value;
-    return TOKEN_INTEGER;
-}
-
-{TYPE_INT_10} {
-    // TODO: parse 128 bit integer
-    int64_t value = strtoll(yytext, NULL, 10);
-    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
-    {
-        yylval->string_v = yytext;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->int128_v = value;
-    return TOKEN_INTEGER;
-}
-
-{TYPE_INT_16} {
-    // TODO: parse 128 bit integer
-    int64_t value = strtoll(yytext, NULL, 16);
-    if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
-    {
-        yylval->string_v = yytext;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->int128_v = value;
-    return TOKEN_INTEGER;
-}
-
-{TYPE_FLOAT} {
-    // TODO: parse 128 bit float
-	double value = yylval->float128_v = strtod(yytext, NULL);
-    if((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
-    {
-        yylval->string_v = yytext;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->float128_v = value;
-	return TOKEN_FLOAT;
-}
-
-{TYPE_DECIMAL} {
-    // TODO
-    yylval->decimal128_v = 0;
-    return TOKEN_FLOAT;
-}
-
-{TYPE_TIME} {
-    yylval->string_v = yytext;
-    return TOKEN_TIME;
-}
-
-{TYPE_TIME_D} {
-    yylval->string_v = yytext;
-    return TOKEN_TIME;
-}
-
-{TYPE_STRING} {
-    char* bad_data_loc = string_unquote_unescape(yytext);
-    if(bad_data_loc != NULL)
-    {
-        yylval->string_v = bad_data_loc;
-        return TOKEN_BAD_DATA;
-    }
-    yylval->string_v = yytext;
-    return TOKEN_STRING;
-}
+{COMMENT}      {/* Ignored */}
+{WHITESPACE}   {/* Ignored */}
+{VALUE_EMPTY}  { return TOKEN_EMPTY; }
+{VALUE_TRUE}   { return TOKEN_TRUE; }
+{VALUE_FALSE}  { return TOKEN_FALSE; }
+{TYPE_INT_2}   { yylval->string_v = yytext; return TOKEN_INTEGER_2; }
+{TYPE_INT_8}   { yylval->string_v = yytext; return TOKEN_INTEGER_8; }
+{TYPE_INT_10}  { yylval->string_v = yytext; return TOKEN_INTEGER_10; }
+{TYPE_INT_16}  { yylval->string_v = yytext; return TOKEN_INTEGER_16; }
+{TYPE_FLOAT}   { yylval->string_v = yytext; return TOKEN_FLOAT; }
+{TYPE_DECIMAL} { yylval->string_v = yytext; return TOKEN_DECIMAL; }
+{TYPE_TIME}    { yylval->string_v = yytext; return TOKEN_TIME; }
+{TYPE_TIME_D}  { yylval->string_v = yytext; return TOKEN_TIME; }
+{TYPE_STRING}  { yylval->string_v = yytext; return TOKEN_STRING; }
 
 . {
     yylval->string_v = yytext;
@@ -160,38 +76,26 @@ VALUE_FALSE  f|false
 
 %%
 
-void yyerror(const void* const scanner, const cte_real_decode_process* decode_process, const char *msg)
+void yyerror(const void* const scanner, cte_real_decode_process* decode_process, const char* msg)
 {
     (void)scanner;
-	decode_process->callbacks->on_error((cte_decode_process*)decode_process, msg);
-}
-
-cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user_context)
-{
-    cte_real_decode_process* process = malloc(sizeof(*process));
-    memset(process, 0, sizeof(*process));
-    process->callbacks = callbacks;
-    process->user_context = user_context;
-    if(yylex_init(&process->scanner) != 0)
-    {
-        callbacks->on_error((cte_decode_process*)process, "Could not init scanner");
-        return NULL;
-    }
-    return (cte_decode_process*)process;
+	decode_process->parse_callbacks.on_error(decode_process, msg);
 }
 
 cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char* const data_start, const int64_t byte_count)
 {
     cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
+    if(process->scanner == NULL)
+    {
+        if(yylex_init(&process->scanner) != 0)
+        {
+            process->callbacks->on_error((cte_decode_process*)process, "Could not init scanner");
+            return 9999;
+        }
+    }
     yy_scan_bytes((const char* const)data_start, byte_count, process->scanner);
     bool result = yyparse(process->scanner, process) == 0;
     return result ? CTE_DECODE_STATUS_OK : 9999; // TODO
-}
-
-void* cte_decode_get_user_context(cte_decode_process* decode_process)
-{
-    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
-    return process->user_context;
 }
 
 void cte_decode_end(cte_decode_process* decode_process)
@@ -201,139 +105,3 @@ void cte_decode_end(cte_decode_process* decode_process)
     free(process);
 }
 
-static bool is_hex_character(int ch)
-{
-    if(ch >= '0' && ch <= '9')
-    {
-        return true;
-    }
-    return ch >= 'a' && ch <= 'f';
-}
-
-static bool is_octal_character(int ch)
-{
-    return ch >= '0' && ch <= '7';
-}
-
-static char* string_unquote_unescape(char* str)
-{
-    char* read_pos = str;
-    char* read_end = read_pos + strlen(read_pos);
-    char* write_pos = str;
-
-    if(*read_pos != '"')
-    {
-        return read_pos;
-    }
-    read_pos++;
-
-    for(; read_pos < read_end; read_pos++)
-    {
-        switch(*read_pos)
-        {
-            case '"':
-                *write_pos = 0;
-                return NULL;
-            case '\\':
-            {
-                char* escape_pos = read_pos;
-                int remaining_bytes = read_end - read_pos;
-                if(remaining_bytes < 1)
-                {
-                    return escape_pos;
-                }
-
-                read_pos++;
-                switch(*read_pos)
-                {
-                    case 'r': *write_pos++ = '\r'; break;
-                    case 'n': *write_pos++ = '\n'; break;
-                    case 't': *write_pos++ = '\t'; break;
-                    case '\\': *write_pos++ = '\\'; break;
-                    case '\"': *write_pos++ = '\"'; break;
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-                    {
-                        uint8_t number_buffer[4] = {*read_pos, 0, 0, 0};
-                        read_pos++;
-                        if(is_octal_character(*read_pos))
-                        {
-                            number_buffer[1] = *read_pos;
-                            read_pos++;
-                        }
-                        if(is_octal_character(*read_pos))
-                        {
-                            number_buffer[2] = *read_pos;
-                            read_pos++;
-                        }
-                        *write_pos++ = (uint8_t)strtoul((char*)number_buffer, NULL, 8);
-                        read_pos--;
-                        break;
-                    }
-                    case 'x':
-                    {
-                        if(remaining_bytes < 2)
-                        {
-                            return escape_pos;
-                        }
-                        read_pos++;
-                        if(!is_hex_character(*read_pos))
-                        {
-                            return escape_pos;
-                        }
-                        uint8_t number_buffer[3] = {*read_pos, 0, 0};
-                        read_pos += 1;
-                        if(is_hex_character(*read_pos))
-                        {
-                            number_buffer[1] = *read_pos;
-                            read_pos += 1;
-                        }
-                        *write_pos++ = (uint8_t)strtoul((char*)number_buffer, NULL, 16);
-                        read_pos--;
-                        break;
-                    }
-                    case 'u':
-                    {
-                        if(remaining_bytes < 5)
-                        {
-                            return escape_pos;
-                        }
-                        if(!is_hex_character(read_pos[1])
-                        || !is_hex_character(read_pos[2])
-                        || !is_hex_character(read_pos[3])
-                        || !is_hex_character(read_pos[4]))
-                        {
-                            return escape_pos;
-                        }
-                        uint8_t number_buffer[5] = {read_pos[1], read_pos[2], read_pos[3], read_pos[4], 0};
-                        read_pos += 4;
-                        unsigned int codepoint = strtoul((char*)number_buffer, NULL, 16);
-                        if(codepoint <= 0x7f)
-                        {
-                            *write_pos++ = (uint8_t)codepoint;
-                        }
-                        else if(codepoint <= 0x7ff)
-                        {
-                            *write_pos++ = (uint8_t)((codepoint >> 6) | 0xc0);
-                            *write_pos++ = (uint8_t)((codepoint & 0x3f) | 0x80);
-                        }
-                        else
-                        {
-                            *write_pos++ = (uint8_t)((codepoint >> 12) | 0xe0);
-                            *write_pos++ = (uint8_t)(((codepoint >> 6) & 0x3f) | 0x80);
-                            *write_pos++ = (uint8_t)((codepoint & 0x3f) | 0x80);
-                        }
-                        break;
-                    }
-                    default:
-                        return escape_pos;
-                }
-                break;
-            }
-            default:
-                *write_pos++ = *read_pos;
-                break;
-        }
-    }
-    *write_pos = 0;
-    return NULL;
-}
