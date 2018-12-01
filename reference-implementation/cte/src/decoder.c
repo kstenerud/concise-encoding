@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "cte_internal.h"
 
-
 static bool is_hex_character(int ch)
 {
     if(ch >= '0' && ch <= '9')
@@ -20,8 +19,12 @@ static bool is_octal_character(int ch)
     return ch >= '0' && ch <= '7';
 }
 
-// Unquotes and unescapes a string in-place (modifies the original string)
-// Returns NULL if successful, or else a pointer to the offending escape sequence.
+/**
+ * Unquotes and unescapes a string in-place (modifies the original string)
+ *
+ * @param str The string to unescape (will be modified).
+ * @return NULL if successful, or else a pointer to the offending escape sequence.
+ */
 static char* string_unquote_unescape(char* str)
 {
     char* read_pos = str;
@@ -151,115 +154,103 @@ static void on_error(cte_real_decode_process* process, const char* message)
 	process->callbacks->on_error((cte_decode_process*)process, message);
 }
 
-static int on_empty(cte_real_decode_process* process)
+static bool on_empty(cte_real_decode_process* process)
 {
-    process->callbacks->on_empty((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_empty((cte_decode_process*)process);
 }
 
-static int on_true(cte_real_decode_process* process)
+static bool on_true(cte_real_decode_process* process)
 {
-    process->callbacks->on_boolean((cte_decode_process*)process, true);
-	return 0;
+    return process->callbacks->on_boolean((cte_decode_process*)process, true);
 }
 
-static int on_false(cte_real_decode_process* process)
+static bool on_false(cte_real_decode_process* process)
 {
-    process->callbacks->on_boolean((cte_decode_process*)process, false);
-	return 0;
+    return process->callbacks->on_boolean((cte_decode_process*)process, false);
 }
 
-static int on_int(cte_real_decode_process* process, int base, const char* string_value)
+static bool on_int(cte_real_decode_process* process, int base, char* string_value)
 {
     int64_t value = strtoll(string_value, NULL, base);
     if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
     {
     	process->callbacks->on_error((cte_decode_process*)process, "Number out of range");
-    	return -1;
+    	return false;
     }
-    process->callbacks->on_int_64((cte_decode_process*)process, value);
-
-	return 0;
+    return process->callbacks->on_int_64((cte_decode_process*)process, value);
 }
 
-static int on_float(cte_real_decode_process* process, const char* string_value)
+static bool on_float(cte_real_decode_process* process, char* string_value)
 {
     double value = strtod(string_value, NULL);
     if((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
     {
     	process->callbacks->on_error((cte_decode_process*)process, "Number out of range");
-    	return -1;
+    	return false;
     }
-    process->callbacks->on_float_64((cte_decode_process*)process, value);
-	return 0;
+    return process->callbacks->on_float_64((cte_decode_process*)process, value);
 }
 
-static int on_decimal(cte_real_decode_process* process, const char* string_value)
+static bool on_decimal(cte_real_decode_process* process, char* string_value)
 {
 	// TODO
 	(void)process;
 	(void)string_value;
-	return 0;
+	return true;
 }
 
-static int on_time(cte_real_decode_process* process, const char* string_value)
+static bool on_time(cte_real_decode_process* process, int day_digits, char* string_value)
 {
 	// TODO
 	(void)process;
+    (void)day_digits;
 	(void)string_value;
-	return 0;
+	return true;
 }
 
-static int on_list_begin(cte_real_decode_process* process)
+static bool on_list_begin(cte_real_decode_process* process)
 {
-    process->callbacks->on_list_begin((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_list_begin((cte_decode_process*)process);
 }
 
-static int on_list_end(cte_real_decode_process* process)
+static bool on_list_end(cte_real_decode_process* process)
 {
-    process->callbacks->on_list_end((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_list_end((cte_decode_process*)process);
 }
 
-static int on_map_begin(cte_real_decode_process* process)
+static bool on_map_begin(cte_real_decode_process* process)
 {
-    process->callbacks->on_map_begin((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_map_begin((cte_decode_process*)process);
 }
 
-static int on_map_end(cte_real_decode_process* process)
+static bool on_map_end(cte_real_decode_process* process)
 {
-    process->callbacks->on_map_end((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_map_end((cte_decode_process*)process);
 }
 
-static int on_string(cte_real_decode_process* process, const char* value)
+static bool on_string(cte_real_decode_process* process, char* value)
 {
-	// TODO: Don't pass in as const
-    char* bad_data_loc = string_unquote_unescape((char*)value);
+    char* bad_data_loc = string_unquote_unescape(value);
     if(bad_data_loc != NULL)
     {
     	// TODO: Show where it's bad (at bad_data_log)
     	process->callbacks->on_error((cte_decode_process*)process, "Bad string");
-    	return -1;
+    	return false;
     }
-    process->callbacks->on_string((cte_decode_process*)process, value);
-	return 0;
+    return process->callbacks->on_string((cte_decode_process*)process, value);
 }
 
-static int on_array_begin(cte_real_decode_process* process, cte_data_type type)
+static bool on_array_begin(cte_real_decode_process* process, cte_data_type type)
 {
 	// TODO
 	(void)process;
 	(void)type;
-	return 0;
+	return true;
 }
 
-static int on_array_end(cte_real_decode_process* process)
+static bool on_array_end(cte_real_decode_process* process)
 {
-    process->callbacks->on_array_end((cte_decode_process*)process);
-	return 0;
+    return process->callbacks->on_array_end((cte_decode_process*)process);
 }
 
 

@@ -32,24 +32,56 @@ const char* cte_version();
 typedef struct {} cte_decode_process;
 
 /**
- * Status codes that can be returned by encoder functions.
+ * Status codes that can be returned by decoder functions.
  */
 typedef enum
 {
     /**
-     * Returned when the document has been successfully decoded.
+     * The document has been successfully decoded.
      */
-    CTE_DECODE_STATUS_OK,
+    CTE_DECODE_STATUS_OK = 0,
 
     /**
-     * Returned when a callback returned false, stopping the decode process.
+     * Bison parser exited due to invalid input.
+     * Matches return from yyabortlab.
+     */
+    CTE_DECODE_STATUS_PARSER_INVALID_INPUT = 1,
+
+    /**
+     * Bison parser ran out of memory.
+     * Matches return from yyexhaustedlab.
+     */
+    CTE_DECODE_STATUS_PARSER_OUT_OF_MEMORY = 2,
+
+    /**
+     * Bison parser failed to initialize.
+     */
+    CTE_DECODE_STATUS_PARSER_INITIALIZATION_ERROR,
+
+    /**
+     * Unbalanced container begin and end markers were detected.
+     */
+    CBE_DECODE_STATUS_UNBALANCED_CONTAINERS,
+
+    /**
+     * An invalid data type was used as a map key.
+     */
+    CBE_DECODE_STATUS_INCORRECT_KEY_TYPE,
+
+    /**
+     * A map contained a key with no value.
+     */
+    CBE_DECODE_STATUS_MISSING_VALUE_FOR_KEY,
+
+    /**
+     * A user callback returned false, stopping the decode process.
      * The process may be resumed after fixing whatever problem caused the
      * callback to return false.
      */
     CTE_DECODE_STATUS_STOPPED_IN_CALLBACK,
 
     /**
-     * Returned when the decoder has reached the end of the buffer and needs
+     * The decoder has reached the end of the buffer and needs
      * more data to finish decoding the document.
      */
     CTE_DECODE_STATUS_NEED_MORE_DATA,
@@ -109,7 +141,7 @@ cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user
  * Get the user context information from a decode process.
  * This is meant to be called by a decode callback function.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  * @return The user context.
  */
 void* cte_decode_get_user_context(cte_decode_process* decode_process);
@@ -119,10 +151,13 @@ void* cte_decode_get_user_context(cte_decode_process* decode_process);
  *
  * Possible status codes:
  * - CTE_DECODE_STATUS_OK: the document has been completely decoded.
+ * - CTE_DECODE_STATUS_UNBALANCED_CONTAINERS: document has unbalanced containers.
+ * - CTE_DECODE_STATUS_INCORRECT_KEY_TYPE: document has an invalid key type.
+ * - CTE_DECODE_STATUS_MISSING_VALUE_FOR_KEY: document has a map key with no value.
  * - CTE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
  * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  * @param data_start The start of the document.
  * @param byte_count The number of bytes in the document fragment.
  * @return The current decoder status.
@@ -133,7 +168,7 @@ cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char
  * End a decoding process, freeing up any decoder resources used.
  * Note: This does NOT free the user context or callback structure.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  */
 void cte_decode_end(cte_decode_process* decode_process);
 
@@ -154,34 +189,32 @@ typedef struct {} cte_encode_process;
 typedef enum
 {
     /**
-     * Returned when a function completes successfully.
+     * Completed successfully.
      */
     CTE_ENCODE_STATUS_OK,
 
     /**
-     * Returned if the function would result in more container ends than
-     * starts, or the document would be completed with containers still open.
+     * Unbalanced container begin and end markers were detected.
      */
     CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS,
 
     /**
-     * Returned when attempting to add an invalid key type to a map.
+     * An invalid data type was used as a map key.
      */
     CTE_ENCODE_STATUS_INCORRECT_KEY_TYPE,
 
     /**
-     * Returned when terminating a map without adding a corresponding value
-     * to the last key.
+     * A map contained a key with no value.
      */
     CTE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Returned when max container depth (default 500) is exceeded.
+     * Max container depth (default 500) was exceeded.
      */
     CTE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED,
 
     /**
-     * Returned when the encoder has reached the end of the buffer and needs
+     * The encoder has reached the end of the buffer and needs
      * more room to encode this object.
      */
     CTE_ENCODE_STATUS_NEED_MORE_ROOM,
@@ -204,7 +237,7 @@ cte_encode_process* cte_encode_begin_with_config(
                         int float_digits_precision);
 
 /**
- * Create a new encoding process with the default configuration.
+ * Begin a new encoding process with the default configuration.
  *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
@@ -249,12 +282,12 @@ int cte_encode_get_document_depth(cte_encode_process* encode_process);
  * Note: Resources will be freed and process terminated EVEN ON ERROR.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS: we're still in a container.
+ * - CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS: one or more containers were not closed.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_end(cte_encode_process* const encode_process);
+cte_encode_status cte_encode_end(cte_encode_process* encode_process);
 
 /**
  * Add an empty object to the document.

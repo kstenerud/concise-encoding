@@ -15,21 +15,21 @@
 %option reentrant
 %option warn
 
-COMMENT      #.*$
-WHITESPACE   [ \t\r\n]
-STRING_CHAR  [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
-TYPE_STRING  \"{STRING_CHAR}*\"
-TYPE_INT_2   [-+]?[0-7]+b
-TYPE_INT_8   [-+]?[0-7]+o
-TYPE_INT_10  [-+]?[0-9]+
-TYPE_INT_16  [-+]?[0-9a-f]+h
-TYPE_FLOAT   [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?
-TYPE_DECIMAL [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?d
-TYPE_TIME    -?[0-9]{4,}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
-TYPE_TIME_D  -?[0-9]{4,}-[0-9]{3}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
-VALUE_EMPTY  empty
-VALUE_TRUE   t|true
-VALUE_FALSE  f|false
+COMMENT       #.*$
+WHITESPACE    [ \t\r\n]
+STRING_CHAR   [^"\\]|\\["\\/bfnrt]|\\u[0-9A-Fa-f]{4}
+TYPE_STRING   \"{STRING_CHAR}*\"
+TYPE_INT_2    [-+]?[0-7]+b
+TYPE_INT_8    [-+]?[0-7]+o
+TYPE_INT_10   [-+]?[0-9]+
+TYPE_INT_16   [-+]?[0-9a-f]+h
+TYPE_FLOAT    [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?
+TYPE_DECIMAL  [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?d
+TYPE_TIME_DD  -?[0-9]{4,}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
+TYPE_TIME_DDD -?[0-9]{4,}-[0-9]{3}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
+VALUE_EMPTY   empty
+VALUE_TRUE    t|true
+VALUE_FALSE   f|false
 
 %%
 
@@ -54,20 +54,20 @@ VALUE_FALSE  f|false
 "t("    { return TOKEN_ARRAY_TIME_START; }
 ")"     { return TOKEN_ARRAY_END; }
 
-{COMMENT}      {/* Ignored */}
-{WHITESPACE}   {/* Ignored */}
-{VALUE_EMPTY}  { return TOKEN_EMPTY; }
-{VALUE_TRUE}   { return TOKEN_TRUE; }
-{VALUE_FALSE}  { return TOKEN_FALSE; }
-{TYPE_INT_2}   { yylval->string_v = yytext; return TOKEN_INTEGER_2; }
-{TYPE_INT_8}   { yylval->string_v = yytext; return TOKEN_INTEGER_8; }
-{TYPE_INT_10}  { yylval->string_v = yytext; return TOKEN_INTEGER_10; }
-{TYPE_INT_16}  { yylval->string_v = yytext; return TOKEN_INTEGER_16; }
-{TYPE_FLOAT}   { yylval->string_v = yytext; return TOKEN_FLOAT; }
-{TYPE_DECIMAL} { yylval->string_v = yytext; return TOKEN_DECIMAL; }
-{TYPE_TIME}    { yylval->string_v = yytext; return TOKEN_TIME; }
-{TYPE_TIME_D}  { yylval->string_v = yytext; return TOKEN_TIME; }
-{TYPE_STRING}  { yylval->string_v = yytext; return TOKEN_STRING; }
+{COMMENT}       {/* Ignored */}
+{WHITESPACE}    {/* Ignored */}
+{VALUE_EMPTY}   { return TOKEN_EMPTY; }
+{VALUE_TRUE}    { return TOKEN_TRUE; }
+{VALUE_FALSE}   { return TOKEN_FALSE; }
+{TYPE_INT_2}    { yylval->string_v = yytext; return TOKEN_INTEGER_2; }
+{TYPE_INT_8}    { yylval->string_v = yytext; return TOKEN_INTEGER_8; }
+{TYPE_INT_10}   { yylval->string_v = yytext; return TOKEN_INTEGER_10; }
+{TYPE_INT_16}   { yylval->string_v = yytext; return TOKEN_INTEGER_16; }
+{TYPE_FLOAT}    { yylval->string_v = yytext; return TOKEN_FLOAT; }
+{TYPE_DECIMAL}  { yylval->string_v = yytext; return TOKEN_DECIMAL; }
+{TYPE_TIME_DD}  { yylval->string_v = yytext; return TOKEN_TIME_DD; }
+{TYPE_TIME_DDD} { yylval->string_v = yytext; return TOKEN_TIME_DDD; }
+{TYPE_STRING}   { yylval->string_v = yytext; return TOKEN_STRING; }
 
 . {
     yylval->string_v = yytext;
@@ -89,13 +89,12 @@ cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char
     {
         if(yylex_init(&process->scanner) != 0)
         {
-            process->callbacks->on_error((cte_decode_process*)process, "Could not init scanner");
-            return 9999;
+            process->callbacks->on_error((cte_decode_process*)process, "Could not initialize scanner");
+            return CTE_DECODE_STATUS_PARSER_INITIALIZATION_ERROR;
         }
     }
     yy_scan_bytes((const char* const)data_start, byte_count, process->scanner);
-    bool result = yyparse(process->scanner, process) == 0;
-    return result ? CTE_DECODE_STATUS_OK : 9999; // TODO
+    return yyparse(process->scanner, process);
 }
 
 void cte_decode_end(cte_decode_process* decode_process)

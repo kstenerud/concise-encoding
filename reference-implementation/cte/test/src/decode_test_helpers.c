@@ -39,42 +39,47 @@ bool decode_get_bool(decode_test_context* context, int index)
     return *((bool*)context->data[index]);
 }
 
-void decode_add_type(decode_test_context* context, decoded_type type)
+static bool decode_add_type(decode_test_context* context, decoded_type type)
 {
     context->type[context->index] = type;
     context->index++;
+    return true;
 }
 
-void decode_add_string(decode_test_context* context, decoded_type type, const char* value)
+static bool decode_add_string(decode_test_context* context, decoded_type type, const char* value)
 {
     char* newvalue = (char*)managed_allocate(strlen(value) + 1);
     strcpy(newvalue, value);
     context->data[context->index] = newvalue;
     decode_add_type(context, type);
+    return true;
 }
 
-void decode_add_int(decode_test_context* context, int64_t value)
+static bool decode_add_int(decode_test_context* context, int64_t value)
 {
     void* newvalue = managed_allocate(sizeof(value));
     memcpy(newvalue, &value, sizeof(value));
     context->data[context->index] = newvalue;
     decode_add_type(context, TYPE_INT);
+    return true;
 }
 
-void decode_add_float(decode_test_context* context, double value)
+static bool decode_add_float(decode_test_context* context, double value)
 {
     void* newvalue = managed_allocate(sizeof(value));
     memcpy(newvalue, &value, sizeof(value));
     context->data[context->index] = newvalue;
     decode_add_type(context, TYPE_FLOAT);
+    return true;
 }
 
-void decode_add_bool(decode_test_context* context, bool value)
+static bool decode_add_bool(decode_test_context* context, bool value)
 {
     void* newvalue = managed_allocate(sizeof(value));
     memcpy(newvalue, &value, sizeof(value));
     context->data[context->index] = newvalue;
     decode_add_type(context, TYPE_BOOLEAN);
+    return true;
 }
 
 static void on_error(cte_decode_process* decode_process, const char* message)
@@ -85,47 +90,47 @@ static void on_error(cte_decode_process* decode_process, const char* message)
 
 static bool on_string(cte_decode_process* decode_process, const char* str)
 {
-    decode_add_string(decode_get_context(decode_process), TYPE_STRING, str);
+    return decode_add_string(decode_get_context(decode_process), TYPE_STRING, str);
 }
 
 static bool on_empty(cte_decode_process* decode_process)
 {
-    decode_add_type(decode_get_context(decode_process), TYPE_EMPTY);
+    return decode_add_type(decode_get_context(decode_process), TYPE_EMPTY);
 }
     
 static bool on_bool(cte_decode_process* decode_process, bool value)
 {
-    decode_add_bool(decode_get_context(decode_process), value);
+    return decode_add_bool(decode_get_context(decode_process), value);
 }
     
 static bool on_int_64(cte_decode_process* decode_process, int64_t value)
 {
-    decode_add_int(decode_get_context(decode_process), value);
+    return decode_add_int(decode_get_context(decode_process), value);
 }
     
 static bool on_float_64(cte_decode_process* decode_process, double value)
 {
-    decode_add_float(decode_get_context(decode_process), value);
+    return decode_add_float(decode_get_context(decode_process), value);
 }
 
 static bool on_list_begin(cte_decode_process* decode_process)
 {
-    decode_add_type(decode_get_context(decode_process), TYPE_LIST_START);
+    return decode_add_type(decode_get_context(decode_process), TYPE_LIST_START);
 }
     
 static bool on_list_end(cte_decode_process* decode_process)
 {
-    decode_add_type(decode_get_context(decode_process), TYPE_LIST_END);
+    return decode_add_type(decode_get_context(decode_process), TYPE_LIST_END);
 }
     
 static bool on_map_begin(cte_decode_process* decode_process)
 {
-    decode_add_type(decode_get_context(decode_process), TYPE_MAP_START);
+    return decode_add_type(decode_get_context(decode_process), TYPE_MAP_START);
 }
     
 static bool on_map_end(cte_decode_process* decode_process)
 {
-    decode_add_type(decode_get_context(decode_process), TYPE_MAP_END);
+    return decode_add_type(decode_get_context(decode_process), TYPE_MAP_END);
 }
 
 cte_decode_callbacks decode_new_callbacks()

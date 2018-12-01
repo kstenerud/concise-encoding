@@ -58,6 +58,7 @@ static void indent(decode_context* context)
 
 static void on_error(cte_decode_process* decode_process, const char* message)
 {
+    (void)decode_process;
     printf("Error: %s\n", message);
 }
 
