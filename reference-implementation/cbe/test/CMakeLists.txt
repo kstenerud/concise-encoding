@@ -54,3 +54,18 @@ target_link_libraries(cbe_test gtest_main CBE::cbe)
 
 # Gain access to internal headers
 include_directories(${CMAKE_SOURCE_DIR}/src)
+
+target_compile_options(cbe_test PRIVATE $<$<CXX_COMPILER_ID:GNU>:
+    -Wall
+    -Wextra
+    -Wduplicated-cond
+    -Wduplicated-branches
+    -Wlogical-op
+    -Wrestrict
+    -Wnull-dereference
+    -Wdouble-promotion
+    -Wshadow
+    -fstrict-aliasing
+    -Wformat=2
+#    -pedantic
+>)

@@ -6,6 +6,55 @@
 #include <cbe/cbe.h>
 #include "decode_encode.h"
 
+#define DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(NAME_FRAGMENT, RETURN_VALUE) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process) \
+{ \
+    (void)decode_process; \
+    return RETURN_VALUE; \
+}
+#define DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(TYPE, NAME_FRAGMENT, RETURN_VALUE) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) \
+{ \
+    (void)decode_process; \
+    (void)value; \
+    return RETURN_VALUE; \
+}
+#define DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(TYPE, NAME_FRAGMENT, RETURN_VALUE) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, const TYPE* elements, const int64_t count) \
+{ \
+    (void)decode_process; \
+    (void)elements; \
+    (void)count; \
+    return RETURN_VALUE; \
+}
+#define DEFINE_DECODE_CALLBACK_SUITE(RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(bool,        boolean, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int8_t,      int_8, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int16_t,     int_16, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int32_t,     int_32, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int64_t,     int_64, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__int128,    int_128, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(float,       float_32, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(double,      float_64, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__float128,  float_128, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal32,  decimal_32, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal64,  decimal_64, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal128, decimal_128, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(smalltime,   time, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    uint8_t,     bitfield, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    char,        string, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                empty, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                end_container, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_list, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_map, RETURN_VALUE) \
+static bool on_array(cbe_decode_process* decode_process, cbe_data_type type, const void* elements, const int64_t count) \
+{ \
+    (void)decode_process; \
+    (void)type; \
+    (void)elements; \
+    (void)count; \
+    return RETURN_VALUE; \
+}
 
 template<typename T> static inline std::vector<T> make_values_of_length(int length)
 {
@@ -188,7 +237,13 @@ static inline void expect_decode_encode(std::vector<uint8_t> const& expected_mem
 {
     expect_memory_after_operation([=](cbe_encode_process* encode_process)
     {
-        return decode_encode(expected_memory.data(), expected_memory.size(), encode_process);
+        cbe_decode_status status = perform_decode_encode(expected_memory.data(), expected_memory.size(), encode_process);
+        // TODO: Find a nicer way to do this.
+        if(status == CBE_DECODE_STATUS_OK)
+        {
+            return CBE_ENCODE_STATUS_OK;
+        }
+        return (cbe_encode_status)9999;
     },
      expected_memory);
 }

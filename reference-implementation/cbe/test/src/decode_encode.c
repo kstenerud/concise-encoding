@@ -3,55 +3,37 @@
 #include <memory.h>
 #include "decode_encode.h"
 
-static bool on_empty(cbe_decode_process* decode_process)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_add_empty(encode_process) == CBE_ENCODE_STATUS_OK;
+#define DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(NAME_FRAGMENT, FUNCTION_FRAGMENT) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process) \
+{ \
+    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process); \
+    return cbe_encode_ ## FUNCTION_FRAGMENT(encode_process) == CBE_ENCODE_STATUS_OK; \
 }
 
-static bool on_boolean(cbe_decode_process* decode_process, bool value)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_add_boolean(encode_process, value) == CBE_ENCODE_STATUS_OK;
-}
-
-#define DEFINE_ADD_PRIMITIVE(TYPE, NAME_FRAGMENT) \
+#define DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(TYPE, NAME_FRAGMENT) \
 static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) \
 { \
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process); \
     return cbe_encode_add_ ## NAME_FRAGMENT(encode_process, value) == CBE_ENCODE_STATUS_OK; \
 }
 
-DEFINE_ADD_PRIMITIVE(int8_t,      int_8)
-DEFINE_ADD_PRIMITIVE(int16_t,     int_16)
-DEFINE_ADD_PRIMITIVE(int32_t,     int_32)
-DEFINE_ADD_PRIMITIVE(int64_t,     int_64)
-DEFINE_ADD_PRIMITIVE(__int128,    int_128)
-DEFINE_ADD_PRIMITIVE(float,       float_32)
-DEFINE_ADD_PRIMITIVE(double,      float_64)
-DEFINE_ADD_PRIMITIVE(__float128,  float_128)
-DEFINE_ADD_PRIMITIVE(_Decimal32,  decimal_32)
-DEFINE_ADD_PRIMITIVE(_Decimal64,  decimal_64)
-DEFINE_ADD_PRIMITIVE(_Decimal128, decimal_128)
-DEFINE_ADD_PRIMITIVE(smalltime,   time)
-
-static bool on_end_container(cbe_decode_process* decode_process)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_end_container(encode_process) == CBE_ENCODE_STATUS_OK;
-}
-
-static bool on_begin_list(cbe_decode_process* decode_process)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_begin_list(encode_process) == CBE_ENCODE_STATUS_OK;
-}
-
-static bool on_begin_map(cbe_decode_process* decode_process)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_begin_map(encode_process) == CBE_ENCODE_STATUS_OK;
-}
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(bool,        boolean)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int8_t,      int_8)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int16_t,     int_16)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int32_t,     int_32)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int64_t,     int_64)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__int128,    int_128)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(float,       float_32)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(double,      float_64)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__float128,  float_128)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal32,  decimal_32)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal64,  decimal_64)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal128, decimal_128)
+DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(smalltime,   time)
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                empty, add_empty)
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                end_container, end_container)
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_list, begin_list)
+DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_map, begin_map)
 
 static bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count)
 {
@@ -105,6 +87,7 @@ static bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type
         case CBE_TYPE_TIME_64:
             HANDLE_ARRAY(time, smalltime);
     }
+    return true;
 }
 
 cbe_decode_process* new_decode_encode_process(cbe_decode_callbacks* callbacks, cbe_encode_process* encode_process)
@@ -132,11 +115,11 @@ cbe_decode_process* new_decode_encode_process(cbe_decode_callbacks* callbacks, c
     return cbe_decode_begin(callbacks, encode_process);
 }
 
-cbe_encode_status decode_encode(const uint8_t* document, int byte_count, cbe_encode_process* encode_process)
+cbe_decode_status perform_decode_encode(const uint8_t* document, int byte_count, cbe_encode_process* encode_process)
 {
     cbe_decode_callbacks callbacks;
     cbe_decode_process* decode_process = new_decode_encode_process(&callbacks, encode_process);
-    cbe_decode_status status = cbe_decode_feed(decode_process, document, byte_count);
-    cbe_decode_end(decode_process);
-    return status;
+    cbe_decode_status status_feed = cbe_decode_feed(decode_process, document, byte_count);
+    cbe_decode_status status_end = cbe_decode_end(decode_process);
+    return status_feed != CBE_DECODE_STATUS_OK ? status_feed : status_end;
 }

@@ -52,35 +52,48 @@ const char* cbe_version();
 typedef struct {} cbe_decode_process;
 
 /**
- * Status codes that can be returned by encoder functions.
+ * Status codes that can be returned by decoder functions.
  */
 typedef enum
 {
 	/**
-	 * Returned when the document has been successfully decoded.
+	 * The document has been successfully decoded.
 	 */
 	CBE_DECODE_STATUS_OK,
 
-	/**
-	 * Returned when a callback returned false, stopping the decode process.
-	 * The process may be resumed after fixing whatever problem caused the
-	 * callback to return false.
-	 */
-	CBE_DECODE_STATUS_STOPPED_IN_CALLBACK,
+    /**
+     * Unbalanced container begin and end markers were detected.
+     */
+    CBE_DECODE_STATUS_UNBALANCED_CONTAINERS,
 
-	/**
-	 * Returned when the decoder has reached the end of the buffer and needs
-	 * more data to finish decoding the document.
-	 */
-	CBE_DECODE_STATUS_NEED_MORE_DATA,
+    /**
+     * An invalid data type was used as a map key.
+     */
+    CBE_DECODE_STATUS_INCORRECT_KEY_TYPE,
+
+    /**
+     * A map contained a key with no value.
+     */
+    CBE_DECODE_STATUS_MISSING_VALUE_FOR_KEY,
+
+    /**
+     * A user callback returned false, stopping the decode process.
+     * The process may be resumed after fixing whatever problem caused the
+     * callback to return false.
+     */
+    CBE_DECODE_STATUS_STOPPED_IN_CALLBACK,
+
+    /**
+     * The decoder has reached the end of the buffer and needs
+     * more data to finish decoding the document.
+     */
+    CBE_DECODE_STATUS_NEED_MORE_DATA,
 } cbe_decode_status;
 
 /**
  * Callbacks for use with cbe_decode().
  *
  * cbe_decode() will call these callbacks as it decodes objects in the document.
- *
- * Note: It's on the client to check for properly balanced containers (list, map).
  *
  * Callback functions return true if processing should continue.
  */
@@ -105,6 +118,9 @@ typedef struct
 	bool (*on_begin_map)         (cbe_decode_process* decode_process);
 	bool (*on_bitfield)          (cbe_decode_process* decode_process, const uint8_t* start, const int64_t bit_count);
 	bool (*on_string)            (cbe_decode_process* decode_process, const char* start, const int64_t byte_count);
+	/**
+	 * Note: The array pointer is NOT guaranteed to be aligned!
+	 */
 	bool (*on_array)             (cbe_decode_process* decode_process, cbe_data_type type, const void* start, int64_t element_count);
 } cbe_decode_callbacks;
 
@@ -122,7 +138,7 @@ cbe_decode_process* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user
  * Get the user context information from a decode process.
  * This is meant to be called by a decode callback function.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  * @return The user context.
  */
 void* cbe_decode_get_user_context(cbe_decode_process* decode_process);
@@ -131,11 +147,14 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process);
  * Decode part of a CBE document.
  *
  * Possible status codes:
- * - CBE_DECODE_STATUS_OK: the document has been completely decoded.
+ * - CBE_DECODE_STATUS_OK: document has been completely decoded successfully.
+ * - CBE_DECODE_STATUS_UNBALANCED_CONTAINERS: document has unbalanced containers.
+ * - CBE_DECODE_STATUS_INCORRECT_KEY_TYPE: document has an invalid key type.
+ * - CBE_DECODE_STATUS_MISSING_VALUE_FOR_KEY: document has a map key with no value.
  * - CBE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  * @param data_start The start of the document.
  * @param byte_count The number of bytes in the document fragment.
  * @return The current decoder status.
@@ -145,18 +164,23 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
 /**
  * Get the current write offset into the decode buffer.
  *
- * @param encode_process The decode process.
+ * @param decode_process The decode process.
  * @return The current offset.
  */
 int64_t cbe_decode_get_buffer_offset(cbe_decode_process* decode_process);
 
 /**
  * End a decoding process, freeing up any decoder resources used.
- * Note: This does NOT free the user context or callback structure.
+ * Note: This does NOT free the user-supplied decode buffer.
+ * Note: Resources will be freed and process terminated EVEN ON ERROR.
  *
- * @param encode_process The decode process.
+ * Possible error codes:
+ * - CBE_DECODE_STATUS_UNBALANCED_CONTAINERS: one or more containers were not closed.
+ *
+ * @param decode_process The decode process.
+ * @return The final decoder status.
  */
-void cbe_decode_end(cbe_decode_process* decode_process);
+cbe_decode_status cbe_decode_end(cbe_decode_process* decode_process);
 
 
 
@@ -172,37 +196,36 @@ typedef struct {} cbe_encode_process;
 typedef enum
 {
 	/**
-	 * Returned when a function completes successfully.
+	 * Completed successfully.
 	 */
 	CBE_ENCODE_STATUS_OK,
 
-	/**
-	 * Returned if the function would result in more container ends than
-	 * starts, or the document would be completed with containers still open.
-	 */
+    /**
+     * Unbalanced container begin and end markers were detected.
+     */
 	CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS,
 
-	/**
-	 * Returned when attempting to add an invalid key type to a map.
-	 */
+    /**
+     * An invalid data type was used as a map key.
+     */
 	CBE_ENCODE_STATUS_INCORRECT_KEY_TYPE,
 
-	/**
-	 * Returned when terminating a map without adding a corresponding value
-	 * to the last key.
-	 */
+    /**
+     * A map contained a key with no value.
+     */
 	CBE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY,
 
 	/**
-	 * Returned when max container depth (default 500) is exceeded.
+	 * Max container depth (default 500) was exceeded.
 	 */
 	CBE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED,
 
 	/**
-	 * Returned when the encoder has reached the end of the buffer and needs
+	 * The encoder has reached the end of the buffer and needs
 	 * more room to encode this object.
 	 */
 	CBE_ENCODE_STATUS_NEED_MORE_ROOM,
+
 } cbe_encode_status;
 
 /**
@@ -251,10 +274,10 @@ int cbe_encode_get_document_depth(cbe_encode_process* encode_process);
  * Note: Resources will be freed and process terminated EVEN ON ERROR.
  *
  * Possible error codes:
- * - CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS: we're still in a container.
+ * - CBE_ENCODE_STATUS_UNBALANCED_CONTAINERS: one or more containers were not closed.
  *
  * @param encode_process The encode process.
- * @return The current encoder status.
+ * @return The final encoder status.
  */
 cbe_encode_status cbe_encode_end(cbe_encode_process* encode_process);
 

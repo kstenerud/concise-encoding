@@ -2,29 +2,7 @@
 
 extern "C"
 {
-#define DEFINE_ADD_PRIMITIVE(TYPE, NAME_FRAGMENT) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) {return false;}
-DEFINE_ADD_PRIMITIVE(int8_t,      int_8)
-DEFINE_ADD_PRIMITIVE(int16_t,     int_16)
-DEFINE_ADD_PRIMITIVE(int32_t,     int_32)
-DEFINE_ADD_PRIMITIVE(int64_t,     int_64)
-DEFINE_ADD_PRIMITIVE(__int128,    int_128)
-DEFINE_ADD_PRIMITIVE(float,       float_32)
-DEFINE_ADD_PRIMITIVE(double,      float_64)
-DEFINE_ADD_PRIMITIVE(__float128,  float_128)
-DEFINE_ADD_PRIMITIVE(_Decimal32,  decimal_32)
-DEFINE_ADD_PRIMITIVE(_Decimal64,  decimal_64)
-DEFINE_ADD_PRIMITIVE(_Decimal128, decimal_128)
-DEFINE_ADD_PRIMITIVE(smalltime,   time)
-
-static bool on_empty(cbe_decode_process* decode_process) {return false;}
-static bool on_boolean(cbe_decode_process* decode_process, bool value) {return false;}
-static bool on_end_container(cbe_decode_process* decode_process) {return false;}
-static bool on_begin_list(cbe_decode_process* decode_process) {return false;}
-static bool on_begin_map(cbe_decode_process* decode_process) {return false;}
-static bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count) {return false;}
-static bool on_string(cbe_decode_process* decode_process, const char* string_start, const int64_t byte_count) {return false;}
-static bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const void* elements, int64_t element_count) {return false;}
+    DEFINE_DECODE_CALLBACK_SUITE(false);
 }
 
 static cbe_decode_process* begin_decode_process(cbe_decode_callbacks* callbacks)

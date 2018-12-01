@@ -30,16 +30,17 @@ target_compile_features(cbe PRIVATE cxx_auto_type)
 target_compile_options(cbe PRIVATE $<$<CXX_COMPILER_ID:GNU>:
     -Wall
     -Wextra
-#    -Wduplicated-cond
-#    -Wduplicated-branches
+    -Wduplicated-cond
+    -Wduplicated-branches
     -Wlogical-op
-#    -Wrestrict
-#    -Wnull-dereference
+    -Wrestrict
+    -Wnull-dereference
     -Wjump-misses-init
     -Wdouble-promotion
     -Wshadow
     -fstrict-aliasing
     -Wformat=2
+#    -pedantic
 >)
 
 ##############################################

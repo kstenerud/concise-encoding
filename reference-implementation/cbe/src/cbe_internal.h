@@ -6,6 +6,10 @@ extern "C" {
 
 #include "cbe/cbe.h"
 
+
+#define MAX_CONTAINER_DEPTH 500
+
+
 typedef enum
 {
     TYPE_SMALLINT_MIN      = -104,
@@ -50,7 +54,7 @@ typedef enum
     TYPE_STRING_13         = 0x8d,
     TYPE_STRING_14         = 0x8e,
     TYPE_STRING_15         = 0x8f,
-    TYPE_ARRAY_STRING      = 0x90,
+    TYPE_STRING            = 0x90,
     TYPE_LIST              = 0x91,
     TYPE_MAP               = 0x92,
     TYPE_END_CONTAINER     = 0x93,

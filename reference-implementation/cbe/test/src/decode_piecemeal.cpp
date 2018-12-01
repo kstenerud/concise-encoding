@@ -15,5 +15,6 @@ TEST(DecodePiecemeal, piecemeal)
 	offset = cbe_decode_get_buffer_offset(decode_process);
 	length = actual_memory.size() - offset;
 	EXPECT_EQ(CBE_DECODE_STATUS_OK, cbe_decode_feed(decode_process, expected_memory.data() + offset, length));
+	EXPECT_EQ(CBE_DECODE_STATUS_OK, cbe_decode_end(decode_process));
 	EXPECT_EQ(expected_memory, actual_memory);
 }
