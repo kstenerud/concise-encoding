@@ -24,9 +24,8 @@ static cbe_decode_process* begin_decode_process(cbe_decode_callbacks* callbacks)
     callbacks->on_end_container = on_end_container;
     callbacks->on_begin_list = on_begin_list;
     callbacks->on_begin_map = on_begin_map;
-    callbacks->on_bitfield = on_bitfield;
     callbacks->on_string = on_string;
-    callbacks->on_array = on_array;
+    callbacks->on_binary_data = on_binary_data;
     return cbe_decode_begin(callbacks, NULL);
 }
 
@@ -71,17 +70,4 @@ TEST(Decode, StopInCallback_ ## TYPE) \
     EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process)); \
     EXPECT_EQ(CBE_DECODE_STATUS_STOPPED_IN_CALLBACK, cbe_decode_feed(decode_process, memory.data(), buffer_length)); \
 }
-DEFINE_ARRAY_STOP_TEST(uint8_t,     bitfield);
-DEFINE_ARRAY_STOP_TEST(bool,        array_boolean);
-DEFINE_ARRAY_STOP_TEST(int8_t,      array_int_8);
-DEFINE_ARRAY_STOP_TEST(int16_t,     array_int_16);
-DEFINE_ARRAY_STOP_TEST(int32_t,     array_int_32);
-DEFINE_ARRAY_STOP_TEST(int64_t,     array_int_64);
-DEFINE_ARRAY_STOP_TEST(__int128,    array_int_128);
-DEFINE_ARRAY_STOP_TEST(float,       array_float_32);
-DEFINE_ARRAY_STOP_TEST(double,      array_float_64);
-DEFINE_ARRAY_STOP_TEST(__float128,  array_float_128);
-DEFINE_ARRAY_STOP_TEST(_Decimal32,  array_decimal_32);
-DEFINE_ARRAY_STOP_TEST(_Decimal64,  array_decimal_64);
-DEFINE_ARRAY_STOP_TEST(_Decimal128, array_decimal_128);
-DEFINE_ARRAY_STOP_TEST(smalltime,   array_time);
+DEFINE_ARRAY_STOP_TEST(uint8_t, binary_data);

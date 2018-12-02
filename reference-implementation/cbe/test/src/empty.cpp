@@ -2,7 +2,7 @@
 
 TEST(EmptyTest, empty)
 {
-    std::vector<uint8_t> expected_memory = {0x94};
+    std::vector<uint8_t> expected_memory = {0x7e};
 
     expect_memory_after_operation([](cbe_encode_process* encode_process) {
         return cbe_encode_add_empty(encode_process);

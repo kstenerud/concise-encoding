@@ -14,7 +14,8 @@ static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process) \
 static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) \
 { \
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process); \
-    return cbe_encode_add_ ## NAME_FRAGMENT(encode_process, value) == CBE_ENCODE_STATUS_OK; \
+    cbe_encode_status status = cbe_encode_add_ ## NAME_FRAGMENT(encode_process, value); \
+    return status == CBE_ENCODE_STATUS_OK; \
 }
 
 DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(bool,        boolean)
@@ -35,59 +36,16 @@ DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                end_container, end_contai
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_list, begin_list)
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_map, begin_map)
 
-static bool on_bitfield(cbe_decode_process* decode_process, const uint8_t* elements, const int64_t element_count)
-{
-    cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    return cbe_encode_add_bitfield(encode_process, elements, element_count) == CBE_ENCODE_STATUS_OK;
-}
-
-static bool on_string(cbe_decode_process* decode_process, const char* string_start, const int64_t byte_count)
+static bool on_string(cbe_decode_process* decode_process, char* string_start, int64_t byte_count)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
     return cbe_encode_add_substring(encode_process, string_start, byte_count) == CBE_ENCODE_STATUS_OK;
 }
 
-static bool on_array(cbe_decode_process* decode_process, cbe_data_type data_type, const void* elements, int64_t element_count)
+static bool on_binary_data(cbe_decode_process* decode_process, uint8_t* start, int64_t byte_count)
 {
     cbe_encode_process* encode_process = (cbe_encode_process*)cbe_decode_get_user_context(decode_process);
-    #define HANDLE_ARRAY(NAME, TYPE) \
-    { \
-        void* elements_copy = malloc(element_count * sizeof(TYPE)); \
-        memcpy(elements_copy, elements, element_count * sizeof(TYPE)); \
-        cbe_encode_status result = cbe_encode_add_array_ ## NAME(encode_process, (TYPE*)elements_copy, element_count); \
-        free(elements_copy); \
-        return result == CBE_ENCODE_STATUS_OK; \
-    }
-    switch(data_type)
-    {
-        case CBE_TYPE_BOOLEAN_8:
-            break;
-        case CBE_TYPE_INT_8:
-            return cbe_encode_add_array_int_8(encode_process, (int8_t*)elements, element_count) == CBE_ENCODE_STATUS_OK; \
-        case CBE_TYPE_INT_16:
-            HANDLE_ARRAY(int_16, int16_t);
-        case CBE_TYPE_INT_32:
-            HANDLE_ARRAY(int_32, int32_t);
-        case CBE_TYPE_INT_64:
-            HANDLE_ARRAY(int_64, int64_t);
-        case CBE_TYPE_INT_128:
-            HANDLE_ARRAY(int_128, __int128);
-        case CBE_TYPE_FLOAT_32:
-            HANDLE_ARRAY(float_32, float);
-        case CBE_TYPE_FLOAT_64:
-            HANDLE_ARRAY(float_64, double);
-        case CBE_TYPE_FLOAT_128:
-            HANDLE_ARRAY(float_128, __float128);
-        case CBE_TYPE_DECIMAL_32:
-            HANDLE_ARRAY(decimal_32, _Decimal32);
-        case CBE_TYPE_DECIMAL_64:
-            HANDLE_ARRAY(decimal_64, _Decimal64);
-        case CBE_TYPE_DECIMAL_128:
-            HANDLE_ARRAY(decimal_128, _Decimal128);
-        case CBE_TYPE_TIME_64:
-            HANDLE_ARRAY(time, smalltime);
-    }
-    return true;
+    return cbe_encode_add_binary_data(encode_process, start, byte_count) == CBE_ENCODE_STATUS_OK;
 }
 
 cbe_decode_process* new_decode_encode_process(cbe_decode_callbacks* callbacks, cbe_encode_process* encode_process)
@@ -109,9 +67,8 @@ cbe_decode_process* new_decode_encode_process(cbe_decode_callbacks* callbacks, c
     callbacks->on_end_container = on_end_container;
     callbacks->on_begin_list = on_begin_list;
     callbacks->on_begin_map = on_begin_map;
-    callbacks->on_bitfield = on_bitfield;
     callbacks->on_string = on_string;
-    callbacks->on_array = on_array;
+    callbacks->on_binary_data = on_binary_data;
     return cbe_decode_begin(callbacks, encode_process);
 }
 

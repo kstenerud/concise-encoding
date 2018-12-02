@@ -240,17 +240,16 @@ static bool on_string(cte_real_decode_process* process, char* value)
     return process->callbacks->on_string((cte_decode_process*)process, value);
 }
 
-static bool on_array_begin(cte_real_decode_process* process, cte_data_type type)
+static bool on_binary_data_begin(cte_real_decode_process* process)
 {
 	// TODO
 	(void)process;
-	(void)type;
 	return true;
 }
 
-static bool on_array_end(cte_real_decode_process* process)
+static bool on_binary_data_end(cte_real_decode_process* process)
 {
-    return process->callbacks->on_array_end((cte_decode_process*)process);
+    return process->callbacks->on_binary_data_end((cte_decode_process*)process);
 }
 
 
@@ -274,8 +273,8 @@ cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user
     process->parse_callbacks.on_map_begin = on_map_begin;
     process->parse_callbacks.on_map_end = on_map_end;
     process->parse_callbacks.on_string = on_string;
-    process->parse_callbacks.on_array_begin = on_array_begin;
-    process->parse_callbacks.on_array_end = on_array_end;
+    process->parse_callbacks.on_binary_data_begin = on_binary_data_begin;
+    process->parse_callbacks.on_binary_data_end = on_binary_data_end;
     return (cte_decode_process*)process;
 }
 

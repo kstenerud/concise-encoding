@@ -29,10 +29,7 @@ int yylex(union YYSTYPE *, void *);
 %token TOKEN_TRUE TOKEN_FALSE TOKEN_FLOAT TOKEN_DECIMAL TOKEN_STRING TOKEN_TIME_DD TOKEN_TIME_DDD TOKEN_EMPTY TOKEN_UNEXPECTED TOKEN_BAD_DATA
 %token TOKEN_INTEGER_2 TOKEN_INTEGER_8 TOKEN_INTEGER_10 TOKEN_INTEGER_16
 %token TOKEN_MAP_START TOKEN_MAP_END TOKEN_LIST_START TOKEN_LIST_END TOKEN_ASSIGNMENT_SEPARATOR
-%token TOKEN_ARRAY_BOOLEAN_START TOKEN_ARRAY_INT_8_START TOKEN_ARRAY_INT_16_START TOKEN_ARRAY_INT_32_START
-%token TOKEN_ARRAY_INT_64_START TOKEN_ARRAY_INT_128_START TOKEN_ARRAY_FLOAT_32_START TOKEN_ARRAY_FLOAT_64_START
-%token TOKEN_ARRAY_FLOAT_128_START TOKEN_ARRAY_DECIMAL_32_START TOKEN_ARRAY_DECIMAL_64_START TOKEN_ARRAY_DECIMAL_128_START
-%token TOKEN_ARRAY_TIME_START TOKEN_ARRAY_END
+%token TOKEN_BINARY_DATA_START TOKEN_BINARY_DATA_END
 
 %start object
 
@@ -77,21 +74,9 @@ string: TOKEN_STRING
 array:  array_start array_entries array_end
 
 array_start:
-      TOKEN_ARRAY_BOOLEAN_START     { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_BOOLEAN_8)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_INT_8_START       { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_8)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_INT_16_START      { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_16)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_INT_32_START      { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_32)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_INT_64_START      { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_64)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_INT_128_START     { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_INT_128)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_FLOAT_32_START    { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_32)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_FLOAT_64_START    { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_64)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_FLOAT_128_START   { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_FLOAT_128)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_DECIMAL_32_START  { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_32)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_DECIMAL_64_START  { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_64)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_DECIMAL_128_START { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_DECIMAL_128)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
-    | TOKEN_ARRAY_TIME_START        { if(!process->parse_callbacks.on_array_begin(process, CTE_TYPE_TIME_64)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
+      TOKEN_BINARY_DATA_START     { if(!process->parse_callbacks.on_binary_data_begin(process)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
 
-array_end: TOKEN_ARRAY_END { if(!process->parse_callbacks.on_array_end(process)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
+array_end: TOKEN_BINARY_DATA_END { if(!process->parse_callbacks.on_binary_data_end(process)) return CTE_DECODE_STATUS_STOPPED_IN_CALLBACK; }
 
 array_entries: /* empty */
     | array_object

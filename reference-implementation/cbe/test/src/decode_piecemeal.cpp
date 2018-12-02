@@ -4,7 +4,7 @@
 
 TEST(DecodePiecemeal, piecemeal)
 {
-	std::vector<uint8_t> const& expected_memory = {0x91, 0x01, 0x68, 0x00, 0x10, 0x93};
+	std::vector<uint8_t> const& expected_memory = {0x7c, 0x01, 0x6e, 0x00, 0x10, 0x7d};
 	std::vector<uint8_t> actual_memory =          {0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f};
 	cbe_encode_process* outer_encode_process = cbe_encode_begin(actual_memory.data(), actual_memory.size());
 	cbe_decode_callbacks callbacks;

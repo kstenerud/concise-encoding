@@ -111,20 +111,8 @@ typedef struct
     bool (*on_map_begin)               (cte_decode_process* decode_process);
     bool (*on_map_end)                 (cte_decode_process* decode_process);
     bool (*on_string)                  (cte_decode_process* decode_process, const char* value);
-    bool (*on_array_begin_boolean)     (cte_decode_process* decode_process);
-    bool (*on_array_begin_int_8)       (cte_decode_process* decode_process);
-    bool (*on_array_begin_int_16)      (cte_decode_process* decode_process);
-    bool (*on_array_begin_int_32)      (cte_decode_process* decode_process);
-    bool (*on_array_begin_int_64)      (cte_decode_process* decode_process);
-    bool (*on_array_begin_int_128)     (cte_decode_process* decode_process);
-    bool (*on_array_begin_float_32)    (cte_decode_process* decode_process);
-    bool (*on_array_begin_float_64)    (cte_decode_process* decode_process);
-    bool (*on_array_begin_float_128)   (cte_decode_process* decode_process);
-    bool (*on_array_begin_decimal_32)  (cte_decode_process* decode_process);
-    bool (*on_array_begin_decimal_64)  (cte_decode_process* decode_process);
-    bool (*on_array_begin_decimal_128) (cte_decode_process* decode_process);
-    bool (*on_array_begin_time)        (cte_decode_process* decode_process);
-    bool (*on_array_end)               (cte_decode_process* decode_process);
+    bool (*on_binary_data_begin)       (cte_decode_process* decode_process);
+    bool (*on_binary_data_end)         (cte_decode_process* decode_process);
 } cte_decode_callbacks;
 
 
@@ -551,188 +539,17 @@ cte_encode_status cte_encode_begin_map(cte_encode_process* const encode_process)
 cte_encode_status cte_encode_end_container(cte_encode_process* const encode_process);
 
 /**
- * Add a bitfield to the document.
- * A bitfield is a packed array of bits, with low bits filled first.
+ * Add an array of binary data to the document.
  *
  * Possible error codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * @param encode_process The encode process.
- * @param packed_values The values to add, pre-packed into bytes.
- * @param element_count The number of bits to add.
+ * @param start The start of the data.
+ * @param byte_count The length of the data in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_bitfield(cte_encode_process* const encode_process, const uint8_t* const packed_values, const int64_t element_count);
-
-/**
- * Add a bitfield to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_boolean(cte_encode_process* const encode_process, const bool* const elements, const int64_t element_count);
-
-/**
- * Add an array of 8-bit integers to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_int_8(cte_encode_process* const encode_process, const int8_t* const elements, const int64_t element_count);
-
-/**
- * Add an array of 16-bit integers to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_int_16(cte_encode_process* const encode_process, const int16_t* const elements, const int64_t element_count);
-
-/**
- * Add an array of 32-bit integers to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_int_32(cte_encode_process* const encode_process, const int32_t* const elements, const int64_t element_count);
-
-/**
- * Add an array of 64-bit integers to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_int_64(cte_encode_process* const encode_process, const int64_t* const elements, const int64_t element_count);
-
-/**
- * Add an array of 128-bit integers to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_int_128(cte_encode_process* const encode_process, const __int128* const elements, const int64_t element_count);
-
-/**
- * Add an array of 32-bit floating point values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_float_32(cte_encode_process* const encode_process, const float* const elements, const int64_t element_count);
-
-/**
- * Add an array of 64-bit floating point values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_float_64(cte_encode_process* const encode_process, const double* const elements, const int64_t element_count);
-
-/**
- * Add an array of 128-bit floating point values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_float_128(cte_encode_process* const encode_process, const __float128* const elements, const int64_t element_count);
-
-/**
- * Add an array of 32-bit decimal values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_decimal_32(cte_encode_process* const encode_process, const _Decimal32* const elements, const int64_t element_count);
-
-/**
- * Add an array of 64-bit decimal values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_decimal_64(cte_encode_process* const encode_process, const _Decimal64* const elements, const int64_t element_count);
-
-/**
- * Add an array of 64-bit decimal values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_decimal_128(cte_encode_process* const encode_process, const _Decimal128* const elements, const int64_t element_count);
-
-/**
- * Add an array of 64-bit time values to the document.
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * @param encode_process The encode process.
- * @param elements The array's elements.
- * @param element_count The number of elements in the array.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_array_time(cte_encode_process* const encode_process, const smalltime* const elements, const int64_t element_count);
-
+cte_encode_status cte_encode_add_binary_data(cte_encode_process* const encode_process, const uint8_t* const start, const int64_t byte_count);
 
 
 

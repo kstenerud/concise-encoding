@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include "cbe_internal.h"
 
+// #define KSLogger_LocalLevel DEBUG
+#include "kslogger.h"
+
 typedef struct
 {
     cbe_decode_callbacks* callbacks;
@@ -105,6 +108,7 @@ static inline int64_t read_array_length(cbe_real_decode_process* const process)
 
 cbe_decode_process* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context)
 {
+    KSLOG_DEBUG("");
     cbe_real_decode_process* process = malloc(sizeof(*process));
     memset(process, 0, sizeof(*process));
     process->callbacks = callbacks;
@@ -120,6 +124,8 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process)
 
 cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count)
 {
+    KSLOG_DEBUG("%d", byte_count);
+    KSLOG_DATA_TRACE(data_start, byte_count, "");
     cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     process->buffer_start = data_start;
     process->buffer_position = data_start;
@@ -129,26 +135,32 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
     while(process->buffer_position < process->buffer_end)
     {
         cbe_type_field type = read_uint_8(process);
+        KSLOG_DEBUG("Type %02x", type);
         switch(type)
         {
             case TYPE_PADDING:
+                KSLOG_DEBUG("[Padding]");
                 // Ignore and restart loop because padding doesn't count as document content.
                 // Otherwise the document depth test would exit the decode loop.
                 continue;
             case TYPE_EMPTY:
+                KSLOG_DEBUG("[Empty]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_empty(decode_process));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_FALSE:
+                KSLOG_DEBUG("[False]");
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_boolean(decode_process, false));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_TRUE:
+                KSLOG_DEBUG("[True]");
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_boolean(decode_process, true));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_END_CONTAINER:
+                KSLOG_DEBUG("[End Container]");
                 STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_end_container(decode_process));
                 process->container_level--;
@@ -158,6 +170,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
                 }
                 break;
             case TYPE_LIST:
+                KSLOG_DEBUG("[List]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_list(decode_process));
                 process->container_level++;
@@ -168,6 +181,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
                 process->next_object_is_map_key = false;
                 break;
             case TYPE_MAP:
+                KSLOG_DEBUG("[Map]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_map(decode_process));
                 process->container_level++;
@@ -183,16 +197,18 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
             case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
             {
-                int64_t string_byte_count = (int64_t)(type - TYPE_STRING_0);
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", string_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, string_byte_count));
+                int64_t local_byte_count = (int64_t)(type - TYPE_STRING_0);
+                KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[String]: ");
+                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", local_byte_count);
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
-                advance_buffer(process, string_byte_count);
+                advance_buffer(process, local_byte_count);
                 break;
             }
 
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
             { \
+                KSLOG_DEBUG("[" #TYPE "]"); \
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(#NAME_FRAGMENT, sizeof(TYPE)); \
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_ ## NAME_FRAGMENT(decode_process, read_ ## NAME_FRAGMENT(process))); \
                 swap_map_key_value_status(process); \
@@ -233,76 +249,28 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             case TYPE_STRING:
             {
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", peek_array_length_field_width(process));
-                int64_t string_byte_count = read_array_length(process);
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", string_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, string_byte_count));
+                int64_t local_byte_count = read_array_length(process);
+                KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[String]: ");
+                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", local_byte_count);
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
-                advance_buffer(process, string_byte_count);
+                advance_buffer(process, local_byte_count);
                 break;
             }
 
-            #define HANDLE_CASE_ARRAY(TYPE, CBE_TYPE) \
-            { \
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(#TYPE " array", peek_array_length_field_width(process)); \
-                int64_t element_count = read_array_length(process); \
-                int64_t array_byte_count = element_count * sizeof(TYPE); \
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(#TYPE " array", array_byte_count); \
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_array(decode_process, CBE_TYPE, (void*)process->buffer_position, element_count)); \
-                swap_map_key_value_status(process); \
-                advance_buffer(process, array_byte_count); \
-            }
-            case TYPE_ARRAY_INT_8:
-                HANDLE_CASE_ARRAY(int8_t, CBE_TYPE_INT_8);
-                break;
-            case TYPE_ARRAY_INT_16:
-                HANDLE_CASE_ARRAY(int16_t, CBE_TYPE_INT_16);
-                break;
-            case TYPE_ARRAY_INT_32:
-                HANDLE_CASE_ARRAY(int32_t, CBE_TYPE_INT_32);
-                break;
-            case TYPE_ARRAY_INT_64:
-                HANDLE_CASE_ARRAY(int64_t, CBE_TYPE_INT_64);
-                break;
-            case TYPE_ARRAY_INT_128:
-                HANDLE_CASE_ARRAY(__int128, CBE_TYPE_INT_128);
-                break;
-            case TYPE_ARRAY_FLOAT_32:
-                HANDLE_CASE_ARRAY(float, CBE_TYPE_FLOAT_32);
-                break;
-            case TYPE_ARRAY_FLOAT_64:
-                HANDLE_CASE_ARRAY(double, CBE_TYPE_FLOAT_64);
-                break;
-            case TYPE_ARRAY_FLOAT_128:
-                HANDLE_CASE_ARRAY(__float128, CBE_TYPE_FLOAT_128);
-                break;
-            case TYPE_ARRAY_DECIMAL_32:
-                HANDLE_CASE_ARRAY(_Decimal32, CBE_TYPE_DECIMAL_32);
-                break;
-            case TYPE_ARRAY_DECIMAL_64:
-                HANDLE_CASE_ARRAY(_Decimal64, CBE_TYPE_DECIMAL_64);
-                break;
-            case TYPE_ARRAY_DECIMAL_128:
-                HANDLE_CASE_ARRAY(_Decimal128, CBE_TYPE_DECIMAL_128);
-                break;
-            case TYPE_ARRAY_TIME:
-                HANDLE_CASE_ARRAY(smalltime, CBE_TYPE_TIME_64);
-                break;
-            case TYPE_ARRAY_BOOLEAN:
+            case TYPE_BINARY_DATA:
             {
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("bitfield", peek_array_length_field_width(process));
-                int64_t length = read_array_length(process);
-                int64_t array_byte_count = length / 8;
-                if(array_byte_count & 7)
-                {
-                    array_byte_count++;
-                }
-                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("bitfield", array_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_bitfield(decode_process, process->buffer_position, length));
+                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", peek_array_length_field_width(process));
+                int64_t local_byte_count = read_array_length(process);
+                KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[Binary]: ");
+                STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", local_byte_count);
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_binary_data(decode_process, (void*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
-                advance_buffer(process, array_byte_count);
+                advance_buffer(process, local_byte_count);
                 break;
             }
             default:
+                KSLOG_DEBUG("[Small]: %d", type);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_int_8(decode_process, type));
                 swap_map_key_value_status(process);
                 break;

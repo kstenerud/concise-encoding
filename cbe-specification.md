@@ -37,31 +37,25 @@ All objects are composed of a type field and possibly a payload.
 |  00  | Integer value 0    |                                                |
 |  01  | Integer value 1    |                                                |
 | ...  | ...                | ...                                            |
-|  67  | Integer value 103  |                                                |
-|  68  | Integer            | [16-bit two's complement signed integer]       |
-|  69  | Integer            | [32-bit two's complement signed integer]       |
-|  6a  | Integer            | [64-bit two's complement signed integer]       |
-|  6b  | Integer            | [128-bit two's complement signed integer]      |
-|  6c  | Float              | [IEEE 754 binary32 floating point]             |
-|  6d  | Float              | [IEEE 754 binary64 floating point]             |
-|  6e  | Float              | [IEEE 754 binary128 floating point]            |
-|  6f  | Decimal            | [IEEE 754 decimal32, Densely Packed Decimal]   |
-|  70  | Decimal            | [IEEE 754 decimal64, Densely Packed Decimal]   |
-|  71  | Decimal            | [IEEE 754 decimal128, Densely Packed Decimal]  |
-|  72  | Time               | [64-bit y,d,h,m,s,us]                          |
-|  73  | Array: Boolean     | [length] [bitfield]                            |
-|  74  | Array: Int 8       | [length] [8-bit signed integers]               |
-|  75  | Array: Int 16      | [length] [16-bit signed integers]              |
-|  76  | Array: Int 32      | [length] [32-bit signed integers]              |
-|  77  | Array: Int 64      | [length] [64-bit signed integers]              |
-|  78  | Array: Int 128     | [length] [128-bit signed integers]             |
-|  79  | Array: Float 32    | [length] [32-bit floats]                       |
-|  7a  | Array: Float 64    | [length] [64-bit floats]                       |
-|  7b  | Array: Float 128   | [length] [128-bit floats]                      |
-|  7c  | Array: Decimal 32  | [length] [32-bit decimals]                     |
-|  7d  | Array: Decimal 64  | [length] [64-bit decimals]                     |
-|  7e  | Array: Decimal 128 | [length] [128-bit decimals]                    |
-|  7f  | Array: Time        | [length] [64-bit times]                        |
+|  6d  | Integer value 109  |                                                |
+|  6e  | Integer (16 bit)   | [16-bit two's complement signed integer]       |
+|  6f  | Integer (32 bit)   | [32-bit two's complement signed integer]       |
+|  70  | Integer (64 bit)   | [64-bit two's complement signed integer]       |
+|  71  | Integer (128 bit)  | [128-bit two's complement signed integer]      |
+|  72  | Float (32 bit)     | [IEEE 754 binary32 floating point]             |
+|  73  | Float (64 bit)     | [IEEE 754 binary64 floating point]             |
+|  74  | Float (128 bit)    | [IEEE 754 binary128 floating point]            |
+|  75  | Decimal (32 bit)   | [IEEE 754 decimal32, Densely Packed Decimal]   |
+|  76  | Decimal (64 bit)   | [IEEE 754 decimal64, Densely Packed Decimal]   |
+|  77  | Decimal (128 bit)  | [IEEE 754 decimal128, Densely Packed Decimal]  |
+|  78  | Time               | [64-bit y,d,h,m,s,us]                          |
+|  79  | Boolean True       |                                                |
+|  7a  | Boolean False      |                                                |
+|  7b  | List               | [object] ... [end container]                   |
+|  7c  | Map                | [key object, value object] ... [end container] |
+|  7d  | End of Container   |                                                |
+|  7e  | Empty (no data)    |                                                |
+|  7f  | Padding            |                                                |
 |  80  | String: 0 bytes    |                                                |
 |  81  | String: 1 byte     | [1 octet of data]                              |
 |  82  | String: 2 bytes    | [2 octets of data]                             |
@@ -79,14 +73,8 @@ All objects are composed of a type field and possibly a payload.
 |  8e  | String: 14 bytes   | [14 octets of data]                            |
 |  8f  | String: 15 bytes   | [15 octets of data]                            |
 |  90  | String             | [byte length] [UTF-8 encoded string]           |
-|  91  | List               | [object] ... [end container]                   |
-|  92  | Map                | [key object, value object] ... [end container] |
-|  93  | End of Container   |                                                |
-|  94  | Empty (no data)    |                                                |
-|  95  | Padding            |                                                |
-|  96  | Boolean False      |                                                |
-|  97  | Boolean True       |                                                |
-|  98  | Integer value -104 |                                                |
+|  91  | Binary Data        | [byte length] [data]                           |
+|  92  | Integer value -110 |                                                |
 | ...  | ...                | ...                                            |
 |  fe  | Integer value -2   |                                                |
 |  ff  | Integer value -1   |                                                |
@@ -102,8 +90,8 @@ True or false.
 
 Examples:
 
-    [97] = true
-    [96] = false
+    [78] = false
+    [79] = true
 
 
 ### Integer
@@ -118,9 +106,9 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [68 7f 00] = 127
-    [69 40 42 0f 00] = 1,000,000
-    [6a 00 f0 5a 2b 17 ff ff ff] = -1000000000000
+    [6e 7f 00] = 127
+    [6f 40 42 0f 00] = 1,000,000
+    [70 00 f0 5a 2b 17 ff ff ff] = -1000000000000
 
 
 ### Binary Floating Point
@@ -129,8 +117,8 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
-    [6c 00 00 48 41] = 12.5
-    [6d 66 66 66 66 66 42 A0 40] = 1281.2
+    [72 00 00 48 41] = 12.5
+    [73 66 66 66 66 66 42 A0 40] = 1281.2
 
 
 ### Decimal Floating Point
@@ -139,7 +127,7 @@ IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bit
 
 Example:
 
-    [70 D0 03 00 00 00 00 30 A2] = -7.50
+    [76 D0 03 00 00 00 00 30 A2] = -7.50
 
 
 ### Time
@@ -187,28 +175,21 @@ Example:
 Array Types
 -----------
 
-### Standard Array
+An "array" for the purposes of this spec is a contiguous series of octets, preceded by a length field.
 
-An array of scalar values. All elements are of the same type and width.
 
-    [Type] [Length] [Element 0] ... [Element (Length-1)]
+### Array Length Field
 
-The elements themselves do *NOT* contain a type field; only a payload. The content type is inferred from the array type.
+The array length field is a little endian encoded unsigned integer that represents the number of octets in the array.
 
-The string and bitfield arrays are handled a little differently, and are discussed separately.
+The two lowest bits (in the first byte as it is stored little endian) form the width code, and determine the full field width:
 
-#### Array Length Field
-
-The array length field is a little endian encoded unsigned integer that represents the number of *elements* in the array, not the byte count (the only exception to this is the string type, which is discussed separately).
-
-The two lowest bits are the width code, and determine the full field width:
-
-| Code |  Width  | Bit Layout        |
-| ---- | ------- | ----------------- |
-|   0  |  6 bits | LLLLLL00          |
-|   1  | 14 bits | LLLLLL01 +  8 x L |
-|   2  | 30 bits | LLLLLL10 + 24 x L |
-|   3  | 62 bits | LLLLLL11 + 56 x L |
+| Code |  Width  | Bit Layout                                         |
+| ---- | ------- | -------------------------------------------------- |
+|   0  |  6 bits | LLLLLL00                                           |
+|   1  | 14 bits | LLLLLL01 + 8xL                                     |
+|   2  | 30 bits | LLLLLL10 + 8xL + 8xL + 8xL                         |
+|   3  | 62 bits | LLLLLL11 + 8xL + 8xL + 8xL + 8xL + 8xL + 8xL + 8xL |
 
 To read the length:
 
@@ -218,9 +199,16 @@ To read the length:
 
 Examples:
 
-    [79 00] Array of 32-bit floats, length 0.
-    [75 0c 18 fc 00 00 e8 03] Array of 16-bit integers, length 3, contents (-1000, 0, 1000).
-    [7a a0 0f ...] = Array of 64-bit floats, length 1000 (contents omitted for brevity).
+    [00] Length 0.
+    [0c] Length 3.
+    [a0 0f] Length 1000.
+
+
+### Binary Data
+
+An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
+
+    [91] [Length] [Octet 0] ... [Octet (Length-1)]
 
 
 ### String
@@ -243,7 +231,7 @@ Original data:
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7  | 8      | 9  | 10 | 11 | 12 | 13 | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | -- | ------ | -- | -- | -- | -- | -- | ------------- |
-| 92  | 85     | 61 | 6c | 70 | 68 | 61 | 01 | 84     | 62 | 65 | 74 | 61 | 02 | 93            |
+| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | 01 | 84     | 62 | 65 | 74 | 61 | 02 | 7d            |
 | Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
 
 First, extract data (values `1` and `2`), including pointers to offset 2 ("alpha") and offset 9 ("beta").
@@ -252,27 +240,8 @@ Next, apply null termination by overwriting the type field of the next value fol
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7   | 8      | 9  | 10 | 11 | 12 | 13  | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | --- | ------ | -- | -- | -- | -- | --- | ------------- |
-| 92  | 85     | 61 | 6c | 70 | 68 | 61 | 00  | 84     | 62 | 65 | 74 | 61 | 00  | 93            |
+| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | 00  | 84     | 62 | 65 | 74 | 61 | 00  | 7d            |
 | Map | String | a  | l  | p  | h  | a  | nul | String | b  | e  | t  | a  | nul | End container |
-
-
-### Boolean Array
-
-Boolean arrays are encoded as little endian bitfields (least significant bit is in the first byte). The length field represents the number of bits (not bytes) in the array.
-
-Bitfields start at the low bit (0) of the first byte, and end on one of the bits in byte (n/8)-1. Bits in the higher positions above the last bit of the last byte are cleared.
-
-The common convention is to represent byte values with the MSB to the "left". However, bitfields are "logically" understood to be LSB-first bit arrays (whereby the lowest bit of the first byte is the first entry in the array).
-
-
-| Bit Ordering  |  Byte 0  |  Byte 1  | ... | Byte (n/8)-1 |
-| ------------- | -------- | -------- | --- | ------------ |
-| Common        | 76543210 | 76543210 | ... | ___43210     |
-| Logical       | 01234567 | 01234567 | ... | 01234___     |
-
-For example, an encoded bit array and its logical representation:
-
-    [73 a4 B1 F9 4C C3 D9 01] = 10001101100111110011001011000011100110111
 
 
 
@@ -287,7 +256,7 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    [91 01 68 88 13 93] = List containing integers (1, 5000)
+    [7b 01 68 88 13 7d] = List containing integers (1, 5000)
 
 
 ### Map
@@ -302,11 +271,11 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
 
-    [91] [key 1] [value 1] [key 2] [value 2] ... [93]
+    [7c] [key 1] [value 1] [key 2] [value 2] ... [7d]
 
 Example:
 
-    [91 81 61 01 81 62 02 93] = Map containg the key-value pairs ("a", 1) ("b", 2)
+    [7c 81 61 01 81 62 02 7d] = Map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 
@@ -321,17 +290,16 @@ Use this with care, as some languages may have restrictions on how it may be use
 
 Example:
 
-    [94] = No data
+    [7e] = No data
 
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types (such as arrays) fall on an aligned address for faster direct reads from the buffer on the receiving end.
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
-    [95 95 95 76 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
-    Array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers begin on a 4-byte boundary.
+    [7f 7f 7f 6f 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 
@@ -352,7 +320,7 @@ Illegal encodings must not be used, as they may cause problems or even API viola
 Smallest Possible Size
 ----------------------
 
-Preservation of the original numeric data type information is not considered important by default (with the exception of arrays). Encoders are encouraged to find the smallest type and width that stores a numeric value without data loss.
+Preservation of the original numeric data type information is not considered important by default. Encoders are encouraged to find the smallest type and width that stores a numeric value without data loss.
 
 For specialized applications, an encoder implementation may choose to preserve larger types and widths as a tradeoff in processing cost vs data size.
 
@@ -363,22 +331,20 @@ Alignment
 
 Applications may require data to be aligned in some cases. For example, some processors cannot read unaligned multibyte data types without compiler intervention. Others can read the data unaligned, but may take more processing time to do so. An encoder could be tuned to insert `padding` bytes when encoding certain types.
 
-This can be especially beneficial for arrays, where the cost of a little upfront padding overhead makes the entire array more efficient to read on certain architectures.
-
     read_data(buffer, buffer_length);
 
-|  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | ... |
-| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --- |
-| 95 | 95 | 95 | 76 | 80 | 38 | 01 | 00 | ff | ff | ff | 7f | fe | ff | ff | 7f | ... |
+|  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
+| -- | -- | -- | -- | -- | -- | -- | -- |
+| 7f | 7f | 7f | 6f | 00 | 00 | 00 | 8f |
 
 As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
 
     read_data(buffer+3, buffer_length-3);
 
-| Bytes 0-3      | Bytes 4-7     | Bytes 8-11  | Bytes 12-15 | ... |
-| -------------- | ------------- | ----------- | ----------- | --- |
-| xx xx xx 76    | 80 38 01 00   | ff ff ff 7f | fe ff ff 7f | ... |
-| Array of int32 | Length 20,000 | 0x7fffffff  | 0x7ffffffe  | ... |
+| Bytes 0-3      | Bytes 4-7     |
+| -------------- | ------------- |
+| xx xx xx 6f    | 00 00 00 8f   |
+| int32          | 0x8f000000    |
 
 
 
@@ -413,8 +379,8 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    [43 42 45 01 95 95 95 76 80 38 01 00 ff ff ff 7f fe ff ff 7f ...] =
-    CBE file containing an array of 20,000 int32s (0x7fffffff, 0x7ffffffe, ...), padded such that the integers start on a 4-byte boundary.
+    [43 42 45 01 7f 7f 7f 6f 00 00 00 8f] =
+    CBE file containing 0x8f000000, padded such that the int32 starts on a 4-byte boundary.
 
 
 

@@ -41,7 +41,7 @@ add_executable(cbe_test
                    src/string.cpp
                    src/list.cpp
                    src/map.cpp
-                   src/array.cpp
+                   src/binary_data.cpp
                    src/empty.cpp
                    src/encode_piecemeal.cpp
                    src/decode_piecemeal.cpp

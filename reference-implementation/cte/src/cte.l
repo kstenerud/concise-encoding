@@ -39,20 +39,8 @@ VALUE_FALSE   f|false
 "]" { return TOKEN_LIST_END; }
 ":" { return TOKEN_ASSIGNMENT_SEPARATOR; }
 
-"b("    { return TOKEN_ARRAY_BOOLEAN_START; }
-"i8("   { return TOKEN_ARRAY_INT_8_START; }
-"i16("  { return TOKEN_ARRAY_INT_16_START; }
-"i32("  { return TOKEN_ARRAY_INT_32_START; }
-"i64("  { return TOKEN_ARRAY_INT_64_START; }
-"i128(" { return TOKEN_ARRAY_INT_128_START; }
-"f32("  { return TOKEN_ARRAY_FLOAT_32_START; }
-"f64("  { return TOKEN_ARRAY_FLOAT_64_START; }
-"f128(" { return TOKEN_ARRAY_FLOAT_128_START; }
-"d32("  { return TOKEN_ARRAY_DECIMAL_32_START; }
-"d64("  { return TOKEN_ARRAY_DECIMAL_64_START; }
-"d128(" { return TOKEN_ARRAY_DECIMAL_128_START; }
-"t("    { return TOKEN_ARRAY_TIME_START; }
-")"     { return TOKEN_ARRAY_END; }
+"h("    { return TOKEN_BINARY_DATA_START; }
+")"     { return TOKEN_BINARY_DATA_END; }
 
 {COMMENT}       {/* Ignored */}
 {WHITESPACE}    {/* Ignored */}

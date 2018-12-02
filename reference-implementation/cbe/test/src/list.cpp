@@ -23,12 +23,12 @@ TEST(ListTest, length_ ## LENGTH) \
     expect_decode_encode(expected_memory); \
 }
 
-DEFINE_ADD_LIST_TEST(0, {0x91, 0x93})
-DEFINE_ADD_LIST_TEST(1, {0x91, 10, 0x93})
-DEFINE_ADD_LIST_TEST(2, {0x91, 10, 10, 0x93})
-DEFINE_ADD_LIST_TEST(3, {0x91, 10, 10, 10, 0x93})
-DEFINE_ADD_LIST_TEST(4, {0x91, 10, 10, 10, 10, 0x93})
-DEFINE_ADD_LIST_TEST(5, {0x91, 10, 10, 10, 10, 10, 0x93})
+DEFINE_ADD_LIST_TEST(0, {0x7b, 0x7d})
+DEFINE_ADD_LIST_TEST(1, {0x7b, 10, 0x7d})
+DEFINE_ADD_LIST_TEST(2, {0x7b, 10, 10, 0x7d})
+DEFINE_ADD_LIST_TEST(3, {0x7b, 10, 10, 10, 0x7d})
+DEFINE_ADD_LIST_TEST(4, {0x7b, 10, 10, 10, 10, 0x7d})
+DEFINE_ADD_LIST_TEST(5, {0x7b, 10, 10, 10, 10, 10, 0x7d})
 
 TEST(ListTest, incomplete)
 {

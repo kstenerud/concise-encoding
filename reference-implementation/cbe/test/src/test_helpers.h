@@ -20,7 +20,7 @@ static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value)
     return RETURN_VALUE; \
 }
 #define DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(TYPE, NAME_FRAGMENT, RETURN_VALUE) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, const TYPE* elements, const int64_t count) \
+static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE* elements, int64_t count) \
 { \
     (void)decode_process; \
     (void)elements; \
@@ -41,20 +41,12 @@ DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal32,  decimal_32, RETURN_VALUE)
 DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal64,  decimal_64, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal128, decimal_128, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(smalltime,   time, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    uint8_t,     bitfield, RETURN_VALUE) \
+DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    uint8_t,     binary_data, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    char,        string, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                empty, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                end_container, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_list, RETURN_VALUE) \
 DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_map, RETURN_VALUE) \
-static bool on_array(cbe_decode_process* decode_process, cbe_data_type type, const void* elements, const int64_t count) \
-{ \
-    (void)decode_process; \
-    (void)type; \
-    (void)elements; \
-    (void)count; \
-    return RETURN_VALUE; \
-}
 
 template<typename T> static inline std::vector<T> make_values_of_length(int length)
 {
@@ -191,32 +183,11 @@ template <> inline cbe_encode_status add_value<std::vector<VECTOR_TYPE>>(cbe_enc
 { \
     return FUNCTION_TO_CALL(encode_process, value.data(), value.size()); \
 }
-DEFINE_ADD_VECTOR_FUNCTION(int8_t,      cbe_encode_add_array_int_8)
-DEFINE_ADD_VECTOR_FUNCTION(int16_t,     cbe_encode_add_array_int_16)
-DEFINE_ADD_VECTOR_FUNCTION(int32_t,     cbe_encode_add_array_int_32)
-DEFINE_ADD_VECTOR_FUNCTION(int64_t,     cbe_encode_add_array_int_64)
-DEFINE_ADD_VECTOR_FUNCTION(__int128,    cbe_encode_add_array_int_128)
-DEFINE_ADD_VECTOR_FUNCTION(float,       cbe_encode_add_array_float_32)
-DEFINE_ADD_VECTOR_FUNCTION(double,      cbe_encode_add_array_float_64)
-DEFINE_ADD_VECTOR_FUNCTION(__float128,  cbe_encode_add_array_float_128)
-DEFINE_ADD_VECTOR_FUNCTION(_Decimal32,  cbe_encode_add_array_decimal_32)
-DEFINE_ADD_VECTOR_FUNCTION(_Decimal64,  cbe_encode_add_array_decimal_64)
-DEFINE_ADD_VECTOR_FUNCTION(_Decimal128, cbe_encode_add_array_decimal_128)
+DEFINE_ADD_VECTOR_FUNCTION(uint8_t,      cbe_encode_add_binary_data)
 
 template <> inline cbe_encode_status add_value<std::string>(cbe_encode_process* encode_process, std::string value)
 {
     return cbe_encode_add_string(encode_process, value.c_str());
-}
-
-template <> inline cbe_encode_status add_value<std::vector<bool>>(cbe_encode_process* encode_process, std::vector<bool> entries)
-{
-    bool array[entries.size()];
-    int index = 0;
-    for(bool entry: entries)
-    {
-        array[index++] = entry;
-    }
-    return cbe_encode_add_array_boolean(encode_process, array, sizeof(array));
 }
 
 

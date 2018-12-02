@@ -20,7 +20,7 @@ Structure
 
 A CTE document is a UTF-8 encoded text document consisting of a single, top-level object. Do not add a byte order mark (BOM). You can store multiple objects in a document by making the top level object a container.
 
-Whitespace is used to separate elements in a container or array. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
+Whitespace is used to separate elements in a container. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
 Example:
 
@@ -30,18 +30,18 @@ A more complex example:
 
     {
         # A comment
-        "list":           [1 2 "a string"]
-        "sub-map":        {1: "one" 2: "two" 3: 3000}
-        "boolean":        true
-        "binary int":     -10001011b
-        "octal int":      644o
-        "regular int":    -10000000
-        "hex int":        fffe0001h
-        "float":          14.125
-        "decimal":        -1.02d
-        "time":           2018-07-01T10:53:22.001481Z
-        "empty":          empty
-        "array of int16": i16(1000 2000 3000)
+        "list":        [1 2 "a string"]
+        "sub-map":     {1: "one" 2: "two" 3: 3000}
+        "boolean":     true
+        "binary int":  -10001011b
+        "octal int":   644o
+        "regular int": -10000000
+        "hex int":     fffe0001h
+        "float":       14.125
+        "decimal":     -1.02d
+        "time":        2018-07-01T10:53:22.001481Z
+        "empty":       empty
+        "bytes":       b(10ff389add004f4f91)
     }
 
 Objects may be of any type described below.
@@ -230,6 +230,24 @@ which is equivalent to:
 Array Types
 -----------
 
+### Binary Data
+
+An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. Contents may be represented as hexadeximal digits or using base64 encoding. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
+
+Binary data begins with an encoding prefix, an opening parenthesis `(`, contents, and finally a closing parenthesis `)`. The contents may be broken up anywhere with whitespace.
+
+The encoding prefix determines the data encoding:
+
+| Type | Encoding                              |
+| ---- | ------------------------------------- |
+|   h  | hexadecimal (1 byte per 2 characters) |
+|   b  | base64 (3 bytes per 4 characters)     |
+
+For this specification, base64 is as described in [RFC 4648](https://tools.ietf.org/html/rfc4648#section-4) (i.e. using `+` and `/`, for characters 62 and 63, and `=` as padding).
+
+For encoding `h`, hexadecimal characters `a`-`f` must be in lowercase.
+
+
 ### String
 
 An array of UTF-8 encoded bytes, without a byte order mark (BOM). Strings must be enclosed in double-quotes `"`.
@@ -250,45 +268,6 @@ The following escape sequences are allowed inside a string's contents, and must 
 Example:
 
     "A string\twith\ttabs\nand\nnewlines"
-
-
-### Array
-
-A typed array of scalar objects. All elements of the array must be of the same type and width.
-
-An array begins with an array type prefix, an opening parenthesis `(`, whitespace separated contents, and finally a closing parenthesis `)`.
-
-#### Data Fitting
-
-All elements of an array must fit within the element type and width of the array. If a value cannot be stored in the array's element type and width without losing data, it is invalid.
-
-Examples of invalid values:
-
- * 1.5 in an integer array
- * 1000 in an 8-bit integer array,
- * 1.000481175553291 in a 32-bit binary float array.
-
-#### Array Type Prefixes (always lower case):
-
-| Type   | Element Data Type              |
-| ------ | ------------------------------ |
-| `b`    | boolean                        |
-| `i8`   | 8-bit signed integer           |
-| `i16`  | 16-bit signed integer          |
-| `i32`  | 32-bit signed integer          |
-| `i64`  | 64-bit signed integer          |
-| `i128` | 128-bit signed integer         |
-| `f32`  | 32-bit binary floating point   |
-| `f64`  | 64-bit binary floating point   |
-| `f128` | 128-bit binary floating point  |
-| `d32`  | 32-bit decimal floating point  |
-| `d64`  | 64-bit decimal floating point  |
-| `d128` | 128-bit decimal floating point |
-| `t`    | time                           |
-
-Example: An array of three 32-bit integers
-
-    i32(1000000 2000000 3000000)
 
 
 
@@ -346,7 +325,7 @@ Example:
 Comments
 --------
 
-Comments may be placed before or after any object (including array elements). Any number of comments may occur in a row. A parser is free to discard comments.
+Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to discard comments.
 
 A comment begins with a `#` character and terminates on the next newline character (U+000A).
 
@@ -361,12 +340,8 @@ Example:
         "joe@average.org"
         "numbers" # after numbers
         :
-        # before the array
-        i32( # before 1
-            1 # before 2
-            2
-            # after 2
-            )
+        # Before binary data (but not inside it)
+        h(01 02 03 04 05 06 07 08 09 0a)
     }
     # Comments at the
     # end of the document.
@@ -376,10 +351,11 @@ Example:
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, with the following exceptions:
+A CTE document must be entirely in lower case, except for the following:
 
  * String contents: `"A string may contain UPPER CASE. Escape sequences, however, must be lower case: \x3d"`
  * Time values must be in upper case: `2018-07-01T10:53:22.001481Z`
+ * base64 encoding specifies uppercase characters in its code table.
 
 Everything else, including hexadecimal digits and escape sequences, must be lower case.
 
@@ -402,16 +378,17 @@ While there are many characters classified as "whitespace" within the Unicode se
  * Before an object (including at the beginning of a document)
  * After an object (including at the end of a document)
  * Between array or container openings & closings: `[`, `]`, `{`, `}`, `(`, `)`
+ * Between encoded characters in a binary data array.
 
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `f32( 1.1   1.2     1.3   )` is equivalent to `f32(1.1 1.2 1.3)`
+ * `h( 01 02 03   0 4 )` is equivalent to `h(01020304)`
  * `{ 1:"one" 2 : "two" 3: "three" 4 :"four"}`
 
 #### Whitespace must NOT occur:
 
- * Between an array type specifier and the opening parenthesis: `i32 (` is invalid
+ * Between a binary data encoding specifier and the opening parenthesis: `h (` is invalid
  * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid
  * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid
 
@@ -425,8 +402,6 @@ Illegal encodings must not be used, as they may cause problems or even API viola
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys (that includes mathematically equivalent keys).
-  * An array's element type must be a scalar type. Arrays of arrays, containers, or `empty`, are not allowed.
-  * An array's elements must be small enough to fit in the array's designated element type.
   * Upper case text is not allowed, except in strings and time values.
   * Whitespace must only occur as described in the whitespace section.
 

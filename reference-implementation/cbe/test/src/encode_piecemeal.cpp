@@ -21,5 +21,5 @@ TEST(EncodePiecemeal, piecemeal)
 			if((status = cbe_encode_add_int(encode_process, 0x1000)) != CBE_ENCODE_STATUS_OK) return status;
 			return cbe_encode_end_container(encode_process);
 		},
-		{0x91, 0x01, 0x68, 0x00, 0x10, 0x93});
+		{0x7b, 0x01, 0x6e, 0x00, 0x10, 0x7d});
 }

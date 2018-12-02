@@ -22,9 +22,8 @@ static cbe_decode_process* new_do_nothing_decode_process(cbe_decode_callbacks* c
     callbacks->on_end_container = on_end_container;
     callbacks->on_begin_list = on_begin_list;
     callbacks->on_begin_map = on_begin_map;
-    callbacks->on_bitfield = on_bitfield;
     callbacks->on_string = on_string;
-    callbacks->on_array = on_array;
+    callbacks->on_binary_data = on_binary_data;
     return cbe_decode_begin(callbacks, NULL);
 }
 
