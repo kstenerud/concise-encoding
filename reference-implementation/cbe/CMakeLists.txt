@@ -12,7 +12,6 @@ add_library(cbe
     src/library.c
     src/decoder.c
     src/encoder.c
-    src/kslogger.c
 )
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing

@@ -124,7 +124,7 @@ void* cbe_decode_get_user_context(cbe_decode_process* decode_process)
 
 cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count)
 {
-    KSLOG_DEBUG("%d", byte_count);
+    KSLOG_DEBUG("Feed %d bytes...", byte_count);
     KSLOG_DATA_TRACE(data_start, byte_count, "");
     cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     process->buffer_start = data_start;
@@ -250,7 +250,8 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             {
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", peek_array_length_field_width(process));
                 int64_t local_byte_count = read_array_length(process);
-                KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[String]: ");
+                KSLOG_DEBUG("[String length %d]", local_byte_count);
+                KSLOG_DATA_TRACE(process->buffer_position, local_byte_count, "[String]: ");
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", local_byte_count);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
@@ -262,7 +263,8 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             {
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", peek_array_length_field_width(process));
                 int64_t local_byte_count = read_array_length(process);
-                KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[Binary]: ");
+                KSLOG_DEBUG("[Binary length %d]", local_byte_count);
+                KSLOG_DATA_TRACE(process->buffer_position, local_byte_count, "[Binary]: ");
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", local_byte_count);
                 STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_binary_data(decode_process, (void*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);

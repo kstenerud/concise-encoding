@@ -1,7 +1,7 @@
 //
-//  KSLoggerCommon.h
+//  KSLogger.h
 //
-//  Created by Karl Stenerud on 11-06-25.
+//  Created by Karl Stenerud on 2011-06-25.
 //
 //  Copyright (c) 2011 Karl Stenerud. All rights reserved.
 //
@@ -46,15 +46,15 @@
  * USAGE
  * =====
  *
- * Set the log level in your "Preprocessor Macros" build setting. You may choose
- * TRACE, DEBUG, INFO, WARN, ERROR. If nothing is set, it defaults to INFO.
+ * Set the default logging level in your preprocessor settings. You may choose
+ * NONE, TRACE, DEBUG, INFO, WARN, ERROR. If nothing is set, it defaults to INFO.
  *
- * KSLogger_Level=WARN
+ *     KSLogger_Level=WARN
  *
- * Anything below that log level will not be printed.
+ * Anything below your specified log level will not be printed.
  * 
  *
- * Next, include the correct header file:
+ * Next, include the header file:
  *
  * #include "KSLogger.h"
  *
@@ -62,37 +62,25 @@
  * Next, call the logger functions from your code:
  *
  * Code:
- *    KSLOG_ERROR(@"Some error message");
+ *     KSLOG_ERROR("Some error message");
  *
  * Prints:
- *    2011-09-25 05:41:01.379 TestApp[4439:f803] ERROR: SomeClass.m (21): -[SomeFunction]: Some error message 
+ *     ERROR: SomeFile.c (21): some_function: Some error message 
  *
  * Code:
- *    KSLOG_INFO(@"Info about %@", someObject);
- *
+ *     KSLOG_INFO("The value is %d", someInteger);
+*
  * Prints:
- *    2011-09-25 05:44:05.239 TestApp[4473:f803] INFO : SomeClass.m (20): -[SomeFunction]: Info about <NSObject: 0xb622840>
+ *     INFO : SomeFile.c (22): some_function: The value is 10
  *
  *
- * The "BASIC" versions of the macros behave exactly like NSLog, except they
- * respect the KSLogger_Level setting:
+ * The "BASIC" versions output only what you supply:
  *
  * Code:
- *    KSLOGBASIC_ERROR(@"A basic log entry");
+ *     KSLOGBASIC_ERROR("A basic log entry");
  *
  * Prints:
- *    2011-09-25 05:44:05.916 TestApp[4473:f803] A basic log entry
- *
- *
- * Note: The C versions use "" instead of @"" in the format field, and do not
- *       print the NSLog preamble:
- *
- * Objective-C version:
- *
- *    2011-09-25 05:41:01.379 TestApp[4439:f803] ERROR: SomeClass.m (21): -[SomeFunction]: Some error message
- *
- * C version:
- *    ERROR: SomeClass.m (21): -[SomeFunction]: Some error message
+ *     A basic log entry
  *
  *
  * =============
@@ -101,7 +89,7 @@
  *
  * You can control logging messages at the local file level using the
  * "KSLogger_LocalLevel" define. Note that it must be defined BEFORE
- * including KSLoggerC.h or KSLoggerObjC.h
+ * including KSLogger.h
  *
  * The KSLOG_XX() and KSLOGBASIC_XX() macros will print out based on the LOWER
  * of KSLogger_Level and KSLogger_LocalLevel, so if KSLogger_Level is DEBUG
@@ -110,34 +98,19 @@
  *
  * Example:
  *
- * // KSLogger_LocalLevel, if defined, MUST be defined BEFORE including KSLoggerXX.h
- * #define KSLogger_LocalLevel TRACE
- * #import "KSLoggerObjC.h"
+ *     // KSLogger_LocalLevel, MUST be defined BEFORE including KSLogger.h
+ *     #define KSLogger_LocalLevel TRACE
+ *     #import "KSLogger.h"
  *
  *
  * ===============
  * IMPORTANT NOTES
  * ===============
  *
- * The C logger is async-safe, but is limited in how big of a log message it can
+ * The logger is async-safe, but is limited in how big of a log message it can
  * print. By default it is 1024 bytes, but the preprocessor define
- * KSLogger_CBufferSize can set the size (only during compilation of KSLogger).
+ * KSLogger_BufferSize can set the size (only during compilation of KSLogger).
  */
-
-void i_kslog_c(const char* level,
-               const char* file,
-               unsigned int line,
-               const char* function,
-               const unsigned char* binary_data,
-               int byte_count, 
-               const char* fmt, ...);
-
-void i_kslog_c_basic(const unsigned char* binary_data,
-                     int byte_count,
-                     const char* fmt, ...);
-
-#define i_KSLOG_FULL i_kslog_c
-#define i_KSLOG_BASIC i_kslog_c_basic
 
 
 /* Back up any existing defines by the same name */
@@ -173,6 +146,11 @@ void i_kslog_c_basic(const unsigned char* binary_data,
 #define TRACE 5
 
 
+
+// =====================
+// Default Configuration
+// =====================
+
 #ifndef KSLogger_Level
     #define KSLogger_Level INFO
 #endif
@@ -181,26 +159,185 @@ void i_kslog_c_basic(const unsigned char* binary_data,
     #define KSLogger_LocalLevel NONE
 #endif
 
-#define a_KSLOG_FULL(LEVEL, BINARY_DATA, BYTE_COUNT, FMT, ...) \
-    i_KSLOG_FULL(LEVEL, \
-                 __FILE__, \
-                 __LINE__, \
-                 __PRETTY_FUNCTION__, \
-                 BINARY_DATA, \
-                 BYTE_COUNT, \
-                 FMT, \
-                 ##__VA_ARGS__)
+#ifndef KSLogger_BufferSize
+    #define KSLogger_BufferSize 1024
+#endif
 
 
+
+// ========
+// Internal
+// ========
+
+#if KSLogger_LocalLevel > KSLogger_Level
+    #undef KSLogger_Level
+    #define KSLogger_Level KSLogger_LocalLevel
+#endif
+
+
+#if KSLogger_Level > NONE
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+static const char* kslog_last_path_entry(const char* path)
+{
+    const char* lastFile = strrchr(path, '/');
+    return lastFile == 0 ? path : lastFile + 1;
+}
+
+static void kslog_write_string(const char* str)
+{
+    size_t bytesToWrite = strlen(str);
+    const char* pos = str;
+    while(bytesToWrite > 0)
+    {
+        ssize_t bytesWritten = write(STDOUT_FILENO, pos, bytesToWrite);
+        if(bytesWritten == -1)
+        {
+            return;
+        }
+        bytesToWrite -= (size_t)bytesWritten;
+        pos += bytesWritten;
+    }
+}
+
+static void kslog_write_hex(const unsigned char* ptr, const int length)
+{
+    if(length <= 0)
+    {
+        return;
+    }
+
+    static char hex_table[] =
+    {
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+    };
+
+    write(STDOUT_FILENO, "[", 1);
+    for(int i = 0; i < length; i++)
+    {
+        char buffer[3];
+        int byte_count = 2;
+        unsigned char byte = ptr[i];
+        buffer[0] = hex_table[byte >> 4];
+        buffer[1] = hex_table[byte & 15];
+        if(i + 1 < length)
+        {
+            buffer[2] = ' ';
+            byte_count++;
+        }
+        write(STDOUT_FILENO, buffer, byte_count);
+    }
+    write(STDOUT_FILENO, "]", 1);
+}
+
+static void kslog_write_varargs(const char* fmt, va_list args)
+{
+    char buffer[KSLogger_BufferSize];
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    kslog_write_string(buffer);
+}
+
+static void kslog_write_wildcard(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args,fmt);
+    kslog_write_varargs(fmt, args);
+    va_end(args);
+}
+
+static void kslog_write_log_contents(
+                    const unsigned char* binary_data,
+                    int byte_count,
+                    const char* fmt,
+                    va_list args)
+{
+    kslog_write_varargs(fmt, args);
+    kslog_write_hex(binary_data, byte_count);
+    write(STDOUT_FILENO, "\n", 1);
+}
+
+static void kslog_write_log(const char* level,
+               const char* file,
+               unsigned int line,
+               const char* function,
+               const unsigned char* binary_data,
+               int byte_count, 
+               const char* fmt, ...);
+
+static void kslog_write_log_basic(const unsigned char* binary_data,
+                     int byte_count,
+                     const char* fmt, ...)
+{
+    if(*fmt != 0)
+    {
+        va_list args;
+        va_start(args,fmt);
+        kslog_write_log_contents(binary_data, byte_count, fmt, args);
+        va_end(args);
+
+        // Avoid "unused function" warning.
+        (void)kslog_write_log;
+    }
+}
+
+static void kslog_write_log(const char* level,
+               const char* file,
+               unsigned int line,
+               const char* function,
+               const unsigned char* binary_data,
+               int byte_count, 
+               const char* fmt, ...)
+{
+    if(*fmt != 0)
+    {
+        kslog_write_wildcard("%s: %s (%u): %s: ",
+                 level, kslog_last_path_entry(file), line, function);
+
+        va_list args;
+        va_start(args,fmt);
+        kslog_write_log_contents(binary_data, byte_count, fmt, args);
+        va_end(args);
+
+        // Avoid "unused function" warning.
+        (void)kslog_write_log_basic;
+    }
+}
+
+#endif
+
+#define KSLOG_BASIC kslog_write_log_basic
+#define indirect_KSLOG_FULL kslog_write_log
+#define KSLOG_FULL(LEVEL, BINARY_DATA, BYTE_COUNT, FMT, ...) \
+    indirect_KSLOG_FULL(LEVEL, \
+                        __FILE__, \
+                        __LINE__, \
+                        __PRETTY_FUNCTION__, \
+                        BINARY_DATA, \
+                        BYTE_COUNT, \
+                        FMT, \
+                        ##__VA_ARGS__)
+
+
+
+// ==========
+// Public API
+// ==========
 
 /** Log an error.
  * Normal version prints out full context. Basic version prints directly.
  *
+ * @param BINARY_DATA Data to be printed as hex.
+ * @param BYTE_COUNT Number of bytes to print.
  * @param FMT The format specifier, followed by its arguments.
  */
-#if KSLogger_Level >= ERROR || KSLogger_LocalLevel >= ERROR
-    #define KSLOG_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...) a_KSLOG_FULL("ERROR", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
-    #define KSLOGBASIC_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...) i_KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+#if KSLogger_Level >= ERROR
+    #define KSLOG_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_FULL("ERROR", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+    #define KSLOGBASIC_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
 #else
     #define KSLOG_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...)
     #define KSLOGBASIC_DATA_ERROR(BINARY_DATA, BYTE_COUNT, FMT, ...)
@@ -211,11 +348,13 @@ void i_kslog_c_basic(const unsigned char* binary_data,
 /** Log a warning.
  * Normal version prints out full context. Basic version prints directly.
  *
+ * @param BINARY_DATA Data to be printed as hex.
+ * @param BYTE_COUNT Number of bytes to print.
  * @param FMT The format specifier, followed by its arguments.
  */
-#if KSLogger_Level >= WARN || KSLogger_LocalLevel >= WARN
-    #define KSLOG_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...) a_KSLOG_FULL("WARN", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
-    #define KSLOGBASIC_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...) i_KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+#if KSLogger_Level >= WARN
+    #define KSLOG_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_FULL("WARN", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+    #define KSLOGBASIC_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
 #else
     #define KSLOG_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...)
     #define KSLOGBASIC_DATA_WARN(BINARY_DATA, BYTE_COUNT, FMT, ...)
@@ -226,11 +365,13 @@ void i_kslog_c_basic(const unsigned char* binary_data,
 /** Log an info message.
  * Normal version prints out full context. Basic version prints directly.
  *
+ * @param BINARY_DATA Data to be printed as hex.
+ * @param BYTE_COUNT Number of bytes to print.
  * @param FMT The format specifier, followed by its arguments.
  */
-#if KSLogger_Level >= INFO || KSLogger_LocalLevel >= INFO
-    #define KSLOG_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...) a_KSLOG_FULL("INFO", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
-    #define KSLOGBASIC_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...) i_KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+#if KSLogger_Level >= INFO
+    #define KSLOG_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_FULL("INFO", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+    #define KSLOGBASIC_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
 #else
     #define KSLOG_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...)
     #define KSLOGBASIC_DATA_INFO(BINARY_DATA, BYTE_COUNT, FMT, ...)
@@ -241,11 +382,13 @@ void i_kslog_c_basic(const unsigned char* binary_data,
 /** Log a debug message.
  * Normal version prints out full context. Basic version prints directly.
  *
+ * @param BINARY_DATA Data to be printed as hex.
+ * @param BYTE_COUNT Number of bytes to print.
  * @param FMT The format specifier, followed by its arguments.
  */
-#if KSLogger_Level >= DEBUG || KSLogger_LocalLevel >= DEBUG
-    #define KSLOG_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...) a_KSLOG_FULL("DEBUG", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
-    #define KSLOGBASIC_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...) i_KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+#if KSLogger_Level >= DEBUG
+    #define KSLOG_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_FULL("DEBUG", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+    #define KSLOGBASIC_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
 #else
     #define KSLOG_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...)
     #define KSLOGBASIC_DATA_DEBUG(BINARY_DATA, BYTE_COUNT, FMT, ...)
@@ -256,11 +399,13 @@ void i_kslog_c_basic(const unsigned char* binary_data,
 /** Log a trace message.
  * Normal version prints out full context. Basic version prints directly.
  *
+ * @param BINARY_DATA Data to be printed as hex.
+ * @param BYTE_COUNT Number of bytes to print.
  * @param FMT The format specifier, followed by its arguments.
  */
-#if KSLogger_Level >= TRACE || KSLogger_LocalLevel >= TRACE
-    #define KSLOG_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...) a_KSLOG_FULL("TRACE", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
-    #define KSLOGBASIC_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...) i_KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+#if KSLogger_Level >= TRACE
+    #define KSLOG_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_FULL("TRACE", BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
+    #define KSLOGBASIC_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...) KSLOG_BASIC(BINARY_DATA, BYTE_COUNT, FMT, ##__VA_ARGS__)
 #else
     #define KSLOG_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...)
     #define KSLOGBASIC_DATA_TRACE(BINARY_DATA, BYTE_COUNT, FMT, ...)
