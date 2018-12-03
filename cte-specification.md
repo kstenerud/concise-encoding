@@ -261,7 +261,6 @@ The following escape sequences are allowed inside a string's contents, and must 
 | `\r`                | carriage return                 |
 | `\n`                | linefeed                        |
 | `\t`                | horizontal tab                  |
-| `\000` - `\777`     | one octet, octal notation       |
 | `\x00` - `\xff`     | one octet, hexadecimal notation |
 | `\u0000` - `\uffff` | unicode character               |
 
