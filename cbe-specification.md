@@ -184,12 +184,12 @@ The array length field is a little endian encoded unsigned integer that represen
 
 The two lowest bits (in the first byte as it is stored little endian) form the width code, and determine the full field width:
 
-| Code |  Width  | Bit Layout                                         |
-| ---- | ------- | -------------------------------------------------- |
-|   0  |  6 bits | LLLLLL00                                           |
-|   1  | 14 bits | LLLLLL01 + 8xL                                     |
-|   2  | 30 bits | LLLLLL10 + 8xL + 8xL + 8xL                         |
-|   3  | 62 bits | LLLLLL11 + 8xL + 8xL + 8xL + 8xL + 8xL + 8xL + 8xL |
+| Code |  Width  | Bit Layout                                                              |
+| ---- | ------- | ----------------------------------------------------------------------- |
+|   0  |  6 bits | LLLLLL00                                                                |
+|   1  | 14 bits | LLLLLL01 LLLLLLLL                                                       |
+|   2  | 30 bits | LLLLLL10 LLLLLLLL LLLLLLLL LLLLLLLL                                     |
+|   3  | 62 bits | LLLLLL11 LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL LLLLLLLL |
 
 To read the length:
 
