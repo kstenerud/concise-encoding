@@ -1,7 +1,7 @@
 Concise Binary Encoding and Concise Text Encoding
 =================================================
 
-General purpose, compact representations of semi-structured hierarchical data, in binary and human readable formats.
+General purpose, compact representations of semi-structured hierarchical data, in binary and text formats.
 
 
 Goals
