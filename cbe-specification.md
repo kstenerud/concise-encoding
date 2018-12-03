@@ -27,7 +27,7 @@ A CBE document is a binary encoded document consisting of a single, top-level ob
 Encoding
 --------
 
-All objects are composed of a type field and possibly a payload.
+All objects are composed of an 8-bit type field and possibly a payload.
 
 
 #### Type Field
@@ -98,7 +98,7 @@ Examples:
 
 Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
 
-Values from -104 to 103 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
+Values from -110 to 109 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
 
 Examples:
@@ -132,7 +132,7 @@ Example:
 
 ### Time
 
-Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime) format.
+Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime) format, stored in little endian byte order.
 
 #### Encoding
 
@@ -193,8 +193,8 @@ The two lowest bits (in the first byte as it is stored little endian) form the w
 
 To read the length:
 
-  * Read the first byte and mask the lower 2 bits to get the width code subfield ( width_code = first_byte & 3 ).
-  * If the width code > 0, read from the same location as an unsigned integer of the corresponding width (16, 32, 64 bits).
+  * Read the lower 2 bits of the first byte to get the width code subfield ( width_code = first_byte & 3 ).
+  * If the width code > 0, read from the same location as a little endian unsigned integer of the corresponding width (16, 32, or 64 bits).
   * Shift "right" unsigned by 2 ( length = value >> 2 ) to get the final value.
 
 Examples:
@@ -295,7 +295,7 @@ Example:
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type may occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
@@ -309,7 +309,7 @@ Illegal Encodings
 Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings, or may even abort processing.
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
-  * Containers must be properly terminated with `end container` tags. Extra `end container` tags are also invalid.
+  * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
   * All map keys must have corresponding values.
   * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
@@ -375,7 +375,7 @@ For example, a file encoded in CBE format version 1 would begin with the header 
 
 ### Encoded Object
 
-The encoded data following the header contains optional padding bytes, followed by a single top-level object. You can store multiple objects by using a collection or array as the "single" object.
+The encoded data following the header contains optional padding bytes, followed by a single top-level object. You can store multiple objects by using a collection as the "single" object.
 
 Example:
 
