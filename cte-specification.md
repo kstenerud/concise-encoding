@@ -122,7 +122,7 @@ Numbers must be written in lower case.
 
 Represents a date & time.
 
-The date-time format is a restricted form of the ISO 8601 extended date format:
+The date-time format is a restricted form of the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) extended date format:
 
  * Time zone is always zero (Z).
  * Times must contain both a date and time component.
