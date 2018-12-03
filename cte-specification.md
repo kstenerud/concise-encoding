@@ -24,10 +24,6 @@ Whitespace is used to separate elements in a container. Maps separate keys and v
 
 Example:
 
-    "A single string object"
-
-A more complex example:
-
     {
         # A comment
         "list":        [1 2 "a string"]
@@ -43,6 +39,14 @@ A more complex example:
         "empty":       empty
         "bytes":       b(10ff389add004f4f91)
     }
+
+The top-level object can also be a more simple type, such as:
+
+    "A single string object"
+
+or:
+
+    30.09
 
 Objects may be of any type described below.
 
@@ -90,7 +94,7 @@ Numbers must be written in lower case.
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values with widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`. The radix character is `.`.
+Represents ieee754 binary floating point values in widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`.
 
 Examples:
 
@@ -102,7 +106,7 @@ Numbers must be written in lower case.
 
 ### Decimal Floating Point
 
-Represents ieee754 decimal floating point values with widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Negative values are prefixed with a dash `-`. The radix character is `.`.
+Represents ieee754 decimal floating point values in widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`.
 
 Decimal floating point values are differentiated from binary floating point values by adding a `d` suffix.
 
@@ -120,9 +124,8 @@ Represents a date & time.
 
 The date-time format is a restricted form of the ISO 8601 extended date format:
 
- * Time zones are mandatory.
- * Time intervals are not allowed.
- * All times must contain both a date and time component.
+ * Time zone is always zero (Z).
+ * Times must contain both a date and time component.
  * Only the fractional seconds field is optional. All other fields are mandatory.
  * The allowed formats are more restricted.
 
@@ -135,33 +138,13 @@ General format:
 
 This allows date/time values to be parsed by a conforming iso8601 parser.
 
-#### Time Zone Designators
+#### Time Zone Designator
 
-The time zone designator may be a timezone offset in the format +HH:MM or -HH:MM, or the zero timezone designator `Z` (capitalized) to refer to UTC. The timezone field must not be omitted.
-
-| Field | Meaning          | Minimum | Maximum |
-| ----- | ---------------- | ------- | ------- |
-| +-    | Offset direction | -       | +       |
-| HH    | Hour offset      | 00      | 23      |
-| MM    | Minute offset    | 00      | 59      |
-
-It's recommended to always use the zero timezone, and only use other timezones when there's a compelling reason to do so.
-
-A parser is not required to preserve the supplied time zone (it may, for example, convert all dates to be UTC-based).
-
-Examples:
-
-| Offset | Meaning                          |
-| ------ | -------------------------------- |
-| Z      | offset 0                         |
-| +00:00 | offset 0                         |
-| -00:00 | offset 0                         |
-| -01:30 | 1 hour and 30 minutes behind UTC |
-| +01:00 | 1 hour ahead of UTC              |
+The time zone designator is always zero `Z`.
 
 #### Date Component
 
-Date fields are separated by dashes. Dates may be represented either in Gregorian date format (YYYY-MM-DD) or in ordinal date format (YYYY-DDD).
+Date fields are separated by dashes. Dates may be represented either in Gregorian date format `YYYY-MM-DD` or in ordinal date format `YYYY-DDD`.
 
 To maintain compatibility with Concise Binary Encoding, only year values from -131072 (which equals -131073 after zero year adjustment) to 131071 are supported.
 
