@@ -14,11 +14,6 @@ static bool is_hex_character(int ch)
     return ch >= 'a' && ch <= 'f';
 }
 
-static bool is_octal_character(int ch)
-{
-    return ch >= '0' && ch <= '7';
-}
-
 /**
  * Unquotes and unescapes a string in-place (modifies the original string)
  *
@@ -61,24 +56,6 @@ static char* string_unquote_unescape(char* str)
                     case 't': *write_pos++ = '\t'; break;
                     case '\\': *write_pos++ = '\\'; break;
                     case '\"': *write_pos++ = '\"'; break;
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-                    {
-                        uint8_t number_buffer[4] = {*read_pos, 0, 0, 0};
-                        read_pos++;
-                        if(is_octal_character(*read_pos))
-                        {
-                            number_buffer[1] = *read_pos;
-                            read_pos++;
-                        }
-                        if(is_octal_character(*read_pos))
-                        {
-                            number_buffer[2] = *read_pos;
-                            read_pos++;
-                        }
-                        *write_pos++ = (uint8_t)strtoul((char*)number_buffer, NULL, 8);
-                        read_pos--;
-                        break;
-                    }
                     case 'x':
                     {
                         if(remaining_bytes < 2)
