@@ -18,7 +18,7 @@ Goals
 Structure
 ---------
 
-A CTE document is a UTF-8 encoded text document consisting of a single, top-level object. Do not add a byte order mark (BOM). You can store multiple objects in a document by making the top level object a container.
+A CTE document is a UTF-8 encoded (with no byte order mark) text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
 Whitespace is used to separate elements in a container. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
