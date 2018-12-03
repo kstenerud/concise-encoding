@@ -1,7 +1,7 @@
 Concise Binary Encoding and Concise Text Encoding
 =================================================
 
-A general purpose, compact representation of semi-structured hierarchical data, in machine readable and human readable formats.
+General purpose, compact representations of semi-structured hierarchical data, in machine readable and human readable formats.
 
 
 Goals
@@ -11,7 +11,7 @@ Goals
   * Supports the most common data types
   * Supports hierarchical data structuring
   * Minimal complexity
-  * Type compatibility between CBE and CTE
+  * Type compatibility between [CBE](cbe-specification.md) and [CTE](cte-specification.md)
 
 #### Goals: Concise Binary Encoding (CBE):
 
@@ -39,34 +39,31 @@ Supported Types
 
 ### Scalar Types
 
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Boolean  | True or false                                        |
-| Integer  | Signed two's complement, from 8 to 128 bits          |
-| Float    | IEEE 754 floating point, from 32 to 128 bits         |
-| Decimal  | IEEE 754 densely packed decimal, from 32 to 128 bits |
-| Time     | Date & time, to the microsecond                      |
+| Type     | Description                                            |
+| -------- | ------------------------------------------------------ |
+| Boolean  | True or false                                          |
+| Integer  | Signed two's complement, from 8 to 128 bits            |
+| Float    | IEEE 754 floating point, from 32 to 128 bits           |
+| Decimal  | IEEE 754 densely packed decimal, from 32 to 128 bits   |
+| Time     | Date & time, to the microsecond                        |
 
 
 ### Array Types
 
-Array types can hold multiple scalar values of the same type and size.
-
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Array    | Array of a scalar type                               |
-| Bitfield | Packed "array" of bits                               |
-| String   | Array of UTF-8 encoded bytes (no BOM)                |
+| Type     | Description                                            |
+| -------- | ------------------------------------------------------ |
+| Binary   | Array of binary data                                   |
+| String   | Array of UTF-8 encoded bytes (no BOM)                  |
 
 
 ### Container Types
 
-Containers can store any type, including other containers and mixed types.
+Containers can hold any combination of types, including other containers.
 
-| Type     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| List     | A list containing any types                          |
-| Map      | Scalar or array types for keys, any types for values |
+| Type     | Description                                            |
+| -------- | ------------------------------------------------------ |
+| List     | A list may containin any types, even mixed             |
+| Map      | Scalar or array types for keys, any types for values   |
 
 
 ### Other Types
