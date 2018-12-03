@@ -206,7 +206,7 @@ Examples:
 
 ### Binary Data
 
-An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
+An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
 
     [91] [Length] [Octet 0] ... [Octet (Length-1)]
 
@@ -238,10 +238,10 @@ First, extract data (values `1` and `2`), including pointers to offset 2 ("alpha
 
 Next, apply null termination by overwriting the type field of the next value following each string:
 
-| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7   | 8      | 9  | 10 | 11 | 12 | 13  | 14            |
-| --- | ------ | -- | -- | -- | -- | -- | --- | ------ | -- | -- | -- | -- | --- | ------------- |
-| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | 00  | 84     | 62 | 65 | 74 | 61 | 00  | 7d            |
-| Map | String | a  | l  | p  | h  | a  | nul | String | b  | e  | t  | a  | nul | End container |
+| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7       | 8      | 9  | 10 | 11 | 12 | 13      | 14            |
+| --- | ------ | -- | -- | -- | -- | -- | ------- | ------ | -- | -- | -- | -- | ------- | ------------- |
+| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | **00**  | 84     | 62 | 65 | 74 | 61 | **00**  | 7d            |
+| Map | String | a  | l  | p  | h  | a  | **nul** | String | b  | e  | t  | a  | **nul** | End container |
 
 
 
@@ -256,7 +256,7 @@ List elements are stored using regular object encoding (type field + possible pa
 
 Example:
 
-    [7b 01 68 88 13 7d] = List containing integers (1, 5000)
+    [7b 01 68 88 13 7d] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -275,7 +275,7 @@ Map contents are stored as key-value pair tuples using regular object encoding (
 
 Example:
 
-    [7c 81 61 01 81 62 02 7d] = Map containg the key-value pairs ("a", 1) ("b", 2)
+    [7c 81 61 01 81 62 02 7d] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 
