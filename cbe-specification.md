@@ -32,52 +32,52 @@ All objects are composed of an 8-bit type field and possibly a payload.
 
 #### Type Field
 
-| Code | Type               | Payload                                        |
-| ---- | ------------------ | ---------------------------------------------- |
-|  00  | Integer value 0    |                                                |
-|  01  | Integer value 1    |                                                |
-| ...  | ...                | ...                                            |
-|  6d  | Integer value 109  |                                                |
-|  6e  | Integer (16 bit)   | [16-bit two's complement signed integer]       |
-|  6f  | Integer (32 bit)   | [32-bit two's complement signed integer]       |
-|  70  | Integer (64 bit)   | [64-bit two's complement signed integer]       |
-|  71  | Integer (128 bit)  | [128-bit two's complement signed integer]      |
-|  72  | Float (32 bit)     | [IEEE 754 binary32 floating point]             |
-|  73  | Float (64 bit)     | [IEEE 754 binary64 floating point]             |
-|  74  | Float (128 bit)    | [IEEE 754 binary128 floating point]            |
-|  75  | Decimal (32 bit)   | [IEEE 754 decimal32, Densely Packed Decimal]   |
-|  76  | Decimal (64 bit)   | [IEEE 754 decimal64, Densely Packed Decimal]   |
-|  77  | Decimal (128 bit)  | [IEEE 754 decimal128, Densely Packed Decimal]  |
-|  78  | Time               | [64-bit y,d,h,m,s,us]                          |
-|  79  | Boolean True       |                                                |
-|  7a  | Boolean False      |                                                |
-|  7b  | List               | [object] ... [end container]                   |
-|  7c  | Map                | [key object, value object] ... [end container] |
-|  7d  | End of Container   |                                                |
-|  7e  | Empty (no data)    |                                                |
-|  7f  | Padding            |                                                |
-|  80  | String: 0 bytes    |                                                |
-|  81  | String: 1 byte     | [1 octet of data]                              |
-|  82  | String: 2 bytes    | [2 octets of data]                             |
-|  83  | String: 3 bytes    | [3 octets of data]                             |
-|  84  | String: 4 bytes    | [4 octets of data]                             |
-|  85  | String: 5 bytes    | [5 octets of data]                             |
-|  86  | String: 6 bytes    | [6 octets of data]                             |
-|  87  | String: 7 bytes    | [7 octets of data]                             |
-|  88  | String: 8 bytes    | [8 octets of data]                             |
-|  89  | String: 9 bytes    | [9 octets of data]                             |
-|  8a  | String: 10 bytes   | [10 octets of data]                            |
-|  8b  | String: 11 bytes   | [11 octets of data]                            |
-|  8c  | String: 12 bytes   | [12 octets of data]                            |
-|  8d  | String: 13 bytes   | [13 octets of data]                            |
-|  8e  | String: 14 bytes   | [14 octets of data]                            |
-|  8f  | String: 15 bytes   | [15 octets of data]                            |
-|  90  | String             | [byte length] [UTF-8 encoded string]           |
-|  91  | Binary Data        | [byte length] [data]                           |
-|  92  | Integer value -110 |                                                |
-| ...  | ...                | ...                                            |
-|  fe  | Integer value -2   |                                                |
-|  ff  | Integer value -1   |                                                |
+| Code | Type               | Payload                                       |
+| ---- | ------------------ | --------------------------------------------- |
+|  00  | Integer value 0    |                                               |
+|  01  | Integer value 1    |                                               |
+| ...  | ...                |                                               |
+|  6d  | Integer value 109  |                                               |
+|  6e  | Integer (16 bit)   | [16-bit two's complement signed integer]      |
+|  6f  | Integer (32 bit)   | [32-bit two's complement signed integer]      |
+|  70  | Integer (64 bit)   | [64-bit two's complement signed integer]      |
+|  71  | Integer (128 bit)  | [128-bit two's complement signed integer]     |
+|  72  | Float (32 bit)     | [IEEE 754 binary32 floating point]            |
+|  73  | Float (64 bit)     | [IEEE 754 binary64 floating point]            |
+|  74  | Float (128 bit)    | [IEEE 754 binary128 floating point]           |
+|  75  | Decimal (32 bit)   | [IEEE 754 decimal32, Densely Packed Decimal]  |
+|  76  | Decimal (64 bit)   | [IEEE 754 decimal64, Densely Packed Decimal]  |
+|  77  | Decimal (128 bit)  | [IEEE 754 decimal128, Densely Packed Decimal] |
+|  78  | Time               | [64-bit y,d,h,m,s,us]                         |
+|  79  | Boolean True       |                                               |
+|  7a  | Boolean False      |                                               |
+|  7b  | List               |                                               |
+|  7c  | Map                |                                               |
+|  7d  | End of Container   |                                               |
+|  7e  | Empty (no data)    |                                               |
+|  7f  | Padding            |                                               |
+|  80  | String: 0 bytes    |                                               |
+|  81  | String: 1 byte     | [1 octet of data]                             |
+|  82  | String: 2 bytes    | [2 octets of data]                            |
+|  83  | String: 3 bytes    | [3 octets of data]                            |
+|  84  | String: 4 bytes    | [4 octets of data]                            |
+|  85  | String: 5 bytes    | [5 octets of data]                            |
+|  86  | String: 6 bytes    | [6 octets of data]                            |
+|  87  | String: 7 bytes    | [7 octets of data]                            |
+|  88  | String: 8 bytes    | [8 octets of data]                            |
+|  89  | String: 9 bytes    | [9 octets of data]                            |
+|  8a  | String: 10 bytes   | [10 octets of data]                           |
+|  8b  | String: 11 bytes   | [11 octets of data]                           |
+|  8c  | String: 12 bytes   | [12 octets of data]                           |
+|  8d  | String: 13 bytes   | [13 octets of data]                           |
+|  8e  | String: 14 bytes   | [14 octets of data]                           |
+|  8f  | String: 15 bytes   | [15 octets of data]                           |
+|  90  | String             | [byte length] [UTF-8 encoded string]          |
+|  91  | Binary Data        | [byte length] [data]                          |
+|  92  | Integer value -110 |                                               |
+| ...  | ...                |                                               |
+|  fe  | Integer value -2   |                                               |
+|  ff  | Integer value -1   |                                               |
 
 
 
