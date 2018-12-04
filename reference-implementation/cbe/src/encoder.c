@@ -12,6 +12,9 @@ struct cbe_encode_process
     uint8_t* buffer_position;
     int container_level;
     bool next_object_is_map_key;
+    bool is_inside_array;
+    int64_t array_current_offset;
+    int64_t array_byte_count;
     bool is_inside_map[MAX_CONTAINER_DEPTH];
 };
 typedef struct cbe_encode_process cbe_encode_process;
@@ -34,6 +37,10 @@ typedef struct cbe_encode_process cbe_encode_process;
 #define STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(PROCESS) \
     if((PROCESS)->is_inside_map[process->container_level] && (PROCESS)->next_object_is_map_key) \
         return CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE
+
+#define STOP_AND_EXIT_IF_INSIDE_ARRAY(PROCESS) \
+    if((PROCESS)->is_inside_array) \
+        return CBE_ENCODE_ERROR_INCOMPLETE_FIELD
 
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
@@ -58,6 +65,11 @@ static inline unsigned int get_length_field_width(const uint64_t length)
     return sizeof(uint64_t);
 }
 
+static inline void add_primitive_type(cbe_encode_process* const process, const cbe_type_field type)
+{
+    KSLOG_DEBUG("%02x", type);
+    *process->buffer_position++ = (uint8_t)type;
+}
 static inline void add_primitive_uint_8(cbe_encode_process* const process, const uint8_t value)
 {
     KSLOG_DEBUG("%02x", value);
@@ -96,19 +108,21 @@ static inline void add_primitive_bytes(cbe_encode_process* const process,
                                        const uint8_t* const bytes,
                                        const uint64_t byte_count)
 {
-    KSLOG_DATA_DEBUG(bytes, byte_count, "Write bytes: ");
+    if(byte_count < 50)
+    {
+        KSLOG_DATA_DEBUG(bytes, byte_count, "Write bytes: ");
+    }
+    else
+    {
+        KSLOG_DATA_TRACE(bytes, byte_count, "Write bytes: ");
+    }
     memcpy(process->buffer_position, bytes, byte_count);
     process->buffer_position += byte_count;
 }
 
-static inline void add_primitive_type(cbe_encode_process* const process, const cbe_type_field type)
+static inline void add_length_field(cbe_encode_process* const process, const uint64_t length)
 {
-    KSLOG_DEBUG("%02x", type);
-    *process->buffer_position++ = (uint8_t)type;
-}
-
-static inline void add_primitive_length(cbe_encode_process* const process, const uint64_t length)
-{
+    KSLOG_DEBUG("%d", length);
     if(length <= MAX_VALUE_6_BIT)
     {
         add_primitive_uint_8(process, (uint8_t)((length << 2) | LENGTH_FIELD_WIDTH_6_BIT));
@@ -130,6 +144,7 @@ static inline void add_primitive_length(cbe_encode_process* const process, const
 static inline cbe_encode_status add_small(cbe_encode_process* const process, const int8_t value)
 {
     KSLOG_DEBUG("");
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process); \
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_int_8(process, value);
     swap_map_key_value_status(process);
@@ -140,6 +155,7 @@ static inline cbe_encode_status add_small(cbe_encode_process* const process, con
     static inline cbe_encode_status add_ ## DEFINITION_TYPE(cbe_encode_process* const process, const DATA_TYPE value) \
     { \
         KSLOG_DEBUG(""); \
+        STOP_AND_EXIT_IF_INSIDE_ARRAY(process); \
         STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, sizeof(value)); \
         add_primitive_type(process, CBE_TYPE); \
         add_primitive_ ## DEFINITION_TYPE(process, value); \
@@ -157,6 +173,36 @@ DEFINE_ADD_SCALAR_FUNCTION(_Decimal32,  decimal_32,  TYPE_DECIMAL_32)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,  decimal_64,  TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
 DEFINE_ADD_SCALAR_FUNCTION(smalltime,   time,        TYPE_TIME)
+
+static cbe_encode_status encode_string_header(cbe_encode_process* process,
+                                              const int64_t byte_count,
+                                              const bool should_reserve_payload)
+{
+    KSLOG_DEBUG("%ld, %d", byte_count, should_reserve_payload);
+    cbe_type_field type = 0;
+    int reserved_count = 0;
+    if(byte_count > 15)
+    {
+        type = TYPE_STRING;
+        reserved_count = get_length_field_width(byte_count);
+    }
+    else
+    {
+        type = TYPE_STRING_0 + byte_count;
+    }
+    if(should_reserve_payload)
+    {
+        reserved_count += byte_count;
+    }
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, reserved_count);
+    add_primitive_type(process, type);
+    if(byte_count > 15)
+    {
+        add_length_field(process, byte_count);
+    }
+    swap_map_key_value_status(process);
+    return CBE_ENCODE_STATUS_OK;
+}
 
 
 cbe_encode_process* cbe_encode_begin(uint8_t* const document_buffer, const int64_t byte_count)
@@ -205,6 +251,7 @@ cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const process)
 {
     KSLOG_DEBUG("");
     STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_EMPTY);
     swap_map_key_value_status(process);
@@ -214,6 +261,7 @@ cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const process)
 cbe_encode_status cbe_encode_add_boolean(cbe_encode_process* const process, const bool value)
 {
     KSLOG_DEBUG("%d", value);
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, value ? TYPE_TRUE : TYPE_FALSE);
     swap_map_key_value_status(process);
@@ -322,6 +370,7 @@ cbe_encode_status cbe_encode_add_time(cbe_encode_process* const process, const s
 cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const process)
 {
     KSLOG_DEBUG("");
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
@@ -336,6 +385,7 @@ cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const process)
 cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const process)
 {
     KSLOG_DEBUG("");
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
     STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
@@ -354,40 +404,12 @@ cbe_encode_status cbe_encode_end_container(cbe_encode_process* const process)
     {
         return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS;
     }
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_END_CONTAINER);
     process->container_level--;
     process->next_object_is_map_key = process->is_inside_map[process->container_level];
-    return CBE_ENCODE_STATUS_OK;
-}
-
-static cbe_encode_status encode_string_header(cbe_encode_process* process,
-                                              const int64_t byte_count,
-                                              const bool should_reserve_payload)
-{
-    cbe_type_field type = 0;
-    int reserved_count = 0;
-    if(byte_count > 15)
-    {
-        type = TYPE_STRING;
-        reserved_count = get_length_field_width(byte_count);
-    }
-    else
-    {
-        type = TYPE_STRING_0 + byte_count;
-    }
-    if(should_reserve_payload)
-    {
-        reserved_count += byte_count;
-    }
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, reserved_count);
-    add_primitive_type(process, type);
-    if(byte_count > 15)
-    {
-        add_primitive_length(process, byte_count);
-    }
-    swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -398,6 +420,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     // TODO: Partial encode
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count);
     add_primitive_bytes(process, start, byte_count);
+    process->array_current_offset += byte_count;
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -405,9 +428,13 @@ cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, con
 {
     // TODO: Sanity checks, field "opened"
     KSLOG_DEBUG("%ld", byte_count);
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_length_field_width(byte_count));
     add_primitive_type(process, TYPE_BINARY_DATA);
-    add_primitive_length(process, byte_count);
+    add_length_field(process, byte_count);
+    process->is_inside_array = true;
+    process->array_current_offset = 0;
+    process->array_byte_count = byte_count;
     swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
@@ -416,6 +443,10 @@ cbe_encode_status cbe_encode_begin_string(cbe_encode_process* const process, con
 {
     // TODO: Sanity checks, field "opened"
     KSLOG_DEBUG("%ld", byte_count);
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
+    process->is_inside_array = true;
+    process->array_current_offset = 0;
+    process->array_byte_count = byte_count;
     const bool should_reserve_payload = false;
     return encode_string_header(process, byte_count, should_reserve_payload);
 }
@@ -426,6 +457,19 @@ cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,
 {
     KSLOG_DEBUG("%d", byte_count);
     KSLOG_DATA_TRACE(start, byte_count, "");
+    if(!process->is_inside_array)
+    {
+        return CBE_ERROR_NOT_INSIDE_ARRAY_FIELD;
+    }
+    int64_t new_array_offset = process->array_current_offset + byte_count;
+    if(new_array_offset > process->array_byte_count)
+    {
+        return CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED;
+    }
+    else if(new_array_offset == process->array_byte_count)
+    {
+        process->is_inside_array = false;
+    }
     return encode_array_contents(process, (const uint8_t*)start, byte_count);
 }
 
@@ -433,6 +477,7 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process, const
 {
     KSLOG_DEBUG("%d", strlen(str));
     KSLOG_DATA_TRACE(str, strlen(str), "");
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     const bool should_reserve_payload = true;
     const int byte_count = strlen(str);
     cbe_encode_status status = encode_string_header(process, byte_count, should_reserve_payload);

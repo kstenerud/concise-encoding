@@ -37,6 +37,9 @@ extern "C" {
 const cbe_decode_callbacks* get_always_false_decode_callbacks();
 const cbe_decode_callbacks* get_always_true_decode_callbacks();
 
+struct cbe_decode_process* new_always_false_decode_process();
+struct cbe_decode_process* new_always_true_decode_process();
+
 #ifdef __cplusplus
 }
 #endif
@@ -50,6 +53,11 @@ const cbe_decode_callbacks* get_always_true_decode_callbacks();
 #include <gtest/gtest.h>
 #include <cbe/cbe.h>
 #include "decode_encode.h"
+
+
+#define EXPECT_ENCODE_OK(...) EXPECT_EQ(CBE_ENCODE_STATUS_OK, __VA_ARGS__)
+
+#define EXPECT_DECODE_OK(...) EXPECT_EQ(CBE_DECODE_STATUS_OK, __VA_ARGS__)
 
 void expect_memory_after_operation(
                         std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation,

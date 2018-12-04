@@ -39,9 +39,10 @@ TEST(Decode, StopInCallback_ ## TYPE) \
     std::array<uint8_t, memory_size> memory; \
     struct cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size()); \
     TYPE array[1]; \
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_add_ ## FUNCTION(encode_process, array, 1)); \
+    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_ ## FUNCTION(encode_process, 1)); \
+    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_add_data(encode_process, array, 1)); \
     int64_t buffer_length = cbe_encode_get_buffer_offset(encode_process); \
     EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process)); \
     EXPECT_EQ(CBE_DECODE_STATUS_STOPPED_IN_CALLBACK, cbe_decode_feed(decode_process, memory.data(), buffer_length)); \
 }
-DEFINE_ARRAY_STOP_TEST(uint8_t, data);
+DEFINE_ARRAY_STOP_TEST(uint8_t, binary);

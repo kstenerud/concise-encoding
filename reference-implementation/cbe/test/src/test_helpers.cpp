@@ -92,6 +92,16 @@ const cbe_decode_callbacks* get_always_true_decode_callbacks()
     return &g_always_true_callbacks;
 }
 
+struct cbe_decode_process* new_always_false_decode_process()
+{
+    return cbe_decode_begin(get_always_false_decode_callbacks(), NULL);
+}
+
+struct cbe_decode_process* new_always_true_decode_process()
+{
+    return cbe_decode_begin(get_always_true_decode_callbacks(), NULL);
+}
+
 
 void expect_memory_after_operation(
                         std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation,

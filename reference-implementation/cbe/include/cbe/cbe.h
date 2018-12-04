@@ -38,16 +38,16 @@ struct cbe_decode_process;
  */
 typedef enum
 {
-	/**
-	 * The document has been successfully decoded.
-	 */
-	CBE_DECODE_STATUS_OK,
+    /**
+     * The document has been successfully decoded.
+     */
+    CBE_DECODE_STATUS_OK,
 
     /**
      * The decoder has reached the end of the buffer and needs more data to
      * finish decoding the document.
      */
-    CBE_DECODE_STATUS_NEED_MORE_DATA,
+    CBE_DECODE_STATUS_NEED_MORE_DATA = 100,
 
     /**
      * A user callback returned false, stopping the decode process.
@@ -95,82 +95,82 @@ typedef struct
     /**
      * An empty field was decoded.
      */
-	bool (*on_add_empty) (struct cbe_decode_process* decode_process);
+    bool (*on_add_empty) (struct cbe_decode_process* decode_process);
 
     /**
      * An boolean field was decoded.
      */
-	bool (*on_add_boolean) (struct cbe_decode_process* decode_process, bool value);
+    bool (*on_add_boolean) (struct cbe_decode_process* decode_process, bool value);
 
     /**
      * An 8-bit integer field was decoded.
      */
-	bool (*on_add_int_8) (struct cbe_decode_process* decode_process, int8_t value);
+    bool (*on_add_int_8) (struct cbe_decode_process* decode_process, int8_t value);
 
     /**
      * A 16-bit integer field was decoded.
      */
-	bool (*on_add_int_16) (struct cbe_decode_process* decode_process, int16_t value);
+    bool (*on_add_int_16) (struct cbe_decode_process* decode_process, int16_t value);
 
     /**
      * A 32-bit integer field was decoded.
      */
-	bool (*on_add_int_32) (struct cbe_decode_process* decode_process, int32_t value);
+    bool (*on_add_int_32) (struct cbe_decode_process* decode_process, int32_t value);
 
     /**
      * A 64-bit integer field was decoded.
      */
-	bool (*on_add_int_64) (struct cbe_decode_process* decode_process, int64_t value);
+    bool (*on_add_int_64) (struct cbe_decode_process* decode_process, int64_t value);
 
     /**
      * A 128-bit integer field was decoded.
      */
-	bool (*on_add_int_128) (struct cbe_decode_process* decode_process, __int128 value);
+    bool (*on_add_int_128) (struct cbe_decode_process* decode_process, __int128 value);
 
     /**
      * A 32-bit binary floating point field was decoded.
      */
-	bool (*on_add_float_32) (struct cbe_decode_process* decode_process, float value);
+    bool (*on_add_float_32) (struct cbe_decode_process* decode_process, float value);
 
     /**
      * A 64-bit binary floating point field was decoded.
      */
-	bool (*on_add_float_64) (struct cbe_decode_process* decode_process, double value);
+    bool (*on_add_float_64) (struct cbe_decode_process* decode_process, double value);
 
     /**
      * A 128-bit binary floating point field was decoded.
      */
-	bool (*on_add_float_128) (struct cbe_decode_process* decode_process, __float128 value);
+    bool (*on_add_float_128) (struct cbe_decode_process* decode_process, __float128 value);
 
     /**
      * A 32-bit decimal floating point field was decoded.
      */
-	bool (*on_add_decimal_32) (struct cbe_decode_process* decode_process, _Decimal32 value);
+    bool (*on_add_decimal_32) (struct cbe_decode_process* decode_process, _Decimal32 value);
 
     /**
      * A 64-bit decimal floating point field was decoded.
      */
-	bool (*on_add_decimal_64) (struct cbe_decode_process* decode_process, _Decimal64 value);
+    bool (*on_add_decimal_64) (struct cbe_decode_process* decode_process, _Decimal64 value);
 
     /**
      * A 128-bit decimal floating point field was decoded.
      */
-	bool (*on_add_decimal_128) (struct cbe_decode_process* decode_process, _Decimal128 value);
+    bool (*on_add_decimal_128) (struct cbe_decode_process* decode_process, _Decimal128 value);
 
     /**
      * A time field was decoded.
      */
-	bool (*on_add_time) (struct cbe_decode_process* decode_process, smalltime value);
+    bool (*on_add_time) (struct cbe_decode_process* decode_process, smalltime value);
 
     /**
      * A list container has been opened.
      */
-	bool (*on_begin_list) (struct cbe_decode_process* decode_process);
+    bool (*on_begin_list) (struct cbe_decode_process* decode_process);
 
     /**
      * A map container has been opened.
      */
-	bool (*on_begin_map) (struct cbe_decode_process* decode_process);
+    bool (*on_begin_map) (struct cbe_decode_process* decode_process);
 
     /**
      * The currently opened container has been closed.
@@ -205,7 +205,7 @@ typedef struct
      * @param start The start of the data.
      * @param byte_count The number of bytes in this array fragment.
      */
-	bool (*on_add_data) (struct cbe_decode_process* decode_process,
+    bool (*on_add_data) (struct cbe_decode_process* decode_process,
                          const uint8_t* start,
                          int64_t byte_count);
 } cbe_decode_callbacks;
@@ -242,7 +242,6 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: document has unbalanced containers.
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
- * - CBE_DECODE_ERROR_FIELD_LENGTH_EXCEEDED: added too much data to a field.
  *
  * Recoverable codes:
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
@@ -314,31 +313,31 @@ struct cbe_encode_process;
  */
 typedef enum
 {
-	/**
-	 * Completed successfully.
-	 */
-	CBE_ENCODE_STATUS_OK,
+    /**
+     * Completed successfully.
+     */
+    CBE_ENCODE_STATUS_OK,
 
     /**
      * The encoder has reached the end of the buffer and needs more room to
      * encode this object.
      */
-    CBE_ENCODE_STATUS_NEED_MORE_ROOM,
+    CBE_ENCODE_STATUS_NEED_MORE_ROOM = 200,
 
     /**
      * Unbalanced container begin and end markers were detected.
      */
-	CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS,
+    CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS,
 
     /**
      * An invalid data type was used as a map key.
      */
-	CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE,
+    CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-	CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
+    CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
 
     /**
      * Attempted to add a new field before the existing field was completely
@@ -350,6 +349,11 @@ typedef enum
      * The currently open field is smaller than the data being added.
      */
     CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED,
+
+    /**
+     * We're not inside an array field.
+     */
+    CBE_ERROR_NOT_INSIDE_ARRAY_FIELD,
 
     /**
      * Max container depth (default 500) was exceeded.
@@ -717,6 +721,7 @@ cbe_encode_status cbe_encode_begin_string(struct cbe_encode_process* encode_proc
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  * - CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
+ * - CBE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
  * @param start The start of the data to add.
