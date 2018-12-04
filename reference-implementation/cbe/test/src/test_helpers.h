@@ -1,52 +1,83 @@
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+#include "kslogger.h"
+#include <cbe/cbe.h>
+
+
+#define FILL_CALLBACKS(CALLBACKS_PTR) \
+{ \
+    (CALLBACKS_PTR)->on_add_empty = on_add_empty; \
+    (CALLBACKS_PTR)->on_add_boolean = on_add_boolean; \
+    (CALLBACKS_PTR)->on_add_int_8 = on_add_int_8; \
+    (CALLBACKS_PTR)->on_add_int_16 = on_add_int_16; \
+    (CALLBACKS_PTR)->on_add_int_32 = on_add_int_32; \
+    (CALLBACKS_PTR)->on_add_int_64 = on_add_int_64; \
+    (CALLBACKS_PTR)->on_add_int_128 = on_add_int_128; \
+    (CALLBACKS_PTR)->on_add_float_32 = on_add_float_32; \
+    (CALLBACKS_PTR)->on_add_float_64 = on_add_float_64; \
+    (CALLBACKS_PTR)->on_add_float_128 = on_add_float_128; \
+    (CALLBACKS_PTR)->on_add_decimal_32 = on_add_decimal_32; \
+    (CALLBACKS_PTR)->on_add_decimal_64 = on_add_decimal_64; \
+    (CALLBACKS_PTR)->on_add_decimal_128 = on_add_decimal_128; \
+    (CALLBACKS_PTR)->on_add_time = on_add_time; \
+    (CALLBACKS_PTR)->on_end_container = on_end_container; \
+    (CALLBACKS_PTR)->on_begin_list = on_begin_list; \
+    (CALLBACKS_PTR)->on_begin_map = on_begin_map; \
+    (CALLBACKS_PTR)->on_begin_string = on_begin_string; \
+    (CALLBACKS_PTR)->on_begin_binary = on_begin_binary; \
+    (CALLBACKS_PTR)->on_add_data = on_add_data; \
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const cbe_decode_callbacks* get_always_false_decode_callbacks();
+const cbe_decode_callbacks* get_always_true_decode_callbacks();
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#ifdef __cplusplus
+
+
 #include <functional>
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <cbe/cbe.h>
 #include "decode_encode.h"
 
-#define DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(NAME_FRAGMENT, RETURN_VALUE) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process) \
-{ \
-    (void)decode_process; \
-    return RETURN_VALUE; \
-}
-#define DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(TYPE, NAME_FRAGMENT, RETURN_VALUE) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE value) \
-{ \
-    (void)decode_process; \
-    (void)value; \
-    return RETURN_VALUE; \
-}
-#define DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(TYPE, NAME_FRAGMENT, RETURN_VALUE) \
-static bool on_ ## NAME_FRAGMENT(cbe_decode_process* decode_process, TYPE* elements, int64_t count) \
-{ \
-    (void)decode_process; \
-    (void)elements; \
-    (void)count; \
-    return RETURN_VALUE; \
-}
-#define DEFINE_DECODE_CALLBACK_SUITE(RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(bool,        boolean, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int8_t,      int_8, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int16_t,     int_16, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int32_t,     int_32, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(int64_t,     int_64, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__int128,    int_128, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(float,       float_32, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(double,      float_64, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(__float128,  float_128, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal32,  decimal_32, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal64,  decimal_64, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(_Decimal128, decimal_128, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_PRIMITIVE(smalltime,   time, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    uint8_t,     binary_data, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_ARRAY(    char,        string, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                empty, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                end_container, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_list, RETURN_VALUE) \
-DEFINE_DECODE_CALLBACK_SUITE_ON_MARKER(                begin_map, RETURN_VALUE) \
+void expect_memory_after_operation(
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation,
+                        std::vector<uint8_t> const& expected_memory);
+
+void expect_incomplete_operation(
+                        const int buffer_size,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation);
+
+void expect_incomplete_operation_decrementing(
+                        const int buffer_size,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation);
+
+void expect_piecemeal_operation(
+                        const int buffer_cutoff,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation1,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation2,
+                        std::vector<uint8_t> const& expected_memory);
+
+void expect_piecemeal_operation_decrementing(
+                        const int buffer_cutoff_high,
+                        const int buffer_cutoff_low,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation1,
+                        std::function<cbe_encode_status(struct cbe_encode_process* encode_process)> operation2,
+                        std::vector<uint8_t> const& expected_memory);
+
+void expect_decode_encode(std::vector<uint8_t> const& expected_memory);
+
 
 template<typename T> static inline std::vector<T> make_values_of_length(int length)
 {
@@ -58,94 +89,10 @@ template<typename T> static inline std::vector<T> make_values_of_length(int leng
     return vec;
 }
 
-static inline void expect_memory_after_operation(
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation,
-                        std::vector<uint8_t> const& expected_memory)
-{
-    const int memory_size = 100000;
-    std::array<uint8_t, memory_size> memory;
-    uint8_t* data = memory.data();
-    memset(data, 0xf7, memory_size);
-    int expected_size = expected_memory.size();
-
-    cbe_encode_process* encode_process = cbe_encode_begin(data, memory_size);
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, operation(encode_process));
-    int actual_size = cbe_encode_get_buffer_offset(encode_process);
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process));
-    fflush(stdout);
-
-    std::vector<uint8_t> actual_memory = std::vector<uint8_t>(data, data + expected_size);
-    EXPECT_EQ(expected_size, actual_size);
-    EXPECT_EQ(expected_memory, actual_memory);
-}
-
-static inline void expect_incomplete_operation(
-                        const int buffer_size,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
-{
-    uint8_t data[buffer_size];
-    memset(data, 0xf7, buffer_size);
-    cbe_encode_process* encode_process = cbe_encode_begin(data, buffer_size);
-    EXPECT_NE(CBE_ENCODE_STATUS_OK, operation(encode_process));
-    cbe_encode_end(encode_process);
-    fflush(stdout);
-}
-
-static inline void expect_incomplete_operation_decrementing(
-                        const int buffer_size,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation)
-{
-    for(int size = buffer_size; size >= 0; size--)
-    {
-        expect_incomplete_operation(size, operation);
-    }
-}
-
-static inline void expect_piecemeal_operation(
-                        const int buffer_cutoff,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
-                        std::vector<uint8_t> const& expected_memory)
-{
-    const int memory_size = 100000;
-    std::array<uint8_t, memory_size> memory;
-    uint8_t* data = memory.data();
-    memset(data, 0xf7, memory_size);
-    int expected_size = expected_memory.size();
-
-    cbe_encode_process* encode_process = cbe_encode_begin(data, buffer_cutoff);
-    EXPECT_NE(CBE_ENCODE_STATUS_OK, operation1(encode_process));
-    fflush(stdout);
-
-    int used_bytes = cbe_encode_get_buffer_offset(encode_process);
-    data += used_bytes;
-    cbe_encode_set_buffer(encode_process, data, memory_size - used_bytes);
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, operation2(encode_process));
-    int actual_size = used_bytes + cbe_encode_get_buffer_offset(encode_process);
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process));
-    fflush(stdout);
-
-    std::vector<uint8_t> actual_memory = std::vector<uint8_t>(memory.data(), memory.data() + actual_size);
-    EXPECT_EQ(expected_size, actual_size);
-    EXPECT_EQ(expected_memory, actual_memory);
-}
-
-static inline void expect_piecemeal_operation_decrementing(
-                        const int buffer_cutoff_high,
-                        const int buffer_cutoff_low,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation1,
-                        std::function<cbe_encode_status(cbe_encode_process* encode_process)> operation2,
-                        std::vector<uint8_t> const& expected_memory)
-{
-    for(int size = buffer_cutoff_high; size >= buffer_cutoff_low; size--)
-    {
-        expect_piecemeal_operation(size, operation1, operation2, expected_memory);
-    }
-}
 
 // Internal
 
-template <typename T> static inline cbe_encode_status add_value(cbe_encode_process* encode_process, T value)
+template <typename T> static inline cbe_encode_status add_value(struct cbe_encode_process* encode_process, T value)
 {
     int status;
     std::string type_name = typeid(T).name();
@@ -161,7 +108,7 @@ template <typename T> static inline cbe_encode_status add_value(cbe_encode_proce
 }
 
 #define DEFINE_ADD_VALUE_FUNCTION(SCALAR_TYPE, FUNCTION_TO_CALL) \
-template <> inline cbe_encode_status add_value<SCALAR_TYPE>(cbe_encode_process* encode_process, SCALAR_TYPE value) \
+template <> inline cbe_encode_status add_value<SCALAR_TYPE>(struct cbe_encode_process* encode_process, SCALAR_TYPE value) \
 { \
     return FUNCTION_TO_CALL(encode_process, value); \
 }
@@ -178,18 +125,27 @@ DEFINE_ADD_VALUE_FUNCTION(_Decimal32,  cbe_encode_add_decimal_32)
 DEFINE_ADD_VALUE_FUNCTION(_Decimal64,  cbe_encode_add_decimal_64)
 DEFINE_ADD_VALUE_FUNCTION(_Decimal128, cbe_encode_add_decimal_128)
 
-#define DEFINE_ADD_VECTOR_FUNCTION(VECTOR_TYPE, FUNCTION_TO_CALL) \
-template <> inline cbe_encode_status add_value<std::vector<VECTOR_TYPE>>(cbe_encode_process* encode_process, std::vector<VECTOR_TYPE> value) \
-{ \
-    return FUNCTION_TO_CALL(encode_process, value.data(), value.size()); \
-}
-DEFINE_ADD_VECTOR_FUNCTION(uint8_t,      cbe_encode_add_binary_data)
-
-template <> inline cbe_encode_status add_value<std::string>(cbe_encode_process* encode_process, std::string value)
+template <> inline cbe_encode_status add_value<std::string>(struct cbe_encode_process* encode_process, std::string value)
 {
-    return cbe_encode_add_string(encode_process, value.c_str());
+    int64_t length = value.size();
+    cbe_encode_status status = cbe_encode_begin_string(encode_process, length);
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+    return cbe_encode_add_data(encode_process, (uint8_t*)value.c_str(), length);
 }
 
+template <> inline cbe_encode_status add_value<std::vector<uint8_t>>(struct cbe_encode_process* encode_process, std::vector<uint8_t> value)
+{
+    int64_t length = value.size();
+    cbe_encode_status status = cbe_encode_begin_binary(encode_process, length);
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+    return cbe_encode_add_data(encode_process, value.data(), length);
+}
 
 // Test functions
 
@@ -201,27 +157,12 @@ template<typename T> static inline void add_bytes(std::vector<uint8_t>& bytes, T
 
 template<typename T> static inline void expect_memory_after_add_value(T writeValue, std::vector<uint8_t> const& expected_memory)
 {
-    expect_memory_after_operation([&](cbe_encode_process* encode_process) {return add_value(encode_process, writeValue);}, expected_memory);
-}
-
-static inline void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
-{
-    expect_memory_after_operation([=](cbe_encode_process* encode_process)
-    {
-        cbe_decode_status status = perform_decode_encode(expected_memory.data(), expected_memory.size(), encode_process);
-        // TODO: Find a nicer way to do this.
-        if(status == CBE_DECODE_STATUS_OK)
-        {
-            return CBE_ENCODE_STATUS_OK;
-        }
-        return (cbe_encode_status)9999;
-    },
-     expected_memory);
+    expect_memory_after_operation([&](struct cbe_encode_process* encode_process) {return add_value(encode_process, writeValue);}, expected_memory);
 }
 
 template<typename T> static inline void expect_add_value_incomplete(const int buffer_size, T writeValue)
 {
-    expect_incomplete_operation(buffer_size, [&](cbe_encode_process* encode_process) \
+    expect_incomplete_operation(buffer_size, [&](struct cbe_encode_process* encode_process) \
     { \
         return add_value(encode_process, writeValue); \
     }); \
@@ -229,7 +170,7 @@ template<typename T> static inline void expect_add_value_incomplete(const int bu
 
 template<typename T> static inline void expect_add_value_incomplete_decrementing(const int buffer_size, T writeValue)
 {
-    expect_incomplete_operation_decrementing(buffer_size, [&](cbe_encode_process* encode_process) \
+    expect_incomplete_operation_decrementing(buffer_size, [&](struct cbe_encode_process* encode_process) \
     { \
         return add_value(encode_process, writeValue); \
     }); \
@@ -260,3 +201,5 @@ TEST(TESTCASE, NAME) \
 { \
     expect_add_value_incomplete_decrementing(SIZE, VALUE); \
 }
+
+#endif // __cplusplus

@@ -106,3 +106,39 @@ DEFINE_ADD_STRING_INCOMPLETE_TEST(15)
 DEFINE_ADD_STRING_INCOMPLETE_TEST(16)
 DEFINE_ADD_STRING_INCOMPLETE_TEST(17)
 DEFINE_ADD_STRING_INCOMPLETE_TEST(0x1000)
+
+
+static std::vector<uint8_t> generate_length_field(int64_t length)
+{
+    int64_t length_bytes = length << 2;
+    uint8_t* bytes = (uint8_t*)&length_bytes;
+    if(length > 0x3fffffff)
+    {
+        length_bytes += 3;
+        return std::vector<uint8_t>(bytes, bytes + 8);
+    }
+    if(length > 0x3fff)
+    {
+        length_bytes += 2;
+        return std::vector<uint8_t>(bytes, bytes + 4);
+    }
+    if(length > 0x3f)
+    {
+        length_bytes += 1;
+        return std::vector<uint8_t>(bytes, bytes + 2);
+    }
+    return std::vector<uint8_t>(bytes, bytes + 1);
+}
+
+TEST(Strings, multipart)
+{
+    int length = 1000;
+    std::vector<uint8_t> length_field_values = generate_length_field(length);
+    std::string str = make_string_with_length(length);
+    std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
+    uint8_t type = 0x90;
+    expected_memory.insert(expected_memory.begin(), length_field_values.begin(), length_field_values.end());
+    expected_memory.insert(expected_memory.begin(), type);
+    expect_memory_after_add_value(str, expected_memory);
+    expect_decode_encode(expected_memory);
+}

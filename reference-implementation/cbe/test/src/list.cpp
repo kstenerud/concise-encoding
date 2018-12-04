@@ -2,7 +2,7 @@
 
 static void expect_memory_after_add_list(int length, std::vector<uint8_t> expected_memory)
 {
-    expect_memory_after_operation([=](cbe_encode_process* encode_process)
+    expect_memory_after_operation([=](struct cbe_encode_process* encode_process)
     {
         cbe_encode_status status;
         if((status = cbe_encode_begin_list(encode_process)) != CBE_ENCODE_STATUS_OK) return status;
@@ -32,7 +32,7 @@ DEFINE_ADD_LIST_TEST(5, {0x7b, 10, 10, 10, 10, 10, 0x7d})
 
 TEST(ListTest, incomplete)
 {
-    expect_incomplete_operation_decrementing(2, [&](cbe_encode_process* encode_process)
+    expect_incomplete_operation_decrementing(2, [&](struct cbe_encode_process* encode_process)
     {
         cbe_encode_status status;
         if((status = cbe_encode_begin_list(encode_process)) != CBE_ENCODE_STATUS_OK) return status;

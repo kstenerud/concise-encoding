@@ -23,6 +23,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 add_executable(cbe_test
                    src/main.cpp
                    src/decode_encode.c
+                   src/test_helpers.cpp
                    src/library.cpp
                    src/support.cpp
                    src/bool.cpp

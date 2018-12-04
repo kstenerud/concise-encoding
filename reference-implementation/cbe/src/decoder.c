@@ -5,9 +5,9 @@
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
-typedef struct
+struct cbe_decode_process
 {
-    cbe_decode_callbacks* callbacks;
+    const cbe_decode_callbacks* callbacks;
     void* user_context;
     const uint8_t* buffer_start;
     const uint8_t* buffer_end;
@@ -16,17 +16,18 @@ typedef struct
     int container_level;
     bool next_object_is_map_key;
     bool is_inside_map[MAX_CONTAINER_DEPTH];
-} cbe_real_decode_process;
+};
+typedef struct cbe_decode_process cbe_decode_process;
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
     if(process->container_level < MAX_CONTAINER_DEPTH) \
         if((PROCESS)->is_inside_map[(PROCESS)->container_level] && !(PROCESS)->next_object_is_map_key) \
-            return CBE_DECODE_STATUS_MISSING_VALUE_FOR_KEY
+            return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY
 
 #define STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(PROCESS) \
     if(process->container_level < MAX_CONTAINER_DEPTH) \
     if((PROCESS)->is_inside_map[process->container_level] && (PROCESS)->next_object_is_map_key) \
-        return CBE_DECODE_STATUS_INCORRECT_KEY_TYPE
+        return CBE_DECODE_ERROR_INCORRECT_KEY_TYPE
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(TYPE, BYTE_COUNT) \
     if(process->buffer_position + (BYTE_COUNT) > process->buffer_end) return CBE_DECODE_STATUS_NEED_MORE_DATA
@@ -34,28 +35,28 @@ typedef struct
 #define STOP_AND_EXIT_IF_BAD_CALLBACK(...) \
     if(!__VA_ARGS__) return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK
 
-static inline void swap_map_key_value_status(cbe_real_decode_process* process)
+static inline void swap_map_key_value_status(cbe_decode_process* process)
 {
     process->next_object_is_map_key = !process->next_object_is_map_key;
 }
 
-static inline void advance_buffer(cbe_real_decode_process* const process, int64_t byte_count)
+static inline void advance_buffer(cbe_decode_process* const process, int64_t byte_count)
 {
     process->buffer_position += byte_count;
 }
 
-static inline uint8_t peek_uint_8(const cbe_real_decode_process* const process)
+static inline uint8_t peek_uint_8(const cbe_decode_process* const process)
 {
     return *process->buffer_position;
 }
 
-static inline uint8_t read_uint_8(cbe_real_decode_process* const process)
+static inline uint8_t read_uint_8(cbe_decode_process* const process)
 {
     return *process->buffer_position++;
 }
 
 #define DEFINE_READ_FUNCTION(TYPE, TYPE_SUFFIX) \
-static inline TYPE read_ ## TYPE_SUFFIX(cbe_real_decode_process* const process) \
+static inline TYPE read_ ## TYPE_SUFFIX(cbe_decode_process* const process) \
 { \
     const safe_ ## TYPE_SUFFIX* const safe = (safe_ ## TYPE_SUFFIX*)process->buffer_position; \
     advance_buffer(process, sizeof(*safe)); \
@@ -76,57 +77,44 @@ DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
 DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
 DEFINE_READ_FUNCTION(smalltime,   time)
 
-static inline int peek_array_length_field_width(const cbe_real_decode_process* const process)
+static inline int peek_array_length_field_width(const cbe_decode_process* const process)
 {
-    switch(peek_uint_8(process) & 3)
+    return 1 << (peek_uint_8(process) & 3);
+}
+
+static inline int64_t read_array_length(cbe_decode_process* const process)
+{
+    switch(peek_array_length_field_width(process))
     {
-        case LENGTH_FIELD_WIDTH_6_BIT:
-            return 1;
-        case LENGTH_FIELD_WIDTH_14_BIT:
-            return 2;
-        case LENGTH_FIELD_WIDTH_30_BIT:
-            return 4;
-        default:
-            return 8;
+        case 1:  return (int64_t)(read_uint_8(process) >> 2);
+        case 2:  return (int64_t)(read_uint_16(process) >> 2);
+        case 4:  return (int64_t)(read_uint_32(process) >> 2);
+        default: return (int64_t)(read_uint_64(process) >> 2);
     }
 }
 
-static inline int64_t read_array_length(cbe_real_decode_process* const process)
-{
-    switch(peek_uint_8(process) & 3)
-    {
-        case LENGTH_FIELD_WIDTH_6_BIT:
-            return (int64_t)(read_uint_8(process) >> 2);
-        case LENGTH_FIELD_WIDTH_14_BIT:
-            return (int64_t)(read_uint_16(process) >> 2);
-        case LENGTH_FIELD_WIDTH_30_BIT:
-            return (int64_t)(read_uint_32(process) >> 2);
-        default:
-            return (int64_t)(read_uint_64(process) >> 2);
-    }
-}
-
-cbe_decode_process* cbe_decode_begin(cbe_decode_callbacks* callbacks, void* user_context)
+struct cbe_decode_process* cbe_decode_begin(const cbe_decode_callbacks* const callbacks,
+                                            void* const user_context)
 {
     KSLOG_DEBUG("");
-    cbe_real_decode_process* process = malloc(sizeof(*process));
+    cbe_decode_process* process = malloc(sizeof(*process));
     memset(process, 0, sizeof(*process));
     process->callbacks = callbacks;
     process->user_context = user_context;
-    return (cbe_decode_process*)process;
+    return process;
 }
 
-void* cbe_decode_get_user_context(cbe_decode_process* decode_process)
+void* cbe_decode_get_user_context(cbe_decode_process* const process)
 {
-    cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     return process->user_context;
 }
 
-cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint8_t* const data_start, const int64_t byte_count)
+cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
+                                  const uint8_t* const data_start,
+                                  const int64_t byte_count)
 {
     KSLOG_DEBUG("Feed %d bytes...", byte_count);
     KSLOG_DATA_TRACE(data_start, byte_count, "");
-    cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     process->buffer_start = data_start;
     process->buffer_position = data_start;
     process->buffer_end = data_start + byte_count;
@@ -146,23 +134,23 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             case TYPE_EMPTY:
                 KSLOG_DEBUG("[Empty]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_empty(decode_process));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_empty(process));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_FALSE:
                 KSLOG_DEBUG("[False]");
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_boolean(decode_process, false));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_boolean(process, false));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_TRUE:
                 KSLOG_DEBUG("[True]");
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_boolean(decode_process, true));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_boolean(process, true));
                 swap_map_key_value_status(process);
                 break;
             case TYPE_END_CONTAINER:
                 KSLOG_DEBUG("[End Container]");
                 STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_end_container(decode_process));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_end_container(process));
                 process->container_level--;
                 if(process->container_level < MAX_CONTAINER_DEPTH)
                 {
@@ -172,7 +160,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             case TYPE_LIST:
                 KSLOG_DEBUG("[List]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_list(decode_process));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_list(process));
                 process->container_level++;
                 if(process->container_level < MAX_CONTAINER_DEPTH)
                 {
@@ -183,7 +171,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             case TYPE_MAP:
                 KSLOG_DEBUG("[Map]");
                 STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(process);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_map(decode_process));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_map(process));
                 process->container_level++;
                 if(process->container_level < MAX_CONTAINER_DEPTH)
                 {
@@ -200,7 +188,8 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
                 int64_t local_byte_count = (int64_t)(type - TYPE_STRING_0);
                 KSLOG_DATA_DEBUG(process->buffer_position, local_byte_count, "[String]: ");
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", local_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_string(process, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_data(process, process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
                 advance_buffer(process, local_byte_count);
                 break;
@@ -210,7 +199,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
             { \
                 KSLOG_DEBUG("[" #TYPE "]"); \
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(#NAME_FRAGMENT, sizeof(TYPE)); \
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_ ## NAME_FRAGMENT(decode_process, read_ ## NAME_FRAGMENT(process))); \
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_ ## NAME_FRAGMENT(process, read_ ## NAME_FRAGMENT(process))); \
                 swap_map_key_value_status(process); \
             }
             case TYPE_INT_16:
@@ -248,12 +237,14 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
                 break;
             case TYPE_STRING:
             {
+                // TODO: handle incremental building
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", peek_array_length_field_width(process));
                 int64_t local_byte_count = read_array_length(process);
                 KSLOG_DEBUG("[String length %d]", local_byte_count);
                 KSLOG_DATA_TRACE(process->buffer_position, local_byte_count, "[String]: ");
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("string", local_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_string(decode_process, (char*)process->buffer_position, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_string(process, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_data(process, process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
                 advance_buffer(process, local_byte_count);
                 break;
@@ -261,19 +252,21 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
 
             case TYPE_BINARY_DATA:
             {
+                // TODO: handle incremental building
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", peek_array_length_field_width(process));
                 int64_t local_byte_count = read_array_length(process);
                 KSLOG_DEBUG("[Binary length %d]", local_byte_count);
                 KSLOG_DATA_TRACE(process->buffer_position, local_byte_count, "[Binary]: ");
                 STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES("binary data", local_byte_count);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_binary_data(decode_process, (void*)process->buffer_position, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_begin_binary(process, local_byte_count));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_data(process, (void*)process->buffer_position, local_byte_count));
                 swap_map_key_value_status(process);
                 advance_buffer(process, local_byte_count);
                 break;
             }
             default:
                 KSLOG_DEBUG("[Small]: %d", type);
-                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_int_8(decode_process, type));
+                STOP_AND_EXIT_IF_BAD_CALLBACK(process->callbacks->on_add_int_8(process, type));
                 swap_map_key_value_status(process);
                 break;
         }
@@ -286,20 +279,18 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* decode_process, const uint
     return CBE_DECODE_STATUS_OK;
 }
 
-int64_t cbe_decode_get_buffer_offset(cbe_decode_process* decode_process)
+int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
 {
-    cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     return process->current_object - process->buffer_start;
 }
 
-cbe_decode_status cbe_decode_end(cbe_decode_process* decode_process)
+cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 {
-    cbe_real_decode_process* process = (cbe_real_decode_process*)decode_process;
     int container_level = process->container_level;    
-    free(decode_process);
+    free(process);
     if(container_level != 0)
     {
-        return CBE_DECODE_STATUS_UNBALANCED_CONTAINERS;
+        return CBE_DECODE_ERROR_UNBALANCED_CONTAINERS;
     }
     return CBE_DECODE_STATUS_OK;
 }

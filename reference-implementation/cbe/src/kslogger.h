@@ -317,7 +317,7 @@ static void kslog_write_log(const char* level,
                         __FILE__, \
                         __LINE__, \
                         __PRETTY_FUNCTION__, \
-                        BINARY_DATA, \
+                        (uint8_t*)BINARY_DATA, \
                         BYTE_COUNT, \
                         FMT, \
                         ##__VA_ARGS__)
