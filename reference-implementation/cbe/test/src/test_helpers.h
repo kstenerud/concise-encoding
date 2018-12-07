@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "kslogger.h"
 #include <cbe/cbe.h>
 
 
@@ -86,6 +85,7 @@ void expect_piecemeal_operation_decrementing(
 
 void expect_decode_encode(std::vector<uint8_t> const& expected_memory);
 
+void buffered_decode_feed(cbe_decode_process* process, const std::vector<uint8_t>& src_document, int buffer_size);
 
 template<typename T> static inline std::vector<T> make_values_of_length(int length)
 {

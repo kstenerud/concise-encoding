@@ -1,5 +1,8 @@
 #include "test_helpers.h"
 
+// #define KSLogger_LocalLevel DEBUG
+#include "kslogger.h"
+
 #define DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, NAME_FRAGMENT) \
 static bool RETURN_BOOL ##_on_ ## NAME_FRAGMENT(struct cbe_decode_process* decode_process) \
 { \
@@ -205,4 +208,54 @@ void expect_decode_encode(std::vector<uint8_t> const& expected_memory)
         return (cbe_encode_status)(encode_status_decode_failed + status);
     },
      expected_memory);
+}
+
+void buffered_decode_feed(cbe_decode_process* process, const std::vector<uint8_t>& src_document, const int buffer_size)
+{
+    uint8_t buffer[buffer_size];
+    const uint8_t* const document = src_document.data();
+    const int document_size = src_document.size();
+    int document_offset = 0;
+    int last_document_offset = 0;
+    int bytes_used = buffer_size;
+
+    for(;;)
+    {
+        int document_remaining_bytes = document_size - document_offset;
+        KSLOG_DEBUG("Remaining document bytes: %d", document_remaining_bytes);
+        int bytes_unused = buffer_size - bytes_used;
+        KSLOG_DEBUG("Unused bytes: %d", bytes_unused);
+        if(bytes_unused > 0)
+        {
+            memmove(buffer, buffer+bytes_used, bytes_unused);
+        }
+        int bytes_to_feed = document_remaining_bytes < buffer_size ? document_remaining_bytes : buffer_size;
+        int bytes_to_fill = bytes_to_feed - bytes_unused;
+        KSLOG_DEBUG("to feed: %d VS to fill: %d", bytes_to_feed, bytes_to_fill);
+        KSLOG_DEBUG("memcpy(buffer+%d, document+%d, %d)", bytes_unused, document_offset, bytes_to_fill);
+        memcpy(buffer+bytes_unused, document + document_offset, bytes_to_fill);
+
+        KSLOG_DEBUG("Feeding bytes: %d", bytes_to_feed);
+        cbe_decode_status status = cbe_decode_feed(process, buffer, bytes_to_feed);
+        bytes_used = cbe_decode_get_buffer_offset(process);
+        KSLOG_DEBUG("Bytes used: %d", bytes_used);
+
+        document_offset += bytes_used;
+        if(document_offset == last_document_offset)
+        {
+            ADD_FAILURE();
+            return;
+        }
+        if(document_offset > document_size)
+        {
+            EXPECT_EQ(document_size, document_offset);
+        }
+        if(document_offset == document_size)
+        {
+            EXPECT_DECODE_OK(status);
+            return;
+        }
+        EXPECT_EQ(CBE_DECODE_STATUS_NEED_MORE_DATA, status);
+        last_document_offset = document_offset;
+    }
 }

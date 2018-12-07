@@ -250,14 +250,8 @@ static void kslog_write_wildcard(const char* fmt, ...)
     va_end(args);
 }
 
-static void kslog_write_log_contents(
-                    const unsigned char* binary_data,
-                    int byte_count,
-                    const char* fmt,
-                    va_list args)
+static void kslog_write_newline()
 {
-    kslog_write_varargs(fmt, args);
-    kslog_write_hex(binary_data, byte_count);
     write(STDOUT_FILENO, "\n", 1);
 }
 
@@ -273,16 +267,18 @@ static void kslog_write_log_basic(const unsigned char* binary_data,
                      int byte_count,
                      const char* fmt, ...)
 {
-    if(*fmt != 0)
+    if(fmt != NULL && *fmt != 0)
     {
         va_list args;
         va_start(args,fmt);
-        kslog_write_log_contents(binary_data, byte_count, fmt, args);
+        kslog_write_varargs(fmt, args);
         va_end(args);
 
         // Avoid "unused function" warning.
         (void)kslog_write_log;
     }
+    kslog_write_hex(binary_data, byte_count);
+    kslog_write_newline();
 }
 
 static void kslog_write_log(const char* level,
@@ -293,19 +289,21 @@ static void kslog_write_log(const char* level,
                int byte_count, 
                const char* fmt, ...)
 {
-    if(*fmt != 0)
+    kslog_write_wildcard("%s: %s (%u): %s: ",
+             level, kslog_last_path_entry(file), line, function);
+    if(fmt != NULL && *fmt != 0)
     {
-        kslog_write_wildcard("%s: %s (%u): %s: ",
-                 level, kslog_last_path_entry(file), line, function);
 
         va_list args;
         va_start(args,fmt);
-        kslog_write_log_contents(binary_data, byte_count, fmt, args);
+        kslog_write_varargs(fmt, args);
         va_end(args);
 
         // Avoid "unused function" warning.
         (void)kslog_write_log_basic;
     }
+    kslog_write_hex(binary_data, byte_count);
+    kslog_write_newline();
 }
 
 #endif
