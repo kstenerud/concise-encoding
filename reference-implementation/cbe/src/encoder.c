@@ -258,6 +258,17 @@ cbe_encode_status cbe_encode_end(cbe_encode_process* const process)
     return CBE_ENCODE_STATUS_OK;
 }
 
+cbe_encode_status cbe_encode_add_padding(cbe_encode_process* const process, int byte_count)
+{
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, byte_count);
+    for(int i = 0; i < byte_count; i++)
+    {
+        add_primitive_uint_8(process, TYPE_PADDING);
+    }
+    return CBE_ENCODE_STATUS_OK;
+}
+
 cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);

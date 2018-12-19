@@ -426,6 +426,19 @@ int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
 cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
 
 /**
+ * Add padding to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param byte_count The number of bytes of padding to add.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_process, int byte_count);
+
+/**
  * Add an empty object to the document.
  *
  * Possible error codes:

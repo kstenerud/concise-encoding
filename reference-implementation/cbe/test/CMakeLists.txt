@@ -22,6 +22,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(cbe_test
                    src/main.cpp
+                   src/cbe_decoder.cpp
                    src/decode_encode.c
                    src/test_helpers.cpp
                    src/library.cpp
@@ -51,7 +52,7 @@ add_executable(cbe_test
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)
-target_link_libraries(cbe_test gtest_main CBE::cbe)
+target_link_libraries(cbe_test gtest_main quadmath CBE::cbe)
 
 # Gain access to internal headers
 include_directories(${CMAKE_SOURCE_DIR}/src)
