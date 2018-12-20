@@ -1,4 +1,4 @@
-#include "test_helpers.h"
+#include "old_test_helpers.h"
 #include "cbe_internal.h"
 
 static cbe_decode_status try_decode(const uint8_t* memory, int64_t length)

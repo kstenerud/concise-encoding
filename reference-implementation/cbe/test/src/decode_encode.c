@@ -2,7 +2,7 @@
 #include <cbe/cbe.h>
 #include <memory.h>
 #include "decode_encode.h"
-#include "test_helpers.h"
+#include "old_test_helpers.h"
 #include "kslogger.h"
 
 #define RETURN_WITH_WARN_ON_ERROR(...) \

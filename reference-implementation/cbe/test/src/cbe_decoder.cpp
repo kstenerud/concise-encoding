@@ -1,5 +1,10 @@
 #include "cbe_decoder.h"
 
+#define KSLogger_LocalLevel TRACE
+#include "kslogger.h"
+#include "as_string.h"
+
+
 static cbe_decoder* get_decoder(struct cbe_decode_process* process)
 {
     return (cbe_decoder*)cbe_decode_get_user_context(process);
@@ -7,87 +12,87 @@ static cbe_decoder* get_decoder(struct cbe_decode_process* process)
 
 static bool on_add_empty(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(::empty());
+    return get_decoder(process)->set_next(enc::empty());
 }
 
 static bool on_add_boolean(struct cbe_decode_process* process, bool value)
 {
-    return get_decoder(process)->set_next(::bl(value));
+    return get_decoder(process)->set_next(enc::bl(value));
 }
 
 static bool on_add_int_8(struct cbe_decode_process* process, int8_t value)
 {
-    return get_decoder(process)->set_next(::i8(value));
+    return get_decoder(process)->set_next(enc::i8(value));
 }
 
 static bool on_add_int_16(struct cbe_decode_process* process, int16_t value)
 {
-    return get_decoder(process)->set_next(::i16(value));
+    return get_decoder(process)->set_next(enc::i16(value));
 }
 
 static bool on_add_int_32(struct cbe_decode_process* process, int32_t value)
 {
-    return get_decoder(process)->set_next(::i32(value));
+    return get_decoder(process)->set_next(enc::i32(value));
 }
 
 static bool on_add_int_64(struct cbe_decode_process* process, int64_t value)
 {
-    return get_decoder(process)->set_next(::i64(value));
+    return get_decoder(process)->set_next(enc::i64(value));
 }
 
 static bool on_add_int_128(struct cbe_decode_process* process, __int128 value)
 {
-    return get_decoder(process)->set_next(::i128(value));
+    return get_decoder(process)->set_next(enc::i128(value));
 }
 
 static bool on_add_float_32(struct cbe_decode_process* process, float value)
 {
-    return get_decoder(process)->set_next(::f32(value));
+    return get_decoder(process)->set_next(enc::f32(value));
 }
 
 static bool on_add_float_64(struct cbe_decode_process* process, double value)
 {
-    return get_decoder(process)->set_next(::f64(value));
+    return get_decoder(process)->set_next(enc::f64(value));
 }
 
 static bool on_add_float_128(struct cbe_decode_process* process, __float128 value)
 {
-    return get_decoder(process)->set_next(::f128(value));
+    return get_decoder(process)->set_next(enc::f128(value));
 }
 
 static bool on_add_decimal_32(struct cbe_decode_process* process, _Decimal32 value)
 {
-    return get_decoder(process)->set_next(::d32(value));
+    return get_decoder(process)->set_next(enc::d32(value));
 }
 
 static bool on_add_decimal_64(struct cbe_decode_process* process, _Decimal64 value)
 {
-    return get_decoder(process)->set_next(::d64(value));
+    return get_decoder(process)->set_next(enc::d64(value));
 }
 
 static bool on_add_decimal_128(struct cbe_decode_process* process, _Decimal128 value)
 {
-    return get_decoder(process)->set_next(::d128(value));
+    return get_decoder(process)->set_next(enc::d128(value));
 }
 
 static bool on_add_time(struct cbe_decode_process* process, smalltime value)
 {
-    return get_decoder(process)->set_next(::time(value));
+    return get_decoder(process)->set_next(enc::smtime(value));
 }
 
 static bool on_begin_list(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(::list());
+    return get_decoder(process)->set_next(enc::list());
 }
 
 static bool on_begin_map(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(::map());
+    return get_decoder(process)->set_next(enc::map());
 }
 
 static bool on_end_container(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(::end());
+    return get_decoder(process)->set_next(enc::end());
 }
 
 static bool on_begin_string(struct cbe_decode_process* process, int64_t byte_count)
@@ -137,8 +142,31 @@ cbe_decoder::cbe_decoder()
 {
 }
 
+cbe_decoder::~cbe_decoder()
+{
+    if(!_process_has_ended)
+    {
+        cbe_decode_end(_process);
+    }
+}
+
+std::vector<uint8_t>& cbe_decoder::received_data()
+{
+    return _received_data;
+}
+
+std::shared_ptr<enc::encoding> cbe_decoder::decoded()
+{
+    if(!_decoded || !_decoded->next())
+    {
+        return _decoded;
+    }
+    return _decoded->next();
+}
+
 cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
 {
+    KSLOG_TRACE("Feeding %s", as_string(data).c_str());
     _received_data.insert(_received_data.begin(), data.begin(), data.end());
     cbe_decode_status status = cbe_decode_feed(_process,
         _received_data.data() + _read_offset,
@@ -147,14 +175,21 @@ cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
     return status;
 }
 
-bool cbe_decoder::set_next(std::shared_ptr<encoding> encoding)
+bool cbe_decoder::set_next(std::shared_ptr<enc::encoding> encoding)
 {
     if(_currently_decoding_type != CBE_DECODING_OTHER)
     {
         // TODO: Error
         return false;
     }
-    _decoded->set_next(encoding);
+    if(_decoded)
+    {
+        _decoded->set_next(encoding);
+    }
+    else
+    {
+        _decoded = encoding;
+    }
     return true;
 }
 

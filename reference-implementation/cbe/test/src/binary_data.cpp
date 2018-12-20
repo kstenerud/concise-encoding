@@ -1,4 +1,4 @@
-#include "test_helpers.h"
+#include "old_test_helpers.h"
 
 static std::vector<uint8_t> make_bytes(int length)
 {
@@ -145,32 +145,4 @@ TEST(BinaryData, encode_too_big_field_two_part)
         EXPECT_ENCODE_OK(cbe_encode_add_data(process, data, sizeof(data)));
         EXPECT_EQ(CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED, cbe_encode_add_data(process, data, sizeof(data)));
     cbe_encode_end(process);
-}
-
-
-// TODO: Move this
-#include "cbe_encoder.h"
-#include "cbe_decoder.h"
-TEST(Encoder, quick_test)
-{
-    cbe_encoder x;
-    cbe_encoder encoder(2000, [](uint8_t* data_start, int64_t length)
-        {
-            std::cout << "Data: " << length << std::endl;
-            (void)data_start;
-            (void)length;
-            return true;
-        });
-    encoder.encode(
-        list()
-            ->i8(4)
-            ->f32(1.5)
-            ->d64(0.2d)
-            ->bl(true)
-        ->end()
-        );
-
-    cbe_decoder decoder;
-    decoder.feed(encoder.encoded_data());
-    decoder.decoded();
 }

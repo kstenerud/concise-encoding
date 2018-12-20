@@ -19,7 +19,7 @@ private:
 	std::vector<uint8_t> _received_data;
 	int64_t _read_offset = 0;
 	bool _process_has_ended = false;
-	std::shared_ptr<encoding> _decoded = ::pad(0);
+	std::shared_ptr<enc::encoding> _decoded;
 	cbe_decoding_type _currently_decoding_type = CBE_DECODING_OTHER;
 	int64_t _currently_decoding_length;
 	int64_t _currently_decoding_offset;
@@ -27,7 +27,7 @@ private:
 
 public:
 	// Internal functions
-	bool set_next(std::shared_ptr<encoding> encoding);
+	bool set_next(std::shared_ptr<enc::encoding> encoding);
 	bool begin_string(int64_t byte_count);
 	bool begin_binary(int64_t byte_count);
 	bool add_data(const std::vector<uint8_t>& data);
@@ -35,20 +35,14 @@ public:
 public:
 	cbe_decoder();
 
-	virtual ~cbe_decoder()
-	{
-		if(!_process_has_ended)
-		{
-			cbe_decode_end(_process);
-		}
-	}
+	~cbe_decoder();
 
 	// Feed data to be decoded.
 	cbe_decode_status feed(std::vector<uint8_t>& data);
 
 	// Get the complete raw data received.
-	std::vector<uint8_t>& received_data() {return _received_data;}
+	std::vector<uint8_t>& received_data();
 
 	// Get the decoded encoding objects.
-	std::shared_ptr<encoding> decoded() {return _decoded->next();}
+	std::shared_ptr<enc::encoding> decoded();
 };
