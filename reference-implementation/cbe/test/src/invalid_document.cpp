@@ -1,9 +1,12 @@
 #include "old_test_helpers.h"
+#include "test_helpers.h"
 #include "cbe_internal.h"
+
+using namespace cbe_test;
 
 static cbe_decode_status try_decode(const uint8_t* memory, int64_t length)
 {
-	struct cbe_decode_process* decode_process = new_always_true_decode_process();
+	struct cbe_decode_process* decode_process = cbe_decode_begin(get_always_true_decode_callbacks(), NULL);
 	cbe_decode_status status_feed = cbe_decode_feed(decode_process, memory, length);
 	cbe_decode_status status_end = cbe_decode_end(decode_process);
 	return status_feed != CBE_DECODE_STATUS_OK ? status_feed : status_end;

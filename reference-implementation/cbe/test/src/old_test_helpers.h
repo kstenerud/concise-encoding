@@ -29,20 +29,6 @@
     (CALLBACKS_PTR)->on_add_data = on_add_data; \
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-const cbe_decode_callbacks* get_always_false_decode_callbacks();
-const cbe_decode_callbacks* get_always_true_decode_callbacks();
-
-struct cbe_decode_process* new_always_false_decode_process();
-struct cbe_decode_process* new_always_true_decode_process();
-
-#ifdef __cplusplus
-}
-#endif
-
 
 #ifdef __cplusplus
 

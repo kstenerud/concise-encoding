@@ -1,4 +1,7 @@
 #include "old_test_helpers.h"
+#include "test_helpers.h"
+
+using namespace cbe_test;
 
 static struct cbe_decode_process* begin_decode_process()
 {

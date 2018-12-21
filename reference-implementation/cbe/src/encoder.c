@@ -29,9 +29,9 @@ struct cbe_encode_process
 typedef struct cbe_encode_process cbe_encode_process;
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
-    if((size_t)((PROCESS)->buffer.end - (PROCESS)->buffer.position) < (size_t)(REQUIRED_BYTES)) \
+    if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(REQUIRED_BYTES)) \
     { \
-        KSLOG_DEBUG("STOP_AND_EXIT: Require %d bytes but only %d available.", (REQUIRED_BYTES), (PROCESS)->buffer.end - (PROCESS)->buffer.position); \
+        KSLOG_DEBUG("STOP_AND_EXIT: Require %d bytes but only %d available.", (REQUIRED_BYTES), get_remaining_space_in_buffer(PROCESS)); \
         return CBE_ENCODE_STATUS_NEED_MORE_ROOM; \
     }
 
@@ -40,19 +40,31 @@ typedef struct cbe_encode_process cbe_encode_process;
 
 #define STOP_AND_EXIT_IF_MAX_DEPTH_EXCEEDED(PROCESS) \
     if((PROCESS)->container.level + 1 >= MAX_CONTAINER_DEPTH) \
-        return CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: Max depth %d exceeded", MAX_CONTAINER_DEPTH); \
+        return CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED; \
+    }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
     if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && !(PROCESS)->container.next_object_is_map_key) \
-        return CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: No map value provided for last key"); \
+        return CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY; \
+    }
 
 #define STOP_AND_EXIT_IF_EXPECTING_MAP_KEY(PROCESS) \
     if((PROCESS)->container.is_inside_map[process->container.level] && (PROCESS)->container.next_object_is_map_key) \
-        return CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: Map key has an invalid type"); \
+        return CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE; \
+    }
 
 #define STOP_AND_EXIT_IF_INSIDE_ARRAY(PROCESS) \
     if((PROCESS)->array.is_inside_array) \
-        return CBE_ENCODE_ERROR_INCOMPLETE_FIELD
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: We're inside an array when we shouldn't be"); \
+        return CBE_ENCODE_ERROR_INCOMPLETE_FIELD; \
+    }
 
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
@@ -63,6 +75,11 @@ typedef struct cbe_encode_process cbe_encode_process;
 #define FITS_IN_FLOAT_64(VALUE)   ((VALUE) == (double)(VALUE))
 #define FITS_IN_DECIMAL_32(VALUE) ((VALUE) == (_Decimal32)(VALUE))
 #define FITS_IN_DECIMAL_64(VALUE) ((VALUE) == (_Decimal64)(VALUE))
+
+static inline int64_t get_remaining_space_in_buffer(cbe_encode_process* process)
+{
+    return process->buffer.end - process->buffer.position;
+}
 
 static inline void swap_map_key_value_status(cbe_encode_process* process)
 {
@@ -241,6 +258,11 @@ int64_t cbe_encode_get_buffer_offset(cbe_encode_process* const process)
     return process->buffer.position - process->buffer.start;
 }
 
+int64_t cbe_encode_get_array_offset(struct cbe_encode_process* process)
+{
+    return process->array.current_offset;
+}
+
 int cbe_encode_get_container_level(cbe_encode_process* const process)
 {
     return process->container.level;    
@@ -248,13 +270,14 @@ int cbe_encode_get_container_level(cbe_encode_process* const process)
 
 cbe_encode_status cbe_encode_end(cbe_encode_process* const process)
 {
-    KSLOG_DEBUG(NULL);
     int container_level = cbe_encode_get_container_level(process);
     free(process);
     if(container_level != 0)
     {
+        KSLOG_DEBUG("STOP_AND_EXIT: Ended encoding without closing all containers");
         return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS;
     }
+    KSLOG_DEBUG("Process ended successfully");
     return CBE_ENCODE_STATUS_OK;
 }
 
@@ -424,6 +447,7 @@ cbe_encode_status cbe_encode_end_container(cbe_encode_process* const process)
     KSLOG_DEBUG(NULL);
     if(process->container.level - 1 < 0)
     {
+        KSLOG_DEBUG("STOP_AND_EXIT: Too many end-containers");
         return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS;
     }
     STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
@@ -439,16 +463,34 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
                                                const uint8_t* start,
                                                const int64_t byte_count)
 {
-    // TODO: Partial encode
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count);
-    add_primitive_bytes(process, start, byte_count);
-    process->array.current_offset += byte_count;
+    int64_t bytes_to_copy = byte_count;
+    int64_t bytes_remaining = get_remaining_space_in_buffer(process);
+    if(bytes_remaining < bytes_to_copy)
+    {
+        if(bytes_remaining <= 0)
+        {
+            STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count);
+        }
+        bytes_to_copy = bytes_remaining;
+    }
+    add_primitive_bytes(process, start, bytes_to_copy);
+    process->array.current_offset += bytes_to_copy;
+    if(bytes_remaining < byte_count)
+    {
+        KSLOG_DEBUG("Encoded %d of %d bytes. Need more room.", bytes_to_copy, byte_count);
+        return CBE_ENCODE_STATUS_NEED_MORE_ROOM;
+    }
+    KSLOG_DEBUG("Encoded %d bytes", bytes_to_copy);
+    if(process->array.current_offset == process->array.byte_count)
+    {
+        KSLOG_DEBUG("Array has ended");
+        process->array.is_inside_array = false;
+    }
     return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, const int64_t byte_count)
 {
-    // TODO: Sanity checks, field "opened"
     KSLOG_DEBUG("Length: %ld", byte_count);
     STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_length_field_width(byte_count));
@@ -463,7 +505,6 @@ cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, con
 
 cbe_encode_status cbe_encode_begin_string(cbe_encode_process* const process, const int64_t byte_count)
 {
-    // TODO: Sanity checks, field "opened"
     KSLOG_DEBUG("Length: %ld", byte_count);
     STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     process->array.is_inside_array = true;
@@ -481,16 +522,14 @@ cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,
     KSLOG_DATA_TRACE(start, byte_count, NULL);
     if(!process->array.is_inside_array)
     {
-        return CBE_ERROR_NOT_INSIDE_ARRAY_FIELD;
+        KSLOG_DEBUG("STOP_AND_EXIT: Attempted to add data while not inside an array field.");
+        return CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD;
     }
     int64_t new_array_offset = process->array.current_offset + byte_count;
     if(new_array_offset > process->array.byte_count)
     {
+        KSLOG_DEBUG("STOP_AND_EXIT: Attempted to write more bytes (%d) than are available in the array (%d)", new_array_offset, process->array.byte_count);
         return CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED;
-    }
-    else if(new_array_offset == process->array.byte_count)
-    {
-        process->array.is_inside_array = false;
     }
     return encode_array_contents(process, (const uint8_t*)start, byte_count);
 }

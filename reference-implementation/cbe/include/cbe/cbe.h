@@ -353,7 +353,7 @@ typedef enum
     /**
      * We're not inside an array field.
      */
-    CBE_ERROR_NOT_INSIDE_ARRAY_FIELD,
+    CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD,
 
     /**
      * Max container depth (default 500) was exceeded.
@@ -392,6 +392,16 @@ void cbe_encode_set_buffer(struct cbe_encode_process* encode_process,
  * @return The current offset.
  */
 int64_t cbe_encode_get_buffer_offset(struct cbe_encode_process* encode_process);
+
+/**
+ * Get the current write offset into the array being encoded.
+ * Use this value when encoding an array in multiple steps.
+ * This value is only valid while encoding an array.
+ *
+ * @param encode_process The encode process.
+ * @return The current offset.
+ */
+int64_t cbe_encode_get_array_offset(struct cbe_encode_process* encode_process);
 
 /**
  * Get the document depth. This is the total depth of lists or maps that

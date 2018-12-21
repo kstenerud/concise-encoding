@@ -119,12 +119,18 @@ void* cbe_decode_get_user_context(cbe_decode_process* const process)
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING() \
     if(process->container.level < MAX_CONTAINER_DEPTH) \
         if(process->container.is_inside_map[process->container.level] && !process->container.next_object_is_map_key) \
-            return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY
+        { \
+            KSLOG_DEBUG("STOP_AND_EXIT: Missing value for previous key"); \
+            return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY; \
+        }
 
 #define STOP_AND_EXIT_IF_EXPECTING_MAP_KEY() \
     if(process->container.level < MAX_CONTAINER_DEPTH) \
     if(process->container.is_inside_map[process->container.level] && process->container.next_object_is_map_key) \
-        return CBE_DECODE_ERROR_INCORRECT_KEY_TYPE
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: Expecting map key as next object"); \
+        return CBE_DECODE_ERROR_INCORRECT_KEY_TYPE; \
+    }
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_BYTES(BYTE_COUNT) \
     if(get_bytes_remaining(process) < (int64_t)(BYTE_COUNT)) \
@@ -134,7 +140,11 @@ void* cbe_decode_get_user_context(cbe_decode_process* const process)
     }
 
 #define STOP_AND_EXIT_IF_FAILED_CALLBACK(...) \
-    if(!__VA_ARGS__) return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK
+    if(!__VA_ARGS__) \
+    { \
+        KSLOG_DEBUG("STOP_AND_EXIT: Callback returned false"); \
+        return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK; \
+    }
 
 static inline cbe_decode_status begin_object(cbe_decode_process* process, const int64_t initial_byte_count)
 {
@@ -185,6 +195,7 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 
     if(bytes_in_array > space_in_buffer)
     {
+        KSLOG_DEBUG("STOP_AND_EXIT: Require %d bytes but only %d bytes available", bytes_in_array, space_in_buffer);
         return CBE_DECODE_STATUS_NEED_MORE_DATA;
     }
 
@@ -221,7 +232,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
 
     while(process->buffer.position < process->buffer.end)
     {
-        KSLOG_DEBUG("Loop, reading type");
+        KSLOG_DEBUG("Reading type");
         cbe_type_field type = read_uint_8(process);
 
         switch(type)
@@ -289,7 +300,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
             {
                 int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
-                KSLOG_DATA_DEBUG(process->buffer.position, array_byte_count, "(String): ");
+                KSLOG_DEBUG("(String %d)", array_byte_count);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_begin_string(process, array_byte_count));
                 internal_begin_array(process, array_byte_count);
                 STOP_AND_EXIT_IF_NOT_OK(stream_array(process));
@@ -375,6 +386,7 @@ cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
     free(process);
     if(level != 0)
     {
+        KSLOG_DEBUG("STOP_AND_EXIT: Not all containers were closed."); \
         return CBE_DECODE_ERROR_UNBALANCED_CONTAINERS;
     }
     return CBE_DECODE_STATUS_OK;

@@ -1,21 +1,5 @@
 #include "old_test_helpers.h"
-
-static std::string make_string_with_length(int length)
-{
-    std::stringstream stream;
-    static const char characters[] =
-    {
-        'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
-        'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-        '0','1','2','3','4','5','6','7','8','9'
-    };
-    static const int character_count = sizeof(characters) / sizeof(*characters);
-    for(int i = 0; i < length; i++)
-    {
-        stream << characters[i % character_count];
-    }
-    return stream.str();
-}
+#include "test_utils.h"
 
 static void expect_memory_string_inferred_length(int length)
 {
@@ -108,32 +92,10 @@ DEFINE_ADD_STRING_INCOMPLETE_TEST(17)
 DEFINE_ADD_STRING_INCOMPLETE_TEST(0x1000)
 
 
-static std::vector<uint8_t> generate_length_field(int64_t length)
-{
-    int64_t length_bytes = length << 2;
-    uint8_t* bytes = (uint8_t*)&length_bytes;
-    if(length > 0x3fffffff)
-    {
-        length_bytes += 3;
-        return std::vector<uint8_t>(bytes, bytes + 8);
-    }
-    if(length > 0x3fff)
-    {
-        length_bytes += 2;
-        return std::vector<uint8_t>(bytes, bytes + 4);
-    }
-    if(length > 0x3f)
-    {
-        length_bytes += 1;
-        return std::vector<uint8_t>(bytes, bytes + 2);
-    }
-    return std::vector<uint8_t>(bytes, bytes + 1);
-}
-
 TEST(Strings, multipart)
 {
     int length = 1000;
-    std::vector<uint8_t> length_field_values = generate_length_field(length);
+    std::vector<uint8_t> length_field_values = generate_array_length_field(length);
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
     uint8_t type = 0x90;

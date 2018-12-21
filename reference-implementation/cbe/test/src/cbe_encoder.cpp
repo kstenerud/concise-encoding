@@ -1,9 +1,13 @@
 #include "cbe_encoder.h"
 
+// #define KSLogger_LocalLevel DEBUG
+#include "kslogger.h"
+
 bool cbe_encoder::flush_buffer()
 {
 	bool result = false;
 	int64_t offset = cbe_encode_get_buffer_offset(_process);
+	KSLOG_DEBUG("Flushing %d bytes and resetting buffer to %d bytes", offset, _buffer.size());
 	if(offset > 0)
 	{
 		_encoded_data.insert(_encoded_data.end(), _buffer.begin(), _buffer.begin() + offset);
@@ -35,24 +39,37 @@ cbe_encode_status cbe_encoder::encode(enc::padding_encoding& e)            {retu
 cbe_encode_status cbe_encoder::stream_array(const std::vector<uint8_t>& data)
 {
 	int64_t offset = 0;
+	KSLOG_DEBUG("Streaming %d bytes", data.size());
 	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
 	while((status = cbe_encode_add_data(_process, data.data()+offset, data.size()-offset)) == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
 	{
-		offset += cbe_encode_get_buffer_offset(_process);
+		int64_t old_offset = offset;
+		(void)old_offset;
+		offset = cbe_encode_get_array_offset(_process);
+		KSLOG_DEBUG("Streamed %d bytes", offset - old_offset);
 		flush_buffer();
+		int64_t remaining_bytes = data.size() - offset;
+		KSLOG_DEBUG("Remaining bytes to stream: %d", remaining_bytes);
+		if(remaining_bytes <= 0)
+		{
+			break;
+		}
 	}
 	return status;
 }
 
 cbe_encode_status cbe_encoder::encode(enc::string_encoding& e)
 {
+	const std::string& value = e.value();
+	KSLOG_DEBUG("size %d", value.size());
     cbe_encode_status status;
-    if((status = cbe_encode_begin_string(_process, e.value().size())) != CBE_ENCODE_STATUS_OK) return status;
-    return stream_array(std::vector<uint8_t>(e.value().begin(), e.value().end()));
+    if((status = cbe_encode_begin_string(_process, value.size())) != CBE_ENCODE_STATUS_OK) return status;
+    return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
 }
 
 cbe_encode_status cbe_encoder::encode(enc::binary_encoding& e)
 {
+	KSLOG_DEBUG("size %d", e.value().size());
     cbe_encode_status status;
     if((status = cbe_encode_begin_binary(_process, e.value().size())) != CBE_ENCODE_STATUS_OK) return status;
     return stream_array(e.value());
@@ -92,6 +109,7 @@ cbe_encoder::cbe_encoder(int64_t buffer_size,
 , _process(cbe_encode_begin(_buffer.data(), _buffer.size()))
 , _on_data_ready(on_data_ready)
 {
+	KSLOG_DEBUG("New cbe_encoder with buffer size %d", _buffer.size());
 }
 
 cbe_encoder::~cbe_encoder()

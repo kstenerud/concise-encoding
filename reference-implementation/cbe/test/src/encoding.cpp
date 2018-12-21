@@ -17,7 +17,7 @@
 //  * binary64: 1.1
 //  * binary128: 1.1l
 
-#define KSLogger_LocalLevel DEBUG
+// #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
 
@@ -286,6 +286,10 @@ std::shared_ptr<encoding> encoding::set_next(std::shared_ptr<encoding> next)
     {
         _last->_next = next;
     }
+    else
+    {
+        _next = next;
+    }
     _last = next;
 
     // FIXME:
@@ -524,15 +528,15 @@ std::shared_ptr<encoding> encoding::end()                            {return thi
 std::shared_ptr<encoding> encoding::empty()                          {return this->set_next(enc::empty());}
 std::shared_ptr<encoding> encoding::pad(int count)                   {return this->set_next(enc::pad(count));}
 std::shared_ptr<encoding> encoding::smtime(smalltime value)          {return this->set_next(enc::smtime(value));}
-std::shared_ptr<encoding> encoding::str(std::string& value)          {return this->set_next(enc::str(value));}
-std::shared_ptr<encoding> encoding::bin(std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
+std::shared_ptr<encoding> encoding::str(const std::string& value)    {return this->set_next(enc::str(value));}
+std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
 std::shared_ptr<encoding> encoding::bl(bool value)                   {return this->set_next(enc::bl(value));}
 std::shared_ptr<encoding> encoding::i8(int8_t value)                 {return this->set_next(enc::i8(value));}
 std::shared_ptr<encoding> encoding::i16(int16_t value)               {return this->set_next(enc::i16(value));}
 std::shared_ptr<encoding> encoding::i32(int32_t value)               {return this->set_next(enc::i32(value));}
 std::shared_ptr<encoding> encoding::i64(int64_t value)               {return this->set_next(enc::i64(value));}
 std::shared_ptr<encoding> encoding::i128(__int128 value)             {return this->set_next(enc::i128(value));}
-std::shared_ptr<encoding> encoding::i128(int64_t high, int64_t low)  {return this->set_next(enc::i128(high, low));}
+std::shared_ptr<encoding> encoding::i128(int64_t high, uint64_t low) {return this->set_next(enc::i128(high, low));}
 std::shared_ptr<encoding> encoding::f32(float value)                 {return this->set_next(enc::f32(value));}
 std::shared_ptr<encoding> encoding::f64(double value)                {return this->set_next(enc::f64(value));}
 std::shared_ptr<encoding> encoding::f128(__float128 value)           {return this->set_next(enc::f128(value));}
@@ -546,15 +550,15 @@ std::shared_ptr<end_container_encoding>        end()                            
 std::shared_ptr<empty_encoding>                empty()                          {return std::make_shared<empty_encoding>();}
 std::shared_ptr<time_encoding>                 smtime(smalltime value)          {return std::make_shared<time_encoding>(value);}
 std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::to_doy(year, month, day), hour, minute, second, usec));}
-std::shared_ptr<string_encoding>               str(std::string& value)          {return std::make_shared<string_encoding>(value);}
-std::shared_ptr<binary_encoding>               bin(std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
+std::shared_ptr<string_encoding>               str(const std::string& value)    {return std::make_shared<string_encoding>(value);}
+std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
 std::shared_ptr<boolean_encoding>              bl(bool value)                   {return std::make_shared<boolean_encoding>(value);}
 std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value)                 {return std::make_shared<number_encoding<int8_t>>(value);}
 std::shared_ptr<number_encoding<int16_t>>      i16(int16_t value)               {return std::make_shared<number_encoding<int16_t>>(value);}
 std::shared_ptr<number_encoding<int32_t>>      i32(int32_t value)               {return std::make_shared<number_encoding<int32_t>>(value);}
 std::shared_ptr<number_encoding<int64_t>>      i64(int64_t value)               {return std::make_shared<number_encoding<int64_t>>(value);}
 std::shared_ptr<int128_encoding>               i128(__int128 value)             {return std::make_shared<int128_encoding>(value);}
-std::shared_ptr<int128_encoding>               i128(int64_t high, int64_t low)  {return i128((((__int128)high) << 64) + low);}
+std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low) {return i128((((__int128)high) << 64) + low);}
 std::shared_ptr<number_encoding<float>>        f32(float value)                 {return std::make_shared<number_encoding<float>>(value);}
 std::shared_ptr<number_encoding<double>>       f64(float value)                 {return std::make_shared<number_encoding<double>>(value);}
 std::shared_ptr<number_encoding<__float128>>   f128(float value)                {return std::make_shared<number_encoding<__float128>>(value);}

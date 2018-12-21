@@ -1,13 +1,9 @@
 #include "old_test_helpers.h"
-
-static std::vector<uint8_t> make_bytes(int length)
-{
-    return make_values_of_length<uint8_t>(length);
-}
+#include "test_utils.h"
 
 static void expect_encode_decode_encode_binary_data(int length, std::vector<uint8_t> expected_prefix)
 {
-    std::vector<uint8_t> bytes = make_bytes(length);
+    std::vector<uint8_t> bytes = make_7f_bytes(length);
     std::vector<uint8_t> expected_memory(expected_prefix);
     expected_memory.insert(expected_memory.end(), bytes.begin(), bytes.end());
     expect_memory_after_add_value(bytes, expected_memory);
@@ -16,7 +12,7 @@ static void expect_encode_decode_encode_binary_data(int length, std::vector<uint
 
 static void expect_add_binary_data_incomplete(int byte_length, int array_length)
 {
-    std::vector<uint8_t> bytes = make_bytes(array_length);
+    std::vector<uint8_t> bytes = make_7f_bytes(array_length);
     expect_add_value_incomplete(byte_length, bytes);
 }
 
