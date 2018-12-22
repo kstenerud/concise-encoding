@@ -18,7 +18,7 @@ private:
 	cbe_decode_process* _process;
 	std::vector<uint8_t> _received_data;
 	int64_t _read_offset = 0;
-	bool _process_has_ended = false;
+	bool _process_is_valid = true;
 	std::shared_ptr<enc::encoding> _decoded;
 	cbe_decoding_type _currently_decoding_type = CBE_DECODING_OTHER;
 	int64_t _currently_decoding_length;
@@ -39,6 +39,9 @@ public:
 
 	// Feed data to be decoded.
 	cbe_decode_status feed(std::vector<uint8_t>& data);
+
+	// End the decoding process.
+	cbe_decode_status end();
 
 	// Get the complete raw data received.
 	std::vector<uint8_t>& received_data();

@@ -155,3 +155,5 @@ TEST_ENCODE_DECODE_CONTAINER(Map, size_0, 1, map()->end(), {0x7c, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(Map, size_1, 1, map()->str("1")->i8(1)->end(), {0x7c, 0x81, 0x31, 0x01, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(Map, size_2, 1, map()->str("1")->i8(1)->str("2")->i8(2)->end(), {0x7c, 0x81, 0x31, 0x01, 0x81, 0x32, 0x02, 0x7d})
 // TODO: Unterminated
+
+TEST_ENCODE_DECODE_STATUS(InvalidList, unterminated, list(), CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS)

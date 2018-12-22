@@ -144,7 +144,7 @@ cbe_decoder::cbe_decoder()
 
 cbe_decoder::~cbe_decoder()
 {
-    if(!_process_has_ended)
+    if(_process_is_valid)
     {
         cbe_decode_end(_process);
     }
@@ -168,6 +168,17 @@ cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
     cbe_decode_status status = cbe_decode_feed(_process, data.data(), data.size());
     _read_offset += cbe_decode_get_buffer_offset(_process);
     return status;
+}
+
+cbe_decode_status cbe_decoder::end()
+{
+    if(!_process_is_valid)
+    {
+        KSLOG_ERROR("Called end() too many times");
+        return (cbe_decode_status)9999999;
+    }
+    _process_is_valid = false;
+    return cbe_decode_end(_process);
 }
 
 bool cbe_decoder::set_next(std::shared_ptr<enc::encoding> encoding)

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "cbe_internal.h"
 
-// #define KSLogger_LocalLevel TRACE
+// #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
 struct cbe_encode_process

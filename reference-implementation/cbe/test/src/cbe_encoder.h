@@ -11,7 +11,9 @@ private:
 	std::vector<uint8_t> _encoded_data;
 	cbe_encode_process* _process;
 	std::function<bool(uint8_t* data_start, int64_t length)> _on_data_ready;
-	bool _process_has_ended = false;
+	bool _process_is_valid = true;
+
+	cbe_encode_status end();
 
 protected:
 	bool flush_buffer();

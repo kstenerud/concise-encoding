@@ -211,13 +211,6 @@ cbe_encode_status cbe_encoder::encode(enc::binary_encoding& e)
 cbe_encode_status cbe_encoder::encode(enc::end_container_encoding& e)
 {
 	(void)e;
-	if(_process_has_ended)
-	{
-		// Don't let cbe_encode_end_container() execute twice, because
-		// it would double-free memory.
-		return (cbe_encode_status)99999999;
-	}
-	_process_has_ended = true;
 	return flush_and_retry([&]
 	{
 		return cbe_encode_end_container(_process);
@@ -226,6 +219,12 @@ cbe_encode_status cbe_encoder::encode(enc::end_container_encoding& e)
 
 cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 {
+	if(!_process_is_valid)
+	{
+		KSLOG_ERROR("Don't call encode more than once on this test object.");
+		return (cbe_encode_status)9999999;
+	}
+
 	cbe_encode_status result = CBE_ENCODE_STATUS_OK;
 	for(std::shared_ptr<enc::encoding> current = enc; current != nullptr; current = current->next())
 	{
@@ -236,7 +235,18 @@ cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 		}
 	}
 	flush_buffer();
-	return result;
+	return end();
+}
+
+cbe_encode_status cbe_encoder::end()
+{
+	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
+	if(_process_is_valid)
+	{
+		status = cbe_encode_end(_process);
+		_process_is_valid = false;
+	}
+	return status;
 }
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,
@@ -250,8 +260,5 @@ cbe_encoder::cbe_encoder(int64_t buffer_size,
 
 cbe_encoder::~cbe_encoder()
 {
-	if(!_process_has_ended)
-	{
-		cbe_encode_end(_process);
-	}
+	end();
 }

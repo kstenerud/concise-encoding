@@ -20,6 +20,8 @@ void expect_encode_decode_equality(int min_buffer_size, std::shared_ptr<enc::enc
 
 void expect_encode_decode_exact_equality(std::shared_ptr<enc::encoding> expected_encoding, const std::vector<uint8_t> expected_memory);
 
+void expect_encode_decode_status(std::shared_ptr<enc::encoding> encoding, cbe_encode_status expected_encode_status, cbe_decode_status expected_decode_status);
+
 }
 
 // Test that the specified encoding produces the expected memory.
@@ -45,3 +47,6 @@ TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_equality(MIN_BUFFER_SIZE, E
 // Test that encoding and decoding produces the specified memory, and reproduces the exact encoding.
 #define TEST_ENCODE_DECODE_EXACT(TESTCASE, NAME, ENCODING, ...) \
 TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_exact_equality(ENCODING, __VA_ARGS__);}
+
+#define TEST_ENCODE_DECODE_STATUS(TESTCASE, NAME, ENCODING, EXPECTED_ENCODE_STATUS, EXPECTED_DECODE_STATUS) \
+TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_status(ENCODING, EXPECTED_ENCODE_STATUS, EXPECTED_DECODE_STATUS);}

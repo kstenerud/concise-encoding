@@ -182,6 +182,10 @@ static std::shared_ptr<enc::encoding> decode_data(int buffer_size, std::vector<u
             break;
         }
     }
+    if(status == CBE_DECODE_STATUS_OK)
+    {
+        status = decoder.end();
+    }
     return decoder.decoded();
 }
 
@@ -273,4 +277,18 @@ void expect_encode_decode_exact_equality(
     EXPECT_EX(*expected_encoding, *actual_encoding);
 }
 
+void expect_encode_decode_status(
+    std::shared_ptr<enc::encoding> encoding,
+    cbe_encode_status expected_encode_status,
+    cbe_decode_status expected_decode_status)
+{
+    cbe_encode_status encode_status = CBE_ENCODE_STATUS_OK;
+    cbe_decode_status decode_status = CBE_DECODE_STATUS_OK;
+    int buffer_size = 100;
+    std::vector<uint8_t> memory = encode_data(buffer_size, encoding, encode_status);
+    ASSERT_EQ(encode_status, expected_encode_status);
+    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, memory, decode_status);
+    ASSERT_EQ(decode_status, expected_decode_status);
 }
+
+} // namespace cbe_test
