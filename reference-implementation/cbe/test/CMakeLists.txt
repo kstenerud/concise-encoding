@@ -29,13 +29,6 @@ add_executable(cbe_test
                    src/test_helpers.cpp
                    src/old_test_helpers.cpp
                    src/decode_encode.c
-                   src/old.cpp
-                   src/string.cpp
-                   src/list.cpp
-                   src/map.cpp
-                   src/binary_data.cpp
-                   src/encode_piecemeal.cpp
-                   src/decode_piecemeal.cpp
                    src/invalid_document.cpp
                    src/stop_in_callback.cpp
                    src/encode_decode.cpp

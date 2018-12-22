@@ -106,6 +106,8 @@ TEST_ENCODE_DECODE(Decimal64, _1000000_000001, d64(1000000.000001dd), {0x76, 0x0
 // TODO: Produces a decimal32
 //TEST_ENCODE_DECODE(Decimal128, _1000000000000_000000000001, d128(1000000000000.000000000001dl), {0x77, 0x01, 0x00, 0x00, 0xa1, 0xed, 0xcc, 0xce, 0x1b, 0xc2, 0xd3, 0x00, 0x00, 0x00, 0x00, 0x28, 0x30})
 
+// TODO: packetized decode
+
 TEST_ENCODE_DECODE(Empty, empty, empty(), {0x7e})
 
 TEST_ENCODE(Padding, pad_1, 10, pad(1), {0x7f})
@@ -134,12 +136,22 @@ TEST_ENCODE_DECODE_CONTAINER(String, size_14, 1, str(make_string(14)), concat({0
 TEST_ENCODE_DECODE_CONTAINER(String, size_15, 1, str(make_string(15)), concat({0x8f}, as_vector(make_string(15))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
+// TODO: Wrong length field
+// TODO: Unfinished (add all other types before finishing)
 
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_0, 2, bin(make_bytes(0)),  concat({0x91}, array_length_field(0)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_1, 2, bin(make_bytes(1)),  concat({0x91}, array_length_field(1), make_bytes(1)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_2, 2, bin(make_bytes(2)),  concat({0x91}, array_length_field(2), make_bytes(2)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_500, 3, bin(make_bytes(500)),  concat({0x91}, array_length_field(500), make_bytes(500)))
+// TODO: Wrong length field
+// TODO: Unfinished (add all other types before finishing)
 
 TEST_ENCODE_DECODE_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_2, 1, list()->str("1")->i8(1)->end(), {0x7b, 0x81, 0x31, 0x01, 0x7d})
+// TODO: Unterminated
+
+TEST_ENCODE_DECODE_CONTAINER(Map, size_0, 1, map()->end(), {0x7c, 0x7d})
+TEST_ENCODE_DECODE_CONTAINER(Map, size_1, 1, map()->str("1")->i8(1)->end(), {0x7c, 0x81, 0x31, 0x01, 0x7d})
+TEST_ENCODE_DECODE_CONTAINER(Map, size_2, 1, map()->str("1")->i8(1)->str("2")->i8(2)->end(), {0x7c, 0x81, 0x31, 0x01, 0x81, 0x32, 0x02, 0x7d})
+// TODO: Unterminated
