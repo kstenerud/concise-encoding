@@ -135,15 +135,17 @@ TEST_ENCODE_DECODE_CONTAINER(String, size_15, 1, str(make_string(15)), concat({0
 TEST_ENCODE_DECODE_CONTAINER(String, size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
 TEST_ENCODE_STATUS(String, too_long, CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED, strh(1)->data({0x30, 0x30}));
+TEST_ENCODE_STATUS(String, too_short, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30, 0x30}));
 
-// TODO: Wrong length field
 // TODO: Unfinished (add all other types before finishing)
 
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_0, 2, bin(make_bytes(0)),  concat({0x91}, array_length_field(0)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_1, 2, bin(make_bytes(1)),  concat({0x91}, array_length_field(1), make_bytes(1)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_2, 2, bin(make_bytes(2)),  concat({0x91}, array_length_field(2), make_bytes(2)))
 TEST_ENCODE_DECODE_CONTAINER(Binary,  size_500, 3, bin(make_bytes(500)),  concat({0x91}, array_length_field(500), make_bytes(500)))
-// TODO: Wrong length field
+TEST_ENCODE_STATUS(Binary, too_long, CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED, binh(1)->data({0x30, 0x30}));
+TEST_ENCODE_STATUS(Binary, too_short, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30, 0x30}));
+
 // TODO: Unfinished (add all other types before finishing)
 
 TEST_ENCODE_DECODE_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})

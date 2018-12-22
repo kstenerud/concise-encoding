@@ -280,6 +280,11 @@ cbe_encode_status cbe_encode_end(cbe_encode_process* const process)
         KSLOG_DEBUG("STOP_AND_EXIT: Ended encoding without closing all containers");
         return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS;
     }
+    if(process->array.is_inside_array)
+    {
+        KSLOG_DEBUG("STOP_AND_EXIT: Ended encoding without finising the current array");
+        return CBE_ENCODE_ERROR_INCOMPLETE_FIELD;
+    }
     KSLOG_DEBUG("Process ended successfully");
     return CBE_ENCODE_STATUS_OK;
 }
