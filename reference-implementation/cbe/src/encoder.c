@@ -359,7 +359,7 @@ cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const process, int64
 
 cbe_encode_status cbe_encode_add_int_128(cbe_encode_process* const process, const __int128 value)
 {
-    KSLOG_DEBUG("Value: TODO");
+    KSLOG_DEBUG("Value: 0x%016x%016x", (int64_t)(value>>64), (uint64_t)value);
     if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
     if(FITS_IN_INT_16(value)) return add_int_16(process, value);
     if(FITS_IN_INT_32(value)) return add_int_32(process, value);
@@ -382,7 +382,7 @@ cbe_encode_status cbe_encode_add_float_64(cbe_encode_process* const process, con
 
 cbe_encode_status cbe_encode_add_float_128(cbe_encode_process* const process, const __float128 value)
 {
-    KSLOG_DEBUG("Value: TODO");
+    KSLOG_DEBUG("Value: ~%f", (double)value);
     if(FITS_IN_FLOAT_32(value)) return add_float_32(process, value);
     if(FITS_IN_FLOAT_64(value)) return add_float_64(process, value);
     return add_float_128(process, value);
@@ -390,20 +390,20 @@ cbe_encode_status cbe_encode_add_float_128(cbe_encode_process* const process, co
 
 cbe_encode_status cbe_encode_add_decimal_32(cbe_encode_process* const process, const _Decimal32 value)
 {
-    KSLOG_DEBUG("Value: TODO");
+    KSLOG_DEBUG("Value: ~%f", (double)value);
     return add_decimal_32(process, value);
 }
 
 cbe_encode_status cbe_encode_add_decimal_64(cbe_encode_process* const process, const _Decimal64 value)
 {
-    KSLOG_DEBUG("Value: TODO");
+    KSLOG_DEBUG("Value: ~%f", (double)value);
     if(FITS_IN_DECIMAL_32(value)) return add_decimal_32(process, value);
     return add_decimal_64(process, value);
 }
 
 cbe_encode_status cbe_encode_add_decimal_128(cbe_encode_process* const process, const _Decimal128 value)
 {
-    KSLOG_DEBUG("Value: TODO");
+    KSLOG_DEBUG("Value: ~%f", (double)value);
     if(FITS_IN_DECIMAL_32(value)) return add_decimal_32(process, value);
     if(FITS_IN_DECIMAL_64(value)) return add_decimal_64(process, value);
     return add_decimal_128(process, value);
