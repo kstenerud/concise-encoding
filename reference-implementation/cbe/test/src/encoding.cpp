@@ -234,20 +234,18 @@ static std::string to_time_string(smalltime value)
     return buff;
 }
 
+// TODO: These are only approximations
 static std::string to_string(_Decimal32 value)
 {
-    (void)value;
-    return "TODO";
+    return "~" + std::to_string((double)value);
 }
 static std::string to_string(_Decimal64 value)
 {
-    (void)value;
-    return "TODO";
+    return "~" + std::to_string((double)value);
 }
 static std::string to_string(_Decimal128 value)
 {
-    (void)value;
-    return "TODO";
+    return "~" + to_string((__float128)value);
 }
 
 std::string to_id_string(bool value)        {return std::string("bl(")   + std::to_string(value) + ")";}
