@@ -207,7 +207,7 @@ static cbe_encode_status encode_string_header(cbe_encode_process* process,
                                               const int64_t byte_count,
                                               const bool should_reserve_payload)
 {
-    KSLOG_DEBUG("Length: %ld, Reserve: %d", byte_count, should_reserve_payload);
+    KSLOG_DEBUG("Length: %ld, Should reserve: %d", byte_count, should_reserve_payload);
     cbe_type_field type = 0;
     int reserved_count = 0;
     if(byte_count > 15)
@@ -229,6 +229,9 @@ static cbe_encode_status encode_string_header(cbe_encode_process* process,
     {
         add_length_field(process, byte_count);
     }
+    process->array.is_inside_array = true;
+    process->array.current_offset = 0;
+    process->array.byte_count = byte_count;
     swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
@@ -507,9 +510,6 @@ cbe_encode_status cbe_encode_begin_string(cbe_encode_process* const process, con
 {
     KSLOG_DEBUG("Length: %ld", byte_count);
     STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
-    process->array.is_inside_array = true;
-    process->array.current_offset = 0;
-    process->array.byte_count = byte_count;
     const bool should_reserve_payload = false;
     return encode_string_header(process, byte_count, should_reserve_payload);
 }

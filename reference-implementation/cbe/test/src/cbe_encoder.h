@@ -15,6 +15,7 @@ private:
 
 protected:
 	bool flush_buffer();
+	cbe_encode_status flush_and_retry(std::function<cbe_encode_status()> my_function);
 
 public:
 	// Internal functions
