@@ -18,7 +18,12 @@ std::string as_string(const std::vector<uint8_t>& value)
     return str.substr(0, str.size()-1);
 }
 
-std::vector<uint8_t> generate_array_length_field(int64_t length)
+std::vector<uint8_t> as_vector(const std::string& value)
+{
+    return std::vector<uint8_t>(value.begin(), value.end());
+}
+
+std::vector<uint8_t> array_length_field(int64_t length)
 {
     int64_t length_bytes = length << 2;
     uint8_t* bytes = (uint8_t*)&length_bytes;
@@ -74,4 +79,20 @@ std::vector<uint8_t> make_incrementing_bytes(int length, int start_value)
         vec.push_back((uint8_t)(value & 0x7f));
     }
     return vec;
+}
+
+std::vector<uint8_t> concat(
+    const std::vector<uint8_t>& v1,
+    const std::vector<uint8_t>& v2,
+    const std::vector<uint8_t>& v3,
+    const std::vector<uint8_t>& v4,
+    const std::vector<uint8_t>& v5
+    )
+{
+    std::vector<uint8_t> accumulator(v1);
+    accumulator.insert(accumulator.end(), v2.begin(), v2.end());
+    accumulator.insert(accumulator.end(), v3.begin(), v3.end());
+    accumulator.insert(accumulator.end(), v4.begin(), v4.end());
+    accumulator.insert(accumulator.end(), v5.begin(), v5.end());
+    return accumulator;
 }

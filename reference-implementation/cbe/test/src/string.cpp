@@ -112,7 +112,7 @@ DEFINE_ADD_STRING_INCOMPLETE_TEST(0x1000)
 TEST(Strings, multipart)
 {
     int length = 1000;
-    std::vector<uint8_t> length_field_values = generate_array_length_field(length);
+    std::vector<uint8_t> length_field_values = array_length_field(length);
     std::string str = make_string_with_length(length);
     std::vector<uint8_t> expected_memory(str.c_str(), str.c_str() + str.size());
     uint8_t type = 0x90;
