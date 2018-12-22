@@ -27,11 +27,8 @@ add_executable(cbe_test
                    src/cbe_decoder.cpp
                    src/cbe_encoder.cpp
                    src/test_helpers.cpp
-                   src/old_test_helpers.cpp
-                   src/decode_encode.c
-                   src/invalid_document.cpp
                    src/stop_in_callback.cpp
-                   src/encode_decode.cpp
+                   src/general_tests.cpp
                )
 
 target_compile_features(cbe_test PRIVATE cxx_auto_type)

@@ -159,6 +159,7 @@ static std::vector<uint8_t> encode_data(int buffer_size, std::shared_ptr<enc::en
             return true;
         });
     status = encoder.encode(encoding);
+    KSLOG_DEBUG("Status = %d", status);
     return actual_memory;
 }
 
@@ -186,6 +187,7 @@ static std::shared_ptr<enc::encoding> decode_data(int buffer_size, std::vector<u
     {
         status = decoder.end();
     }
+    KSLOG_DEBUG("Status = %d", status);
     return decoder.decoded();
 }
 
@@ -288,6 +290,26 @@ void expect_encode_decode_status(
     std::vector<uint8_t> memory = encode_data(buffer_size, encoding, encode_status);
     ASSERT_EQ(encode_status, expected_encode_status);
     std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, memory, decode_status);
+    ASSERT_EQ(decode_status, expected_decode_status);
+}
+
+void expect_encode_status(
+    std::shared_ptr<enc::encoding> encoding,
+    cbe_encode_status expected_encode_status)
+{
+    cbe_encode_status encode_status = CBE_ENCODE_STATUS_OK;
+    int buffer_size = 100;
+    std::vector<uint8_t> memory = encode_data(buffer_size, encoding, encode_status);
+    ASSERT_EQ(encode_status, expected_encode_status);
+}
+
+void expect_decode_status(
+    std::vector<uint8_t> document,
+    cbe_decode_status expected_decode_status)
+{
+    cbe_decode_status decode_status = CBE_DECODE_STATUS_OK;
+    int buffer_size = 100;
+    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, document, decode_status);
     ASSERT_EQ(decode_status, expected_decode_status);
 }
 

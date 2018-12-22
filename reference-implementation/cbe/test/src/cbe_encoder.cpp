@@ -231,6 +231,7 @@ cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 		result = current->encode(*this);
 		if(result != CBE_ENCODE_STATUS_OK)
 		{
+			flush_buffer();
 			return result;
 		}
 	}

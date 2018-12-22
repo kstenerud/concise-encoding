@@ -22,6 +22,14 @@ void expect_encode_decode_exact_equality(std::shared_ptr<enc::encoding> expected
 
 void expect_encode_decode_status(std::shared_ptr<enc::encoding> encoding, cbe_encode_status expected_encode_status, cbe_decode_status expected_decode_status);
 
+void expect_encode_status(
+    std::shared_ptr<enc::encoding> encoding,
+    cbe_encode_status expected_encode_status);
+
+void expect_decode_status(
+    std::vector<uint8_t> document,
+    cbe_decode_status expected_decode_status);
+
 }
 
 // Test that the specified encoding produces the expected memory.
@@ -48,5 +56,11 @@ TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_equality(MIN_BUFFER_SIZE, E
 #define TEST_ENCODE_DECODE_EXACT(TESTCASE, NAME, ENCODING, ...) \
 TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_exact_equality(ENCODING, __VA_ARGS__);}
 
-#define TEST_ENCODE_DECODE_STATUS(TESTCASE, NAME, ENCODING, EXPECTED_ENCODE_STATUS, EXPECTED_DECODE_STATUS) \
+#define TEST_ENCODE_DECODE_STATUS(TESTCASE, NAME, EXPECTED_ENCODE_STATUS, EXPECTED_DECODE_STATUS, ENCODING) \
 TEST(TESTCASE, NAME) {cbe_test::expect_encode_decode_status(ENCODING, EXPECTED_ENCODE_STATUS, EXPECTED_DECODE_STATUS);}
+
+#define TEST_ENCODE_STATUS(TESTCASE, NAME, EXPECTED_ENCODE_STATUS, ENCODING) \
+TEST(TESTCASE, NAME) {cbe_test::expect_encode_status(ENCODING, EXPECTED_ENCODE_STATUS);}
+
+#define TEST_DECODE_STATUS(TESTCASE, NAME, EXPECTED_DECODE_STATUS, ...) \
+TEST(TESTCASE, NAME) {cbe_test::expect_decode_status(__VA_ARGS__, EXPECTED_DECODE_STATUS);}

@@ -106,8 +106,6 @@ TEST_ENCODE_DECODE(Decimal64, _1000000_000001, d64(1000000.000001dd), {0x76, 0x0
 // TODO: Produces a decimal32
 //TEST_ENCODE_DECODE(Decimal128, _1000000000000_000000000001, d128(1000000000000.000000000001dl), {0x77, 0x01, 0x00, 0x00, 0xa1, 0xed, 0xcc, 0xce, 0x1b, 0xc2, 0xd3, 0x00, 0x00, 0x00, 0x00, 0x28, 0x30})
 
-// TODO: packetized decode
-
 TEST_ENCODE_DECODE(Empty, empty, empty(), {0x7e})
 
 TEST_ENCODE(Padding, pad_1, 10, pad(1), {0x7f})
@@ -149,11 +147,72 @@ TEST_ENCODE_DECODE_CONTAINER(Binary,  size_500, 3, bin(make_bytes(500)),  concat
 TEST_ENCODE_DECODE_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_2, 1, list()->str("1")->i8(1)->end(), {0x7b, 0x81, 0x31, 0x01, 0x7d})
-// TODO: Unterminated
+TEST_ENCODE_DECODE_STATUS(List, unterminated, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, list())
+TEST_ENCODE_DECODE_STATUS(List, unterminated_2, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, list()->f32(0.1))
+TEST_ENCODE_DECODE_STATUS(List, unterminated_3, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, list()->map())
+// Can't test decode because ending the container ends the document.
+TEST_ENCODE_STATUS(List, encode_extra_end, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, list()->end()->end())
+TEST_ENCODE_STATUS(List, encode_extra_end_2, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, list()->map()->end()->end()->end())
+TEST(List, too_deep)
+{
+	const int depth_too_far = 10001;
+    const int memory_size = 100000;
+    std::array<uint8_t, memory_size> memory;
+
+	struct cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
+	cbe_encode_status status;
+	for(int i = 0; i < depth_too_far; i++)
+	{
+		status = cbe_encode_begin_list(encode_process);
+		if(status == CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED)
+		{
+			break;
+		}
+	}
+	EXPECT_EQ(CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED, status);
+}
 
 TEST_ENCODE_DECODE_CONTAINER(Map, size_0, 1, map()->end(), {0x7c, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(Map, size_1, 1, map()->str("1")->i8(1)->end(), {0x7c, 0x81, 0x31, 0x01, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(Map, size_2, 1, map()->str("1")->i8(1)->str("2")->i8(2)->end(), {0x7c, 0x81, 0x31, 0x01, 0x81, 0x32, 0x02, 0x7d})
-// TODO: Unterminated
+TEST_ENCODE_DECODE_STATUS(Map, unterminated, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, map())
+TEST_ENCODE_DECODE_STATUS(Map, unterminated_2, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, map()->f32(0.1)->i8(1))
+TEST_ENCODE_DECODE_STATUS(Map, unterminated_3, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, map()->str("")->list())
+TEST_ENCODE_DECODE_STATUS(Map, unterminated_4, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, map()->str("")->list()->end())
+// Can't test decode because ending the container ends the document.
+TEST_ENCODE_STATUS(Map, encode_extra_end, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, map()->end()->end())
+TEST_ENCODE_STATUS(Map, encode_extra_end_2, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, map()->str("")->list()->end()->end()->end())
 
-TEST_ENCODE_DECODE_STATUS(InvalidList, unterminated, list(), CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS)
+TEST_ENCODE_STATUS(Map, encode_empty_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->empty()->str("")->end())
+TEST_DECODE_STATUS(Map, decode_empty_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7e, 0x80, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_list_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->list()->end()->str("")->end())
+TEST_DECODE_STATUS(Map, decode_list_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7b, 0x7d, 0x80, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_map_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->map()->end()->str("")->end())
+TEST_DECODE_STATUS(Map, decode_map_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7c, 0x7d, 0x80, 0x7d})
+
+TEST_ENCODE_STATUS(Map, encode_missing_value_i8, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->i8(0)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_i8, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x00, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_i16, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->i16(0xfff)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_i16, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x6e, 0xff, 0x0f, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_i32, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->i32(0xfffff)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_i32, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x6f, 0xff, 0xff, 0xff, 0x0f, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_i64, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->i64(0xfffffffff)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_i64, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x70, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_i128, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->i128(0x0f, 0xffffffffffffffff)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_i128, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x71, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_f32, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->f32(0.1)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_f32, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x72, 0xcd, 0xcc, 0xcc, 0x3d, 0x7d})
+// TODO: f64, f128
+TEST_ENCODE_STATUS(Map, encode_missing_value_d32, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->d32(0.1)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_d32, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x75, 0x01, 0x00, 0x00, 0x32, 0x7d})
+// TODO: d64, f128
+TEST_ENCODE_STATUS(Map, encode_missing_value_time, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->smtime(0)->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_time, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_string, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->str("")->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_string, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x80, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_long_string, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->str("0000000000000000")->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_long_string, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x90, 0x40, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_missing_value_map, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->str("")->map()->str("")->end()->end())
+TEST_DECODE_STATUS(Map, decode_missing_value_map, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x80, 0x7c, 0x80, 0x7d, 0x7d})
+
+// TODO: packetized decode
