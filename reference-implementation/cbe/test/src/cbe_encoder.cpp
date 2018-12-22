@@ -208,6 +208,27 @@ cbe_encode_status cbe_encoder::encode(enc::binary_encoding& e)
     return stream_array(e.value());
 }
 
+cbe_encode_status cbe_encoder::encode(enc::string_header_encoding& e)
+{
+	return flush_and_retry([&]
+	{
+		return cbe_encode_begin_string(_process, e.byte_count());
+	});
+}
+
+cbe_encode_status cbe_encoder::encode(enc::binary_header_encoding& e)
+{
+	return flush_and_retry([&]
+	{
+		return cbe_encode_begin_string(_process, e.byte_count());
+	});
+}
+
+cbe_encode_status cbe_encoder::encode(enc::data_encoding& e)
+{
+    return stream_array(e.value());
+}
+
 cbe_encode_status cbe_encoder::encode(enc::end_container_encoding& e)
 {
 	(void)e;

@@ -263,6 +263,7 @@ std::string to_id_string(_Decimal128 value) {return std::string("d128(") + to_st
 std::string to_id_string(const std::string& value) {return std::string("s(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
 std::string to_id_string(const std::vector<uint8_t>& value) {return std::string("b(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
 std::string to_id_string_time(smalltime value) {return std::string("t(") + to_time_string(value)  + ")";}
+std::string to_id_string(const std::string& name, int64_t value) {return name + "(" + std::to_string(value) + ")";}
 
 
 encoding::encoding(const enc::major_type type, const size_t size, const std::string& string_value)
@@ -458,6 +459,21 @@ cbe_encode_status binary_encoding::encode(encoder& encoder)
     return encoder.encode(*this);
 }
 
+cbe_encode_status string_header_encoding::encode(encoder& encoder)
+{
+    return encoder.encode(*this);
+}
+
+cbe_encode_status binary_header_encoding::encode(encoder& encoder)
+{
+    return encoder.encode(*this);
+}
+
+cbe_encode_status data_encoding::encode(encoder& encoder)
+{
+    return encoder.encode(*this);
+}
+
 cbe_encode_status boolean_encoding::encode(encoder& encoder)
 {
     return encoder.encode(*this);
@@ -528,6 +544,9 @@ std::shared_ptr<encoding> encoding::pad(int count)                   {return thi
 std::shared_ptr<encoding> encoding::smtime(smalltime value)          {return this->set_next(enc::smtime(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)    {return this->set_next(enc::str(value));}
 std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
+std::shared_ptr<encoding> encoding::strh(int64_t byte_count)         {return this->set_next(enc::strh(byte_count));}
+std::shared_ptr<encoding> encoding::binh(int64_t byte_count)         {return this->set_next(enc::binh(byte_count));}
+std::shared_ptr<encoding> encoding::data(const std::vector<uint8_t>& value) {return this->set_next(enc::data(value));}
 std::shared_ptr<encoding> encoding::bl(bool value)                   {return this->set_next(enc::bl(value));}
 std::shared_ptr<encoding> encoding::i8(int8_t value)                 {return this->set_next(enc::i8(value));}
 std::shared_ptr<encoding> encoding::i16(int16_t value)               {return this->set_next(enc::i16(value));}
@@ -550,6 +569,9 @@ std::shared_ptr<time_encoding>                 smtime(smalltime value)          
 std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::to_doy(year, month, day), hour, minute, second, usec));}
 std::shared_ptr<string_encoding>               str(const std::string& value)    {return std::make_shared<string_encoding>(value);}
 std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
+std::shared_ptr<string_header_encoding>        strh(int64_t byte_count)         {return std::make_shared<string_header_encoding>(byte_count);}
+std::shared_ptr<binary_header_encoding>        binh(int64_t byte_count)         {return std::make_shared<binary_header_encoding>(byte_count);}
+std::shared_ptr<data_encoding>                 data(const std::vector<uint8_t>& value) {return std::make_shared<data_encoding>(value);}
 std::shared_ptr<boolean_encoding>              bl(bool value)                   {return std::make_shared<boolean_encoding>(value);}
 std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value)                 {return std::make_shared<number_encoding<int8_t>>(value);}
 std::shared_ptr<number_encoding<int16_t>>      i16(int16_t value)               {return std::make_shared<number_encoding<int16_t>>(value);}

@@ -27,6 +27,9 @@ typedef enum
     ENCODE_TYPE_TIME,
     ENCODE_TYPE_STRING,
     ENCODE_TYPE_BINARY,
+    ENCODE_TYPE_STRING_HEADER,
+    ENCODE_TYPE_BINARY_HEADER,
+    ENCODE_TYPE_ARRAY_DATA,
     ENCODE_TYPE_LIST,
     ENCODE_TYPE_MAP,
     ENCODE_TYPE_CONTAINER_END,
@@ -66,6 +69,7 @@ std::string to_id_string(_Decimal128 value);
 std::string to_id_string(const std::string& value); 
 std::string to_id_string(const std::vector<uint8_t>& value);
 std::string to_id_string_time(smalltime value);
+std::string to_id_string(const std::string& name, int64_t value);
 
 
 namespace adl_helper
@@ -106,6 +110,9 @@ public:
     std::shared_ptr<encoding> smtime(smalltime value);
     std::shared_ptr<encoding> str(const std::string& value);
     std::shared_ptr<encoding> bin(const std::vector<uint8_t>& value);
+    std::shared_ptr<encoding> strh(int64_t length);
+    std::shared_ptr<encoding> binh(int64_t length);
+    std::shared_ptr<encoding> data(const std::vector<uint8_t>& value);
     std::shared_ptr<encoding> bl(bool value);
     std::shared_ptr<encoding> i8(int8_t value);
     std::shared_ptr<encoding> i16(int16_t value);
@@ -325,6 +332,43 @@ public:
     std::vector<uint8_t> value() {return _value;}
 };
 
+class string_header_encoding: public encoding
+{
+private:
+    const int64_t _byte_count;
+public:
+    string_header_encoding(int64_t byte_count): encoding(enc::ENCODE_TYPE_STRING_HEADER, 1, enc::to_id_string("strh", byte_count)), _byte_count(byte_count) {}
+    cbe_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_byte_count); }
+    bool has_value(int64_t value) const { return _byte_count == value; }
+    int64_t byte_count() {return _byte_count;}
+};
+
+class binary_header_encoding: public encoding
+{
+private:
+    const int64_t _byte_count;
+public:
+    binary_header_encoding(int64_t byte_count): encoding(enc::ENCODE_TYPE_BINARY_HEADER, 1, enc::to_id_string("binh", byte_count)), _byte_count(byte_count) {}
+    cbe_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_byte_count); }
+    bool has_value(int64_t value) const { return _byte_count == value; }
+    int64_t byte_count() {return _byte_count;}
+};
+
+class data_encoding: public encoding
+{
+private:
+    const std::vector<uint8_t> _value;
+public:
+    data_encoding(const std::vector<uint8_t>& value): encoding(enc::ENCODE_TYPE_ARRAY_DATA, 1, enc::to_id_string("data", value.size())), _value(value) {}
+    cbe_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const    { return get_type() == rhs.get_type() && rhs.has_value(_value); }
+    bool has_value(const std::vector<uint8_t>& value) const { return _value == value; }
+    std::vector<uint8_t> value() {return _value;}
+};
+
+
 class encoder
 {
 public:
@@ -336,6 +380,9 @@ public:
     virtual cbe_encode_status encode(time_encoding& encoding) = 0;
     virtual cbe_encode_status encode(string_encoding& encoding) = 0;
     virtual cbe_encode_status encode(binary_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(string_header_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(binary_header_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(data_encoding& encoding) = 0;
     virtual cbe_encode_status encode(boolean_encoding& encoding) = 0;
     virtual cbe_encode_status encode(number_encoding<int8_t>& encoding) = 0;
     virtual cbe_encode_status encode(number_encoding<int16_t>& encoding) = 0;
@@ -359,6 +406,9 @@ std::shared_ptr<time_encoding>                 smtime(smalltime value);
 std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec);
 std::shared_ptr<string_encoding>               str(const std::string& value);
 std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value);
+std::shared_ptr<string_header_encoding>        strh(int64_t byte_count);
+std::shared_ptr<binary_header_encoding>        binh(int64_t byte_count);
+std::shared_ptr<data_encoding>                 data(const std::vector<uint8_t>& value);
 std::shared_ptr<boolean_encoding>              bl(bool value);
 std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value);
 std::shared_ptr<number_encoding<int16_t>>      i16(int16_t value);

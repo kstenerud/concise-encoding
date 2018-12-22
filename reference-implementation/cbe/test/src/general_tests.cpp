@@ -134,6 +134,8 @@ TEST_ENCODE_DECODE_CONTAINER(String, size_14, 1, str(make_string(14)), concat({0
 TEST_ENCODE_DECODE_CONTAINER(String, size_15, 1, str(make_string(15)), concat({0x8f}, as_vector(make_string(15))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
+TEST_ENCODE_STATUS(String, too_long, CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED, strh(1)->data({0x30, 0x30}));
+
 // TODO: Wrong length field
 // TODO: Unfinished (add all other types before finishing)
 
@@ -214,5 +216,3 @@ TEST_ENCODE_STATUS(Map, encode_missing_value_long_string, CBE_ENCODE_ERROR_MISSI
 TEST_DECODE_STATUS(Map, decode_missing_value_long_string, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x90, 0x40, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x7d})
 TEST_ENCODE_STATUS(Map, encode_missing_value_map, CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY, map()->str("")->map()->str("")->end()->end())
 TEST_DECODE_STATUS(Map, decode_missing_value_map, CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY, {0x7c, 0x80, 0x7c, 0x80, 0x7d, 0x7d})
-
-// TODO: packetized decode

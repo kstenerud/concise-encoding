@@ -41,6 +41,9 @@ public:
 	cbe_encode_status stream_array(const std::vector<uint8_t>& data);
 	cbe_encode_status encode(enc::string_encoding& e);
 	cbe_encode_status encode(enc::binary_encoding& e);
+	cbe_encode_status encode(enc::string_header_encoding& e);
+	cbe_encode_status encode(enc::binary_header_encoding& e);
+	cbe_encode_status encode(enc::data_encoding& e);
 	cbe_encode_status encode(enc::end_container_encoding& e);
 
 public:
