@@ -116,7 +116,7 @@ DEFINE_TIME_TEST(1955, 11,  5,  8, 21,  0,      0, {0x78, 0x00, 0x00, 0x00, 0x54
 DEFINE_TIME_TEST(2015, 10, 21, 14, 28,  9, 714000, {0x78, 0x10, 0xe5, 0x9a, 0x70, 0xce, 0xe4, 0xf7, 0x01})
 DEFINE_TIME_TEST(1985, 10, 26,  8, 22, 16, 900142, {0x78, 0x2e, 0xbc, 0x0d, 0x59, 0x68, 0x65, 0xf0, 0x01})
 
-TEST_ENCODE_DECODE(String,  size_0, str(""), {0x80})
+TEST_ENCODE_DECODE_CONTAINER(String,  size_0, 1,  str(make_string(0)), {0x80})
 TEST_ENCODE_DECODE_CONTAINER(String,  size_1, 1,  str(make_string(1)), {0x81, 0x30})
 TEST_ENCODE_DECODE_CONTAINER(String,  size_2, 1,  str(make_string(2)), {0x82, 0x30, 0x31})
 TEST_ENCODE_DECODE_CONTAINER(String,  size_3, 1,  str(make_string(3)), {0x83, 0x30, 0x31, 0x32})
