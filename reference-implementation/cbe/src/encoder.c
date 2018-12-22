@@ -453,12 +453,12 @@ cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const process)
 cbe_encode_status cbe_encode_end_container(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
+    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     if(process->container.level - 1 < 0)
     {
         KSLOG_DEBUG("STOP_AND_EXIT: Too many end-containers");
         return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS;
     }
-    STOP_AND_EXIT_IF_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_END_CONTAINER);
