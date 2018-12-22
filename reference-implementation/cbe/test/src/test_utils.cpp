@@ -70,7 +70,7 @@ std::vector<uint8_t> make_7f_bytes(int length)
     return vec;
 }
 
-std::vector<uint8_t> make_incrementing_bytes(int length, int start_value)
+std::vector<uint8_t> make_bytes(int length, int start_value)
 {
     std::vector<uint8_t> vec;
     int value = start_value;

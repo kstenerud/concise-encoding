@@ -133,7 +133,12 @@ TEST_ENCODE_DECODE_CONTAINER(String, size_13, 1, str(make_string(13)), concat({0
 TEST_ENCODE_DECODE_CONTAINER(String, size_14, 1, str(make_string(14)), concat({0x8e}, as_vector(make_string(14))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_15, 1, str(make_string(15)), concat({0x8f}, as_vector(make_string(15))))
 TEST_ENCODE_DECODE_CONTAINER(String, size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
-TEST_ENCODE_DECODE_CONTAINER(String, size_4000, 3, str(make_string(4000)), concat({0x90}, array_length_field(4000), as_vector(make_string(4000))))
+TEST_ENCODE_DECODE_CONTAINER(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
+
+TEST_ENCODE_DECODE_CONTAINER(Binary,  size_0, 2, bin(make_bytes(0)),  concat({0x91}, array_length_field(0)))
+TEST_ENCODE_DECODE_CONTAINER(Binary,  size_1, 2, bin(make_bytes(1)),  concat({0x91}, array_length_field(1), make_bytes(1)))
+TEST_ENCODE_DECODE_CONTAINER(Binary,  size_2, 2, bin(make_bytes(2)),  concat({0x91}, array_length_field(2), make_bytes(2)))
+TEST_ENCODE_DECODE_CONTAINER(Binary,  size_500, 3, bin(make_bytes(500)),  concat({0x91}, array_length_field(500), make_bytes(500)))
 
 TEST_ENCODE_DECODE_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})

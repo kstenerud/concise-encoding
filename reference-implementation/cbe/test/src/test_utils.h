@@ -17,7 +17,7 @@ std::string make_string(int length);
 std::vector<uint8_t> make_7f_bytes(int length);
 
 // Generate a vector with the sequence 00,01,02...7f,00,01...
-std::vector<uint8_t> make_incrementing_bytes(int length, int start_value=0);
+std::vector<uint8_t> make_bytes(int length, int start_value=0);
 
 std::vector<uint8_t> concat(
 	const std::vector<uint8_t>& v1,
