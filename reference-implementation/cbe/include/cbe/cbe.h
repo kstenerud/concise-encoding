@@ -178,9 +178,10 @@ typedef struct
     bool (*on_end_container) (struct cbe_decode_process* decode_process);
 
     /**
-     * A string has been opened. Expect subsequent calls to on_add_string_data()
-     * until the string has been filled. Once filled, the field is considered
-     * "closed".
+     * A string has been opened. Expect subsequent calls to
+     * on_add_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_add_data`, the field is considered
+     * "complete" and is closed.
      *
      * @param decode_process The decode process.
      * @param byte_count The total length of the string.
@@ -189,8 +190,9 @@ typedef struct
 
     /**
      * A binary data array has been opened. Expect subsequent calls to
-     * on_add_binary_data() until the array has been filled. Once filled, the field
-     * is considered "closed".
+     * on_add_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_add_data`, the field is considered
+     * "complete" and is closed.
      *
      * @param decode_process The decode process.
      * @param byte_count The total length of the array.
@@ -239,7 +241,7 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * - CBE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
  *
  * Unrecoverable codes:
- * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: document has unbalanced containers.
+ * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
  *
@@ -740,6 +742,9 @@ cbe_encode_status cbe_encode_begin_string(struct cbe_encode_process* encode_proc
 
 /**
  * Add data to the currently opened array field (string or binary).
+ * You can call this as many times as you like until the array field has been
+ * completely filled, at which point it is automatically considered "completed"
+ * and is closed.
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -756,7 +761,7 @@ cbe_encode_status cbe_encode_add_data(struct cbe_encode_process* encode_process,
                                       int64_t byte_count);
 
 /**
- * Convenience function: add a UTF-8 encoded string + its data to a document.
+ * Convenience function: add a UTF-8 encoded string and its data to a document.
  * Note: Do not include a byte order marker (BOM).
  *
  * Possible error codes:
