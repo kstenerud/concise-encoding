@@ -76,7 +76,6 @@ Usage
 
     char encode_process_backing_store[cbe_encode_process_size()];
     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)encode_process_backing_store;
-    void* context = my_get_context_data();
     unsigned char* document_buffer = my_get_document_pointer();
     int64_t document_buffer_size = my_get_document_byte_count();
     cbe_encode_status status = CBE_ENCODE_STATUS_OK;
