@@ -7,6 +7,9 @@ extern "C" {
 #include "cbe/cbe.h"
 
 
+// Maximum container depth allowed in a document.
+// Adding lists or maps will exit with an error code
+// if this depth is exceeded.
 #define MAX_CONTAINER_DEPTH 500
 
 
@@ -56,11 +59,11 @@ typedef uint8_t cbe_encoded_type_field;
 
 typedef enum
 {
-    LENGTH_FIELD_WIDTH_6_BIT  = 0,
-    LENGTH_FIELD_WIDTH_14_BIT = 1,
-    LENGTH_FIELD_WIDTH_30_BIT = 2,
-    LENGTH_FIELD_WIDTH_62_BIT = 3,
-} cbe_length_field_width;
+    ARRAY_LENGTH_FIELD_WIDTH_6_BIT  = 0,
+    ARRAY_LENGTH_FIELD_WIDTH_14_BIT = 1,
+    ARRAY_LENGTH_FIELD_WIDTH_30_BIT = 2,
+    ARRAY_LENGTH_FIELD_WIDTH_62_BIT = 3,
+} cbe_array_length_field_width;
 
 typedef enum
 {

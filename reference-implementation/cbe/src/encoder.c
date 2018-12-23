@@ -5,6 +5,11 @@
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
+
+// ====
+// Data
+// ====
+
 struct cbe_encode_process
 {
     struct
@@ -27,6 +32,11 @@ struct cbe_encode_process
     } container;
 };
 typedef struct cbe_encode_process cbe_encode_process;
+
+
+// ==============
+// Error Handlers
+// ==============
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
     if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(REQUIRED_BYTES)) \
@@ -97,6 +107,11 @@ typedef struct cbe_encode_process cbe_encode_process;
         return CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE; \
     }
 
+
+// =======
+// Utility
+// =======
+
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
 #define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
 #define FITS_IN_INT_16(VALUE)     ((VALUE) == (int16_t)(VALUE))
@@ -117,7 +132,7 @@ static inline void swap_map_key_value_status(cbe_encode_process* process)
     process->container.next_object_is_map_key = !process->container.next_object_is_map_key;
 }
 
-static inline unsigned int get_length_field_width(const uint64_t length)
+static inline unsigned int get_array_length_field_width(const uint64_t length)
 {
     if(length <= MAX_VALUE_6_BIT)  return sizeof(uint8_t);
     if(length <= MAX_VALUE_14_BIT) return sizeof(uint16_t);
@@ -192,28 +207,28 @@ static inline void add_primitive_bytes(cbe_encode_process* const process,
     process->buffer.position += byte_count;
 }
 
-static inline void add_length_field(cbe_encode_process* const process, const uint64_t length)
+static inline void add_array_length_field(cbe_encode_process* const process, const uint64_t length)
 {
     KSLOG_DEBUG("Length: %d", length);
     if(length <= MAX_VALUE_6_BIT)
     {
-        add_primitive_uint_8(process, (uint8_t)((length << 2) | LENGTH_FIELD_WIDTH_6_BIT));
+        add_primitive_uint_8(process, (uint8_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_6_BIT));
         return;
     }
     if(length <= MAX_VALUE_14_BIT)
     {
-        add_primitive_uint_16(process, (uint16_t)((length << 2) | LENGTH_FIELD_WIDTH_14_BIT));
+        add_primitive_uint_16(process, (uint16_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_14_BIT));
         return;
     }
     if(length <= MAX_VALUE_30_BIT)
     {
-        add_primitive_uint_32(process, (uint32_t)((length << 2) | LENGTH_FIELD_WIDTH_30_BIT));
+        add_primitive_uint_32(process, (uint32_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_30_BIT));
         return;
     }
-    add_primitive_uint_64(process, (length << 2) | LENGTH_FIELD_WIDTH_62_BIT);
+    add_primitive_uint_64(process, (length << 2) | ARRAY_LENGTH_FIELD_WIDTH_62_BIT);
 }
 
-static inline cbe_encode_status add_small(cbe_encode_process* const process, const int8_t value)
+static inline cbe_encode_status add_int_small(cbe_encode_process* const process, const int8_t value)
 {
     KSLOG_DEBUG(NULL);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
@@ -246,9 +261,9 @@ DEFINE_ADD_SCALAR_FUNCTION(_Decimal64,  decimal_64,  TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(_Decimal128, decimal_128, TYPE_DECIMAL_128)
 DEFINE_ADD_SCALAR_FUNCTION(smalltime,   time,        TYPE_TIME)
 
-static cbe_encode_status encode_string_header(cbe_encode_process* process,
-                                              const int64_t byte_count,
-                                              const bool should_reserve_payload)
+static inline cbe_encode_status encode_string_header(cbe_encode_process* process,
+                                                     const int64_t byte_count,
+                                                     const bool should_reserve_payload)
 {
     KSLOG_DEBUG("Length: %ld, Should reserve: %d", byte_count, should_reserve_payload);
     cbe_type_field type = 0;
@@ -256,7 +271,7 @@ static cbe_encode_status encode_string_header(cbe_encode_process* process,
     if(byte_count > 15)
     {
         type = TYPE_STRING;
-        reserved_count = get_length_field_width(byte_count);
+        reserved_count = get_array_length_field_width(byte_count);
     }
     else
     {
@@ -270,13 +285,17 @@ static cbe_encode_status encode_string_header(cbe_encode_process* process,
     add_primitive_type(process, type);
     if(byte_count > 15)
     {
-        add_length_field(process, byte_count);
+        add_array_length_field(process, byte_count);
     }
     begin_array(process, byte_count);
     swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
 }
 
+
+// ===
+// API
+// ===
 
 cbe_encode_process* cbe_encode_begin(uint8_t* const document_buffer, const int64_t byte_count)
 {
@@ -357,7 +376,7 @@ cbe_encode_status cbe_encode_add_boolean(cbe_encode_process* const process, cons
 cbe_encode_status cbe_encode_add_int(cbe_encode_process* const process, const int value)
 {
     KSLOG_DEBUG("Value: %d", value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     if(FITS_IN_INT_16(value)) return add_int_16(process, value);
     if(FITS_IN_INT_32(value)) return add_int_32(process, value);
     if(FITS_IN_INT_64(value)) return add_int_64(process, value);
@@ -367,21 +386,21 @@ cbe_encode_status cbe_encode_add_int(cbe_encode_process* const process, const in
 cbe_encode_status cbe_encode_add_int_8(cbe_encode_process* const process, int8_t const value)
 {
     KSLOG_DEBUG("Value: %d", value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     return add_int_16(process, value);
 }
 
 cbe_encode_status cbe_encode_add_int_16(cbe_encode_process* const process, int16_t const value)
 {
     KSLOG_DEBUG("Value: %d", value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     return add_int_16(process, value);
 }
 
 cbe_encode_status cbe_encode_add_int_32(cbe_encode_process* const process, int32_t const value)
 {
     KSLOG_DEBUG("Value: %d", value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     if(FITS_IN_INT_16(value)) return add_int_16(process, value);
     return add_int_32(process, value);
 }
@@ -389,7 +408,7 @@ cbe_encode_status cbe_encode_add_int_32(cbe_encode_process* const process, int32
 cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const process, int64_t const value)
 {
     KSLOG_DEBUG("Value: %d", value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     if(FITS_IN_INT_16(value)) return add_int_16(process, value);
     if(FITS_IN_INT_32(value)) return add_int_32(process, value);
     return add_int_64(process, value);
@@ -398,7 +417,7 @@ cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const process, int64
 cbe_encode_status cbe_encode_add_int_128(cbe_encode_process* const process, const __int128 value)
 {
     KSLOG_DEBUG("Value: 0x%016x%016x", (int64_t)(value>>64), (uint64_t)value);
-    if(FITS_IN_INT_SMALL(value)) return add_small(process, value);
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
     if(FITS_IN_INT_16(value)) return add_int_16(process, value);
     if(FITS_IN_INT_32(value)) return add_int_32(process, value);
     if(FITS_IN_INT_64(value)) return add_int_64(process, value);
@@ -502,15 +521,15 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
 {
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 0);
     int64_t bytes_to_copy = byte_count;
-    int64_t bytes_remaining = get_remaining_space_in_buffer(process);
-    if(bytes_remaining < bytes_to_copy)
+    int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+    if(space_in_buffer < bytes_to_copy)
     {
-        bytes_to_copy = bytes_remaining;
+        bytes_to_copy = space_in_buffer;
     }
     add_primitive_bytes(process, start, bytes_to_copy);
     process->array.current_offset += bytes_to_copy;
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count - bytes_remaining);
-    KSLOG_DEBUG("Encoded %d bytes", bytes_to_copy);
+    KSLOG_DEBUG("Streamed %d bytes into array", bytes_to_copy);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count - space_in_buffer);
     if(process->array.current_offset == process->array.byte_count)
     {
         KSLOG_DEBUG("Array has ended");
@@ -523,9 +542,9 @@ cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, con
 {
     KSLOG_DEBUG("Length: %ld", byte_count);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_length_field_width(byte_count));
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_array_length_field_width(byte_count));
     add_primitive_type(process, TYPE_BINARY_DATA);
-    add_length_field(process, byte_count);
+    add_array_length_field(process, byte_count);
     begin_array(process, byte_count);
     swap_map_key_value_status(process);
     return CBE_ENCODE_STATUS_OK;
