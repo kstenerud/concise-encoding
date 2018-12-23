@@ -157,8 +157,6 @@ static inline void add_primitive_int_8(cbe_encode_process* const process, const 
 #define DEFINE_PRIMITIVE_ADD_FUNCTION(DATA_TYPE, DEFINITION_TYPE) \
     static inline void add_primitive_ ## DEFINITION_TYPE(cbe_encode_process* const process, const DATA_TYPE value) \
     { \
-        /* Must clear memory first because the compiler may do a partial store where there are zero bytes in the source */ \
-        memset(process->buffer.position, 0, sizeof(value)); \
         safe_ ## DEFINITION_TYPE* safe = (safe_##DEFINITION_TYPE*)process->buffer.position; \
         safe->contents = value; \
         KSLOG_DATA_DEBUG(process->buffer.position, sizeof(value), NULL); \
