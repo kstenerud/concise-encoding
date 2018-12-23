@@ -4,48 +4,6 @@
 #include "kslogger.h"
 
 
-// ===========================================================================
-// Google Test extension to test for exact equality in encoding objects
-
-namespace testing {
-namespace internal {
-
-// The helper function for {ASSERT|EXPECT}_EQ.
-template <typename T1, typename T2>
-AssertionResult CmpHelperEX(const char* lhs_expression,
-                            const char* rhs_expression,
-                            const T1& lhs,
-                            const T2& rhs) {
-  if (lhs.is_equal_in_type_and_size(rhs)) {
-    return AssertionSuccess();
-  }
-
-  return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
-}
-
-template <bool lhs_is_null_literal>
-class ExHelper {
- public:
-  // This templatized version is for the general case.
-  template <typename T1, typename T2>
-  static AssertionResult Compare(const char* lhs_expression,
-                                 const char* rhs_expression,
-                                 const T1& lhs,
-                                 const T2& rhs) {
-    return CmpHelperEX(lhs_expression, rhs_expression, lhs, rhs);
-  }
-
-};
-
-}}
-
-#define EXPECT_EX(val1, val2) \
-  EXPECT_PRED_FORMAT2(::testing::internal:: \
-                      ExHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
-                      val1, val2)
-
-// ===========================================================================
-
 namespace cbe_test
 {
 
@@ -147,7 +105,10 @@ const cbe_decode_callbacks* get_always_true_decode_callbacks()
 // ===========================================================================
 
 
-static std::vector<uint8_t> encode_data(int buffer_size, std::shared_ptr<enc::encoding> encoding, cbe_encode_status& status)
+static std::vector<uint8_t> encode_data(
+    int buffer_size,
+    std::shared_ptr<enc::encoding> encoding,
+    cbe_encode_status& status)
 {
     std::vector<uint8_t> actual_memory;
 
@@ -163,7 +124,10 @@ static std::vector<uint8_t> encode_data(int buffer_size, std::shared_ptr<enc::en
     return actual_memory;
 }
 
-static std::shared_ptr<enc::encoding> decode_data(int buffer_size, std::vector<uint8_t> data, cbe_decode_status& status)
+static std::shared_ptr<enc::encoding> decode_data(
+    int buffer_size,
+    std::vector<uint8_t> data,
+    cbe_decode_status& status)
 {
     cbe_decoder decoder;
     KSLOG_DEBUG("Decode %d bytes with buffer size %d", data.size(), buffer_size);
@@ -192,7 +156,8 @@ static std::shared_ptr<enc::encoding> decode_data(int buffer_size, std::vector<u
     return decoder.decoded();
 }
 
-bool expect_encode(int buffer_size,
+bool expect_encode_produces_data_and_status(
+    int buffer_size,
     std::shared_ptr<enc::encoding> encoding,
     const std::vector<uint8_t> expected_memory,
     cbe_encode_status expected_status)
@@ -208,7 +173,8 @@ bool expect_encode(int buffer_size,
     return actual_status == CBE_ENCODE_STATUS_OK;
 }
 
-void expect_decode(int buffer_size,
+void expect_decode_produces_data_and_status(
+    int buffer_size,
     const std::vector<uint8_t> memory,
     std::shared_ptr<enc::encoding> expected_encoding,
     cbe_decode_status expected_status)
@@ -221,32 +187,29 @@ void expect_decode(int buffer_size,
     ASSERT_EQ(*expected_encoding, *actual_encoding);
 }
 
-void expect_decode_exact(int buffer_size,
-    const std::vector<uint8_t> memory,
-    std::shared_ptr<enc::encoding> expected_encoding,
-    cbe_decode_status expected_status)
-{
-    KSLOG_DEBUG("Decode %s", as_string(memory).c_str());
-    cbe_decode_status actual_status = CBE_DECODE_STATUS_OK;
-    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, memory, actual_status);
-    ASSERT_EQ(expected_status, actual_status);
-    ASSERT_TRUE(actual_encoding);
-    EXPECT_EX(*expected_encoding, *actual_encoding);
-}
-
-void expect_encode_decode(int buffer_size,
+static void expect_encode_decode_produces_data_and_status(
+    int buffer_size,
     std::shared_ptr<enc::encoding> expected_encoding,
     const std::vector<uint8_t> expected_memory,
     cbe_encode_status expected_encode_status,
     cbe_decode_status expected_decode_status)
 {
-    if(expect_encode(buffer_size, expected_encoding, expected_memory, expected_encode_status))
+    if(expect_encode_produces_data_and_status(
+        buffer_size,
+        expected_encoding,
+        expected_memory,
+        expected_encode_status))
     {
-        expect_decode(buffer_size, expected_memory, expected_encoding, expected_decode_status);
+        expect_decode_produces_data_and_status(
+            buffer_size,
+            expected_memory,
+            expected_encoding,
+            expected_decode_status);
     }
 }
 
-void expect_encode_decode_equality(int min_buffer_size,
+void expect_encode_decode_with_shrinking_buffer_size(
+    int min_buffer_size,
     std::shared_ptr<enc::encoding> expected_encoding,
     const std::vector<uint8_t> expected_memory)
 {
@@ -257,30 +220,24 @@ void expect_encode_decode_equality(int min_buffer_size,
     }
     for(int buffer_size = expected_buffer_size+16; buffer_size >= min_buffer_size; buffer_size--)
     {
-        expect_encode_decode(buffer_size, expected_encoding, expected_memory, CBE_ENCODE_STATUS_OK, CBE_DECODE_STATUS_OK);
+        expect_encode_decode_produces_data_and_status(
+            buffer_size,
+            expected_encoding,
+            expected_memory,
+            CBE_ENCODE_STATUS_OK,
+            CBE_DECODE_STATUS_OK);
     }
     if(min_buffer_size > 1)
     {
-        expect_encode(min_buffer_size - 1, expected_encoding, expected_memory, CBE_ENCODE_STATUS_NEED_MORE_ROOM);
+        expect_encode_produces_data_and_status(
+            min_buffer_size - 1,
+            expected_encoding,
+            expected_memory,
+            CBE_ENCODE_STATUS_NEED_MORE_ROOM);
     }
 }
 
-void expect_encode_decode_exact_equality(
-    std::shared_ptr<enc::encoding> expected_encoding,
-    const std::vector<uint8_t> expected_memory)
-{
-    cbe_encode_status encode_status = CBE_ENCODE_STATUS_OK;
-    cbe_decode_status decode_status = CBE_DECODE_STATUS_OK;
-    int buffer_size = expected_memory.size() + 100;
-    std::vector<uint8_t> actual_memory = encode_data(buffer_size, expected_encoding, encode_status);
-    ASSERT_EQ(encode_status, CBE_ENCODE_STATUS_OK);
-    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, expected_memory, decode_status);
-    ASSERT_EQ(decode_status, CBE_DECODE_STATUS_OK);
-    ASSERT_EQ(expected_memory, actual_memory);
-    EXPECT_EX(*expected_encoding, *actual_encoding);
-}
-
-void expect_encode_decode_status(
+void expect_encode_decode_produces_status(
     std::shared_ptr<enc::encoding> encoding,
     cbe_encode_status expected_encode_status,
     cbe_decode_status expected_decode_status)
@@ -294,7 +251,7 @@ void expect_encode_decode_status(
     ASSERT_EQ(decode_status, expected_decode_status);
 }
 
-void expect_encode_status(
+void expect_encode_produces_status(
     std::shared_ptr<enc::encoding> encoding,
     cbe_encode_status expected_encode_status)
 {
@@ -304,7 +261,7 @@ void expect_encode_status(
     ASSERT_EQ(encode_status, expected_encode_status);
 }
 
-void expect_decode_status(
+void expect_decode_produces_status(
     std::vector<uint8_t> document,
     cbe_decode_status expected_decode_status)
 {
