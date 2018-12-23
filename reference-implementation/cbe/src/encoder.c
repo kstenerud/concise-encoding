@@ -555,7 +555,7 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process, const
     KSLOG_DATA_TRACE(str, strlen(str), NULL);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
     const bool should_reserve_payload = true;
-    const int byte_count = strlen(str);
+    const int64_t byte_count = strlen(str);
     cbe_encode_status status = encode_string_header(process, byte_count, should_reserve_payload);
     if(status != CBE_ENCODE_STATUS_OK)
     {
