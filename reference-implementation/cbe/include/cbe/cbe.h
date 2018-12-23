@@ -273,15 +273,13 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * unconsumed bytes must be prepended to the subsequent buffer for the next
  * call to cbe_decode_feed().
  *
- * If an unrecoverable code is returned, you must still call cbe_decode_end()
- * (and disregard its return code) in order to free all decoder resources. The
- * document is invalid, and must be discarded.
+ * If an unrecoverable code is returned, the document is invalid, and must be
+ * discarded.
  *
- * If a recoverable code is returned, the decoder process is still valid, and
- * still points to the field that caused the code to be returned. If you can
- * fix the problem that led to the recoverable code, you may run
- * cbe_decode_feed() again using the same buffer + the current offset from
- * cbe_decode_get_buffer_offset().
+ * If a recoverable code is returned, the decoder process points to the field
+ * that caused the code to be returned. If you can fix the problem that led to
+ * the recoverable code, you may run `cbe_decode_feed()` again using the same
+ * buffer + the current offset from `cbe_decode_get_buffer_offset()`.
  *
  * @param decode_process The decode process.
  * @param data_start The start of the document.
@@ -302,13 +300,7 @@ cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
 int64_t cbe_decode_get_buffer_offset(struct cbe_decode_process* decode_process);
 
 /**
- * End a decoding process, closing the document and freeing up any decoder
- * resources used. The document is ALWAYS closed (and resources freed),
- * regardless of the status code returned. If the status code is not
- * CBE_DECODE_STATUS_OK, then the document is invalid because it is
- * malformed, and must be discarded.
- *
- * Note: This does NOT free the user-supplied decode buffer or the user context.
+ * End a decoding process, checking for document validity.
  *
  * Possible error codes:
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
@@ -453,13 +445,7 @@ int64_t cbe_encode_get_array_offset(struct cbe_encode_process* encode_process);
 int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
 
 /**
- * End an encoding process, closing the document and freeing up any encoder
- * resources used. The document is ALWAYS closed (and resources freed),
- * regardless of the status code returned. If the status code is not
- * CBE_ENCODE_STATUS_OK, then the document is invalid because it is
- * malformed, and must be discarded.
- *
- * Note: This does NOT free the user-supplied encode buffer.
+ * End an encoding process, checking the document for validity.
  *
  * Possible error codes:
  * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.

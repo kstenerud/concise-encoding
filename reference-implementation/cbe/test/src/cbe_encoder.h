@@ -52,8 +52,6 @@ public:
 		std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready =
 			[](uint8_t* data_start, int64_t length){(void)data_start; (void)length; return true;});
 
-	~cbe_encoder();
-
 	// Encode an encoding object and all linked objects.
 	cbe_encode_status encode(std::shared_ptr<enc::encoding> enc);
 

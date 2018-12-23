@@ -280,8 +280,3 @@ cbe_encoder::cbe_encoder(int64_t buffer_size,
 {
 	KSLOG_DEBUG("New cbe_encoder with buffer size %d", _buffer.size());
 }
-
-cbe_encoder::~cbe_encoder()
-{
-	end();
-}

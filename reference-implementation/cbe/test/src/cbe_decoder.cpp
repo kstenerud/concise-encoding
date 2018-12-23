@@ -144,11 +144,6 @@ cbe_decoder::cbe_decoder()
     cbe_decode_begin(_process, &g_callbacks, (void*)this);
 }
 
-cbe_decoder::~cbe_decoder()
-{
-    cbe_decode_end(_process);
-}
-
 std::vector<uint8_t>& cbe_decoder::received_data()
 {
     return _received_data;

@@ -36,8 +36,6 @@ public:
 public:
 	cbe_decoder();
 
-	~cbe_decoder();
-
 	// Feed data to be decoded.
 	cbe_decode_status feed(std::vector<uint8_t>& data);
 
