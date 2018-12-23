@@ -195,27 +195,34 @@ static cbe_decode_status begin_array(cbe_decode_process* const process,
 {
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, peek_array_length_field_width(process));
-    int64_t array_byte_count = read_array_length(process);
+
+    const int64_t array_byte_count = read_array_length(process);
+
     KSLOG_DEBUG("Length: %d", array_byte_count);
     STOP_AND_EXIT_IF_FAILED_CALLBACK(on_begin_array(process, array_byte_count));
     internal_begin_array(process, array_byte_count);
+
     return CBE_DECODE_STATUS_OK;
 }
 
 static cbe_decode_status stream_array(cbe_decode_process* const process)
 {
-    int64_t bytes_in_array = process->array.byte_count - process->array.current_offset;
-    int64_t space_in_buffer = get_remaining_space_in_buffer(process);
-    int64_t bytes_to_stream = bytes_in_array <= space_in_buffer ? bytes_in_array : space_in_buffer;
+    const int64_t bytes_in_array = process->array.byte_count - process->array.current_offset;
+    const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+    const int64_t bytes_to_stream = bytes_in_array <= space_in_buffer ? bytes_in_array : space_in_buffer;
+
     KSLOG_DEBUG("Length: arr %d vs buf %d: %d bytes", bytes_in_array, space_in_buffer, bytes_to_stream);
     KSLOG_DATA_TRACE(process->buffer.position, bytes_to_stream, NULL);
     STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_add_data(process, process->buffer.position, bytes_to_stream));
+
     consume_bytes(process, bytes_to_stream);
     process->array.current_offset += bytes_to_stream;
+
     KSLOG_DEBUG("Streamed %d bytes into array", bytes_to_stream);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, bytes_in_array - space_in_buffer);
     end_object(process);
     process->array.is_inside_array = false;
+
     return CBE_DECODE_STATUS_OK;
 }
 
@@ -230,8 +237,10 @@ struct cbe_decode_process* cbe_decode_begin(const cbe_decode_callbacks* const ca
     KSLOG_DEBUG(NULL);
     cbe_decode_process* process = malloc(sizeof(*process));
     memset(process, 0, sizeof(*process));
+
     process->callbacks = callbacks;
     process->user_context = user_context;
+
     return process;
 }
 
@@ -246,6 +255,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
 {
     KSLOG_DEBUG("Feed %d bytes...", byte_count);
     KSLOG_DATA_TRACE(data_start, byte_count, NULL);
+
     process->buffer.start = data_start;
     process->buffer.position = data_start;
     process->buffer.end = data_start + byte_count;
@@ -265,7 +275,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
     while(process->buffer.position < process->buffer.end)
     {
         KSLOG_DEBUG("Reading type");
-        cbe_type_field type = read_uint_8(process);
+        const cbe_type_field type = read_uint_8(process);
 
         switch(type)
         {
@@ -331,7 +341,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_STRING_8: case TYPE_STRING_9: case TYPE_STRING_10: case TYPE_STRING_11:
             case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
             {
-                int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
+                const int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
                 KSLOG_DEBUG("(String %d)", array_byte_count);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_begin_string(process, array_byte_count));
                 internal_begin_array(process, array_byte_count);
@@ -413,10 +423,13 @@ int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
 
 cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 {
-    cbe_decode_process temp_process = *process;
+    const cbe_decode_process temp_process = *process;
+
     free(process);
+
     STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(&temp_process);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(&temp_process);
+
     KSLOG_DEBUG("Process ended successfully");
     return CBE_DECODE_STATUS_OK;
 }
