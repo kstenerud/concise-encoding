@@ -580,11 +580,11 @@ std::shared_ptr<number_encoding<int64_t>>      i64(int64_t value)               
 std::shared_ptr<int128_encoding>               i128(__int128 value)             {return std::make_shared<int128_encoding>(value);}
 std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low) {return i128((((__int128)high) << 64) + low);}
 std::shared_ptr<number_encoding<float>>        f32(float value)                 {return std::make_shared<number_encoding<float>>(value);}
-std::shared_ptr<number_encoding<double>>       f64(float value)                 {return std::make_shared<number_encoding<double>>(value);}
-std::shared_ptr<number_encoding<__float128>>   f128(float value)                {return std::make_shared<number_encoding<__float128>>(value);}
+std::shared_ptr<number_encoding<double>>       f64(double value)                {return std::make_shared<number_encoding<double>>(value);}
+std::shared_ptr<number_encoding<__float128>>   f128(__float128 value)           {return std::make_shared<number_encoding<__float128>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal32>>      d32(_Decimal32 value)            {return std::make_shared<dfp_encoding<_Decimal32>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal64>>      d64(_Decimal64 value)            {return std::make_shared<dfp_encoding<_Decimal64>>(value);}
-std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal32 value)           {return std::make_shared<dfp_encoding<_Decimal128>>(value);}
+std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value)           {return std::make_shared<dfp_encoding<_Decimal128>>(value);}
 std::shared_ptr<padding_encoding>              pad(int byte_count)              {return std::make_shared<padding_encoding>(byte_count);}
 
 } // namespace enc
