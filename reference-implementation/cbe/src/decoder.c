@@ -161,8 +161,6 @@ void* cbe_decode_get_user_context(cbe_decode_process* const process)
     return process->user_context;
 }
 
-
-
 static inline cbe_decode_status begin_object(cbe_decode_process* process, const int64_t initial_byte_count)
 {
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(initial_byte_count);
