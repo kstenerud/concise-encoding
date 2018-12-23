@@ -15,6 +15,7 @@ typedef enum
 class cbe_decoder
 {
 private:
+	std::vector<char> _process_backing_store;
 	cbe_decode_process* _process;
 	std::vector<uint8_t> _received_data;
 	int64_t _read_offset = 0;

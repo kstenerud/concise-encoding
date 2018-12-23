@@ -214,13 +214,30 @@ typedef struct
 
 
 /**
+ * Get the size of the decode process data.
+ * Use this to create a backing store for the process data like so:
+ *     char process_backing_store[cbe_decode_process_size()];
+ *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)process_backing_store;
+ * or
+ *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)malloc(cbe_decode_process_size());
+ * or
+ *     std::vector<char> process_backing_store(cbe_decode_process_size());
+ *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)process_backing_store.data();
+ *
+ * @return The process data size.
+ */
+int cbe_decode_process_size();
+
+/**
  * Begin a new decoding process.
  *
+ * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
- * @return The process of the new decode process.
  */
-struct cbe_decode_process* cbe_decode_begin(const cbe_decode_callbacks* callbacks, void* user_context);
+void cbe_decode_begin(struct cbe_decode_process* decode_process,
+                      const cbe_decode_callbacks* callbacks,
+                      void* user_context);
 
 /**
  * Get the user context information from a decode process.
@@ -365,14 +382,30 @@ typedef enum
 } cbe_encode_status;
 
 /**
+ * Get the size of the encode process data.
+ * Use this to create a backing store for the process data like so:
+ *     char process_backing_store[cbe_encode_process_size()];
+ *     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)process_backing_store;
+ * or
+ *     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)malloc(cbe_encode_process_size());
+ * or
+ *     std::vector<char> process_backing_store(cbe_encode_process_size());
+ *     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)process_backing_store.data();
+ *
+ * @return The process data size.
+ */
+int cbe_encode_process_size();
+
+/**
  * Begin a new encoding process, setting up an initial document buffer.
  *
+ * @param encode_process The encode process to initialize.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
- * @return The new encode process.
  */
-struct cbe_encode_process* cbe_encode_begin(uint8_t* document_buffer,
-                                            int64_t byte_count);
+void cbe_encode_begin(struct cbe_encode_process* encode_process,
+                      uint8_t* document_buffer,
+                      int64_t byte_count);
 
 /**
  * Replace the document buffer in an encode process.

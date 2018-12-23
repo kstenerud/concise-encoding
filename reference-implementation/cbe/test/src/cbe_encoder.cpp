@@ -273,8 +273,9 @@ cbe_encode_status cbe_encoder::end()
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,
 	std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
-: _buffer(buffer_size)
-, _process(cbe_encode_begin(_buffer.data(), _buffer.size()))
+: _process_backing_store(cbe_encode_process_size())
+, _process((cbe_encode_process*)_process_backing_store.data())
+, _buffer(buffer_size)
 , _on_data_ready(on_data_ready)
 {
 	KSLOG_DEBUG("New cbe_encoder with buffer size %d", _buffer.size());

@@ -1,5 +1,3 @@
-#include <memory.h>
-#include <stdlib.h>
 #include "cbe_internal.h"
 
 // #define KSLogger_LocalLevel DEBUG
@@ -231,17 +229,21 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 // API
 // ===
 
-struct cbe_decode_process* cbe_decode_begin(const cbe_decode_callbacks* const callbacks,
-                                            void* const user_context)
+int cbe_decode_process_size()
+{
+    return sizeof(cbe_decode_process);
+}
+
+void cbe_decode_begin(cbe_decode_process* const process,
+                      const cbe_decode_callbacks* const callbacks,
+                      void* const user_context)
 {
     KSLOG_DEBUG(NULL);
-    cbe_decode_process* process = malloc(sizeof(*process));
-    memset(process, 0, sizeof(*process));
 
     process->callbacks = callbacks;
     process->user_context = user_context;
-
-    return process;
+    process->array.is_inside_array = false;
+    process->container.level = 0;
 }
 
 void* cbe_decode_get_user_context(cbe_decode_process* const process)
@@ -423,12 +425,8 @@ int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
 
 cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 {
-    const cbe_decode_process temp_process = *process;
-
-    free(process);
-
-    STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(&temp_process);
-    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(&temp_process);
+    STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(process);
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
 
     KSLOG_DEBUG("Process ended successfully");
     return CBE_DECODE_STATUS_OK;

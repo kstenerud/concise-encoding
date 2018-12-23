@@ -204,7 +204,9 @@ TEST(List, too_deep)
     const int memory_size = 100000;
     std::array<uint8_t, memory_size> memory;
 
-	struct cbe_encode_process* encode_process = cbe_encode_begin(memory.data(), memory.size());
+    char cbe_encode_process_data[cbe_encode_process_size()];
+    struct cbe_encode_process* encode_process = (struct cbe_encode_process*)&cbe_encode_process_data ;
+    cbe_encode_begin(encode_process, memory.data(), memory.size());
 	cbe_encode_status status;
 	for(int i = 0; i < depth_too_far; i++)
 	{

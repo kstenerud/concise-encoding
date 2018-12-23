@@ -113,7 +113,7 @@ static bool on_add_data(struct cbe_decode_process* process,
 }
 
 
-static cbe_decode_callbacks g_callbacks =
+static const cbe_decode_callbacks g_callbacks =
 {
     on_add_empty: on_add_empty,
     on_add_boolean: on_add_boolean,
@@ -138,16 +138,15 @@ static cbe_decode_callbacks g_callbacks =
 };
 
 cbe_decoder::cbe_decoder()
-: _process(cbe_decode_begin(&g_callbacks, (void*)this))
+: _process_backing_store(cbe_decode_process_size())
+, _process((cbe_decode_process*)_process_backing_store.data())
 {
+    cbe_decode_begin(_process, &g_callbacks, (void*)this);
 }
 
 cbe_decoder::~cbe_decoder()
 {
-    if(_process_is_valid)
-    {
-        cbe_decode_end(_process);
-    }
+    cbe_decode_end(_process);
 }
 
 std::vector<uint8_t>& cbe_decoder::received_data()
