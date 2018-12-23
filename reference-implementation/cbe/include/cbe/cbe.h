@@ -57,7 +57,7 @@ typedef enum
     CBE_DECODE_STATUS_STOPPED_IN_CALLBACK,
 
     /**
-     * Unbalanced container begin and end markers were detected.
+     * Unbalanced list/map begin and end markers were detected.
      */
     CBE_DECODE_ERROR_UNBALANCED_CONTAINERS,
 
@@ -327,7 +327,7 @@ typedef enum
     CBE_ENCODE_STATUS_NEED_MORE_ROOM = 200,
 
     /**
-     * Unbalanced container begin and end markers were detected.
+     * Unbalanced list/map begin and end markers were detected.
      */
     CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS,
 
@@ -342,8 +342,8 @@ typedef enum
     CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Attempted to add a new field before the existing field was completely
-     * filled.
+     * Attempted to add a new field or close the document before the existing
+     * field was completely filled.
      */
     CBE_ENCODE_ERROR_INCOMPLETE_FIELD,
 
