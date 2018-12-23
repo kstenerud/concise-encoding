@@ -48,27 +48,6 @@ typedef struct cbe_encode_process cbe_encode_process;
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(PROCESS, REQUIRED_BYTES) \
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, ((REQUIRED_BYTES) + sizeof(cbe_encoded_type_field)))
 
-#define STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(PROCESS) \
-    if((PROCESS)->container.level + 1 >= MAX_CONTAINER_DEPTH) \
-    { \
-        KSLOG_DEBUG("STOP AND EXIT: Max depth %d exceeded", MAX_CONTAINER_DEPTH); \
-        return CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED; \
-    }
-
-#define STOP_AND_EXIT_IF_IS_NOT_INSIDE_CONTAINER(PROCESS) \
-    if((PROCESS)->container.level <= 0) \
-    { \
-        KSLOG_DEBUG("STOP AND EXIT: We're not inside a container"); \
-        return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
-    }
-
-#define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
-    if((PROCESS)->container.level != 0) \
-    { \
-        KSLOG_DEBUG("STOP AND EXIT: There are still open containers when there shouldn't be"); \
-        return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
-    }
-
 #define STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(PROCESS) \
     if((PROCESS)->array.is_inside_array) \
     { \
@@ -92,6 +71,27 @@ typedef struct cbe_encode_process cbe_encode_process;
         return CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED; \
     } \
 }
+
+#define STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(PROCESS) \
+    if((PROCESS)->container.level + 1 >= MAX_CONTAINER_DEPTH) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Max depth %d exceeded", MAX_CONTAINER_DEPTH); \
+        return CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_NOT_INSIDE_CONTAINER(PROCESS) \
+    if((PROCESS)->container.level <= 0) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: We're not inside a container"); \
+        return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
+    if((PROCESS)->container.level != 0) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: There are still open containers when there shouldn't be"); \
+        return CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
+    }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
     if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && !(PROCESS)->container.next_object_is_map_key) \

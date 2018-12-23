@@ -47,6 +47,13 @@ typedef struct cbe_decode_process cbe_decode_process;
         return CBE_DECODE_STATUS_NEED_MORE_DATA; \
     }
 
+#define STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(PROCESS) \
+    if((PROCESS)->array.is_inside_array) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: We're inside an array when we shouldn't be"); \
+        return CBE_DECODE_ERROR_INCOMPLETE_FIELD; \
+    }
+
 #define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
     if((PROCESS)->container.level != 0) \
     { \
@@ -409,5 +416,7 @@ cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
     cbe_decode_process temp_process = *process;
     free(process);
     STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(&temp_process);
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(&temp_process);
+    KSLOG_DEBUG("Process ended successfully");
     return CBE_DECODE_STATUS_OK;
 }

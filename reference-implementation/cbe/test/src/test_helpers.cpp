@@ -183,7 +183,8 @@ static std::shared_ptr<enc::encoding> decode_data(int buffer_size, std::vector<u
             break;
         }
     }
-    if(status == CBE_DECODE_STATUS_OK)
+    // Also checking NEED_MORE_DATA to allow testing for premature end of data.
+    if(status == CBE_DECODE_STATUS_OK || status == CBE_DECODE_STATUS_NEED_MORE_DATA)
     {
         status = decoder.end();
     }
