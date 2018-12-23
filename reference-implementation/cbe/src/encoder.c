@@ -86,11 +86,11 @@ typedef struct cbe_encode_process cbe_encode_process;
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
     if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && !(PROCESS)->container.next_object_is_map_key) \
     { \
-        KSLOG_DEBUG("STOP AND EXIT: No map value provided for last key"); \
+        KSLOG_DEBUG("STOP AND EXIT: No map value provided for previous key"); \
         return CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY; \
     }
 
-#define STOP_AND_EXIT_IF_IS_EXPECTING_MAP_KEY(PROCESS) \
+#define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
     if((PROCESS)->container.is_inside_map[process->container.level] && (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
@@ -314,9 +314,10 @@ int cbe_encode_get_container_level(cbe_encode_process* const process)
 
 cbe_encode_status cbe_encode_end(cbe_encode_process* const process)
 {
+    cbe_encode_process temp_process = *process;
     free(process);
-    STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(process);
-    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(&temp_process);
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(&temp_process);
     KSLOG_DEBUG("Process ended successfully");
     return CBE_ENCODE_STATUS_OK;
 }
@@ -335,7 +336,7 @@ cbe_encode_status cbe_encode_add_padding(cbe_encode_process* const process, int 
 cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
-    STOP_AND_EXIT_IF_IS_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_EMPTY);
@@ -456,7 +457,7 @@ cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
-    STOP_AND_EXIT_IF_IS_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
     STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_LIST);
@@ -471,7 +472,7 @@ cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
-    STOP_AND_EXIT_IF_IS_EXPECTING_MAP_KEY(process);
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
     STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
     add_primitive_type(process, TYPE_MAP);
