@@ -44,6 +44,7 @@ Usage
 
 ### Decoding
 
+```c
     char decode_process_backing_store[cbe_decode_process_size()];
     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)decode_process_backing_store;
     const cbe_decode_callbacks callbacks =
@@ -70,10 +71,12 @@ Usage
     }
 
     status = cbe_decode_end(decode_process);
+```
 
 
 ### Encoding
 
+```c
     char encode_process_backing_store[cbe_encode_process_size()];
     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)encode_process_backing_store;
     unsigned char* document_buffer = my_get_document_pointer();
@@ -90,6 +93,7 @@ Usage
     status = cbe_encode_add_string(encode_process, "Testing");
     status = cbe_encode_end_container(encode_process);
     status = cbe_encode_end(encode_process);
+```
 
 
 
