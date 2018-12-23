@@ -3,8 +3,6 @@ Reference Implementation for Concise Binary Encoding
 
 A C implementation to demonstrate a simple CBE codec.
 
-The only heap allocations occur when starting a new process.
-
 
 Assumptions
 -----------
@@ -23,14 +21,12 @@ Requirements
 
 
 
-C Library Dependencies
-----------------------
+Dependencies
+------------
 
- * decimal/decimal: For C++ decimal float types
+ * decimal/decimal (if using C++): For C++ decimal float types
  * stdbool.h: For bool type
  * stdint.h: Fot int types
- * memory.h: For memset()
- * stdlib.h: For malloc() and free()
 
 
 
