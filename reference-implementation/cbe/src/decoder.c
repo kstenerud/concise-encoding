@@ -14,7 +14,6 @@ struct cbe_decode_process
         const uint8_t* start;
         const uint8_t* end;
         const uint8_t* position;
-        const uint8_t* current_object;
     } buffer;
     struct
     {
@@ -228,7 +227,6 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
     process->buffer.start = data_start;
     process->buffer.position = data_start;
     process->buffer.end = data_start + byte_count;
-    process->buffer.current_object = process->buffer.position;
 
     #define BEGIN_OBJECT(SIZE) \
         STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_object(process, SIZE));
@@ -378,7 +376,6 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 END_OBJECT();
                 break;
         }
-        process->buffer.current_object = process->buffer.position;
         if(process->container.level <= 0)
         {
             break;
