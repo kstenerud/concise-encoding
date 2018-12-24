@@ -294,13 +294,15 @@ Other Types
 
 ### Empty
 
-Denotes the absence of data. Some languages implement this as the "null" value. It must be in lower case (`Empty`, `EMPTY`, `eMPty` are invalid).
+Denotes the absence of data. Some languages implement this as the "null" value. you may also use its alias `e`.
 
-Use this with care, as some languages may have restrictions on how it may be used in data structures.
+Use `empty` with care, as some languages have restrictions on how it may be used in data structures.
 
 Example:
 
     empty
+
+    e
 
 
 
@@ -335,9 +337,9 @@ Letter Case
 
 A CTE document must be entirely in lower case, except for the following:
 
- * String contents: `"A string may contain UPPER CASE. Escape sequences, however, must be lower case: \x3d"`
- * Time values must be in upper case: `2018-07-01T10:53:22.001481Z`
- * base64 encoding specifies uppercase characters in its code table.
+ * String contents: `"A string may contain UPPER CASE. Escape sequences must be lower case: \x3d"`
+ * Time values must be in upper case to conform with ISO 8601: `2018-07-01T10:53:22.001481Z`
+ * base64 encoding makes use of uppercase characters in its code table.
 
 Everything else, including hexadecimal digits and escape sequences, must be lower case.
 
@@ -345,6 +347,11 @@ Everything else, including hexadecimal digits and escape sequences, must be lowe
 
 Whitespace
 ----------
+
+Whitespace characters are ignored by a CTE parser. Any number of whitespace characters may occur in a sequence.
+
+
+### Valid Whitespace Characters
 
 While there are many characters classified as "whitespace" within the Unicode set, only the following are valid whitespace characters in a CTE document:
 
@@ -355,24 +362,38 @@ While there are many characters classified as "whitespace" within the Unicode se
 | U+000D     | carriage return |
 | U+0020     | space           |
 
-#### Whitespace may occur:
+
+### Whitespace **may** occur:
 
  * Before an object (including at the beginning of a document)
  * After an object (including at the end of a document)
- * Between array or container openings & closings: `[`, `]`, `{`, `}`, `(`, `)`
- * Between encoded characters in a binary data array.
+ * Between array/container openings & closings: `[`, `]`, `{`, `}`, `(`, `)`
+ * Between encoding characters in a binary data array (both base64 and hex).
 
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
  * `h( 01 02 03   0 4 )` is equivalent to `h(01020304)`
- * `{ 1:"one" 2 : "two" 3: "three" 4 :"four"}`
+ * `{ 1:"one" 2 : "two" 3: "three" 4 :"four"}` is equivalent to `{1:"one" 2:"two" 3:"three" 4:"four"}`
 
-#### Whitespace must NOT occur:
 
- * Between a binary data encoding specifier and the opening parenthesis: `h (` is invalid
- * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid
- * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid
+### Whitespace **must** occur:
+
+ * Between key-value pairs in a map: `{1:"one"2:"two"3:"three"4:"four"}` is invalid.
+
+
+### Whitespace **must not** occur:
+
+ * Between a binary data encoding specifier and the opening parenthesis: `h (` is invalid.
+ * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid.
+ * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid.
+ * Splitting `true`, `false`, or `empty`: `t rue` is invalid.
+
+
+### Whitespace is interpreted literally (not ignored) within a string:
+
+    "This string has spaces
+    and a newline, which are all preserved."
 
 
 
