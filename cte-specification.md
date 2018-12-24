@@ -301,7 +301,6 @@ Use `empty` with care, as some languages have restrictions on how it may be used
 Example:
 
     empty
-
     e
 
 
