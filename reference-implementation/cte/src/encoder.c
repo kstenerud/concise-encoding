@@ -9,12 +9,6 @@
     if((size_t)((PROCESS)->end - (PROCESS)->pos) < (size_t)(REQUIRED_BYTES)) \
         return CTE_ENCODE_STATUS_NEED_MORE_ROOM
 
-// TODO: Kil this
-static inline cte_encode_process* get_real_process(cte_encode_process* encode_process)
-{
-    return encode_process;
-}
-
 int cte_encode_process_size()
 {
     return sizeof(cte_encode_process);
@@ -123,32 +117,28 @@ static cte_encode_status add_object(cte_encode_process* const process, const cha
     return status;
 }
 
-cte_encode_status cte_encode_add_empty(cte_encode_process* const encode_process)
+cte_encode_status cte_encode_add_empty(cte_encode_process* const process)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     if(process->next_object_is_map_key) return 9999;
     return add_object(process, "empty");
 }
 
-cte_encode_status cte_encode_add_boolean(cte_encode_process* const encode_process, const bool value)
+cte_encode_status cte_encode_add_boolean(cte_encode_process* const process, const bool value)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     if(process->next_object_is_map_key) return 9999;
     return add_object(process, value ? "t" : "f");
 }
 
-cte_encode_status cte_encode_add_int_64(cte_encode_process* const encode_process, const int64_t value)
+cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, const int64_t value)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     if(process->next_object_is_map_key) return 9999;
     char buffer[21];
     sprintf(buffer, "%ld", value);
     return add_object(process, buffer);
 }
 
-cte_encode_status cte_encode_add_float_64(cte_encode_process* const encode_process, const double value)
+cte_encode_status cte_encode_add_float_64(cte_encode_process* const process, const double value)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     if(process->next_object_is_map_key) return 9999;
     char fmt[10];
     sprintf(fmt, "%%.%dlg", process->float_digits_precision);
@@ -194,9 +184,8 @@ static cte_encode_status add_substring_with_escaping(cte_encode_process* const p
     return CTE_ENCODE_STATUS_OK;
 }
 
-cte_encode_status cte_encode_add_substring(cte_encode_process* const encode_process, const char* const start, const int64_t byte_count)
+cte_encode_status cte_encode_add_substring(cte_encode_process* const process, const char* const start, const int64_t byte_count)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     cte_encode_status status = CTE_ENCODE_STATUS_OK;
     if((status = add_object(process, "\"")) != CTE_ENCODE_STATUS_OK) return status;
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count + 1);
@@ -205,9 +194,9 @@ cte_encode_status cte_encode_add_substring(cte_encode_process* const encode_proc
     return status;
 }
 
-cte_encode_status cte_encode_add_string(cte_encode_process* const encode_process, const char* const str)
+cte_encode_status cte_encode_add_string(cte_encode_process* const process, const char* const str)
 {
-    return cte_encode_add_substring(encode_process, str, strlen(str));
+    return cte_encode_add_substring(process, str, strlen(str));
 }
 
 static cte_encode_status start_container(cte_encode_process* const process, bool is_map)
@@ -224,21 +213,18 @@ static cte_encode_status start_container(cte_encode_process* const process, bool
 
 }
 
-cte_encode_status cte_encode_begin_list(cte_encode_process* const encode_process)
+cte_encode_status cte_encode_begin_list(cte_encode_process* const process)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     return start_container(process, false);
 }
 
-cte_encode_status cte_encode_begin_map(cte_encode_process* const encode_process)
+cte_encode_status cte_encode_begin_map(cte_encode_process* const process)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     return start_container(process, true);
 }
 
-cte_encode_status cte_encode_end_container(cte_encode_process* const encode_process)
+cte_encode_status cte_encode_end_container(cte_encode_process* const process)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     cte_encode_status status = CTE_ENCODE_STATUS_OK;
     if(process->container_level <= 0)
     {
@@ -258,12 +244,11 @@ cte_encode_status cte_encode_end_container(cte_encode_process* const encode_proc
     return status;
 }
 
-cte_encode_status cte_encode_end(cte_encode_process* const encode_process)
+cte_encode_status cte_encode_end(cte_encode_process* const process)
 {
-    cte_encode_process* process = get_real_process(encode_process);
     while(process->container_level > 0)
     {
-        if(!cte_encode_end_container(encode_process))
+        if(!cte_encode_end_container(process))
         {
             return 9999;
         }
