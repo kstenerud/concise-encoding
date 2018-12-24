@@ -401,11 +401,12 @@ Illegal Encodings
 
 Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A parser may discard illegal encodings, or may even abort processing.
 
-  * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
-  * Map keys must not be container types or the `empty` type.
-  * Maps must not contain duplicate keys (this includes mathematically equivalent numeric keys).
-  * Upper case text is not allowed, except as described in section `Letter Case`.
-  * Whitespace must only occur as described in section `Whitespace`.
+ * Numeric values must be representable in their respective binary formats (integer, binary float, decimal float).
+ * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
+ * Map keys must not be container types or the `empty` type.
+ * Maps must not contain duplicate keys (this includes mathematically equivalent numeric keys).
+ * Upper case text is not allowed, except as described in section `Letter Case`.
+ * Whitespace must only occur as described in section `Whitespace`.
 
 
 
