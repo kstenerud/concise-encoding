@@ -279,7 +279,7 @@ typedef enum
     /**
      * Completed successfully.
      */
-    CTE_ENCODE_STATUS_OK,
+    CTE_ENCODE_STATUS_OK = 0,
 
     /**
      * The encoder has reached the end of the buffer and needs more room to
