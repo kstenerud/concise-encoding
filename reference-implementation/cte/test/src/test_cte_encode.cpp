@@ -6,7 +6,9 @@ TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    cte_encode_process* process = cte_encode_begin(buff, sizeof(buff)); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, buff, sizeof(buff))); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -18,10 +20,13 @@ TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    cte_encode_process* process = cte_encode_begin_with_config(buff, \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process, \
+                                                                buff, \
                                                                 sizeof(buff), \
                                                                 DEFAULT_INDENT_SPACES, \
-                                                                DIGITS); \
+                                                                DIGITS)); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -33,10 +38,13 @@ TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    cte_encode_process* process = cte_encode_begin_with_config(buff, \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process, \
+                                                                buff, \
                                                                 sizeof(buff), \
                                                                 INDENTATION, \
-                                                                DEFAULT_FLOAT_DIGITS_PRECISION); \
+                                                                DEFAULT_FLOAT_DIGITS_PRECISION)); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -47,7 +55,9 @@ TEST(CTE_Encode, NAME) \
 TEST(CTE_Encode, NAME) \
 { \
     uint8_t buff[BUFFER_SIZE]; \
-    cte_encode_process* process = cte_encode_begin(buff, sizeof(buff)); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, buff, sizeof(buff))); \
     __VA_ARGS__ \
     fflush(stdout); \
 }

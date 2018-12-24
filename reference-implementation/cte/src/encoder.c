@@ -20,14 +20,13 @@ int cte_encode_process_size()
     return sizeof(cte_encode_process);
 }
 
-cte_encode_process* cte_encode_begin_with_config(
+cte_encode_status cte_encode_begin_with_config(
+                        cte_encode_process* process,
                         uint8_t* const document_buffer,
                         int64_t byte_count,
                         int indent_spaces,
                         int float_digits_precision)
 {
-    cte_encode_process* process = malloc(sizeof(*process));
-    memset(process, 0, sizeof(*process));
     process->start = document_buffer;
     process->pos = document_buffer;
     process->end = document_buffer + byte_count;
@@ -37,12 +36,15 @@ cte_encode_process* cte_encode_begin_with_config(
     process->is_first_in_document = true;
     process->is_first_in_container = false;
     process->next_object_is_map_key = false;
-    return process;
+    return CTE_ENCODE_STATUS_OK;
 }
 
-cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byte_count)
+cte_encode_status cte_encode_begin(cte_encode_process* process,
+                                   uint8_t* const document_buffer,
+                                   int64_t byte_count)
 {
-    return cte_encode_begin_with_config(document_buffer,
+    return cte_encode_begin_with_config(process,
+                                        document_buffer,
                                         byte_count,
                                         DEFAULT_INDENT_SPACES,
                                         DEFAULT_FLOAT_DIGITS_PRECISION);

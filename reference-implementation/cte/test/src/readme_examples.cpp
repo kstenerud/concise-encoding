@@ -6,10 +6,13 @@ TEST(CTE_Examples, encode)
 {
     int indent_spaces = 4;
     uint8_t buffer[1000];
-    cte_encode_process* process = cte_encode_begin_with_config(buffer,
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size());
+    cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data();
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process,
+                                                                buffer,
                                                                 sizeof(buffer),
                                                                 indent_spaces,
-                                                                DEFAULT_FLOAT_DIGITS_PRECISION);
+                                                                DEFAULT_FLOAT_DIGITS_PRECISION));
 
     cte_encode_begin_map(process);
     cte_encode_add_string(process, "null");

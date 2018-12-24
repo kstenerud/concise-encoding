@@ -349,7 +349,8 @@ int cte_encode_process_size();
  * @param float_digits_precision The number of significant digits to print for floating point numbers.
  * @return The new encode process.
  */
-struct cte_encode_process* cte_encode_begin_with_config(
+cte_encode_status cte_encode_begin_with_config(
+                        struct cte_encode_process* encode_process,
                         uint8_t* const document_buffer,
                         int64_t byte_count,
                         int indent_spaces,
@@ -362,7 +363,10 @@ struct cte_encode_process* cte_encode_begin_with_config(
  * @param byte_count Size of the buffer in bytes.
  * @return The new encode process.
  */
-struct cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byte_count);
+cte_encode_status cte_encode_begin(
+                        struct cte_encode_process* encode_process,
+                        uint8_t* const document_buffer,
+                        int64_t byte_count);
 
 /**
  * Replace the document buffer in an encode process.
