@@ -56,16 +56,16 @@ Usage
     int64_t bytes_received;
     cbe_decode_status status = CBE_DECODE_STATUS_OK;
 
-    cbe_decode_begin(decode_process, &callbacks, context);
+    status = cbe_decode_begin(decode_process, &callbacks, context);
+    if(status != CBE_DECODE_STATUS_OK)
+    {
+        // TODO: Do something about it
+    }
 
     while(my_has_more_data())
     {
         my_get_next_packet(&decode_buffer, &bytes_received);
         status = cbe_decode_feed(decode_process, decode_buffer, bytes_received);
-        if(status != CBE_DECODE_STATUS_OK)
-        {
-            // TODO: Do something about it
-        }
         int64_t bytes_consumed = cbe_decode_get_buffer_offset(decode_process);
         // Todo: Move uncomsumed bytes to the beginning of the buffer for next time around
     }
@@ -83,12 +83,12 @@ Usage
     int64_t document_buffer_size = my_get_document_byte_count();
     cbe_encode_status status = CBE_ENCODE_STATUS_OK;
 
-    cbe_encode_begin(encode_process, document_buffer, document_buffer_size);
-    status = cbe_encode_begin_list(encode_process);
+    status = cbe_encode_begin(encode_process, document_buffer, document_buffer_size);
     if(status != CBE_ENCODE_STATUS_OK)
     {
         // TODO: Do something about it
     }
+    status = cbe_encode_begin_list(encode_process);
     status = cbe_encode_add_int_8(encode_process, 1);
     status = cbe_encode_add_string(encode_process, "Testing");
     status = cbe_encode_end_container(encode_process);
