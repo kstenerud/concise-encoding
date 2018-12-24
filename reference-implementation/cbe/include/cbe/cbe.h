@@ -41,7 +41,7 @@ typedef enum
     /**
      * The document has been successfully decoded.
      */
-    CBE_DECODE_STATUS_OK,
+    CBE_DECODE_STATUS_OK = 0,
 
     /**
      * The decoder has reached the end of the buffer and needs more data to
@@ -92,89 +92,55 @@ typedef enum
  */
 typedef struct
 {
-    /**
-     * An empty field was decoded.
-     */
+    // An empty field was decoded.
     bool (*on_add_empty) (struct cbe_decode_process* decode_process);
 
-    /**
-     * An boolean field was decoded.
-     */
+    // An boolean field was decoded.
     bool (*on_add_boolean) (struct cbe_decode_process* decode_process, bool value);
 
-    /**
-     * An 8-bit integer field was decoded.
-     */
+    // An 8-bit integer field was decoded.
     bool (*on_add_int_8) (struct cbe_decode_process* decode_process, int8_t value);
 
-    /**
-     * A 16-bit integer field was decoded.
-     */
+    // A 16-bit integer field was decoded.
     bool (*on_add_int_16) (struct cbe_decode_process* decode_process, int16_t value);
 
-    /**
-     * A 32-bit integer field was decoded.
-     */
+    // A 32-bit integer field was decoded.
     bool (*on_add_int_32) (struct cbe_decode_process* decode_process, int32_t value);
 
-    /**
-     * A 64-bit integer field was decoded.
-     */
+    // A 64-bit integer field was decoded.
     bool (*on_add_int_64) (struct cbe_decode_process* decode_process, int64_t value);
 
-    /**
-     * A 128-bit integer field was decoded.
-     */
+    // A 128-bit integer field was decoded.
     bool (*on_add_int_128) (struct cbe_decode_process* decode_process, __int128 value);
 
-    /**
-     * A 32-bit binary floating point field was decoded.
-     */
+    // A 32-bit binary floating point field was decoded.
     bool (*on_add_float_32) (struct cbe_decode_process* decode_process, float value);
 
-    /**
-     * A 64-bit binary floating point field was decoded.
-     */
+    // A 64-bit binary floating point field was decoded.
     bool (*on_add_float_64) (struct cbe_decode_process* decode_process, double value);
 
-    /**
-     * A 128-bit binary floating point field was decoded.
-     */
+    // A 128-bit binary floating point field was decoded.
     bool (*on_add_float_128) (struct cbe_decode_process* decode_process, __float128 value);
 
-    /**
-     * A 32-bit decimal floating point field was decoded.
-     */
+    // A 32-bit decimal floating point field was decoded.
     bool (*on_add_decimal_32) (struct cbe_decode_process* decode_process, _Decimal32 value);
 
-    /**
-     * A 64-bit decimal floating point field was decoded.
-     */
+    // A 64-bit decimal floating point field was decoded.
     bool (*on_add_decimal_64) (struct cbe_decode_process* decode_process, _Decimal64 value);
 
-    /**
-     * A 128-bit decimal floating point field was decoded.
-     */
+    // A 128-bit decimal floating point field was decoded.
     bool (*on_add_decimal_128) (struct cbe_decode_process* decode_process, _Decimal128 value);
 
-    /**
-     * A time field was decoded.
-     */
+    // A time field was decoded.
     bool (*on_add_time) (struct cbe_decode_process* decode_process, smalltime value);
 
-    /**
-     * A list container has been opened.
-     */
+    // A list container has been opened.
     bool (*on_begin_list) (struct cbe_decode_process* decode_process);
 
-    /**
-     * A map container has been opened.
-     */
+    // A map container has been opened.
     bool (*on_begin_map) (struct cbe_decode_process* decode_process);
 
-    /**
-     * The currently opened container has been closed.
-     */
+    // The currently opened container has been closed.
     bool (*on_end_container) (struct cbe_decode_process* decode_process);
 
     /**
