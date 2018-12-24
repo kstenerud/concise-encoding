@@ -130,6 +130,12 @@ static std::shared_ptr<enc::encoding> decode_data(
     cbe_decode_status& status)
 {
     cbe_decoder decoder;
+    status = decoder.begin();
+    if(status != CBE_DECODE_STATUS_OK)
+    {
+        return decoder.decoded();
+    }
+
     KSLOG_DEBUG("Decode %d bytes with buffer size %d", data.size(), buffer_size);
     for(unsigned offset = 0; offset < data.size(); offset += buffer_size)
     {

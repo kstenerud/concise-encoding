@@ -234,9 +234,9 @@ int cbe_decode_process_size()
     return sizeof(cbe_decode_process);
 }
 
-void cbe_decode_begin(cbe_decode_process* const process,
-                      const cbe_decode_callbacks* const callbacks,
-                      void* const user_context)
+cbe_decode_status cbe_decode_begin(cbe_decode_process* const process,
+                                   const cbe_decode_callbacks* const callbacks,
+                                   void* const user_context)
 {
     KSLOG_DEBUG(NULL);
 
@@ -244,6 +244,8 @@ void cbe_decode_begin(cbe_decode_process* const process,
     process->user_context = user_context;
     process->array.is_inside_array = false;
     process->container.level = 0;
+
+    return CBE_DECODE_STATUS_OK;
 }
 
 void* cbe_decode_get_user_context(cbe_decode_process* const process)

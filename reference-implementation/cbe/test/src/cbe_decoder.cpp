@@ -141,7 +141,6 @@ cbe_decoder::cbe_decoder()
 : _process_backing_store(cbe_decode_process_size())
 , _process((cbe_decode_process*)_process_backing_store.data())
 {
-    cbe_decode_begin(_process, &g_callbacks, (void*)this);
 }
 
 std::vector<uint8_t>& cbe_decoder::received_data()
@@ -162,6 +161,11 @@ cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
     cbe_decode_status status = cbe_decode_feed(_process, data.data(), data.size());
     _read_offset += cbe_decode_get_buffer_offset(_process);
     return status;
+}
+
+cbe_decode_status cbe_decoder::begin()
+{
+    return cbe_decode_begin(_process, &g_callbacks, (void*)this);
 }
 
 cbe_decode_status cbe_decoder::end()

@@ -349,15 +349,17 @@ int cbe_encode_process_size()
 }
 
 
-void cbe_encode_begin(struct cbe_encode_process* const process,
-                      uint8_t* const document_buffer,
-                      const int64_t byte_count)
+cbe_encode_status cbe_encode_begin(struct cbe_encode_process* const process,
+                                   uint8_t* const document_buffer,
+                                   const int64_t byte_count)
 {
     KSLOG_DEBUG(NULL);
 
     cbe_encode_set_buffer(process, document_buffer, byte_count);
     process->array.is_inside_array = false;
     process->container.level = 0;
+
+    return CBE_ENCODE_STATUS_OK;
 }
 
 void cbe_encode_set_buffer(cbe_encode_process* const process,

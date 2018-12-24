@@ -240,13 +240,12 @@ cbe_encode_status cbe_encoder::encode(enc::end_container_encoding& e)
 
 cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 {
-	if(!_process_is_valid)
+	cbe_encode_status result = cbe_encode_begin(_process, _buffer.data(), _buffer.size());
+	if(result != CBE_ENCODE_STATUS_OK)
 	{
-		KSLOG_ERROR("Don't call encode more than once on this test object.");
-		return (cbe_encode_status)9999999;
+		return result;
 	}
 
-	cbe_encode_status result = CBE_ENCODE_STATUS_OK;
 	for(std::shared_ptr<enc::encoding> current = enc; current != nullptr; current = current->next())
 	{
 		result = current->encode(*this);
@@ -256,19 +255,9 @@ cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 			return result;
 		}
 	}
-	flush_buffer();
-	return end();
-}
 
-cbe_encode_status cbe_encoder::end()
-{
-	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
-	if(_process_is_valid)
-	{
-		status = cbe_encode_end(_process);
-		_process_is_valid = false;
-	}
-	return status;
+	flush_buffer();
+	return cbe_encode_end(_process);
 }
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,

@@ -197,11 +197,15 @@ int cbe_decode_process_size();
 /**
  * Begin a new decoding process.
  *
+ * Successful status codes:
+ * - CBE_DECODE_STATUS_OK: The decode process has begun.
+ *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
+ * @return The current decoder status.
  */
-void cbe_decode_begin(struct cbe_decode_process* decode_process,
+cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
                       const cbe_decode_callbacks* callbacks,
                       void* user_context);
 
@@ -357,13 +361,17 @@ int cbe_encode_process_size();
 /**
  * Begin a new encoding process, setting up an initial document buffer.
  *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
  * @param encode_process The encode process to initialize.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
+ * @return The current encoder status.
  */
-void cbe_encode_begin(struct cbe_encode_process* encode_process,
-                      uint8_t* document_buffer,
-                      int64_t byte_count);
+cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
+                                   uint8_t* document_buffer,
+                                   int64_t byte_count);
 
 /**
  * Replace the document buffer in an encode process.
