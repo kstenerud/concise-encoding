@@ -343,6 +343,9 @@ int cte_encode_process_size();
 /**
  * Begin a new encoding process.
  *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The encode process has begun.
+ *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print).
@@ -359,6 +362,9 @@ cte_encode_status cte_encode_begin_with_config(
 /**
  * Begin a new encoding process with the default configuration.
  *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The encode process has begun.
+ *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  * @return The new encode process.
@@ -370,6 +376,7 @@ cte_encode_status cte_encode_begin(
 
 /**
  * Replace the document buffer in an encode process.
+ * This also resets the buffer offset.
  *
  * @param encode_process The encode process.
  * @param document_buffer A buffer to store the document in.
@@ -379,6 +386,7 @@ void cte_encode_set_buffer(struct cte_encode_process* encode_process, uint8_t* c
 
 /**
  * Get the current write offset into the encode buffer.
+ * This points to one past the last byte written to the current buffer.
  *
  * @param encode_process The encode process.
  * @return The current offset.
@@ -387,8 +395,8 @@ int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
 
 /**
  * Get the document depth. This is the total depth of lists or maps that
- * haven't yet been terminated with an "end container". When you have
- * completed your document, it should be 0.
+ * haven't yet been terminated with an "end container". It must be 0 in order
+ * to successfully complete a document.
  *
  * A negative value indicates that you've added too many "end container"
  * objects, and the document is now invalid. Note: Adding more containers
@@ -400,15 +408,14 @@ int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
 int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
 
 /**
- * End an encoding process, freeing up any encoder resources used.
- * Note: This does NOT free the user-supplied encode buffer.
- * Note: Resources will be freed and process terminated EVEN ON ERROR.
+ * End an encoding process, checking the document for validity.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS: one or more containers were not closed.
+ * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: a field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @return The current encoder status.
+ * @return The final encoder status.
  */
 cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
 
@@ -416,232 +423,250 @@ cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
  * Add an empty object to the document.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_empty(struct cte_encode_process* const encode_process);
+cte_encode_status cte_encode_add_empty(struct cte_encode_process* encode_process);
 
 /**
  * Add a boolean value to the document.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_boolean(struct cte_encode_process* const encode_process, const bool value);
+cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_process, bool value);
 
 /**
  * Add an integer value to the document.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int(struct cte_encode_process* const encode_process, const int value);
+cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, int value);
 
 /**
  * Add an integer value to the document.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_8(struct cte_encode_process* const encode_process, const int8_t value);
+cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process, int8_t value);
 
 /**
  * Add a 16 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_16(struct cte_encode_process* const encode_process, const int16_t value);
+cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_process, int16_t value);
 
 /**
  * Add a 32 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_32(struct cte_encode_process* const encode_process, const int32_t value);
+cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_process, int32_t value);
 
 /**
  * Add a 64 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_64(struct cte_encode_process* const encode_process, const int64_t value);
+cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_process, int64_t value);
 
 /**
  * Add a 128 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_128(struct cte_encode_process* const encode_process, const __int128 value);
+cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_process, __int128 value);
 
 /**
  * Add a 32 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_32(struct cte_encode_process* const encode_process, const float value);
+cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_process, float value);
 
 /**
  * Add a 64 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_64(struct cte_encode_process* const encode_process, const double value);
+cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_process, double value);
 
 /**
  * Add a 128 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_128(struct cte_encode_process* const encode_process, const __float128 value);
+cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process, __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* const encode_process, const _Decimal32 value);
+cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_process, _Decimal32 value);
 
 /**
  * Add a 64 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* const encode_process, const _Decimal64 value);
+cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_process, _Decimal64 value);
 
 /**
  * Add a 128 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* const encode_process, const _Decimal128 value);
+cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_process, _Decimal128 value);
 
 /**
  * Add a time value to the document.
- * Use cte_new_time() to generate a time value.
+ * Use cbe_new_time() to generate a time value.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_time(struct cte_encode_process* const encode_process, const smalltime value);
+cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process, smalltime value);
 
 /**
- * Add a UTF-8 encoded null-terminated string value to the document.
- * Do not include a byte order marker (BOM)
+ * Add a UTF-8 encoded string and its data to a document.
+ * Note: Do not include a byte order marker (BOM).
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param str The null-terminated string to add.
+ * @param str The string to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_string(struct cte_encode_process* const encode_process, const char* const str);
+cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_process, const char* str);
 
 /**
  * Add a substring of a UTF-8 encoded string value to the document.
  * Do not include a byte order marker (BOM)
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param string_start The start of the substring to add.
  * @param byte_count The length of the substring in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_substring(struct cte_encode_process* const encode_process, const char* const string_start, const int64_t byte_count);
+cte_encode_status cte_encode_add_substring(struct cte_encode_process* encode_process, const char* string_start, int64_t byte_count);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CTE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_list(struct cte_encode_process* const encode_process);
+cte_encode_status cte_encode_begin_list(struct cte_encode_process* encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -650,30 +675,33 @@ cte_encode_status cte_encode_begin_list(struct cte_encode_process* const encode_
  * odd item is a corresponding value.
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_STATUS_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CTE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_map(struct cte_encode_process* const encode_process);
+cte_encode_status cte_encode_begin_map(struct cte_encode_process* encode_process);
 
 /**
  * End the current container (list or map) in the document.
  * If calling this function would result in too many end containers,
- * the operation is aborted and returns CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS
+ * the operation is aborted and returns CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS
  *
  * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS: we're not in a container.
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: we're not in a container.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_end_container(struct cte_encode_process* const encode_process);
+cte_encode_status cte_encode_end_container(struct cte_encode_process* encode_process);
 
 /**
+* TODO: Streaming
  * Add an array of binary data to the document.
  *
  * Possible error codes:
@@ -684,7 +712,7 @@ cte_encode_status cte_encode_end_container(struct cte_encode_process* const enco
  * @param byte_count The length of the data in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_binary_data(struct cte_encode_process* const encode_process, const uint8_t* const start, const int64_t byte_count);
+cte_encode_status cte_encode_add_binary_data(struct cte_encode_process* encode_process, const uint8_t* start, int64_t byte_count);
 
 
 
