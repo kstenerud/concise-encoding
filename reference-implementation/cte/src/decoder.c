@@ -3,7 +3,7 @@
 #include <math.h>
 #include <memory.h>
 #include <stdlib.h>
-#include "cte_internal.h"
+#include "decoder.h"
 
 
 static bool is_hex_character(int ch)

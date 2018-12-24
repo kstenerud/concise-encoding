@@ -2,8 +2,33 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "cte_internal.h"
+#include <cte/cte.h>
 
+
+// ====
+// Data
+// ====
+
+struct cte_encode_process
+{
+    const uint8_t* start;
+    const uint8_t* end;
+    uint8_t* pos;
+    int indent_spaces;
+    int float_digits_precision;
+    int container_level;
+    bool is_inside_map[200];
+    bool is_first_in_document;
+    bool is_first_in_container;
+    bool next_object_is_map_key;
+    // TODO: allowed_types
+};
+typedef struct cte_encode_process cte_encode_process;
+
+
+// ==============
+// Error Handlers
+// ==============
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
     if((size_t)((PROCESS)->end - (PROCESS)->pos) < (size_t)(REQUIRED_BYTES)) \

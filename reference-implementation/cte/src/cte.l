@@ -1,6 +1,6 @@
 %{
 
-#include "cte_internal.h"
+#include "decoder.h"
 #include "parser.h"
 
 %}
