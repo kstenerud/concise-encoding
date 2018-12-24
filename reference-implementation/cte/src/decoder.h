@@ -5,25 +5,8 @@ extern "C" {
 
 #include "cte/cte.h"
 
-typedef enum
-{
-    // enum value & 0xff == sizeof(type)
-    CTE_TYPE_NONE         = 0,
-    CTE_TYPE_BOOLEAN_8    = 0x100 + sizeof(bool),
-    CTE_TYPE_INT_8        = 0x200 + sizeof(int8_t),
-    CTE_TYPE_INT_16       = 0x300 + sizeof(int16_t),
-    CTE_TYPE_INT_32       = 0x400 + sizeof(int32_t),
-    CTE_TYPE_INT_64       = 0x500 + sizeof(int64_t),
-    CTE_TYPE_INT_128      = 0x600 + sizeof(__int128),
-    CTE_TYPE_FLOAT_32     = 0x700 + sizeof(float),
-    CTE_TYPE_FLOAT_64     = 0x800 + sizeof(double),
-    CTE_TYPE_FLOAT_128    = 0x900 + sizeof(__float128),
-    CTE_TYPE_DECIMAL_32   = 0xa00 + sizeof(_Decimal32),
-    CTE_TYPE_DECIMAL_64   = 0xb00 + sizeof(_Decimal64),
-    CTE_TYPE_DECIMAL_128  = 0xc00 + sizeof(_Decimal128),
-    CTE_TYPE_TIME_64      = 0xd00 + sizeof(smalltime),
-} cte_data_type;
 
+// Callbacks from parser to decoder.
 typedef struct
 {
     void (*on_error)             (struct cte_decode_process* decode_process, const char* message);
@@ -44,7 +27,6 @@ typedef struct
 } internal_parse_callbacks;
 
 
-
 struct cte_decode_process
 {
     internal_parse_callbacks parse_callbacks;
@@ -54,6 +36,11 @@ struct cte_decode_process
     void* scanner;
 };
 typedef struct cte_decode_process cte_decode_process;
+
+
+// =========================================
+// Declarations needed by the lexer & parser
+// =========================================
 
 void yyerror(const void* const scanner, struct cte_decode_process* decode_process, const char *msg);
 
