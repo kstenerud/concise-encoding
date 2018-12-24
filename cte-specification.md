@@ -94,19 +94,22 @@ Numbers must be written in lower case.
 
 ### Binary Floating Point
 
-Represents ieee754 binary floating point values in widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`.
+Represents ieee754 binary floating point values in widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`. Other allowable values are `nan` (not a number), and positive & negative infinity (`inf`, `-inf`).
 
 Examples:
 
     1.25e+7
     -9.00001
+    nan
+    inf
+    -inf
 
 Numbers must be written in lower case.
 
 
 ### Decimal Floating Point
 
-Represents ieee754 decimal floating point values in widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`.
+Represents ieee754 decimal floating point values in widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`. Other allowable values are `nand` (not a number), and positive & negative infinity (`infd`, `-infd`).
 
 Decimal floating point values are differentiated from binary floating point values by adding a `d` suffix.
 
@@ -114,6 +117,9 @@ Examples:
 
     12.99d
     -100.04d
+    nand
+    infd
+    -infd
 
 Numbers must be written in lower case.
 
