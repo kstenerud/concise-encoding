@@ -57,6 +57,8 @@ typedef struct cte_decode_process cte_decode_process;
 
 void yyerror(const void* const scanner, struct cte_decode_process* decode_process, const char *msg);
 
+extern internal_parse_callbacks g_cte_parse_callbacks;
+
 
 #ifdef __cplusplus 
 }

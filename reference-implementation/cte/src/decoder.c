@@ -230,34 +230,29 @@ static bool on_binary_data_end(cte_decode_process* process)
     return process->callbacks->on_binary_data_end(process);
 }
 
+// Exposed global so that cte.l can see it
+internal_parse_callbacks g_cte_parse_callbacks =
+{
+    .on_error = on_error,
+    .on_empty = on_empty,
+    .on_true = on_true,
+    .on_false = on_false,
+    .on_int = on_int,
+    .on_float = on_float,
+    .on_decimal = on_decimal,
+    .on_time = on_time,
+    .on_list_begin = on_list_begin,
+    .on_list_end = on_list_end,
+    .on_map_begin = on_map_begin,
+    .on_map_end = on_map_end,
+    .on_string = on_string,
+    .on_binary_data_begin = on_binary_data_begin,
+    .on_binary_data_end = on_binary_data_end,
+};
+
 int cte_decode_process_size()
 {
     return sizeof(cte_decode_process);
-}
-
-// TODO: ove this to cbe.l
-cte_decode_status cte_decode_begin(cte_decode_process* process,
-                                   const cte_decode_callbacks* callbacks,
-                                   void* user_context)
-{
-    process->callbacks = callbacks;
-    process->user_context = user_context;
-    process->parse_callbacks.on_error = on_error;
-    process->parse_callbacks.on_empty = on_empty;
-    process->parse_callbacks.on_true = on_true;
-    process->parse_callbacks.on_false = on_false;
-    process->parse_callbacks.on_int = on_int;
-    process->parse_callbacks.on_float = on_float;
-    process->parse_callbacks.on_decimal = on_decimal;
-    process->parse_callbacks.on_time = on_time;
-    process->parse_callbacks.on_list_begin = on_list_begin;
-    process->parse_callbacks.on_list_end = on_list_end;
-    process->parse_callbacks.on_map_begin = on_map_begin;
-    process->parse_callbacks.on_map_end = on_map_end;
-    process->parse_callbacks.on_string = on_string;
-    process->parse_callbacks.on_binary_data_begin = on_binary_data_begin;
-    process->parse_callbacks.on_binary_data_end = on_binary_data_end;
-    return CTE_DECODE_STATUS_OK;
 }
 
 void* cte_decode_get_user_context(cte_decode_process* process)
