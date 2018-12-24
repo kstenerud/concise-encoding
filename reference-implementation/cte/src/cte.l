@@ -64,31 +64,32 @@ VALUE_FALSE   f|false
 
 %%
 
-void yyerror(const void* const scanner, cte_real_decode_process* decode_process, const char* msg)
+void yyerror(const void* const scanner, cte_decode_process* process, const char* msg)
 {
     (void)scanner;
-	decode_process->parse_callbacks.on_error(decode_process, msg);
+	process->parse_callbacks.on_error(process, msg);
 }
 
-cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char* const data_start, const int64_t byte_count)
+cte_decode_status cte_decode_feed(cte_decode_process* process,
+                                  const char* const data_start,
+                                  const int64_t byte_count)
 {
-    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
+    // TODO: Move this to cte_decode_begin
     if(process->scanner == NULL)
     {
         if(yylex_init(&process->scanner) != 0)
         {
-            process->callbacks->on_error((cte_decode_process*)process, "Could not initialize scanner");
-            return CTE_DECODE_STATUS_PARSER_INITIALIZATION_ERROR;
+            process->callbacks->on_error(process, "Could not initialize scanner");
+            return CTE_DECODE_ERROR_PARSER_INITIALIZATION_ERROR;
         }
     }
     yy_scan_bytes((const char* const)data_start, byte_count, process->scanner);
     return yyparse(process->scanner, process);
 }
 
-void cte_decode_end(cte_decode_process* decode_process)
+cte_decode_status cte_decode_end(cte_decode_process* process)
 {
-    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
     yylex_destroy(process->scanner);
-    free(process);
+    return CTE_DECODE_STATUS_OK;
 }
 

@@ -16,6 +16,8 @@ extern "C" {
 #include <stdint.h>
 #include <smalltime/smalltime.h>
 
+
+
 /**
  * Get the current library version as a semantic version (e.g. "1.5.2").
  *
@@ -29,7 +31,7 @@ const char* cte_version();
 // Decoding API
 // ------------
 
-typedef struct {} cte_decode_process;
+struct cte_decode_process;
 
 /**
  * Status codes that can be returned by decoder functions.
@@ -45,33 +47,19 @@ typedef enum
      * Bison parser exited due to invalid input.
      * Matches return from yyabortlab.
      */
-    CTE_DECODE_STATUS_PARSER_INVALID_INPUT = 1,
+    CTE_DECODE_ERROR_PARSER_INVALID_INPUT = 1,
 
     /**
      * Bison parser ran out of memory.
      * Matches return from yyexhaustedlab.
      */
-    CTE_DECODE_STATUS_PARSER_OUT_OF_MEMORY = 2,
+    CTE_DECODE_ERROR_PARSER_OUT_OF_MEMORY = 2,
 
     /**
-     * Bison parser failed to initialize.
+     * The decoder has reached the end of the buffer and needs more data to
+     * finish decoding the document.
      */
-    CTE_DECODE_STATUS_PARSER_INITIALIZATION_ERROR,
-
-    /**
-     * Unbalanced container begin and end markers were detected.
-     */
-    CBE_DECODE_STATUS_UNBALANCED_CONTAINERS,
-
-    /**
-     * An invalid data type was used as a map key.
-     */
-    CBE_DECODE_STATUS_INCORRECT_KEY_TYPE,
-
-    /**
-     * A map contained a key with no value.
-     */
-    CBE_DECODE_STATUS_MISSING_VALUE_FOR_KEY,
+    CTE_DECODE_STATUS_NEED_MORE_DATA = 300,
 
     /**
      * A user callback returned false, stopping the decode process.
@@ -81,49 +69,133 @@ typedef enum
     CTE_DECODE_STATUS_STOPPED_IN_CALLBACK,
 
     /**
-     * The decoder has reached the end of the buffer and needs
-     * more data to finish decoding the document.
+     * Unbalanced list/map begin and end markers were detected.
      */
-    CTE_DECODE_STATUS_NEED_MORE_DATA,
+    CTE_DECODE_ERROR_UNBALANCED_CONTAINERS,
+
+    /**
+     * An invalid data type was used as a map key.
+     */
+    CTE_DECODE_ERROR_INCORRECT_KEY_TYPE,
+
+    /**
+     * A map contained a key with no value.
+     */
+    CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
+
+    /**
+     * Bison parser failed to initialize.
+     */
+    CTE_DECODE_ERROR_PARSER_INITIALIZATION_ERROR,
 } cte_decode_status;
 
-
+/**
+ * Callbacks for use with cte_decode(). These mirror the encode API.
+ *
+ * cte_decode() will call these callbacks as it decodes objects in the document.
+ *
+ * Callback functions return true if processing should continue.
+ */
 typedef struct
 {
-    void (*on_error)                   (cte_decode_process* decode_process, const char* message);
-    bool (*on_empty)                   (cte_decode_process* decode_process);
-    bool (*on_boolean)                 (cte_decode_process* decode_process, bool value);
-    bool (*on_int_8)                   (cte_decode_process* decode_process, int8_t value);
-    bool (*on_int_16)                  (cte_decode_process* decode_process, int16_t value);
-    bool (*on_int_32)                  (cte_decode_process* decode_process, int32_t value);
-    bool (*on_int_64)                  (cte_decode_process* decode_process, int64_t value);
-    bool (*on_int_128)                 (cte_decode_process* decode_process, __int128 value);
-    bool (*on_float_32)                (cte_decode_process* decode_process, float value);
-    bool (*on_float_64)                (cte_decode_process* decode_process, double value);
-    bool (*on_float_128)               (cte_decode_process* decode_process, __float128 value);
-    bool (*on_decimal_32)              (cte_decode_process* decode_process, _Decimal32 value);
-    bool (*on_decimal_64)              (cte_decode_process* decode_process, _Decimal64 value);
-    bool (*on_decimal_128)             (cte_decode_process* decode_process, _Decimal128 value);
-    // TODO: Parse and split time
-    bool (*on_time)                    (cte_decode_process* decode_process, const char* value);
-    bool (*on_list_begin)              (cte_decode_process* decode_process);
-    bool (*on_list_end)                (cte_decode_process* decode_process);
-    bool (*on_map_begin)               (cte_decode_process* decode_process);
-    bool (*on_map_end)                 (cte_decode_process* decode_process);
-    bool (*on_string)                  (cte_decode_process* decode_process, const char* value);
-    bool (*on_binary_data_begin)       (cte_decode_process* decode_process);
-    bool (*on_binary_data_end)         (cte_decode_process* decode_process);
+    // An error occurred
+    void (*on_error) (struct cte_decode_process* decode_process, const char* message);
+
+    // An empty field was decoded.
+    bool (*on_empty) (struct cte_decode_process* decode_process);
+
+    // An boolean field was decoded.
+    bool (*on_boolean) (struct cte_decode_process* decode_process, bool value);
+
+    // An 8-bit integer field was decoded.
+    bool (*on_int_8) (struct cte_decode_process* decode_process, int8_t value);
+
+    // A 16-bit integer field was decoded.
+    bool (*on_int_16) (struct cte_decode_process* decode_process, int16_t value);
+
+    // A 32-bit integer field was decoded.
+    bool (*on_int_32) (struct cte_decode_process* decode_process, int32_t value);
+
+    // A 64-bit integer field was decoded.
+    bool (*on_int_64) (struct cte_decode_process* decode_process, int64_t value);
+
+    // A 128-bit integer field was decoded.
+    bool (*on_int_128) (struct cte_decode_process* decode_process, __int128 value);
+
+    // A 32-bit binary floating point field was decoded.
+    bool (*on_float_32) (struct cte_decode_process* decode_process, float value);
+
+    // A 64-bit binary floating point field was decoded.
+    bool (*on_float_64) (struct cte_decode_process* decode_process, double value);
+
+    // A 128-bit binary floating point field was decoded.
+    bool (*on_float_128) (struct cte_decode_process* decode_process, __float128 value);
+
+    // A 32-bit decimal floating point field was decoded.
+    bool (*on_decimal_32) (struct cte_decode_process* decode_process, _Decimal32 value);
+
+    // A 64-bit decimal floating point field was decoded.
+    bool (*on_decimal_64) (struct cte_decode_process* decode_process, _Decimal64 value);
+
+    // A 128-bit decimal floating point field was decoded.
+    bool (*on_decimal_128) (struct cte_decode_process* decode_process, _Decimal128 value);
+
+    // A time field was decoded.
+    bool (*on_time) (struct cte_decode_process* decode_process, const char* value);
+
+    // A list container has been opened.
+    bool (*on_list_begin) (struct cte_decode_process* decode_process);
+
+    // A list container has been closed.
+    bool (*on_list_end) (struct cte_decode_process* decode_process);
+
+    // A map container has been opened.
+    bool (*on_map_begin) (struct cte_decode_process* decode_process);
+
+    // A map container has been closed.
+    bool (*on_map_end) (struct cte_decode_process* decode_process);
+
+    // TODO: How to split thsse up?
+    bool (*on_string) (struct cte_decode_process* decode_process, const char* value);
+
+    bool (*on_binary_data_begin) (struct cte_decode_process* decode_process);
+
+    bool (*on_binary_data_end) (struct cte_decode_process* decode_process);
 } cte_decode_callbacks;
 
 
 /**
+ * Get the size of the decode process data.
+ * Use this to create a backing store for the process data like so:
+ *     char process_backing_store[cte_decode_process_size()];
+ *     struct cte_decode_process* decode_process = (struct cte_decode_process*)process_backing_store;
+ * or
+ *     struct cte_decode_process* decode_process = (struct cte_decode_process*)malloc(cte_decode_process_size());
+ * or
+ *     std::vector<char> process_backing_store(cte_decode_process_size());
+ *     struct cte_decode_process* decode_process = (struct cte_decode_process*)process_backing_store.data();
+ *
+ * @return The process data size.
+ */
+int cte_decode_process_size();
+
+/**
  * Begin a new decoding process.
  *
+ * Successful status codes:
+ * - CTE_DECODE_STATUS_OK: The decode process has begun.
+ *
+ * Unrecoverable codes:
+ * - CTE_DECODE_ERROR_PARSER_INITIALIZATION_ERROR
+ *
+ * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
- * @return The process of the new decode process.
+ * @return The current decoder status.
  */
-cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user_context);
+cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
+                                   const cte_decode_callbacks* callbacks,
+                                   void* user_context);
 
 /**
  * Get the user context information from a decode process.
@@ -132,33 +204,61 @@ cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user
  * @param decode_process The decode process.
  * @return The user context.
  */
-void* cte_decode_get_user_context(cte_decode_process* decode_process);
+void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
 
 /**
- * Decode part of a CBE document.
+ * Decode part of a CTE document.
  *
- * Possible status codes:
- * - CTE_DECODE_STATUS_OK: the document has been completely decoded.
- * - CTE_DECODE_STATUS_UNBALANCED_CONTAINERS: document has unbalanced containers.
- * - CTE_DECODE_STATUS_INCORRECT_KEY_TYPE: document has an invalid key type.
- * - CTE_DECODE_STATUS_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * Note: data_start is not const because 
+ *
+ * Successful status codes:
+ * - CTE_DECODE_STATUS_OK: document has been completely decoded.
  * - CTE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
+ *
+ * Unrecoverable codes:
+ * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
+ * - CTE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
+ * - CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ *
+ * Recoverable codes:
  * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
+ *
+ * Encountering CTE_DECODE_STATUS_NEED_MORE_DATA means that cte_decode_feed()
+ * has decoded everything it can from the current buffer, and is ready to
+ * receive the next buffer of encoded data. It is important to get the
+ * current buffer offset after receiving this status code, because some bytes
+ * at the end of the current buffer may not have been consumed; these
+ * unconsumed bytes must be prepended to the subsequent buffer for the next
+ * call to cte_decode_feed().
+ *
+ * If an unrecoverable code is returned, the document is invalid, and must be
+ * discarded.
+ *
+ * If a recoverable code is returned, the decoder process points to the field
+ * that caused the code to be returned. If you can fix the problem that led to
+ * the recoverable code, you may run `cte_decode_feed()` again using the same
+ * buffer + the current offset from `cte_decode_get_buffer_offset()`.
  *
  * @param decode_process The decode process.
  * @param data_start The start of the document.
  * @param byte_count The number of bytes in the document fragment.
  * @return The current decoder status.
  */
-cte_decode_status cte_decode_feed(cte_decode_process* decode_process, const char* const data_start, const int64_t byte_count);
+cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
+                                  const char* data_start,
+                                  int64_t byte_count);
 
 /**
- * End a decoding process, freeing up any decoder resources used.
- * Note: This does NOT free the user context or callback structure.
+ * End a decoding process, checking for document validity.
+ *
+ * Possible error codes:
+ * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
+ * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: a field has not been completely filled yet.
  *
  * @param decode_process The decode process.
+ * @return The final decoder status.
  */
-void cte_decode_end(cte_decode_process* decode_process);
+cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
 
 
 

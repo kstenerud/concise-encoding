@@ -154,7 +154,9 @@ TEST(CTE_Examples, decode)
     decode_context context = {0};
     const char* cte_string = "{\"null\":empty \"one\":1 \"list\":[1 2 3 {\"a\":1 \"b\":2 \"c\":3}] \"true\":true}";
 
-    cte_decode_process* decode_process = cte_decode_begin(&callbacks, &context);
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, &context));
     ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte_string, strlen(cte_string)));
     cte_decode_end(decode_process);
 }

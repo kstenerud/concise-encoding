@@ -4,7 +4,7 @@
 #include <memory.h>
 #include <stdio.h>
 
-static decode_test_context* decode_get_context(cte_decode_process* process)
+static decode_test_context* decode_get_context(struct cte_decode_process* process)
 {
     return (decode_test_context*)cte_decode_get_user_context(process);
 }
@@ -82,55 +82,55 @@ static bool decode_add_bool(decode_test_context* context, bool value)
     return true;
 }
 
-static void on_error(cte_decode_process* decode_process, const char* message)
+static void on_error(struct cte_decode_process* process, const char* message)
 {
     printf("Error: %s\n", message);
-    decode_add_string(decode_get_context(decode_process), TYPE_ERROR, message);
+    decode_add_string(decode_get_context(process), TYPE_ERROR, message);
 }
 
-static bool on_string(cte_decode_process* decode_process, const char* str)
+static bool on_string(struct cte_decode_process* process, const char* str)
 {
-    return decode_add_string(decode_get_context(decode_process), TYPE_STRING, str);
+    return decode_add_string(decode_get_context(process), TYPE_STRING, str);
 }
 
-static bool on_empty(cte_decode_process* decode_process)
+static bool on_empty(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(decode_process), TYPE_EMPTY);
+    return decode_add_type(decode_get_context(process), TYPE_EMPTY);
 }
     
-static bool on_bool(cte_decode_process* decode_process, bool value)
+static bool on_bool(struct cte_decode_process* process, bool value)
 {
-    return decode_add_bool(decode_get_context(decode_process), value);
+    return decode_add_bool(decode_get_context(process), value);
 }
     
-static bool on_int_64(cte_decode_process* decode_process, int64_t value)
+static bool on_int_64(struct cte_decode_process* process, int64_t value)
 {
-    return decode_add_int(decode_get_context(decode_process), value);
+    return decode_add_int(decode_get_context(process), value);
 }
     
-static bool on_float_64(cte_decode_process* decode_process, double value)
+static bool on_float_64(struct cte_decode_process* process, double value)
 {
-    return decode_add_float(decode_get_context(decode_process), value);
+    return decode_add_float(decode_get_context(process), value);
 }
 
-static bool on_list_begin(cte_decode_process* decode_process)
+static bool on_list_begin(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(decode_process), TYPE_LIST_START);
+    return decode_add_type(decode_get_context(process), TYPE_LIST_START);
 }
     
-static bool on_list_end(cte_decode_process* decode_process)
+static bool on_list_end(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(decode_process), TYPE_LIST_END);
+    return decode_add_type(decode_get_context(process), TYPE_LIST_END);
 }
     
-static bool on_map_begin(cte_decode_process* decode_process)
+static bool on_map_begin(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(decode_process), TYPE_MAP_START);
+    return decode_add_type(decode_get_context(process), TYPE_MAP_START);
 }
     
-static bool on_map_end(cte_decode_process* decode_process)
+static bool on_map_end(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(decode_process), TYPE_MAP_END);
+    return decode_add_type(decode_get_context(process), TYPE_MAP_END);
 }
 
 cte_decode_callbacks decode_new_callbacks()

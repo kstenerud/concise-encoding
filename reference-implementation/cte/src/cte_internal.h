@@ -24,25 +24,23 @@ typedef enum
     CTE_TYPE_TIME_64      = 0xd00 + sizeof(smalltime),
 } cte_data_type;
 
-struct cte_real_decode_process;
-
 typedef struct
 {
-    void (*on_error)             (struct cte_real_decode_process* decode_process, const char* message);
-    bool (*on_empty)             (struct cte_real_decode_process* decode_process);
-    bool (*on_true)              (struct cte_real_decode_process* decode_process);
-    bool (*on_false)             (struct cte_real_decode_process* decode_process);
-    bool (*on_int)               (struct cte_real_decode_process* decode_process, int base, char* value);
-    bool (*on_float)             (struct cte_real_decode_process* decode_process, char* value);
-    bool (*on_decimal)           (struct cte_real_decode_process* decode_process, char* value);
-    bool (*on_time)              (struct cte_real_decode_process* decode_process, int day_digits, char* value);
-    bool (*on_list_begin)        (struct cte_real_decode_process* decode_process);
-    bool (*on_list_end)          (struct cte_real_decode_process* decode_process);
-    bool (*on_map_begin)         (struct cte_real_decode_process* decode_process);
-    bool (*on_map_end)           (struct cte_real_decode_process* decode_process);
-    bool (*on_string)            (struct cte_real_decode_process* decode_process, char* value);
-    bool (*on_binary_data_begin) (struct cte_real_decode_process* decode_process);
-    bool (*on_binary_data_end)   (struct cte_real_decode_process* decode_process);
+    void (*on_error)             (struct cte_decode_process* decode_process, const char* message);
+    bool (*on_empty)             (struct cte_decode_process* decode_process);
+    bool (*on_true)              (struct cte_decode_process* decode_process);
+    bool (*on_false)             (struct cte_decode_process* decode_process);
+    bool (*on_int)               (struct cte_decode_process* decode_process, int base, char* value);
+    bool (*on_float)             (struct cte_decode_process* decode_process, char* value);
+    bool (*on_decimal)           (struct cte_decode_process* decode_process, char* value);
+    bool (*on_time)              (struct cte_decode_process* decode_process, int day_digits, char* value);
+    bool (*on_list_begin)        (struct cte_decode_process* decode_process);
+    bool (*on_list_end)          (struct cte_decode_process* decode_process);
+    bool (*on_map_begin)         (struct cte_decode_process* decode_process);
+    bool (*on_map_end)           (struct cte_decode_process* decode_process);
+    bool (*on_string)            (struct cte_decode_process* decode_process, char* value);
+    bool (*on_binary_data_begin) (struct cte_decode_process* decode_process);
+    bool (*on_binary_data_end)   (struct cte_decode_process* decode_process);
 } internal_parse_callbacks;
 
 
@@ -65,17 +63,16 @@ typedef struct
     // TODO: allowed_types
 } cte_real_encode_process;
 
-
-typedef struct cte_real_decode_process
+typedef struct cte_decode_process
 {
     internal_parse_callbacks parse_callbacks;
-    cte_decode_callbacks* callbacks;
+    const cte_decode_callbacks* callbacks;
     int document_depth;
     void* user_context;
     void* scanner;
-} cte_real_decode_process;
+} cte_decode_process;
 
-void yyerror(const void* const scanner, cte_real_decode_process* decode_process, const char *msg);
+void yyerror(const void* const scanner, struct cte_decode_process* decode_process, const char *msg);
 
 
 #ifdef __cplusplus 

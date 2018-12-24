@@ -18,7 +18,7 @@ int yylex(union YYSTYPE *, void *);
 %lex-param { void *scanner }
 
 %parse-param { void *scanner }
-%parse-param { cte_real_decode_process* process }
+%parse-param { cte_decode_process* process }
 
 %union {
     char* string_v;

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "cte_internal.h"
 
+
 static bool is_hex_character(int ch)
 {
     if(ch >= '0' && ch <= '9')
@@ -126,49 +127,49 @@ static char* string_unquote_unescape(char* str)
 }
 
 
-static void on_error(cte_real_decode_process* process, const char* message)
+static void on_error(cte_decode_process* process, const char* message)
 {
-	process->callbacks->on_error((cte_decode_process*)process, message);
+	process->callbacks->on_error(process, message);
 }
 
-static bool on_empty(cte_real_decode_process* process)
+static bool on_empty(cte_decode_process* process)
 {
-    return process->callbacks->on_empty((cte_decode_process*)process);
+    return process->callbacks->on_empty(process);
 }
 
-static bool on_true(cte_real_decode_process* process)
+static bool on_true(cte_decode_process* process)
 {
-    return process->callbacks->on_boolean((cte_decode_process*)process, true);
+    return process->callbacks->on_boolean(process, true);
 }
 
-static bool on_false(cte_real_decode_process* process)
+static bool on_false(cte_decode_process* process)
 {
-    return process->callbacks->on_boolean((cte_decode_process*)process, false);
+    return process->callbacks->on_boolean(process, false);
 }
 
-static bool on_int(cte_real_decode_process* process, int base, char* string_value)
+static bool on_int(cte_decode_process* process, int base, char* string_value)
 {
     int64_t value = strtoll(string_value, NULL, base);
     if((value == LLONG_MAX || value == LLONG_MIN) && errno == ERANGE)
     {
-    	process->callbacks->on_error((cte_decode_process*)process, "Number out of range");
+    	process->callbacks->on_error(process, "Number out of range");
     	return false;
     }
-    return process->callbacks->on_int_64((cte_decode_process*)process, value);
+    return process->callbacks->on_int_64(process, value);
 }
 
-static bool on_float(cte_real_decode_process* process, char* string_value)
+static bool on_float(cte_decode_process* process, char* string_value)
 {
     double value = strtod(string_value, NULL);
     if((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
     {
-    	process->callbacks->on_error((cte_decode_process*)process, "Number out of range");
+    	process->callbacks->on_error(process, "Number out of range");
     	return false;
     }
-    return process->callbacks->on_float_64((cte_decode_process*)process, value);
+    return process->callbacks->on_float_64(process, value);
 }
 
-static bool on_decimal(cte_real_decode_process* process, char* string_value)
+static bool on_decimal(cte_decode_process* process, char* string_value)
 {
 	// TODO
 	(void)process;
@@ -176,7 +177,7 @@ static bool on_decimal(cte_real_decode_process* process, char* string_value)
 	return true;
 }
 
-static bool on_time(cte_real_decode_process* process, int day_digits, char* string_value)
+static bool on_time(cte_decode_process* process, int day_digits, char* string_value)
 {
 	// TODO
 	(void)process;
@@ -185,56 +186,60 @@ static bool on_time(cte_real_decode_process* process, int day_digits, char* stri
 	return true;
 }
 
-static bool on_list_begin(cte_real_decode_process* process)
+static bool on_list_begin(cte_decode_process* process)
 {
-    return process->callbacks->on_list_begin((cte_decode_process*)process);
+    return process->callbacks->on_list_begin(process);
 }
 
-static bool on_list_end(cte_real_decode_process* process)
+static bool on_list_end(cte_decode_process* process)
 {
-    return process->callbacks->on_list_end((cte_decode_process*)process);
+    return process->callbacks->on_list_end(process);
 }
 
-static bool on_map_begin(cte_real_decode_process* process)
+static bool on_map_begin(cte_decode_process* process)
 {
-    return process->callbacks->on_map_begin((cte_decode_process*)process);
+    return process->callbacks->on_map_begin(process);
 }
 
-static bool on_map_end(cte_real_decode_process* process)
+static bool on_map_end(cte_decode_process* process)
 {
-    return process->callbacks->on_map_end((cte_decode_process*)process);
+    return process->callbacks->on_map_end(process);
 }
 
-static bool on_string(cte_real_decode_process* process, char* value)
+static bool on_string(cte_decode_process* process, char* value)
 {
     char* bad_data_loc = string_unquote_unescape(value);
     if(bad_data_loc != NULL)
     {
     	// TODO: Show where it's bad (at bad_data_log)
-    	process->callbacks->on_error((cte_decode_process*)process, "Bad string");
+    	process->callbacks->on_error(process, "Bad string");
     	return false;
     }
-    return process->callbacks->on_string((cte_decode_process*)process, value);
+    return process->callbacks->on_string(process, value);
 }
 
-static bool on_binary_data_begin(cte_real_decode_process* process)
+static bool on_binary_data_begin(cte_decode_process* process)
 {
 	// TODO
 	(void)process;
 	return true;
 }
 
-static bool on_binary_data_end(cte_real_decode_process* process)
+static bool on_binary_data_end(cte_decode_process* process)
 {
-    return process->callbacks->on_binary_data_end((cte_decode_process*)process);
+    return process->callbacks->on_binary_data_end(process);
 }
 
-
-
-cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user_context)
+int cte_decode_process_size()
 {
-    cte_real_decode_process* process = malloc(sizeof(*process));
-    memset(process, 0, sizeof(*process));
+    return sizeof(cte_decode_process);
+}
+
+// TODO: ove this to cbe.l
+cte_decode_status cte_decode_begin(cte_decode_process* process,
+                                   const cte_decode_callbacks* callbacks,
+                                   void* user_context)
+{
     process->callbacks = callbacks;
     process->user_context = user_context;
     process->parse_callbacks.on_error = on_error;
@@ -252,11 +257,10 @@ cte_decode_process* cte_decode_begin(cte_decode_callbacks* callbacks, void* user
     process->parse_callbacks.on_string = on_string;
     process->parse_callbacks.on_binary_data_begin = on_binary_data_begin;
     process->parse_callbacks.on_binary_data_end = on_binary_data_end;
-    return (cte_decode_process*)process;
+    return CTE_DECODE_STATUS_OK;
 }
 
-void* cte_decode_get_user_context(cte_decode_process* decode_process)
+void* cte_decode_get_user_context(cte_decode_process* process)
 {
-    cte_real_decode_process* process = (cte_real_decode_process*)decode_process;
     return process->user_context;
 }

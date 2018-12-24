@@ -16,7 +16,9 @@ void expect_decoded(const char* cte, ...)
     decode_test_context* context = &test_context;
     cte_decode_callbacks callbacks = decode_new_callbacks();
 
-    cte_decode_process* decode_process = cte_decode_begin(&callbacks, context);
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context));
     ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte, strlen(cte)));
     cte_decode_end(decode_process);
     fflush(stdout);
@@ -92,7 +94,9 @@ void expect_decode_failure(const char* cte)
     void* context = &test_context;
     cte_decode_callbacks callbacks = decode_new_callbacks();
 
-    cte_decode_process* decode_process = cte_decode_begin(&callbacks, context);
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context));
     ASSERT_NE(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte, strlen(cte)));
     cte_decode_end(decode_process);
 }
