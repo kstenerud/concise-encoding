@@ -269,7 +269,7 @@ cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
 #define DEFAULT_INDENT_SPACES 0
 #define DEFAULT_FLOAT_DIGITS_PRECISION 15
 
-typedef struct {} cte_encode_process;
+struct cte_encode_process;
 
 /**
  * Status codes that can be returned by encoder functions.
@@ -282,30 +282,46 @@ typedef enum
     CTE_ENCODE_STATUS_OK,
 
     /**
-     * Unbalanced container begin and end markers were detected.
+     * The encoder has reached the end of the buffer and needs more room to
+     * encode this object.
      */
-    CTE_ENCODE_STATUS_UNBALANCED_CONTAINERS,
+    CTE_ENCODE_STATUS_NEED_MORE_ROOM = 400,
+
+    /**
+     * Unbalanced list/map begin and end markers were detected.
+     */
+    CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS,
 
     /**
      * An invalid data type was used as a map key.
      */
-    CTE_ENCODE_STATUS_INCORRECT_KEY_TYPE,
+    CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-    CTE_ENCODE_STATUS_MISSING_VALUE_FOR_KEY,
+    CTE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
+
+    /**
+     * Attempted to add a new field or close the document before the existing
+     * field was completely filled.
+     */
+    CTE_ENCODE_ERROR_INCOMPLETE_FIELD,
+
+    /**
+     * The currently open field is smaller than the data being added.
+     */
+    CTE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED,
+
+    /**
+     * We're not inside an array field.
+     */
+    CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD,
 
     /**
      * Max container depth (default 500) was exceeded.
      */
-    CTE_ENCODE_STATUS_MAX_CONTAINER_DEPTH_EXCEEDED,
-
-    /**
-     * The encoder has reached the end of the buffer and needs
-     * more room to encode this object.
-     */
-    CTE_ENCODE_STATUS_NEED_MORE_ROOM,
+    CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
 } cte_encode_status;
 
 
@@ -318,7 +334,7 @@ typedef enum
  * @param float_digits_precision The number of significant digits to print for floating point numbers.
  * @return The new encode process.
  */
-cte_encode_process* cte_encode_begin_with_config(
+struct cte_encode_process* cte_encode_begin_with_config(
                         uint8_t* const document_buffer,
                         int64_t byte_count,
                         int indent_spaces,
@@ -331,7 +347,7 @@ cte_encode_process* cte_encode_begin_with_config(
  * @param byte_count Size of the buffer in bytes.
  * @return The new encode process.
  */
-cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byte_count);
+struct cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byte_count);
 
 /**
  * Replace the document buffer in an encode process.
@@ -340,7 +356,7 @@ cte_encode_process* cte_encode_begin(uint8_t* const document_buffer, int64_t byt
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  */
-void cte_encode_set_buffer(cte_encode_process* encode_process, uint8_t* const document_buffer, int64_t byte_count);
+void cte_encode_set_buffer(struct cte_encode_process* encode_process, uint8_t* const document_buffer, int64_t byte_count);
 
 /**
  * Get the current write offset into the encode buffer.
@@ -348,7 +364,7 @@ void cte_encode_set_buffer(cte_encode_process* encode_process, uint8_t* const do
  * @param encode_process The encode process.
  * @return The current offset.
  */
-int64_t cte_encode_get_buffer_offset(cte_encode_process* encode_process);
+int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
 
 /**
  * Get the document depth. This is the total depth of lists or maps that
@@ -362,7 +378,7 @@ int64_t cte_encode_get_buffer_offset(cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return the document depth.
  */
-int cte_encode_get_document_depth(cte_encode_process* encode_process);
+int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
 
 /**
  * End an encoding process, freeing up any encoder resources used.
@@ -375,7 +391,7 @@ int cte_encode_get_document_depth(cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_end(cte_encode_process* encode_process);
+cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
 
 /**
  * Add an empty object to the document.
@@ -387,7 +403,7 @@ cte_encode_status cte_encode_end(cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_empty(cte_encode_process* const encode_process);
+cte_encode_status cte_encode_add_empty(struct cte_encode_process* const encode_process);
 
 /**
  * Add a boolean value to the document.
@@ -399,7 +415,7 @@ cte_encode_status cte_encode_add_empty(cte_encode_process* const encode_process)
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_boolean(cte_encode_process* const encode_process, const bool value);
+cte_encode_status cte_encode_add_boolean(struct cte_encode_process* const encode_process, const bool value);
 
 /**
  * Add an integer value to the document.
@@ -411,7 +427,7 @@ cte_encode_status cte_encode_add_boolean(cte_encode_process* const encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int(cte_encode_process* const encode_process, const int value);
+cte_encode_status cte_encode_add_int(struct cte_encode_process* const encode_process, const int value);
 
 /**
  * Add an integer value to the document.
@@ -423,7 +439,7 @@ cte_encode_status cte_encode_add_int(cte_encode_process* const encode_process, c
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_8(cte_encode_process* const encode_process, const int8_t value);
+cte_encode_status cte_encode_add_int_8(struct cte_encode_process* const encode_process, const int8_t value);
 
 /**
  * Add a 16 bit integer value to the document.
@@ -436,7 +452,7 @@ cte_encode_status cte_encode_add_int_8(cte_encode_process* const encode_process,
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_16(cte_encode_process* const encode_process, const int16_t value);
+cte_encode_status cte_encode_add_int_16(struct cte_encode_process* const encode_process, const int16_t value);
 
 /**
  * Add a 32 bit integer value to the document.
@@ -449,7 +465,7 @@ cte_encode_status cte_encode_add_int_16(cte_encode_process* const encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_32(cte_encode_process* const encode_process, const int32_t value);
+cte_encode_status cte_encode_add_int_32(struct cte_encode_process* const encode_process, const int32_t value);
 
 /**
  * Add a 64 bit integer value to the document.
@@ -462,7 +478,7 @@ cte_encode_status cte_encode_add_int_32(cte_encode_process* const encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_64(cte_encode_process* const encode_process, const int64_t value);
+cte_encode_status cte_encode_add_int_64(struct cte_encode_process* const encode_process, const int64_t value);
 
 /**
  * Add a 128 bit integer value to the document.
@@ -475,7 +491,7 @@ cte_encode_status cte_encode_add_int_64(cte_encode_process* const encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_128(cte_encode_process* const encode_process, const __int128 value);
+cte_encode_status cte_encode_add_int_128(struct cte_encode_process* const encode_process, const __int128 value);
 
 /**
  * Add a 32 bit floating point value to the document.
@@ -488,7 +504,7 @@ cte_encode_status cte_encode_add_int_128(cte_encode_process* const encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_32(cte_encode_process* const encode_process, const float value);
+cte_encode_status cte_encode_add_float_32(struct cte_encode_process* const encode_process, const float value);
 
 /**
  * Add a 64 bit floating point value to the document.
@@ -501,7 +517,7 @@ cte_encode_status cte_encode_add_float_32(cte_encode_process* const encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_64(cte_encode_process* const encode_process, const double value);
+cte_encode_status cte_encode_add_float_64(struct cte_encode_process* const encode_process, const double value);
 
 /**
  * Add a 128 bit floating point value to the document.
@@ -514,7 +530,7 @@ cte_encode_status cte_encode_add_float_64(cte_encode_process* const encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_128(cte_encode_process* const encode_process, const __float128 value);
+cte_encode_status cte_encode_add_float_128(struct cte_encode_process* const encode_process, const __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.
@@ -527,7 +543,7 @@ cte_encode_status cte_encode_add_float_128(cte_encode_process* const encode_proc
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const encode_process, const _Decimal32 value);
+cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* const encode_process, const _Decimal32 value);
 
 /**
  * Add a 64 bit decimal value to the document.
@@ -540,7 +556,7 @@ cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const encode_pro
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const encode_process, const _Decimal64 value);
+cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* const encode_process, const _Decimal64 value);
 
 /**
  * Add a 128 bit decimal value to the document.
@@ -553,7 +569,7 @@ cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const encode_pro
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const encode_process, const _Decimal128 value);
+cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* const encode_process, const _Decimal128 value);
 
 /**
  * Add a time value to the document.
@@ -566,7 +582,7 @@ cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const encode_pr
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_time(cte_encode_process* const encode_process, const smalltime value);
+cte_encode_status cte_encode_add_time(struct cte_encode_process* const encode_process, const smalltime value);
 
 /**
  * Add a UTF-8 encoded null-terminated string value to the document.
@@ -579,7 +595,7 @@ cte_encode_status cte_encode_add_time(cte_encode_process* const encode_process, 
  * @param str The null-terminated string to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_string(cte_encode_process* const encode_process, const char* const str);
+cte_encode_status cte_encode_add_string(struct cte_encode_process* const encode_process, const char* const str);
 
 /**
  * Add a substring of a UTF-8 encoded string value to the document.
@@ -593,7 +609,7 @@ cte_encode_status cte_encode_add_string(cte_encode_process* const encode_process
  * @param byte_count The length of the substring in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_substring(cte_encode_process* const encode_process, const char* const string_start, const int64_t byte_count);
+cte_encode_status cte_encode_add_substring(struct cte_encode_process* const encode_process, const char* const string_start, const int64_t byte_count);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
@@ -606,7 +622,7 @@ cte_encode_status cte_encode_add_substring(cte_encode_process* const encode_proc
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_list(cte_encode_process* const encode_process);
+cte_encode_status cte_encode_begin_list(struct cte_encode_process* const encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -622,7 +638,7 @@ cte_encode_status cte_encode_begin_list(cte_encode_process* const encode_process
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_map(cte_encode_process* const encode_process);
+cte_encode_status cte_encode_begin_map(struct cte_encode_process* const encode_process);
 
 /**
  * End the current container (list or map) in the document.
@@ -636,7 +652,7 @@ cte_encode_status cte_encode_begin_map(cte_encode_process* const encode_process)
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_end_container(cte_encode_process* const encode_process);
+cte_encode_status cte_encode_end_container(struct cte_encode_process* const encode_process);
 
 /**
  * Add an array of binary data to the document.
@@ -649,7 +665,7 @@ cte_encode_status cte_encode_end_container(cte_encode_process* const encode_proc
  * @param byte_count The length of the data in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_binary_data(cte_encode_process* const encode_process, const uint8_t* const start, const int64_t byte_count);
+cte_encode_status cte_encode_add_binary_data(struct cte_encode_process* const encode_process, const uint8_t* const start, const int64_t byte_count);
 
 
 

@@ -48,7 +48,7 @@ typedef struct
 /**
  * Holds encoder contextual data.
  */
-typedef struct
+struct cte_encode_process
 {
     const uint8_t* start;
     const uint8_t* end;
@@ -61,16 +61,18 @@ typedef struct
     bool is_first_in_container;
     bool next_object_is_map_key;
     // TODO: allowed_types
-} cte_real_encode_process;
+};
+typedef struct cte_encode_process cte_encode_process;
 
-typedef struct cte_decode_process
+struct cte_decode_process
 {
     internal_parse_callbacks parse_callbacks;
     const cte_decode_callbacks* callbacks;
     int document_depth;
     void* user_context;
     void* scanner;
-} cte_decode_process;
+};
+typedef struct cte_decode_process cte_decode_process;
 
 void yyerror(const void* const scanner, struct cte_decode_process* decode_process, const char *msg);
 
