@@ -326,6 +326,21 @@ typedef enum
 
 
 /**
+ * Get the size of the encode process data.
+ * Use this to create a backing store for the process data like so:
+ *     char process_backing_store[cte_encode_process_size()];
+ *     struct cte_encode_process* encode_process = (struct cte_encode_process*)process_backing_store;
+ * or
+ *     struct cte_encode_process* encode_process = (struct cte_encode_process*)malloc(cte_encode_process_size());
+ * or
+ *     std::vector<char> process_backing_store(cte_encode_process_size());
+ *     struct cte_encode_process* encode_process = (struct cte_encode_process*)process_backing_store.data();
+ *
+ * @return The process data size.
+ */
+int cte_encode_process_size();
+
+/**
  * Begin a new encoding process.
  *
  * @param document_buffer A buffer to store the document in.

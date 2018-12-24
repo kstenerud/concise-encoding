@@ -15,6 +15,11 @@ static inline cte_encode_process* get_real_process(cte_encode_process* encode_pr
     return encode_process;
 }
 
+int cte_encode_process_size()
+{
+    return sizeof(cte_encode_process);
+}
+
 cte_encode_process* cte_encode_begin_with_config(
                         uint8_t* const document_buffer,
                         int64_t byte_count,
