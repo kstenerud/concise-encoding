@@ -387,7 +387,7 @@ Example:
 Version History
 ---------------
 
-June 5, 2018: Version 1
+June 5, 2018: Preview Version 1
 
 
 

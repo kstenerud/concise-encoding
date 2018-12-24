@@ -275,7 +275,7 @@ A map associates objects (keys) with other objects (values). Keys may be any mix
  * 2000.0
  * 2000.0d
 
-Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace.
+Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace. A key without a paired value is not allowed.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
@@ -403,9 +403,9 @@ Illegal encodings must not be used, as they may cause problems or even API viola
 
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Map keys must not be container types or the `empty` type.
-  * Maps must not contain duplicate keys (that includes mathematically equivalent keys).
-  * Upper case text is not allowed, except in strings and time values.
-  * Whitespace must only occur as described in the whitespace section.
+  * Maps must not contain duplicate keys (this includes mathematically equivalent numeric keys).
+  * Upper case text is not allowed, except as described in section `Letter Case`.
+  * Whitespace must only occur as described in section `Whitespace`.
 
 
 
@@ -429,7 +429,7 @@ For example: File `mydata.cte`
 Version History
 ---------------
 
-July 22, 2018: Version 1
+July 22, 2018: Preview Version 1
 
 
 
