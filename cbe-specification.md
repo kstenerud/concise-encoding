@@ -193,9 +193,9 @@ The two lowest bits (in the first byte as it is stored little endian) form the w
 
 To read the length:
 
-  * Read the lower 2 bits of the first byte to get the width code subfield ( width_code = first_byte & 3 ).
+  * Read the lower 2 bits of the first byte to get the width code subfield (`width_code = first_byte & 3`).
   * If the width code > 0, read from the same location as a little endian unsigned integer of the corresponding width (16, 32, or 64 bits).
-  * Shift "right" unsigned by 2 ( length = value >> 2 ) to get the final value.
+  * Shift "right" unsigned by 2 (`length = value >> 2`) to get the final value.
 
 Examples:
 
@@ -223,9 +223,11 @@ Examples:
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [90 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
-For implementations requiring null-terminated strings, one possible option would be to modify the underlying buffer after extracting values and offsets.
+#### Null Termination
 
-Example: Map containing {"alpha": 1, "beta": 2}
+Since all objects contain a type field, implementations requiring null terminated strings can artificially do so in a copy-free manner by keeping track of the subsequent object's metadata, and then overwriting its type field with 0. This complicates the code, but may be useful in environments where memory is at a premium, or for documents containing long strings that are expensive to copy.
+
+##### Example: Map containing {"alpha": 1, "beta": 2}
 
 Original data:
 
@@ -234,14 +236,33 @@ Original data:
 | 7c  | 85     | 61 | 6c | 70 | 68 | 61 | 01 | 84     | 62 | 65 | 74 | 61 | 02 | 7d            |
 | Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
 
-First, extract data (values `1` and `2`), including pointers to offset 2 ("alpha") and offset 9 ("beta").
+First, extract metadata (simple values `1` and `2`), and pointers to offset 2 ("alpha") and offset 9 ("beta").
 
-Next, apply null termination by overwriting the type field of the next value following each string:
+Next, apply null termination by overwriting the type field of the next object following each string:
 
 | 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7       | 8      | 9  | 10 | 11 | 12 | 13      | 14            |
 | --- | ------ | -- | -- | -- | -- | -- | ------- | ------ | -- | -- | -- | -- | ------- | ------------- |
 | 7c  | 85     | 61 | 6c | 70 | 68 | 61 | **00**  | 84     | 62 | 65 | 74 | 61 | **00**  | 7d            |
 | Map | String | a  | l  | p  | h  | a  | **nul** | String | b  | e  | t  | a  | **nul** | End container |
+
+
+##### Special Case Example: Document containing single string object "test"
+
+In this case, there's no subsequent object whose type field we can use, so we must always ensure the "real" buffer is 1 byte longer than reported.
+
+Original data:
+
+| 0      | 1  | 2  | 3  | 4  | 5                    |
+| ------ | -- | -- | -- | -- | -------------------- |
+| 0x84   | 74 | 65 | 73 | 74 | xx                   |
+| String | t  | e  | s  | t  | spare byte in buffer |
+
+Apply termination:
+
+| 0      | 1  | 2  | 3  | 4  | 5                    |
+| ------ | -- | -- | -- | -- | -------------------- |
+| 0x84   | 74 | 65 | 73 | 74 | **00**               |
+| String | t  | e  | s  | t  | **nul**              |
 
 
 
@@ -252,7 +273,7 @@ Container Types
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
-List elements are stored using regular object encoding (type field + possible payload), and the list is terminated by an "end of container" marker.
+List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
 Example:
 
@@ -269,7 +290,7 @@ All keys in a map must resolve to a unique value, even across data types. For ex
  * 2000 (32-bit integer)
  * 2000.0 (32-bit float)
 
-Map contents are stored as key-value pair tuples using regular object encoding (type field + possible payload):
+Map contents are stored as key-value pairs of objects:
 
     [7c] [key 1] [value 1] [key 2] [value 2] ... [7d]
 
@@ -286,7 +307,7 @@ Other Types
 
 Represents the absence of data. Some languages implement this as the NULL value.
 
-Use this with care, as some languages may have restrictions on how it may be used in data structures.
+Use `empty` with care, as some languages may have restrictions on how it may be used in data structures.
 
 Example:
 
@@ -295,7 +316,7 @@ Example:
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type may occur up to 15 times before any type field (to support aligning anything up to 128 bits wide). A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type may occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
@@ -313,7 +334,7 @@ Illegal encodings must not be used, as they may cause problems or even API viola
   * All map keys must have corresponding values.
   * Map keys must not be container types or the `empty` type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
-  * An array's length field must match the length of its data.
+  * An array's length field must match the byte-length of its data.
 
 
 
