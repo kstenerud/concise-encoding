@@ -20,7 +20,7 @@ Structure
 
 A CTE document is a UTF-8 encoded (with no byte order mark) text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
-With the exeption of string contents, all characters in a CTE document must fall within the range U+0020 to U+007E (inclusive). Strings may contain any valid UTF-8 sequence.
+With the exception of string contents, all characters in a CTE document must fall within the range U+0020 to U+007E (inclusive). Strings may contain any valid UTF-8 sequence.
 
 Whitespace is used to separate elements in a container. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
