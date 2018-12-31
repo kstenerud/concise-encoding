@@ -22,7 +22,7 @@ A CTE document is a UTF-8 encoded (with no byte order mark) text document consis
 
 With the exception of string contents, all characters in a CTE document must fall within the range U+0020 to U+007E (inclusive). Strings may contain any valid UTF-8 sequence.
 
-Whitespace is used to separate elements in a container. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
+Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by a colon `:` and possible whitespace. The key-value pairs themselves are separated by whitespace.
 
 Example:
 
@@ -36,10 +36,11 @@ Example:
         "regular int": -10000000
         "hex int":     fffe0001h
         "float":       14.125
-        "decimal":     -1.02d
+        "decimal":     -1.02e+40d
         "time":        2018-07-01T10:53:22.001481Z
         "empty":       empty
-        "bytes":       b(10ff389add004f4f91)
+        "bytes":       h(10 ff 38 9a dd 00 4f 4f 91)
+        1:             "Keys don't have to be strings"
     }
 
 The top-level object can also be a more simple type, such as:
@@ -295,6 +296,11 @@ The encoding prefix determines the data encoding:
 For this specification, base64 is as described in [RFC 4648](https://tools.ietf.org/html/rfc4648#section-4) (i.e. using `+` and `/`, for characters 62 and 63, and `=` as padding).
 
 For encoding `h`, hexadecimal characters `a`-`f` must be in lowercase.
+
+Example:
+
+ * h(5468697320697320656e636f64656420696e20686578)
+ * b(VGhpcyBpcyBlbmNvZGVkIGluIGJhc2U2NA==)
 
 
 ### String
