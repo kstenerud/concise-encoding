@@ -101,7 +101,7 @@ A floating point number is composed of a whole part and a fractional part, separ
     1.0
     -98.413
 
-The exponential portion is denoted by the character `e`, followed by the signed size of the base-10 exponent:
+The exponential portion is denoted by the character `e`, followed by the signed size of the base-10 exponent. Values with exponential fields must be normalized.
 
     6.411e+9 = 6411000000
     6.411e-9 = 0.000000006411
