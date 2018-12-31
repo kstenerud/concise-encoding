@@ -20,6 +20,8 @@ Structure
 
 A CTE document is a UTF-8 encoded (with no byte order mark) text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
+With the exeption of string contents, all characters in a CTE document must fall within the range U+0020 to U+007E (inclusive). Strings may contain any valid UTF-8 sequence.
+
 Whitespace is used to separate elements in a container. Maps separate keys and values using a colon `:`, and key-value pairs using whitespace.
 
 Example:
@@ -372,7 +374,9 @@ Comments
 
 Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to preserve or discard comments.
 
-A comment begins with a `#` character and terminates on the next newline character (U+000A).
+A comment begins with a `#` character and terminates at the next carriage return (U+000D) or newline (U+000A). It is considered good form to put a space between the `#` character and the actual comment.
+
+If a parser wishes to preserve comments, the contents of a comment are everything between the `#` and the carriage return or newline, except that if the first character following the comment initiator (`#`) is a space (U+0020), it is discarded. All subsequent spaces (including leading spaces) are preserved.
 
 Example:
 
