@@ -73,43 +73,59 @@ Represents two's complement signed integers up to a width of 128 bits. Negative 
 
 Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
 
-| Base | Name        | Suffix |
-| ---- | ----------- | ------ |
-|   2  | Binary      | b      |
-|   8  | Octal       | o      |
-|  10  | Decimal     | (none) |
-|  16  | Hexadecimal | h      |
+| Base | Name        | Digits           | Suffix |
+| ---- | ----------- | ---------------- | ------ |
+|   2  | Binary      | 01               | b      |
+|   8  | Octal       | 01234567         | o      |
+|  10  | Decimal     | 0123456789       | (none) |
+|  16  | Hexadecimal | 0123456789abcdef | h      |
 
 Examples:
 
 | Notation  | Base | Decimal Integer Value |
 | --------- | ---- | --------------------- |
-| 900000    |  10  | 900000                |
 | -1100b    |   2  | -12                   |
 | 755o      |   8  | 493                   |
+| 900000    |  10  | 900000                |
 | deadbeefh |  16  | 3735928559            |
 
 Numbers must be written in lower case.
 
 
-### Binary Floating Point
+### Floating Point
 
-Represents ieee754 binary floating point values in widths from 32 to 128 bits. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`. Other allowable values are `nan` (not a number), and positive & negative infinity (`inf`, `-inf`).
+A floating point number is composed of a whole part and a fractional part, separated by a dot `.`, with an optional exponential portion. Negative values are prefixed with a dash `-`.
+
+    1.0
+    -98.413
+
+The exponential portion is denoted by the character `e`, followed by the signed size of the base-10 exponent:
+
+    6.411e+9 = 6411000000
+    6.411e-9 = 0.000000006411
+
+Numbers must be written in lower case.
+
+There are two kinds of floating point numbers supported in this spec: binary and decimal.
+
+
+#### Binary Floating Point
+
+Represents ieee754 binary floating point values in widths from 32 to 128 bits.
 
 Examples:
 
     1.25e+7
     -9.00001
-    nan
-    inf
-    -inf
 
-Numbers must be written in lower case.
+Binary floating point values are more common, and are supported by almost all hardware, but suffer from precision loss in the fractional portion due to the values being represented internally as powers of 2. Converting base-10 fractions to base-2 causes loss of precision because not all base-10 fractions can be accurately represented as sums of base-2 fractions within the constraints of the ieee754 spec. For example, `90.1` in decimal would be somewhere around `90.0999` in binary.
+
+Even though binary floating point values lose accuracy in certain cases, it is important to retain fidelity when transmitting such data.
 
 
-### Decimal Floating Point
+#### Decimal Floating Point
 
-Represents ieee754 decimal floating point values in widths from 32 to 128 bits. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. Supports exponential notation using `e`. Negative values are prefixed with a dash `-`, and the radix character is `.`. Other allowable values are `nand` (not a number), and positive & negative infinity (`infd`, `-infd`).
+Represents ieee754 decimal floating point values in widths from 32 to 128 bits. These are primarily used in financial and other applications where binary rounding errors are unacceptable.
 
 Decimal floating point values are differentiated from binary floating point values by adding a `d` suffix.
 
@@ -117,11 +133,50 @@ Examples:
 
     12.99d
     -100.04d
-    nand
-    infd
-    -infd
+    2.58411e-50d
 
-Numbers must be written in lower case.
+Decimal floating point values don't lose precision because they are internally represented as powers of 10, but they have slightly less range, and aren't supported in hardware on many platforms (yet).
+
+
+#### Rules
+
+**There must be at least one digit on each side of the dot character:**
+
+| Invalid    | Valid   | Notes                                                |
+| ---------- | ------- | ---------------------------------------------------- |
+| -1.        | -1.0    | Or use integer value -1                              |
+| .1         | 0.1     |                                                      |
+| .218901e+2 | 21.8901 | Or 2.18901e+1                                        |
+| -0         | -0.0    | Special case: -0 cannot be represented as an integer |
+
+**If there is an exponential portion, there must also be a dot:**
+
+| Invalid    | Valid    |
+| ---------- | -------- |
+| 1e+100     | 1.0e+100 |
+
+**Exponential notation must be normalized (only one digit to the left of the dot):**
+
+| Invalid    | Valid      |
+| ---------- | ---------- |
+| 12e+50     | 1.2e+51    |
+| 108.44e+10 | 1.0844e+12 |
+| -1000e+5   | -1.0e+8    |
+| 15.0e-20   | 1.5e-21    |
+
+
+#### Infinity and Not a Number
+
+The following are special floating point values:
+
+ * `inf`: Infinity
+ * `-inf`: Negative Infinity
+ * `nan`: Not a Number (non-signaling)
+
+Note: There is no `nand` or `infd`. Use `nan` and `inf`.
+
+A decoder is free to present these as binary or decimal floating point values. The end user may convert them as desired.
+
 
 
 ### Time
@@ -314,7 +369,7 @@ Example:
 Comments
 --------
 
-Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to discard comments.
+Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to preserve or discard comments.
 
 A comment begins with a `#` character and terminates on the next newline character (U+000A).
 
@@ -344,9 +399,9 @@ A CTE document must be entirely in lower case, except for the following:
 
  * String contents: `"A string may contain UPPER CASE. Escape sequences must be lower case: \x3d"`
  * Time values must be in upper case to conform with ISO 8601: `2018-07-01T10:53:22.001481Z`
- * base64 encoding makes use of uppercase characters in its code table.
+ * base64 encoding makes use of uppercase characters in its code table, and is therefore allowed.
 
-Everything else, including hexadecimal digits and escape sequences, must be lower case.
+Everything else, including hexadecimal digits, exponents and escape sequences, must be lower case.
 
 
 
