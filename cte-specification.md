@@ -106,9 +106,11 @@ The exponential portion is denoted by the character `e`, followed by the signed 
     6.411e+9 = 6411000000
     6.411e-9 = 0.000000006411
 
+The maximum number of significant digits, if not specified by the party encoding the data, is as many digits as ieee754 allows for the data type.
+
 Numbers must be written in lower case.
 
-There are two kinds of floating point numbers supported in this spec: binary and decimal.
+There are two types of floating point numbers supported: binary and decimal.
 
 
 #### Binary Floating Point
