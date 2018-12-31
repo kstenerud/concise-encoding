@@ -155,14 +155,15 @@ Decimal floating point values don't lose precision because they are internally r
 | ---------- | -------- |
 | 1e+100     | 1.0e+100 |
 
-**Exponential notation must be normalized (only one digit to the left of the dot):**
+**Exponential notation must be normalized (one and only one digit to the left of the dot, non-zero):**
 
 | Invalid    | Valid      |
 | ---------- | ---------- |
-| 12e+50     | 1.2e+51    |
-| 108.44e+10 | 1.0844e+12 |
+| 22e+50     | 2.2e+51    |
+| 508.44e+10 | 5.0844e+12 |
 | -1000e+5   | -1.0e+8    |
-| 15.0e-20   | 1.5e-21    |
+| 65.0e-20   | 6.5e-21    |
+| 0.5e+10    | 5.0e+11    |
 
 
 #### Infinity and Not a Number
