@@ -101,18 +101,18 @@ major_type get_major_type(const std::vector<uint8_t>& value)
 static int g_days_to_the_month[] =
 {
     0, // Nothing
-    0, // January
-    31, // February
-    31 + 28, // March
-    31 + 28 + 31, // April
-    31 + 28 + 31 + 30, // May
-    31 + 28 + 31 + 30 + 31, // June
-    31 + 28 + 31 + 30 + 31 + 30, // July
-    31 + 28 + 31 + 30 + 31 + 30 + 31, // August
-    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31, // September
-    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30, // October
-    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31, // November
-    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30, // December
+    g_days_to_the_month[ 0] +  0, // January
+    g_days_to_the_month[ 1] + 31, // February
+    g_days_to_the_month[ 2] + 28, // March
+    g_days_to_the_month[ 3] + 31, // April
+    g_days_to_the_month[ 4] + 30, // May
+    g_days_to_the_month[ 5] + 31, // June
+    g_days_to_the_month[ 6] + 30, // July
+    g_days_to_the_month[ 7] + 31, // August
+    g_days_to_the_month[ 8] + 31, // September
+    g_days_to_the_month[ 9] + 30, // October
+    g_days_to_the_month[10] + 31, // November
+    g_days_to_the_month[11] + 30, // December
 };
 
 static inline int is_leap_year(int year)

@@ -1,7 +1,7 @@
 #include "cbe_internal.h"
-#include "cbe_version.h"
+#include "version.h"
 
 const char* cbe_version()
 {
-    return CBE_VERSION;
+    return PROJECT_VERSION;
 }

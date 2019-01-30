@@ -1,15 +1,7 @@
-Reference Implementation for Concise Binary Encoding
-====================================================
+Reference Library for the Safe16 Encoding System
+================================================
 
-A C implementation to demonstrate a simple CBE codec.
-
-
-Assumptions
------------
-
- * Assumes densely packed decimal encoding for C decimal types (_Decimal32, _Decimal64, _Decimal128). This is the default for gcc and other compilers using decNumber.
- * Assumes a little endian host.
-
+A C implementation to demonstrate a simple SAFE16 codec.
 
 
 Requirements
@@ -20,14 +12,11 @@ Requirements
   * A C++ compiler (for the unit tests)
 
 
-
 Dependencies
 ------------
 
- * decimal/decimal (if using C++): For C++ decimal float types
  * stdbool.h: For bool type
  * stdint.h: Fot int types
-
 
 
 Building
@@ -39,65 +28,99 @@ Building
     make
 
 
-Usage
------
-
-### Decoding
-
-```c
-    char decode_process_backing_store[cbe_decode_process_size()];
-    struct cbe_decode_process* decode_process = (struct cbe_decode_process*)decode_process_backing_store;
-    const cbe_decode_callbacks callbacks =
-    {
-        // TODO: Fill in callback pointers
-    };
-    void* context = my_get_context_data();
-    unsigned char* decode_buffer;
-    int64_t bytes_received;
-    cbe_decode_status status = CBE_DECODE_STATUS_OK;
-
-    status = cbe_decode_begin(decode_process, &callbacks, context);
-    if(status != CBE_DECODE_STATUS_OK)
-    {
-        // TODO: Do something about it
-    }
-
-    while(my_has_more_data())
-    {
-        my_get_next_packet(&decode_buffer, &bytes_received);
-        status = cbe_decode_feed(decode_process, decode_buffer, bytes_received);
-        int64_t bytes_consumed = cbe_decode_get_buffer_offset(decode_process);
-        // Todo: Move uncomsumed bytes to the beginning of the buffer for next time around
-    }
-
-    status = cbe_decode_end(decode_process);
-```
-
-
-### Encoding
-
-```c
-    char encode_process_backing_store[cbe_encode_process_size()];
-    struct cbe_encode_process* encode_process = (struct cbe_encode_process*)encode_process_backing_store;
-    unsigned char* document_buffer = my_get_document_pointer();
-    int64_t document_buffer_size = my_get_document_byte_count();
-    cbe_encode_status status = CBE_ENCODE_STATUS_OK;
-
-    status = cbe_encode_begin(encode_process, document_buffer, document_buffer_size);
-    if(status != CBE_ENCODE_STATUS_OK)
-    {
-        // TODO: Do something about it
-    }
-    status = cbe_encode_begin_list(encode_process);
-    status = cbe_encode_add_int_8(encode_process, 1);
-    status = cbe_encode_add_string(encode_process, "Testing");
-    status = cbe_encode_end_container(encode_process);
-    status = cbe_encode_end(encode_process);
-```
-
-
-
 Running Tests
 -------------
 
-    ./test/cbe_test
+    make test
+
+or:
+
+    ./tests/Safe16
+
+
+Usage
+-----
+
+Note: Using C++ to make the string & data code simpler.
+
+### Decoding
+
+```c++
+    std::string my_source_data = "21d17d3f21c18899714596adcc9679d8";
+
+    int64_t decoded_length = safe16_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe16_decode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       decode_buffer.data(),
+                                       decode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
+```
+
+### Decoding (with length field)
+
+```c++
+    std::string my_source_data = "a021d17d3f21c18899714596adcc9679d8";
+
+    int64_t decoded_length = safe16_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe16l_decode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        decode_buffer.data(),
+                                        decode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
+```
+
+### Encoding
+
+```C++
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+
+    bool should_include_length = false;
+    int64_t encoded_length = safe16_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe16_encode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       encode_buffer.data(),
+                                       encode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
+```
+
+### Encoding (with length field)
+
+```c++
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+
+    bool should_include_length = true;
+    int64_t encoded_length = safe16_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe16l_encode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        encode_buffer.data(),
+                                        encode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
+```
