@@ -20,27 +20,25 @@ Structure
 
 A CTE document is a UTF-8 encoded (with no byte order mark) text document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
 
-With the exception of string contents, all characters in a CTE document must fall within the range U+0020 to U+007D (inclusive), or CR (U+000D), LF (U+000A), TAB (U+0009). Strings may contain any valid UTF-8 sequence.
-
-Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by a colon `:` and possible whitespace. The key-value pairs themselves are separated by whitespace.
+Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character `=` and possible whitespace. The key-value pairs themselves are separated by whitespace.
 
 Example:
 
     {
         # A comment
-        "list":        [1 2 "a string"]
-        "sub-map":     {1: "one" 2: "two" 3: 3000}
-        "boolean":     true
-        "binary int":  -10001011b
-        "octal int":   644o
-        "regular int": -10000000
-        "hex int":     fffe0001h
-        "float":       14.125
-        "decimal":     -1.02e+40d
-        "time":        2018-07-01T10:53:22.001481Z
-        "empty":       empty
-        "bytes":       h(10 ff 38 9a dd 00 4f 4f 91)
-        1:             "Keys don't have to be strings"
+        "list"        = [1 2 "a string"]
+        "sub-map"     = {1="one" 2="two" 3=3000}
+        "boolean"     = true
+        "binary int"  = -b:10001011
+        "octal int"   = o:644
+        "regular int" = -10000000
+        "hex int"     = h:fffe0001
+        "float"       = 14.125
+        "decimal"     = -d:1.02e+40
+        "time"        = 2018-07-01T10:53:22.001481Z
+        "nil"         = nil
+        "bytes"       = h/10 ff 38 9a dd 00 4f 4f 91/
+        1             = "Keys don't have to be strings"
     }
 
 The top-level object can also be a more simple type, such as:
@@ -60,23 +58,21 @@ Scalar Types
 
 ### Boolean
 
-Supports the values `true` and `false`, and their aliases `t` and `f`.
+Supports the values `true` and `false`.
 
 Example:
 
     true
     false
-    t
-    f
 
 
 ### Integer
 
-Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-`.
+Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-` as a sign character.
 
-Integers can be specified in base 2, 8, 10, or 16. A suffix character determines which base to interpret as:
+Integers can be specified in base 2, 8, 10, or 16. For bases other than 10, integers must be prefixed (after the sign character) with a special prefix character and a colon `:`.
 
-| Base | Name        | Digits           | Suffix |
+| Base | Name        | Digits           | Prefix |
 | ---- | ----------- | ---------------- | ------ |
 |   2  | Binary      | 01               | b      |
 |   8  | Octal       | 01234567         | o      |
@@ -85,12 +81,12 @@ Integers can be specified in base 2, 8, 10, or 16. A suffix character determines
 
 Examples:
 
-| Notation  | Base | Decimal Integer Value |
-| --------- | ---- | --------------------- |
-| -1100b    |   2  | -12                   |
-| 755o      |   8  | 493                   |
-| 900000    |  10  | 900000                |
-| deadbeefh |  16  | 3735928559            |
+| Notation   | Base | Base-10 Equivalent |
+| ---------- | ---- | ------------------ |
+| -b:1100    |   2  | -12                |
+| o:755      |   8  | 493                |
+| 900000     |  10  | 900000             |
+| h:deadbeef |  16  | 3735928559         |
 
 Numbers must be written in lower case.
 
@@ -102,12 +98,12 @@ A floating point number is composed of a whole part and a fractional part, separ
     1.0
     -98.413
 
-The exponential portion is denoted by the character `e`, followed by the signed size of the base-10 exponent. Values with exponential fields must be normalized.
+The exponential portion is denoted by the lowercase character `e`, followed by the signed size of the base-10 exponent. Values with exponential fields must be normalized.
 
     6.411e+9 = 6411000000
     6.411e-9 = 0.000000006411
 
-The maximum number of significant digits, if not specified by the party encoding the data, is as many digits as ieee754 allows for the data type.
+The maximum number of significant digits, if not defined a-priori for participating parties, is as many digits as ieee754 allows for the data type.
 
 Numbers must be written in lower case.
 
@@ -132,13 +128,13 @@ Even though binary floating point values lose accuracy in certain cases, it is i
 
 Represents ieee754 decimal floating point values in widths from 32 to 128 bits. These are primarily used in financial and other applications where binary rounding errors are unacceptable.
 
-Decimal floating point values are differentiated from binary floating point values by adding a `d` suffix.
+Decimal floating point values are differentiated from binary floating point values by adding a `d:` prefix (after the sign character).
 
 Examples:
 
-    12.99d
-    -100.04d
-    2.58411e-50d
+    d:12.99
+    -d:100.04
+    d:2.58411e-50
 
 Decimal floating point values don't lose precision because they are internally represented as powers of 10, but they have slightly less range, and aren't supported in hardware on many platforms (yet).
 
@@ -179,10 +175,9 @@ The following are special floating point values:
  * `-inf`: Negative Infinity
  * `nan`: Not a Number (non-signaling)
 
-Note: There is no `nand` or `infd`. Use `nan` and `inf`.
+Although ieee754 allows many different NaN values (signaling or non-signaling + payload), all NaN values for the purpose of this spec are considered equal and non-signaling, and must be treated as equivalent when used as map keys (meaning you cannot have multiple NAN keys in a map).
 
-A decoder is free to present these as binary or decimal floating point values. The end user may convert them as desired.
-
+A decoder is free to decode infinity and NaN as binary or decimal floating point values.
 
 
 ### Time
@@ -282,25 +277,23 @@ Array Types
 
 ### Binary Data
 
-An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. Contents may be represented as hexadeximal digits or using base64 encoding. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
+An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
 
-Binary data begins with an encoding prefix, an opening parenthesis `(`, contents, and finally a closing parenthesis `)`. The contents may be broken up anywhere with whitespace.
+Binary data begins with an encoding type, followed by a slash `/`, encoded contents, and then a terminating slash `/`. The encoded contents may contain whitespace at any point.
 
-The encoding prefix determines the data encoding:
+Encoding Types:
 
-| Type | Encoding                              |
-| ---- | ------------------------------------- |
-|   h  | hexadecimal (1 byte per 2 characters) |
-|   b  | base64 (3 bytes per 4 characters)     |
-
-For this specification, base64 is as described in [RFC 4648](https://tools.ietf.org/html/rfc4648#section-4) (i.e. using `+` and `/`, for characters 62 and 63, and `=` as padding).
-
-For encoding `h`, hexadecimal characters `a`-`f` must be in lowercase.
+| Type   | Prefix | Notes                                                                          |
+| ------ | ------ | ------------------------------------------------------------------------------ |
+| Hex    |    h   | 1 byte represented by 2 lowercase hexadecimal characters, whitespace optional  |
+| Safe85 |    s   | https://github.com/kstenerud/safe-encoding/blob/master/safe85-specification.md |
 
 Example:
 
- * h(5468697320697320656e636f64656420696e20686578)
- * b(VGhpcyBpcyBlbmNvZGVkIGluIGJhc2U2NA==)
+| Type   | Encoded Contents                               |
+| ------ | ---------------------------------------------- |
+| Hex    | `h/39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c/` |
+| Safe85 | `s/8F2{*RVCLI8LDzZ!3e/`                        |
 
 
 ### String
@@ -336,27 +329,27 @@ A list begins with an opening square bracket `[`, whitespace separated contents,
 
 Example:
 
-    [1 "two" 3.1 {} empty]
+    [1 "two" 3.1 {} nil]
 
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers. All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `nil` type. Values may be any mix of any type, including other containers. All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
 
  * 2000
  * 2000.0
  * 2000.0d
 
-Map entries are split into key-value pairs using the colon `:` character and optional whitespace. Key-value pairs are separated from each other using whitespace. A key without a paired value is not allowed.
+Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs are separated from each other using whitespace. A key without a paired value is not allowed in a map.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
 Example:
 
     {
-        1: "alpha"
-        2: "beta"
-        "a map": {one: 1}
+        1 = "alpha"
+        2 = "beta"
+        "a map" = {one = 1}
     }
 
 
@@ -364,16 +357,15 @@ Example:
 Other Types
 -----------
 
-### Empty
+### Nil
 
-Denotes the absence of data. Some languages implement this as the "null" value. you may also use its alias `e`.
+Denotes the absence of data. Some languages implement this as the `null` value.
 
-Use `empty` with care, as some languages have restrictions on how it may be used in data structures.
+Use nil judiciously and sparingly, as some languages have restrictions on how it may be used in data structures.
 
 Example:
 
-    empty
-    e
+    nil
 
 
 
@@ -382,9 +374,9 @@ Comments
 
 Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to preserve or discard comments.
 
-A comment begins with a `#` character and terminates at the next carriage return (U+000D) or newline (U+000A). It is considered good form to put a space between the `#` character and the actual comment.
+A comment begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). Comment contents may contain any printable or non-linebreaking whitespace UTF-8 characters.
 
-If a parser wishes to preserve comments, the contents of a comment are everything between the `#` and the carriage return or newline, except that if the first character following the comment initiator (`#`) is a space (U+0020), it is discarded. All subsequent spaces (including leading spaces) are preserved.
+If a parser wishes to preserve comments, the contents of a comment are everything between the `# ` (# space) sequence and the carriage return or newline. All whitespace after the comment initiator `# ` should be preserved.
 
 Example:
 
@@ -392,13 +384,13 @@ Example:
     {
         # Comment before the "name" object.
         # And another comment.
-        "name": "Joe Average" # Comment before the "email" object.
-        "email": # Comment before the "joe@average.org" object.
+        "name" = "Joe Average" # Comment before the "email" object.
+        "email" = # Comment before the "joe@average.org" object.
         "joe@average.org"
-        "numbers" # after numbers
-        :
-        # Before binary data (but not inside it)
-        h(01 02 03 04 05 06 07 08 09 0a)
+        "numbers" # Comment after numbers
+        =
+        # Comment before some binary data (but not inside it)
+        h/01 02 03 04 05 06 07 08 09 0a/
     }
     # Comments at the
     # end of the document.
@@ -408,11 +400,11 @@ Example:
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, except for the following:
+A CTE document must be entirely in lower case, with the following exceptions:
 
  * String contents: `"A string may contain UPPER CASE. Escape sequences must be lower case: \x3d"`
  * Time values must be in upper case to conform with ISO 8601: `2018-07-01T10:53:22.001481Z`
- * base64 encoding makes use of uppercase characters in its code table, and is therefore allowed.
+ * Safe85 encoding, because it makes use of uppercase characters in its code table.
 
 Everything else, including hexadecimal digits, exponents and escape sequences, must be lower case.
 
@@ -421,7 +413,7 @@ Everything else, including hexadecimal digits, exponents and escape sequences, m
 Whitespace
 ----------
 
-Whitespace characters are ignored by a CTE parser. Any number of whitespace characters may occur in a sequence.
+Whitespace characters outside of strings and comments are ignored by a CTE parser. Any number of whitespace characters may occur in a sequence.
 
 
 ### Valid Whitespace Characters
@@ -440,34 +432,36 @@ While there are many characters classified as "whitespace" within the Unicode se
 
  * Before an object (including at the beginning of a document)
  * After an object (including at the end of a document)
- * Between array/container openings & closings: `[`, `]`, `{`, `}`, `(`, `)`
- * Between encoding characters in a binary data array (both base64 and hex).
+ * Between array/container openings & closings: `[`, `]`, `{`, `}`, `/`
+ * Between encoding characters in a binary data array.
 
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `h( 01 02 03   0 4 )` is equivalent to `h(01020304)`
- * `{ 1:"one" 2 : "two" 3: "three" 4 :"four"}` is equivalent to `{1:"one" 2:"two" 3:"three" 4:"four"}`
+ * `h/ 01 02 03   0 4 /` is equivalent to `h/01020304/`
+ * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 
 ### Whitespace **must** occur:
 
- * Between key-value pairs in a map: `{1:"one"2:"two"3:"three"4:"four"}` is invalid.
+ * Between values in a list: `[12"one-two or twelve?"]` is invalid
+ * Between key-value pairs in a map: `{1="one"2="two"3="three"4="four"}` is invalid.
 
 
 ### Whitespace **must not** occur:
 
- * Between a binary data encoding specifier and the opening parenthesis: `h (` is invalid.
+ * Between a binary data encoding type and the opening slash: `s /` is invalid.
  * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid.
- * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3` are invalid.
- * Splitting `true`, `false`, or `empty`: `t rue` is invalid.
+ * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3`, `- 1.0` are invalid.
+ * Splitting special values: `t rue`, `ni l`, `i nf`, `n a n` are invalid.
 
 
-### Whitespace is interpreted literally (not ignored) within a string:
+### Whitespace is interpreted literally (not ignored) within a string or comment:
 
     "This string has spaces
     and a newline, which are all preserved."
 
+    # Comment whitepsace      is preserved.
 
 
 Illegal Encodings
@@ -477,10 +471,10 @@ Illegal encodings must not be used, as they may cause problems or even API viola
 
  * Numeric values must be representable in their respective binary formats (integer, binary float, decimal float).
  * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
- * Map keys must not be container types or the `empty` type.
+ * Map keys must not be container types or the `nil` type.
  * Maps must not contain duplicate keys (this includes mathematically equivalent numeric keys).
- * Upper case text is not allowed, except as described in section `Letter Case`.
- * Whitespace must only occur as described in section `Whitespace`.
+ * Upper case text is not allowed, except as described in section [Letter Case](#letter-case).
+ * Whitespace must only occur as described in section [Whitespace](#whitespace).
 
 
 
@@ -491,12 +485,12 @@ A CTE file is simply a file containing a single CTE document. Recall that a CTE 
 
 For example: File `mydata.cte`
 
-    # This is an example CTE document!
+    # This is an example CTE document.
     # Remember: Any number of comments can appear in a row.
     {
         # Here are some mapped values...
-        "first": 1
-        "second": 2
+        "first" = 1
+        "second" = 2
     }
 
 

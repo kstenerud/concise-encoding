@@ -54,7 +54,7 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  7b  | List               |                                               |
 |  7c  | Map                |                                               |
 |  7d  | End of Container   |                                               |
-|  7e  | Empty (no data)    |                                               |
+|  7e  | Nil (no data)      |                                               |
 |  7f  | Padding            |                                               |
 |  80  | String: 0 bytes    |                                               |
 |  81  | String: 1 byte     | [1 octet of data]                             |
@@ -282,7 +282,7 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `empty` type. Values may be any mix of any type, including other containers.
+A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `nil` type. Values may be any mix of any type, including other containers.
 
 All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
 
@@ -303,11 +303,11 @@ Example:
 Other Types
 -----------
 
-### Empty
+### Nil
 
-Represents the absence of data. Some languages implement this as the NULL value.
+Denotes the absence of data. Some languages implement this as the `null` value.
 
-Use `empty` with care, as some languages may have restrictions on how it may be used in data structures.
+Use nil judiciously and sparingly, as some languages have restrictions on how it may be used in data structures.
 
 Example:
 
@@ -332,7 +332,7 @@ Illegal encodings must not be used, as they may cause problems or even API viola
   * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
   * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
   * All map keys must have corresponding values.
-  * Map keys must not be container types or the `empty` type.
+  * Map keys must not be container types or the `nil` type.
   * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
   * An array's length field must match the byte-length of its data.
 
