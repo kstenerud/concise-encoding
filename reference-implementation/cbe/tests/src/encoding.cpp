@@ -120,11 +120,11 @@ static inline int is_leap_year(int year)
     return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
 }
 
-unsigned int to_doy(int year, unsigned int month, unsigned int day)
+unsigned int ymd_to_doy(int year, unsigned int month, unsigned int day)
 {
     // Extremely naive converter, only good for modern dates.
     unsigned int days = g_days_to_the_month[month] + day;
-    if(is_leap_year(year))
+    if(is_leap_year(year) && month > 2)
     {
         days++;
     }
@@ -429,12 +429,12 @@ cbe_encode_status map_encoding::encode(encoder& encoder)
     return encoder.encode(*this);
 }
 
-cbe_encode_status end_container_encoding::encode(encoder& encoder)
+cbe_encode_status container_end_encoding::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-cbe_encode_status empty_encoding::encode(encoder& encoder)
+cbe_encode_status nil_encoding::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
@@ -539,7 +539,7 @@ template <> cbe_encode_status dfp_encoding<_Decimal128>::encode(encoder& encoder
 std::shared_ptr<encoding> encoding::list()                           {return this->set_next(enc::list());}
 std::shared_ptr<encoding> encoding::map()                            {return this->set_next(enc::map());}
 std::shared_ptr<encoding> encoding::end()                            {return this->set_next(enc::end());}
-std::shared_ptr<encoding> encoding::empty()                          {return this->set_next(enc::empty());}
+std::shared_ptr<encoding> encoding::nil()                            {return this->set_next(enc::nil());}
 std::shared_ptr<encoding> encoding::pad(int count)                   {return this->set_next(enc::pad(count));}
 std::shared_ptr<encoding> encoding::smtime(smalltime value)          {return this->set_next(enc::smtime(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)    {return this->set_next(enc::str(value));}
@@ -563,10 +563,10 @@ std::shared_ptr<encoding> encoding::d128(_Decimal128 value)          {return thi
 
 std::shared_ptr<list_encoding>                 list()                           {return std::make_shared<list_encoding>();}
 std::shared_ptr<map_encoding>                  map()                            {return std::make_shared<map_encoding>();}
-std::shared_ptr<end_container_encoding>        end()                            {return std::make_shared<end_container_encoding>();}
-std::shared_ptr<empty_encoding>                empty()                          {return std::make_shared<empty_encoding>();}
+std::shared_ptr<container_end_encoding>        end()                            {return std::make_shared<container_end_encoding>();}
+std::shared_ptr<nil_encoding>                  nil()                            {return std::make_shared<nil_encoding>();}
 std::shared_ptr<time_encoding>                 smtime(smalltime value)          {return std::make_shared<time_encoding>(value);}
-std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::to_doy(year, month, day), hour, minute, second, usec));}
+std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::ymd_to_doy(year, month, day), hour, minute, second, usec));}
 std::shared_ptr<string_encoding>               str(const std::string& value)    {return std::make_shared<string_encoding>(value);}
 std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
 std::shared_ptr<string_header_encoding>        strh(int64_t byte_count)         {return std::make_shared<string_header_encoding>(byte_count);}
@@ -584,7 +584,7 @@ std::shared_ptr<number_encoding<double>>       f64(double value)                
 std::shared_ptr<number_encoding<__float128>>   f128(__float128 value)           {return std::make_shared<number_encoding<__float128>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal32>>      d32(_Decimal32 value)            {return std::make_shared<dfp_encoding<_Decimal32>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal64>>      d64(_Decimal64 value)            {return std::make_shared<dfp_encoding<_Decimal64>>(value);}
-std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value)           {return std::make_shared<dfp_encoding<_Decimal128>>(value);}
+std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value)          {return std::make_shared<dfp_encoding<_Decimal128>>(value);}
 std::shared_ptr<padding_encoding>              pad(int byte_count)              {return std::make_shared<padding_encoding>(byte_count);}
 
 } // namespace enc

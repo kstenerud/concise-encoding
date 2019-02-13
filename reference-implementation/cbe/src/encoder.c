@@ -401,7 +401,7 @@ cbe_encode_status cbe_encode_add_padding(cbe_encode_process* const process, int 
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_add_empty(cbe_encode_process* const process)
+cbe_encode_status cbe_encode_add_nil(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
 
@@ -540,7 +540,7 @@ cbe_encode_status cbe_encode_add_time(cbe_encode_process* const process, const s
     return add_time(process, value);
 }
 
-cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const process)
+cbe_encode_status cbe_encode_list_begin(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
 
@@ -559,7 +559,7 @@ cbe_encode_status cbe_encode_begin_list(cbe_encode_process* const process)
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const process)
+cbe_encode_status cbe_encode_map_begin(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
 
@@ -578,7 +578,7 @@ cbe_encode_status cbe_encode_begin_map(cbe_encode_process* const process)
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_end_container(cbe_encode_process* const process)
+cbe_encode_status cbe_encode_container_end(cbe_encode_process* const process)
 {
     KSLOG_DEBUG(NULL);
 
@@ -594,7 +594,7 @@ cbe_encode_status cbe_encode_end_container(cbe_encode_process* const process)
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, const int64_t byte_count)
+cbe_encode_status cbe_encode_binary_begin(cbe_encode_process* const process, const int64_t byte_count)
 {
     KSLOG_DEBUG("Length: %ld", byte_count);
 
@@ -609,7 +609,7 @@ cbe_encode_status cbe_encode_begin_binary(cbe_encode_process* const process, con
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_begin_string(cbe_encode_process* const process, const int64_t byte_count)
+cbe_encode_status cbe_encode_string_begin(cbe_encode_process* const process, const int64_t byte_count)
 {
     KSLOG_DEBUG("Length: %ld", byte_count);
 

@@ -32,52 +32,54 @@ static bool RETURN_BOOL ##_on_ ## NAME_FRAGMENT(struct cbe_decode_process* decod
     return RETURN_BOOL; \
 }
 #define DEFINE_EMPTY_DECODE_CALLBACK_SUITE(RETURN_BOOL) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_boolean, bool) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_int_8, int8_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_int_16, int16_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_int_32, int32_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_int_64, int64_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_int_128, __int128) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_float_32, float) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_float_64, double) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_float_128, __float128) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_decimal_32, _Decimal32) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_decimal_64, _Decimal64) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_decimal_128, _Decimal128) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, add_time, smalltime) \
-DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, add_empty) \
-DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, end_container) \
-DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, begin_list) \
-DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, begin_map) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, begin_string, int64_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, begin_binary, int64_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_2_PARAMETER(RETURN_BOOL, add_data, const uint8_t*, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, boolean, bool) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, int_8, int8_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, int_16, int16_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, int_32, int32_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, int_64, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, int_128, __int128) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, float_32, float) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, float_64, double) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, float_128, __float128) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, decimal_32, _Decimal32) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, decimal_64, _Decimal64) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, decimal_128, _Decimal128) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, time, smalltime) \
+DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, nil) \
+DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, list_begin) \
+DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, list_end) \
+DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, map_begin) \
+DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, map_end) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, string_begin, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, binary_begin, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_2_PARAMETER(RETURN_BOOL, data, const uint8_t*, int64_t) \
 
 DEFINE_EMPTY_DECODE_CALLBACK_SUITE(false)
 DEFINE_EMPTY_DECODE_CALLBACK_SUITE(true)
 
 #define FILL_ALWAYS_RETURN_CALLBACKS(CALLBACKS_PTR, RETURN_BOOL) \
 { \
-    (CALLBACKS_PTR)->on_add_empty = RETURN_BOOL ## _on_add_empty; \
-    (CALLBACKS_PTR)->on_add_boolean = RETURN_BOOL ## _on_add_boolean; \
-    (CALLBACKS_PTR)->on_add_int_8 = RETURN_BOOL ## _on_add_int_8; \
-    (CALLBACKS_PTR)->on_add_int_16 = RETURN_BOOL ## _on_add_int_16; \
-    (CALLBACKS_PTR)->on_add_int_32 = RETURN_BOOL ## _on_add_int_32; \
-    (CALLBACKS_PTR)->on_add_int_64 = RETURN_BOOL ## _on_add_int_64; \
-    (CALLBACKS_PTR)->on_add_int_128 = RETURN_BOOL ## _on_add_int_128; \
-    (CALLBACKS_PTR)->on_add_float_32 = RETURN_BOOL ## _on_add_float_32; \
-    (CALLBACKS_PTR)->on_add_float_64 = RETURN_BOOL ## _on_add_float_64; \
-    (CALLBACKS_PTR)->on_add_float_128 = RETURN_BOOL ## _on_add_float_128; \
-    (CALLBACKS_PTR)->on_add_decimal_32 = RETURN_BOOL ## _on_add_decimal_32; \
-    (CALLBACKS_PTR)->on_add_decimal_64 = RETURN_BOOL ## _on_add_decimal_64; \
-    (CALLBACKS_PTR)->on_add_decimal_128 = RETURN_BOOL ## _on_add_decimal_128; \
-    (CALLBACKS_PTR)->on_add_time = RETURN_BOOL ## _on_add_time; \
-    (CALLBACKS_PTR)->on_end_container = RETURN_BOOL ## _on_end_container; \
-    (CALLBACKS_PTR)->on_begin_list = RETURN_BOOL ## _on_begin_list; \
-    (CALLBACKS_PTR)->on_begin_map = RETURN_BOOL ## _on_begin_map; \
-    (CALLBACKS_PTR)->on_begin_string = RETURN_BOOL ## _on_begin_string; \
-    (CALLBACKS_PTR)->on_begin_binary = RETURN_BOOL ## _on_begin_binary; \
-    (CALLBACKS_PTR)->on_add_data = RETURN_BOOL ## _on_add_data; \
+    (CALLBACKS_PTR)->on_nil = RETURN_BOOL ## _on_nil; \
+    (CALLBACKS_PTR)->on_boolean = RETURN_BOOL ## _on_boolean; \
+    (CALLBACKS_PTR)->on_int_8 = RETURN_BOOL ## _on_int_8; \
+    (CALLBACKS_PTR)->on_int_16 = RETURN_BOOL ## _on_int_16; \
+    (CALLBACKS_PTR)->on_int_32 = RETURN_BOOL ## _on_int_32; \
+    (CALLBACKS_PTR)->on_int_64 = RETURN_BOOL ## _on_int_64; \
+    (CALLBACKS_PTR)->on_int_128 = RETURN_BOOL ## _on_int_128; \
+    (CALLBACKS_PTR)->on_float_32 = RETURN_BOOL ## _on_float_32; \
+    (CALLBACKS_PTR)->on_float_64 = RETURN_BOOL ## _on_float_64; \
+    (CALLBACKS_PTR)->on_float_128 = RETURN_BOOL ## _on_float_128; \
+    (CALLBACKS_PTR)->on_decimal_32 = RETURN_BOOL ## _on_decimal_32; \
+    (CALLBACKS_PTR)->on_decimal_64 = RETURN_BOOL ## _on_decimal_64; \
+    (CALLBACKS_PTR)->on_decimal_128 = RETURN_BOOL ## _on_decimal_128; \
+    (CALLBACKS_PTR)->on_time = RETURN_BOOL ## _on_time; \
+    (CALLBACKS_PTR)->on_list_begin = RETURN_BOOL ## _on_list_begin; \
+    (CALLBACKS_PTR)->on_list_end = RETURN_BOOL ## _on_list_end; \
+    (CALLBACKS_PTR)->on_map_begin = RETURN_BOOL ## _on_map_begin; \
+    (CALLBACKS_PTR)->on_map_end = RETURN_BOOL ## _on_map_end; \
+    (CALLBACKS_PTR)->on_string_begin = RETURN_BOOL ## _on_string_begin; \
+    (CALLBACKS_PTR)->on_binary_begin = RETURN_BOOL ## _on_binary_begin; \
+    (CALLBACKS_PTR)->on_data = RETURN_BOOL ## _on_data; \
 }
 
 
@@ -158,6 +160,16 @@ static std::shared_ptr<enc::encoding> decode_data(
     {
         status = decoder.end();
     }
+    KSLOG_DEBUG("Status = %d", status);
+    return decoder.decoded();
+}
+
+static std::shared_ptr<enc::encoding> decode(
+    std::vector<uint8_t> data,
+    cbe_decode_status& status)
+{
+    cbe_decoder decoder;
+    status = decoder.decode(data);
     KSLOG_DEBUG("Status = %d", status);
     return decoder.decoded();
 }
@@ -253,7 +265,7 @@ void expect_encode_decode_produces_status(
     int buffer_size = 100;
     std::vector<uint8_t> memory = encode_data(buffer_size, encoding, encode_status);
     ASSERT_EQ(encode_status, expected_encode_status);
-    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, memory, decode_status);
+    std::shared_ptr<enc::encoding> actual_encoding = decode(memory, decode_status);
     ASSERT_EQ(decode_status, expected_decode_status);
 }
 
@@ -272,8 +284,7 @@ void expect_decode_produces_status(
     cbe_decode_status expected_decode_status)
 {
     cbe_decode_status decode_status = CBE_DECODE_STATUS_OK;
-    int buffer_size = 100;
-    std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size, document, decode_status);
+    std::shared_ptr<enc::encoding> actual_encoding = decode(document, decode_status);
     ASSERT_EQ(decode_status, expected_decode_status);
 }
 

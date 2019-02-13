@@ -92,78 +92,81 @@ typedef enum
  */
 typedef struct
 {
-    // An empty field was decoded.
-    bool (*on_add_empty) (struct cbe_decode_process* decode_process);
+    // An nil field was decoded.
+    bool (*on_nil) (struct cbe_decode_process* decode_process);
 
     // An boolean field was decoded.
-    bool (*on_add_boolean) (struct cbe_decode_process* decode_process, bool value);
+    bool (*on_boolean) (struct cbe_decode_process* decode_process, bool value);
 
     // An 8-bit integer field was decoded.
-    bool (*on_add_int_8) (struct cbe_decode_process* decode_process, int8_t value);
+    bool (*on_int_8) (struct cbe_decode_process* decode_process, int8_t value);
 
     // A 16-bit integer field was decoded.
-    bool (*on_add_int_16) (struct cbe_decode_process* decode_process, int16_t value);
+    bool (*on_int_16) (struct cbe_decode_process* decode_process, int16_t value);
 
     // A 32-bit integer field was decoded.
-    bool (*on_add_int_32) (struct cbe_decode_process* decode_process, int32_t value);
+    bool (*on_int_32) (struct cbe_decode_process* decode_process, int32_t value);
 
     // A 64-bit integer field was decoded.
-    bool (*on_add_int_64) (struct cbe_decode_process* decode_process, int64_t value);
+    bool (*on_int_64) (struct cbe_decode_process* decode_process, int64_t value);
 
     // A 128-bit integer field was decoded.
-    bool (*on_add_int_128) (struct cbe_decode_process* decode_process, __int128 value);
+    bool (*on_int_128) (struct cbe_decode_process* decode_process, __int128 value);
 
     // A 32-bit binary floating point field was decoded.
-    bool (*on_add_float_32) (struct cbe_decode_process* decode_process, float value);
+    bool (*on_float_32) (struct cbe_decode_process* decode_process, float value);
 
     // A 64-bit binary floating point field was decoded.
-    bool (*on_add_float_64) (struct cbe_decode_process* decode_process, double value);
+    bool (*on_float_64) (struct cbe_decode_process* decode_process, double value);
 
     // A 128-bit binary floating point field was decoded.
-    bool (*on_add_float_128) (struct cbe_decode_process* decode_process, __float128 value);
+    bool (*on_float_128) (struct cbe_decode_process* decode_process, __float128 value);
 
     // A 32-bit decimal floating point field was decoded.
-    bool (*on_add_decimal_32) (struct cbe_decode_process* decode_process, _Decimal32 value);
+    bool (*on_decimal_32) (struct cbe_decode_process* decode_process, _Decimal32 value);
 
     // A 64-bit decimal floating point field was decoded.
-    bool (*on_add_decimal_64) (struct cbe_decode_process* decode_process, _Decimal64 value);
+    bool (*on_decimal_64) (struct cbe_decode_process* decode_process, _Decimal64 value);
 
     // A 128-bit decimal floating point field was decoded.
-    bool (*on_add_decimal_128) (struct cbe_decode_process* decode_process, _Decimal128 value);
+    bool (*on_decimal_128) (struct cbe_decode_process* decode_process, _Decimal128 value);
 
     // A time field was decoded.
-    bool (*on_add_time) (struct cbe_decode_process* decode_process, smalltime value);
+    bool (*on_time) (struct cbe_decode_process* decode_process, smalltime value);
 
-    // A list container has been opened.
-    bool (*on_begin_list) (struct cbe_decode_process* decode_process);
+    // A list has been opened.
+    bool (*on_list_begin) (struct cbe_decode_process* decode_process);
 
-    // A map container has been opened.
-    bool (*on_begin_map) (struct cbe_decode_process* decode_process);
+    // The current list has been closed.
+    bool (*on_list_end) (struct cbe_decode_process* decode_process);
 
-    // The currently opened container has been closed.
-    bool (*on_end_container) (struct cbe_decode_process* decode_process);
+    // A map has been opened.
+    bool (*on_map_begin) (struct cbe_decode_process* decode_process);
+
+    // The current map has been closed.
+    bool (*on_map_end) (struct cbe_decode_process* decode_process);
 
     /**
      * A string has been opened. Expect subsequent calls to
-     * on_add_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_add_data`, the field is considered
+     * on_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_data`, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
      * @param byte_count The total length of the string.
      */
-    bool (*on_begin_string) (struct cbe_decode_process* decode_process, int64_t byte_count);
+    bool (*on_string_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
 
     /**
      * A binary data array has been opened. Expect subsequent calls to
-     * on_add_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_add_data`, the field is considered
+     * on_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_data`, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
      * @param byte_count The total length of the array.
      */
-    bool (*on_begin_binary) (struct cbe_decode_process* decode_process, int64_t byte_count);
+    bool (*on_binary_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
 
     /**
      * Array data was decoded, and should be added to the current array field
@@ -173,9 +176,9 @@ typedef struct
      * @param start The start of the data.
      * @param byte_count The number of bytes in this array fragment.
      */
-    bool (*on_add_data) (struct cbe_decode_process* decode_process,
-                         const uint8_t* start,
-                         int64_t byte_count);
+    bool (*on_data) (struct cbe_decode_process* decode_process,
+                     const uint8_t* start,
+                     int64_t byte_count);
 } cbe_decode_callbacks;
 
 
@@ -281,6 +284,18 @@ int64_t cbe_decode_get_buffer_offset(struct cbe_decode_process* decode_process);
  */
 cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
 
+/**
+ * Decode an entire CBE document.
+ *
+ * @param callbacks The callbacks to call while decoding the document.
+ * @param user_context Whatever data you want to be available to the callbacks.
+ * @param document_start The start of the document.
+ * @param byte_count The number of bytes in the document.
+ */
+cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
+                             void* user_context,
+                             const uint8_t* document_start,
+                             int64_t byte_count);
 
 
 // ------------
@@ -444,7 +459,7 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
 cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_process, int byte_count);
 
 /**
- * Add an empty object to the document.
+ * Add an nil object to the document.
  *
  * Possible error codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -454,7 +469,7 @@ cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_proce
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_empty(struct cbe_encode_process* encode_process);
+cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
 
 /**
  * Add a boolean value to the document.
@@ -661,7 +676,7 @@ cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process,
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_begin_list(struct cbe_encode_process* encode_process);
+cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -678,7 +693,7 @@ cbe_encode_status cbe_encode_begin_list(struct cbe_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_begin_map(struct cbe_encode_process* encode_process);
+cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process);
 
 /**
  * End the current container (list or map) in the document.
@@ -693,7 +708,7 @@ cbe_encode_status cbe_encode_begin_map(struct cbe_encode_process* encode_process
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_end_container(struct cbe_encode_process* encode_process);
+cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_process);
 
 /**
  * Begin an array of binary data in the document.
@@ -712,7 +727,7 @@ cbe_encode_status cbe_encode_end_container(struct cbe_encode_process* encode_pro
  * @param byte_count The total length of the data to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_begin_binary(struct cbe_encode_process* encode_process, int64_t byte_count);
+cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Begin a string in the document. The string data will be UTF-8 without a BOM.
@@ -731,7 +746,7 @@ cbe_encode_status cbe_encode_begin_binary(struct cbe_encode_process* encode_proc
  * @param byte_count The total length of the string to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_begin_string(struct cbe_encode_process* encode_process, int64_t byte_count);
+cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Add data to the currently opened array field (string or binary).

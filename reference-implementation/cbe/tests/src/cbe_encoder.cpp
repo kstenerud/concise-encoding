@@ -121,12 +121,12 @@ cbe_encode_status cbe_encoder::encode(enc::time_encoding& e)
 		return cbe_encode_add_time(_process, e.value());
 	});
 }
-cbe_encode_status cbe_encoder::encode(enc::empty_encoding& e)
+cbe_encode_status cbe_encoder::encode(enc::nil_encoding& e)
 {
 	(void)e;
 	return flush_and_retry([&]
 	{
-		return cbe_encode_add_empty(_process);
+		return cbe_encode_add_nil(_process);
 	});
 }
 cbe_encode_status cbe_encoder::encode(enc::list_encoding& e)
@@ -134,7 +134,7 @@ cbe_encode_status cbe_encoder::encode(enc::list_encoding& e)
 	(void)e;
 	return flush_and_retry([&]
 	{
-		return cbe_encode_begin_list(_process);
+		return cbe_encode_list_begin(_process);
 	});
 }
 cbe_encode_status cbe_encoder::encode(enc::map_encoding& e)
@@ -142,7 +142,7 @@ cbe_encode_status cbe_encoder::encode(enc::map_encoding& e)
 	(void)e;
 	return flush_and_retry([&]
 	{
-		return cbe_encode_begin_map(_process);
+		return cbe_encode_map_begin(_process);
 	});
 }
 cbe_encode_status cbe_encoder::encode(enc::padding_encoding& e)
@@ -181,7 +181,7 @@ cbe_encode_status cbe_encoder::encode(enc::string_encoding& e)
 	KSLOG_DEBUG("size %d", value.size());
     cbe_encode_status status = flush_and_retry([&]
 	{
-		return cbe_encode_begin_string(_process, value.size());
+		return cbe_encode_string_begin(_process, value.size());
 	});
 
     if(status != CBE_ENCODE_STATUS_OK)
@@ -197,7 +197,7 @@ cbe_encode_status cbe_encoder::encode(enc::binary_encoding& e)
 	KSLOG_DEBUG("size %d", e.value().size());
     cbe_encode_status status = flush_and_retry([&]
 	{
-		return cbe_encode_begin_binary(_process, e.value().size());
+		return cbe_encode_binary_begin(_process, e.value().size());
 	});
 
     if(status != CBE_ENCODE_STATUS_OK)
@@ -212,7 +212,7 @@ cbe_encode_status cbe_encoder::encode(enc::string_header_encoding& e)
 {
 	return flush_and_retry([&]
 	{
-		return cbe_encode_begin_string(_process, e.byte_count());
+		return cbe_encode_string_begin(_process, e.byte_count());
 	});
 }
 
@@ -220,7 +220,7 @@ cbe_encode_status cbe_encoder::encode(enc::binary_header_encoding& e)
 {
 	return flush_and_retry([&]
 	{
-		return cbe_encode_begin_string(_process, e.byte_count());
+		return cbe_encode_string_begin(_process, e.byte_count());
 	});
 }
 
@@ -229,12 +229,12 @@ cbe_encode_status cbe_encoder::encode(enc::data_encoding& e)
     return stream_array(e.value());
 }
 
-cbe_encode_status cbe_encoder::encode(enc::end_container_encoding& e)
+cbe_encode_status cbe_encoder::encode(enc::container_end_encoding& e)
 {
 	(void)e;
 	return flush_and_retry([&]
 	{
-		return cbe_encode_end_container(_process);
+		return cbe_encode_container_end(_process);
 	});
 }
 

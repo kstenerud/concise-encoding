@@ -103,7 +103,7 @@ TEST_ENCODE_DECODE_DECIMAL32(_0_1, 0.1df, {0x75, 0x01, 0x00, 0x00, 0x32})
 TEST_ENCODE_DECODE(Decimal64, _1000000_000001, d64(1000000.000001dd), {0x76, 0x01, 0x10, 0xa5, 0xd4, 0xe8, 0x00, 0x00, 0x31})
 TEST_ENCODE_DECODE(Decimal128, _1000000000000_000000000001, d128(1000000000000.000000000001dl), {0x77, 0x01, 0x00, 0x00, 0xa1, 0xed, 0xcc, 0xce, 0x1b, 0xc2, 0xd3, 0x00, 0x00, 0x00, 0x00, 0x28, 0x30})
 
-TEST_ENCODE_DECODE(Empty, empty, empty(), {0x7e})
+TEST_ENCODE_DECODE(Empty, nil, nil(), {0x7e})
 
 TEST_ENCODE(Padding, pad_1, 10, pad(1), {0x7f})
 TEST_ENCODE(Padding, pad_2, 10, pad(2), {0x7f, 0x7f})
@@ -149,7 +149,7 @@ TEST_ENCODE_STATUS(String, boolean, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->
 TEST_ENCODE_STATUS(String, list, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->list()->end());
 TEST_ENCODE_STATUS(String, map, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->map()->end());
 TEST_ENCODE_STATUS(String, end, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->end());
-TEST_ENCODE_STATUS(String, empty, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->empty());
+TEST_ENCODE_STATUS(String, nil, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->nil());
 TEST_ENCODE_STATUS(String, padding, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->pad(1));
 TEST_ENCODE_STATUS(String, string, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->str("a"));
 TEST_ENCODE_STATUS(String, string16, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->str("1234567890123456"));
@@ -179,7 +179,7 @@ TEST_ENCODE_STATUS(Binary, boolean, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->
 TEST_ENCODE_STATUS(Binary, list, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->list()->end());
 TEST_ENCODE_STATUS(Binary, map, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->map()->end());
 TEST_ENCODE_STATUS(Binary, end, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->end());
-TEST_ENCODE_STATUS(Binary, empty, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->empty());
+TEST_ENCODE_STATUS(Binary, nil, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->nil());
 TEST_ENCODE_STATUS(Binary, padding, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->pad(1));
 TEST_ENCODE_STATUS(Binary, string, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->str("a"));
 TEST_ENCODE_STATUS(Binary, string16, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->str("1234567890123456"));
@@ -207,7 +207,7 @@ TEST(List, too_deep)
 	cbe_encode_status status;
 	for(int i = 0; i < depth_too_far; i++)
 	{
-		status = cbe_encode_begin_list(encode_process);
+		status = cbe_encode_list_begin(encode_process);
 		if(status == CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED)
 		{
 			break;
@@ -227,8 +227,8 @@ TEST_ENCODE_DECODE_STATUS(Map, unterminated_4, CBE_ENCODE_ERROR_UNBALANCED_CONTA
 TEST_ENCODE_STATUS(Map, encode_extra_end, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, map()->end()->end())
 TEST_ENCODE_STATUS(Map, encode_extra_end_2, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, map()->str("")->list()->end()->end()->end())
 
-TEST_ENCODE_STATUS(Map, encode_empty_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->empty()->str("")->end())
-TEST_DECODE_STATUS(Map, decode_empty_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7e, 0x80, 0x7d})
+TEST_ENCODE_STATUS(Map, encode_nil_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->nil()->str("")->end())
+TEST_DECODE_STATUS(Map, decode_nil_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7e, 0x80, 0x7d})
 TEST_ENCODE_STATUS(Map, encode_list_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->list()->end()->str("")->end())
 TEST_DECODE_STATUS(Map, decode_list_key, CBE_DECODE_ERROR_INCORRECT_KEY_TYPE, {0x7c, 0x7b, 0x7d, 0x80, 0x7d})
 TEST_ENCODE_STATUS(Map, encode_map_key, CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE, map()->map()->end()->str("")->end())

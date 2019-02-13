@@ -105,7 +105,7 @@ public:
     std::shared_ptr<encoding> list();
     std::shared_ptr<encoding> map();
     std::shared_ptr<encoding> end();
-    std::shared_ptr<encoding> empty();
+    std::shared_ptr<encoding> nil();
     std::shared_ptr<encoding> pad(int count);
     std::shared_ptr<encoding> smtime(smalltime value);
     std::shared_ptr<encoding> str(const std::string& value);
@@ -183,17 +183,17 @@ public:
     cbe_encode_status encode(encoder& encoder);
 };
 
-class end_container_encoding: public no_value_encoding
+class container_end_encoding: public no_value_encoding
 {
 public:
-    end_container_encoding(): no_value_encoding(enc::ENCODE_TYPE_CONTAINER_END, "End") {}
+    container_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_CONTAINER_END, "End") {}
     cbe_encode_status encode(encoder& encoder);
 };
 
-class empty_encoding: public no_value_encoding
+class nil_encoding: public no_value_encoding
 {
 public:
-    empty_encoding(): no_value_encoding(enc::ENCODE_TYPE_EMPTY, "Empty") {}
+    nil_encoding(): no_value_encoding(enc::ENCODE_TYPE_EMPTY, "Empty") {}
     cbe_encode_status encode(encoder& encoder);
 };
 
@@ -374,8 +374,8 @@ class encoder
 public:
     virtual cbe_encode_status encode(list_encoding& encoding) = 0;
     virtual cbe_encode_status encode(map_encoding& encoding) = 0;
-    virtual cbe_encode_status encode(end_container_encoding& encoding) = 0;
-    virtual cbe_encode_status encode(empty_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(container_end_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(nil_encoding& encoding) = 0;
     virtual cbe_encode_status encode(padding_encoding& encoding) = 0;
     virtual cbe_encode_status encode(time_encoding& encoding) = 0;
     virtual cbe_encode_status encode(string_encoding& encoding) = 0;
@@ -398,30 +398,30 @@ public:
 };
 
 
-std::shared_ptr<list_encoding>                 list();
-std::shared_ptr<map_encoding>                  map();
-std::shared_ptr<end_container_encoding>        end();
-std::shared_ptr<empty_encoding>                empty();
-std::shared_ptr<time_encoding>                 smtime(smalltime value);
-std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec);
-std::shared_ptr<string_encoding>               str(const std::string& value);
-std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value);
-std::shared_ptr<string_header_encoding>        strh(int64_t byte_count);
-std::shared_ptr<binary_header_encoding>        binh(int64_t byte_count);
-std::shared_ptr<data_encoding>                 data(const std::vector<uint8_t>& value);
-std::shared_ptr<boolean_encoding>              bl(bool value);
-std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value);
-std::shared_ptr<number_encoding<int16_t>>      i16(int16_t value);
-std::shared_ptr<number_encoding<int32_t>>      i32(int32_t value);
-std::shared_ptr<number_encoding<int64_t>>      i64(int64_t value);
-std::shared_ptr<int128_encoding>               i128(__int128 value);
-std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low);
-std::shared_ptr<number_encoding<float>>        f32(float value);
-std::shared_ptr<number_encoding<double>>       f64(double value);
-std::shared_ptr<number_encoding<__float128>>   f128(__float128 value);
-std::shared_ptr<dfp_encoding<_Decimal32>>      d32(_Decimal32 value);
-std::shared_ptr<dfp_encoding<_Decimal64>>      d64(_Decimal64 value);
-std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value);
-std::shared_ptr<padding_encoding>              pad(int byte_count);
+std::shared_ptr<list_encoding>               list();
+std::shared_ptr<map_encoding>                map();
+std::shared_ptr<container_end_encoding>      end();
+std::shared_ptr<nil_encoding>                nil();
+std::shared_ptr<time_encoding>               smtime(smalltime value);
+std::shared_ptr<time_encoding>               smtime(int year, int month, int day, int hour, int minute, int second, int usec);
+std::shared_ptr<string_encoding>             str(const std::string& value);
+std::shared_ptr<binary_encoding>             bin(const std::vector<uint8_t>& value);
+std::shared_ptr<string_header_encoding>      strh(int64_t byte_count);
+std::shared_ptr<binary_header_encoding>      binh(int64_t byte_count);
+std::shared_ptr<data_encoding>               data(const std::vector<uint8_t>& value);
+std::shared_ptr<boolean_encoding>            bl(bool value);
+std::shared_ptr<number_encoding<int8_t>>     i8(int8_t value);
+std::shared_ptr<number_encoding<int16_t>>    i16(int16_t value);
+std::shared_ptr<number_encoding<int32_t>>    i32(int32_t value);
+std::shared_ptr<number_encoding<int64_t>>    i64(int64_t value);
+std::shared_ptr<int128_encoding>             i128(__int128 value);
+std::shared_ptr<int128_encoding>             i128(int64_t high, uint64_t low);
+std::shared_ptr<number_encoding<float>>      f32(float value);
+std::shared_ptr<number_encoding<double>>     f64(double value);
+std::shared_ptr<number_encoding<__float128>> f128(__float128 value);
+std::shared_ptr<dfp_encoding<_Decimal32>>    d32(_Decimal32 value);
+std::shared_ptr<dfp_encoding<_Decimal64>>    d64(_Decimal64 value);
+std::shared_ptr<dfp_encoding<_Decimal128>>   d128(_Decimal128 value);
+std::shared_ptr<padding_encoding>            pad(int byte_count);
 
 } // namespace enc

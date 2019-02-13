@@ -32,7 +32,7 @@ public:
 	cbe_encode_status encode(enc::dfp_encoding<_Decimal128>& e);
 	cbe_encode_status encode(enc::boolean_encoding& e);
 	cbe_encode_status encode(enc::time_encoding& e);
-	cbe_encode_status encode(enc::empty_encoding& e);
+	cbe_encode_status encode(enc::nil_encoding& e);
 	cbe_encode_status encode(enc::list_encoding& e);
 	cbe_encode_status encode(enc::map_encoding& e);
 	cbe_encode_status encode(enc::padding_encoding& e);
@@ -42,7 +42,7 @@ public:
 	cbe_encode_status encode(enc::string_header_encoding& e);
 	cbe_encode_status encode(enc::binary_header_encoding& e);
 	cbe_encode_status encode(enc::data_encoding& e);
-	cbe_encode_status encode(enc::end_container_encoding& e);
+	cbe_encode_status encode(enc::container_end_encoding& e);
 
 public:
 	cbe_encoder(int64_t buffer_size=10000,

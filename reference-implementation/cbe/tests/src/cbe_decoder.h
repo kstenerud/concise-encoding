@@ -29,8 +29,8 @@ private:
 public:
 	// Internal functions
 	bool set_next(std::shared_ptr<enc::encoding> encoding);
-	bool begin_string(int64_t byte_count);
-	bool begin_binary(int64_t byte_count);
+	bool string_begin(int64_t byte_count);
+	bool binary_begin(int64_t byte_count);
 	bool add_data(const std::vector<uint8_t>& data);
 
 public:
@@ -44,6 +44,9 @@ public:
 
 	// End the decoding process.
 	cbe_decode_status end();
+
+	// Decode an entire document
+	cbe_decode_status decode(std::vector<uint8_t>& document);
 
 	// Get the complete raw data received.
 	std::vector<uint8_t>& received_data();

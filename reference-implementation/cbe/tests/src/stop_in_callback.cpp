@@ -48,7 +48,7 @@ TEST(Decode, StopInCallback_ ## TYPE) \
     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)&cbe_encode_process_data ; \
     cbe_encode_begin(encode_process, memory.data(), memory.size()); \
     TYPE array[1]; \
-    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_begin_ ## FUNCTION(encode_process, 1)); \
+    EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_ ## FUNCTION ## _begin(encode_process, 1)); \
     EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_add_data(encode_process, array, 1)); \
     int64_t buffer_length = cbe_encode_get_buffer_offset(encode_process); \
     EXPECT_EQ(CBE_ENCODE_STATUS_OK, cbe_encode_end(encode_process)); \
