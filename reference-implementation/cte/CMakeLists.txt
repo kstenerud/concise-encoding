@@ -1,42 +1,86 @@
 cmake_minimum_required(VERSION 3.5)
-project(libcte VERSION 1.0.0 LANGUAGES C CXX)
 
-#Make sure that custom modules are found
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+# Set policy to highest version, up to 3.13
+if(${CMAKE_VERSION} VERSION_LESS 3.13)
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+else()
+    cmake_policy(VERSION 3.13)
+endif()
+
+
+#################
+# Configuration #
+#################
+
+# Variables so we don't repeat ourselves
+set(LOCAL_PROJECT_VERSION     "1.0.0")
+set(LOCAL_PROJECT_VENDOR      "Karl Stenerud")
+set(LOCAL_PROJECT_NAMESPACE   "KS")
+set(LOCAL_PROJECT_NAME        "CTELib")
+set(LOCAL_PROJECT_OUTPUT_NAME "cte")
+set(LOCAL_PROJECT_DESCRIPTION "Safe binary to text encoding")
+
+project(${LOCAL_PROJECT_NAME}
+        VERSION ${LOCAL_PROJECT_VERSION}
+        DESCRIPTION ${LOCAL_PROJECT_DESCRIPTION}
+        LANGUAGES C CXX)
 
 find_package(BISON)
 find_package(FLEX)
-
-
-##############################################
-# Create target and set properties
-
 bison_target(BisonParser src/cte.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
 flex_target(FlexScanner src/cte.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.c)
 add_flex_bison_dependency(FlexScanner BisonParser)
 
-add_library(cte
-    src/decoder.c
-    src/encoder.c
-    src/library.c
-    ${BISON_BisonParser_OUTPUTS}
-    ${FLEX_FlexScanner_OUTPUTS}
+# Our build target is a static library. Other options are SHARED and MODULE.
+add_library(ctelib_target STATIC
+        src/decoder.c
+        src/encoder.c
+        src/library.c
+        ${BISON_BisonParser_OUTPUTS}
+        ${FLEX_FlexScanner_OUTPUTS}
 )
 
-#Add an alias so that library can be used inside the build tree, e.g. when testing
-add_library(CTE::cte ALIAS cte)
+# Also make it accessible via namespace
+add_library(${LOCAL_PROJECT_NAMESPACE}::${LOCAL_PROJECT_NAME} ALIAS ctelib_target)
 
-#Set target properties
-target_include_directories(cte
+
+
+################
+# Dependencies #
+################
+
+# Subdir with CMake support
+# add_subdirectory(some/subdir)
+
+
+
+############
+# Building #
+############
+
+# Change the output name from "libctelib_target.a" to "libsomelibrary.a"
+set_target_properties(ctelib_target PROPERTIES
+    OUTPUT_NAME ${LOCAL_PROJECT_OUTPUT_NAME}
+)
+
+# Where to find the header files
+target_include_directories(ctelib_target
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_BINARY_DIR}/gen-private-include
 )
 
-target_compile_features(cte PRIVATE cxx_auto_type)
-target_compile_options(cte PRIVATE $<$<CXX_COMPILER_ID:GNU>:
+# Generate a private header "version.h" defining PROJECT_VERSION
+configure_file (
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/gen-private-include/version.h"
+)
+
+# Turn on warnings
+target_compile_options(ctelib_target PRIVATE $<$<CXX_COMPILER_ID:GNU>:
     -Wall
     -Wextra
     -Wduplicated-cond
@@ -49,62 +93,76 @@ target_compile_options(cte PRIVATE $<$<CXX_COMPILER_ID:GNU>:
     -Wshadow
     -fstrict-aliasing
     -Wformat=2
-#    -pedantic
+    # Only turn pedantic on temporarily
+    # -pedantic
+>)
+target_compile_options(ctelib_target PRIVATE $<$<CXX_COMPILER_ID:MSVC>:
+    /W4
+    /w44265
+    /w44061
+    /w44062
 >)
 
-##############################################
-# Installation instructions
 
-include(GNUInstallDirs)
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/CTE)
 
-configure_file(src/cte_version.h.in cte_version.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+###########
+# Testing #
+###########
 
-install(TARGETS cte
-    EXPORT cte-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+# Simple testing:
+# include(CTest)
+# add_test(NAME TestName COMMAND TargetName)
 
-#This is required so that the exported target has the name CTE and not cte
-set_target_properties(cte PROPERTIES EXPORT_NAME CTE)
 
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# Using a subdir:
+option(PACKAGE_TESTS "Build the tests" ON)
+if(PACKAGE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
-#Export the targets to a script
-install(EXPORT cte-targets
-  FILE
-    CTETargets.cmake
-  NAMESPACE
-    CTE::
-  DESTINATION
-    ${INSTALL_CONFIGDIR}
-)
 
-#Create a ConfigVersion.cmake file
+
+
+#############
+# Exporting #
+#############
+
+# Write a version file so that CMake's find_package() can check for a specific
+# version of this package.
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/CTEConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
+    ${LOCAL_PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
     COMPATIBILITY AnyNewerVersion
 )
 
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/CTEConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/CTEConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+include(GNUInstallDirs)
+install(TARGETS ctelib_target EXPORT ${LOCAL_PROJECT_NAME}Targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-#Install the config, configversion and custom find modules
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/CTEConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/CTEConfigVersion.cmake
-    DESTINATION ${INSTALL_CONFIGDIR}
+export(TARGETS ctelib_target NAMESPACE ${LOCAL_PROJECT_NAMESPACE}:: FILE ${LOCAL_PROJECT_NAME}Targets.cmake)
+export(PACKAGE ${LOCAL_PROJECT_NAME})
+
+# Packaging
+set(CPACK_PACKAGE_VENDOR ${LOCAL_PROJECT_VENDOR})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${LOCAL_PROJECT_DESCRIPTION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENCE.md")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+# Source package generator
+set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_IGNORE_FILES
+    /.git*
+    /dist
+    /.*build.*
+    /\\\\.DS_Store
 )
-
-export(EXPORT cte-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/CTETargets.cmake NAMESPACE CTE::)
-
-#Register package in user's package registry
-export(PACKAGE CTE)
-
-add_subdirectory(test)

@@ -1,9 +1,9 @@
 #include "cte/cte.h"
-#include "cte_version.h"
+#include "version.h"
 
 
 const char* cte_version()
 {
-    return CTE_VERSION;
+    return PROJECT_VERSION;
 }
 

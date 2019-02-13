@@ -78,13 +78,10 @@ endmacro()
 # Tests #
 #########
 
-package_add_test(cbe_tests
-    src/cbe_decoder.cpp
-    src/cbe_encoder.cpp
-    src/encoding.cpp
-    src/general_tests.cpp
-    src/library.cpp
-    src/stop_in_callback.cpp
-    src/test_helpers.cpp
-    src/test_utils.cpp
+package_add_test(cte_tests
+    src/managed_allocator.c
+    src/decode_test_helpers.c
+    src/test_cte_decode.cpp
+    src/test_cte_encode.cpp
+    src/readme_examples.cpp
 )
