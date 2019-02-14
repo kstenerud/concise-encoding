@@ -57,6 +57,11 @@ typedef enum
     CBE_DECODE_STATUS_STOPPED_IN_CALLBACK,
 
     /**
+     * One or more of the arguments was invalid.
+     */
+    CBE_DECODE_ERROR_INVALID_ARGUMENT,
+
+    /**
      * Unbalanced list/map begin and end markers were detected.
      */
     CBE_DECODE_ERROR_UNBALANCED_CONTAINERS,
@@ -81,6 +86,7 @@ typedef enum
      * The currently open field is smaller than the data being added.
      */
     CBE_DECODE_ERROR_FIELD_LENGTH_EXCEEDED,
+
 } cbe_decode_status;
 
 /**
@@ -185,17 +191,18 @@ typedef struct
 /**
  * Get the size of the decode process data.
  * Use this to create a backing store for the process data like so:
- *     char process_backing_store[cbe_decode_process_size()];
+ *     char process_backing_store[cbe_decode_process_size(max_depth)];
  *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)process_backing_store;
  * or
  *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)malloc(cbe_decode_process_size());
  * or
- *     std::vector<char> process_backing_store(cbe_decode_process_size());
+ *     std::vector<char> process_backing_store(cbe_decode_process_size(max_depth));
  *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)process_backing_store.data();
  *
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @return The process data size.
  */
-int cbe_decode_process_size();
+int cbe_decode_process_size(int max_container_depth);
 
 /**
  * Begin a new decoding process.
@@ -205,11 +212,13 @@ int cbe_decode_process_size();
  *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @param user_context Whatever data you want to be available to the callbacks.
  * @return The current decoder status.
  */
 cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
                       const cbe_decode_callbacks* callbacks,
+                      int max_container_depth,
                       void* user_context);
 
 /**
@@ -289,11 +298,13 @@ cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
  *
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @param document_start The start of the document.
  * @param byte_count The number of bytes in the document.
  */
 cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
                              void* user_context,
+                             int max_container_depth,
                              const uint8_t* document_start,
                              int64_t byte_count);
 
@@ -319,6 +330,11 @@ typedef enum
      * encode this object.
      */
     CBE_ENCODE_STATUS_NEED_MORE_ROOM = 200,
+
+    /**
+     * One or more of the arguments was invalid.
+     */
+    CBE_ENCODE_ERROR_INVALID_ARGUMENT,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -369,9 +385,10 @@ typedef enum
  *     std::vector<char> process_backing_store(cbe_encode_process_size());
  *     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)process_backing_store.data();
  *
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @return The process data size.
  */
-int cbe_encode_process_size();
+int cbe_encode_process_size(int max_container_depth);
 
 /**
  * Begin a new encoding process, setting up an initial document buffer.
@@ -380,11 +397,13 @@ int cbe_encode_process_size();
  * - CBE_ENCODE_STATUS_OK: The encode process has begun.
  *
  * @param encode_process The encode process to initialize.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  * @return The current encoder status.
  */
 cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
+                                   int max_container_depth,
                                    uint8_t* document_buffer,
                                    int64_t byte_count);
 
@@ -395,10 +414,11 @@ cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
  * @param encode_process The encode process.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
+ * @return The current encoder status.
  */
-void cbe_encode_set_buffer(struct cbe_encode_process* encode_process,
-                           uint8_t* document_buffer,
-                           int64_t byte_count);
+cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_process,
+                                        uint8_t* document_buffer,
+                                        int64_t byte_count);
 
 /**
  * Get the current write offset into the encode buffer.

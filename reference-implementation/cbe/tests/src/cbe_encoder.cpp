@@ -3,6 +3,8 @@
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
+#define MAX_CONTAINER_DEPTH 500
+
 bool cbe_encoder::flush_buffer()
 {
 	bool result = false;
@@ -13,7 +15,11 @@ bool cbe_encoder::flush_buffer()
 		_encoded_data.insert(_encoded_data.end(), _buffer.begin(), _buffer.begin() + offset);
 		result = _on_data_ready(_buffer.data(), offset);
 	}
-	cbe_encode_set_buffer(_process, _buffer.data(), _buffer.size());
+	if(cbe_encode_set_buffer(_process, _buffer.data(), _buffer.size()) != CBE_ENCODE_STATUS_OK)
+	{
+		KSLOG_ERROR("Error setting encode buffer");
+		return false;
+	}
 
 	return result;
 }
@@ -153,12 +159,25 @@ cbe_encode_status cbe_encoder::encode(enc::padding_encoding& e)
 	});
 }
 
+// Workaround for bizarre vector behavior that produces null pointers on 0 length
+static const uint8_t g_dummy_pointer[] = {0};
+
 cbe_encode_status cbe_encoder::stream_array(const std::vector<uint8_t>& data)
 {
 	int64_t offset = 0;
 	KSLOG_DEBUG("Streaming %d bytes", data.size());
 	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
-	while((status = cbe_encode_add_data(_process, data.data()+offset, data.size()-offset)) == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
+	const uint8_t* data_pointer = data.data();
+	if(data_pointer == NULL)
+	{
+		if(data.size() != 0)
+		{
+			KSLOG_ERROR("data.data() is null!");
+			return (cbe_encode_status)99999999;
+		}
+		data_pointer = g_dummy_pointer;
+	}
+	while((status = cbe_encode_add_data(_process, data_pointer+offset, data.size()-offset)) == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
 	{
 		int64_t old_offset = offset;
 		(void)old_offset;
@@ -240,7 +259,7 @@ cbe_encode_status cbe_encoder::encode(enc::container_end_encoding& e)
 
 cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 {
-	cbe_encode_status result = cbe_encode_begin(_process, _buffer.data(), _buffer.size());
+	cbe_encode_status result = cbe_encode_begin(_process, MAX_CONTAINER_DEPTH, _buffer.data(), _buffer.size());
 	if(result != CBE_ENCODE_STATUS_OK)
 	{
 		return result;
@@ -262,7 +281,7 @@ cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,
 	std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
-: _process_backing_store(cbe_encode_process_size())
+: _process_backing_store(cbe_encode_process_size(MAX_CONTAINER_DEPTH))
 , _process((cbe_encode_process*)_process_backing_store.data())
 , _buffer(buffer_size)
 , _on_data_ready(on_data_ready)

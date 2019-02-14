@@ -1,7 +1,14 @@
 #include "cbe_internal.h"
 
-// #define KSLogger_LocalLevel TRACE
+// #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
+
+
+// ========
+// Defaults
+// ========
+
+static const int g_default_max_container_depth = 500;
 
 
 // ====
@@ -26,9 +33,10 @@ struct cbe_decode_process
     } array;
     struct
     {
+        int max_depth;
         int level;
         bool next_object_is_map_key;
-        bool is_inside_map[MAX_CONTAINER_DEPTH];
+        bool is_inside_map[];
     } container;
 };
 typedef struct cbe_decode_process cbe_decode_process;
@@ -60,7 +68,7 @@ typedef struct cbe_decode_process cbe_decode_process;
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    if((PROCESS)->container.level < MAX_CONTAINER_DEPTH) \
+    if((PROCESS)->container.level < (PROCESS)->container.max_depth) \
         if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && !(PROCESS)->container.next_object_is_map_key) \
         { \
             KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
@@ -68,7 +76,7 @@ typedef struct cbe_decode_process cbe_decode_process;
         }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    if((PROCESS)->container.level < MAX_CONTAINER_DEPTH) \
+    if((PROCESS)->container.level < (PROCESS)->container.max_depth) \
     if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
@@ -100,6 +108,21 @@ typedef struct cbe_decode_process cbe_decode_process;
 // =======
 // Utility
 // =======
+
+static int get_max_container_depth_or_default(int max_container_depth)
+{
+    return max_container_depth > 0 ? max_container_depth : g_default_max_container_depth;
+}
+
+static void zero_memory(void* const memory, const unsigned byte_count)
+{
+    uint8_t* ptr = memory;
+    uint8_t* const end = ptr + byte_count;
+    while(ptr < end)
+    {
+        *ptr++ = 0;
+    }
+}
 
 static inline int64_t get_remaining_space_in_buffer(cbe_decode_process* process)
 {
@@ -233,30 +256,34 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 // API
 // ===
 
-int cbe_decode_process_size()
+int cbe_decode_process_size(const int max_container_depth)
 {
-    return sizeof(cbe_decode_process);
+    KSLOG_DEBUG("(max_container_depth %d)", max_container_depth);
+    return sizeof(cbe_decode_process) + get_max_container_depth_or_default(max_container_depth);
 }
 
 cbe_decode_status cbe_decode_begin(cbe_decode_process* const process,
                                    const cbe_decode_callbacks* const callbacks,
+                                   const int max_container_depth,
                                    void* const user_context)
 {
-    KSLOG_DEBUG(NULL);
-
-    uint8_t* ptr = (uint8_t*)process;
-    for(uint8_t* end = ptr + sizeof(*process); ptr < end; ptr++)
+    KSLOG_DEBUG("(process %p, callbacks %p, user_context %p)", process, callbacks, user_context);
+    if(process == NULL || callbacks == NULL)
     {
-        *ptr = 0;
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
+
+    zero_memory(process, sizeof(*process) + 1);
     process->callbacks = callbacks;
     process->user_context = user_context;
+    process->container.max_depth = get_max_container_depth_or_default(max_container_depth);
 
     return CBE_DECODE_STATUS_OK;
 }
 
 void* cbe_decode_get_user_context(cbe_decode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     return process->user_context;
 }
 
@@ -264,7 +291,12 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                                   const uint8_t* const data_start,
                                   const int64_t byte_count)
 {
-    KSLOG_DEBUG("Feed %d bytes...", byte_count);
+    KSLOG_DEBUG("(process %p, data_start %p, byte_count %ld)", process, data_start, byte_count);
+    if(process == NULL || data_start == NULL || byte_count < 0)
+    {
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+    }
+
     KSLOG_DATA_TRACE(data_start, byte_count, NULL);
 
     process->buffer.start = data_start;
@@ -285,58 +317,57 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
 
     while(process->buffer.position < process->buffer.end)
     {
-        KSLOG_DEBUG("Reading type");
         const cbe_type_field type = read_uint_8(process);
 
         switch(type)
         {
             case TYPE_PADDING:
-                KSLOG_DEBUG("(Padding)");
+                KSLOG_DEBUG("<Padding>");
                 // Ignore and restart loop because padding doesn't count as document content.
                 // Otherwise the document depth test would exit the decode loop.
                 continue;
             case TYPE_EMPTY:
-                KSLOG_DEBUG("(Empty)");
+                KSLOG_DEBUG("<Empty>");
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_nil(process));
                 END_OBJECT();
                 break;
             case TYPE_FALSE:
-                KSLOG_DEBUG("(False)");
+                KSLOG_DEBUG("<False>");
                 BEGIN_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_boolean(process, false));
                 END_OBJECT();
                 break;
             case TYPE_TRUE:
-                KSLOG_DEBUG("(True)");
+                KSLOG_DEBUG("<True>");
                 BEGIN_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_boolean(process, true));
                 END_OBJECT();
                 break;
             case TYPE_LIST:
-                KSLOG_DEBUG("(List)");
+                KSLOG_DEBUG("<List>");
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_list_begin(process));
                 process->container.level++;
-                if(process->container.level < MAX_CONTAINER_DEPTH)
+                if(process->container.level < process->container.max_depth)
                 {
                     process->container.is_inside_map[process->container.level] = false;
                 }
                 process->container.next_object_is_map_key = false;
                 break;
             case TYPE_MAP:
-                KSLOG_DEBUG("(Map)");
+                KSLOG_DEBUG("<Map>");
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_map_begin(process));
                 process->container.level++;
-                if(process->container.level < MAX_CONTAINER_DEPTH)
+                if(process->container.level < process->container.max_depth)
                 {
                     process->container.is_inside_map[process->container.level] = true;
                 }
                 process->container.next_object_is_map_key = true;
                 break;
             case TYPE_END_CONTAINER:
-                KSLOG_DEBUG("(End Container)");
+                KSLOG_DEBUG("<End Container>");
                 STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
                 if(process->container.is_inside_map[process->container.level])
                 {
@@ -348,7 +379,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 }
                 END_OBJECT();
                 process->container.level--;
-                if(process->container.level < MAX_CONTAINER_DEPTH)
+                if(process->container.level < process->container.max_depth)
                 {
                     process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
                 }
@@ -360,7 +391,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_STRING_12: case TYPE_STRING_13: case TYPE_STRING_14: case TYPE_STRING_15:
             {
                 const int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
-                KSLOG_DEBUG("(String %d)", array_byte_count);
+                KSLOG_DEBUG("<String %d>", array_byte_count);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_string_begin(process, array_byte_count));
                 internal_begin_array(process, array_byte_count);
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
@@ -368,7 +399,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             }
 
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
-                KSLOG_DEBUG("(" #TYPE ")"); \
+                KSLOG_DEBUG("<" #TYPE ">"); \
                 BEGIN_OBJECT(sizeof(TYPE)); \
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_ ## NAME_FRAGMENT(process, read_ ## NAME_FRAGMENT(process))); \
                 END_OBJECT();
@@ -407,20 +438,20 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 break;
             case TYPE_STRING:
             {
-                KSLOG_DEBUG("(String)");
+                KSLOG_DEBUG("<String>");
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_array(process, process->callbacks->on_string_begin));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
                 break;
             }
             case TYPE_BINARY_DATA:
             {
-                KSLOG_DEBUG("(Binary)");
+                KSLOG_DEBUG("<Binary>");
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_array(process, process->callbacks->on_binary_begin));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
                 break;
             }
             default:
-                KSLOG_DEBUG("(Small): %d", type);
+                KSLOG_DEBUG("<Small %d>", type);
                 BEGIN_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_int_8(process, type));
                 END_OBJECT();
@@ -436,11 +467,23 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
 
 int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
+    if(process == NULL)
+    {
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+    }
+
     return process->buffer.position - process->buffer.start;
 }
 
 cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
+    if(process == NULL)
+    {
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+    }
+
     STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(process);
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
 
@@ -450,13 +493,20 @@ cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 
 cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
                              void* const user_context,
+                             const int max_container_depth,
                              const uint8_t* const document,
                              const int64_t document_length)
 {
-    KSLOG_TRACE("Call: callbacks %p, document %p, document_length %d", callbacks, document, document_length);
-    char decode_process_backing_store[cbe_decode_process_size()];
+    KSLOG_DEBUG("(callbacks %p, user_context %p, document %p, document_length %d)",
+        callbacks, user_context, document, document_length);
+    if(callbacks == NULL || document == NULL || document_length < 0)
+    {
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    char decode_process_backing_store[cbe_decode_process_size(max_container_depth)];
     cbe_decode_process* process = (cbe_decode_process*)decode_process_backing_store;
-    cbe_decode_status status = cbe_decode_begin(process, callbacks, user_context);
+    cbe_decode_status status = cbe_decode_begin(process, callbacks, max_container_depth, user_context);
     if(status != CBE_DECODE_STATUS_OK)
     {
         return status;

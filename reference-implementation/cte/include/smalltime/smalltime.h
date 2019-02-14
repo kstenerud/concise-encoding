@@ -2,14 +2,15 @@
  * Smalltime
  * =========
  *
- * A simple and convenient date & time format in 64 bits.
+ * A simple and convenient binary date & time format in 64 bits.
  *
  *
  * Features
  * --------
  *
  *  * Encodes a complete date & time into a 64-bit signed integer.
- *  * Maintenance-free (no human managed tables to update).
+ *  * Fields (including year) are compatible with ISO-8601.
+ *  * Maintenance-free (no leap second tables to update).
  *  * Easily converts to human readable fields.
  *  * Supports hundreds of thousands of years.
  *  * Supports time units to the microsecond.
@@ -94,7 +95,7 @@ static inline smalltime smalltime_new(int year, int day, int hour, int minute, i
 /**
  * Get the year component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the year component.
  */
 static inline int smalltime_get_year(smalltime time)
@@ -103,17 +104,17 @@ static inline int smalltime_get_year(smalltime time)
 }
 
 /**
- * Set the year component of a time value.
+ * Get a new time based on an existing one, with a new year component.
  * Valid range is -131072 to 131071.
  * Note: There is no 0 AD or BC, so BC years are adjusted by 1:
  *       1 = 1 AD, 0 = 1 BC, -1 = 2 BC, ...
  * Note: Input is NOT validated!
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @param year The year component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_year(smalltime time, int year)
+static inline smalltime smalltime_with_year(smalltime time, int year)
 {
     return (time & ~SMALLTIME_MASK_YEAR) | ((smalltime)year << SMALLTIME_BITSHIFT_YEAR);
 }
@@ -121,7 +122,7 @@ static inline smalltime smalltime_set_year(smalltime time, int year)
 /**
  * Get the day component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the day component.
  */
 static inline int smalltime_get_day(smalltime time)
@@ -130,16 +131,16 @@ static inline int smalltime_get_day(smalltime time)
 }
 
 /**
- * Set the day component of a time value.
+ * Get a new time based on an existing one, with a new day component.
  * Valid range is 1 to 366 (ordinal date).
  * The value 366 is to support leap years.
  * Note: Input is NOT validated!
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @param day The day component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_day(smalltime time, int day)
+static inline smalltime smalltime_with_day(smalltime time, int day)
 {
     return (time & ~SMALLTIME_MASK_DAY) | ((smalltime)day << SMALLTIME_BITSHIFT_DAY);
 }
@@ -147,7 +148,7 @@ static inline smalltime smalltime_set_day(smalltime time, int day)
 /**
  * Get the hour component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the hour component.
  */
 static inline int smalltime_get_hour(smalltime time)
@@ -156,15 +157,15 @@ static inline int smalltime_get_hour(smalltime time)
 }
 
 /**
- * Set the hour component of a time value.
+ * Get a new time based on an existing one, with a new hour component.
  * Valid range is 0 to 23.
  * Note: Input is NOT validated!
  *
- * @param time The time value.
- * @param hour The hour component.
+ * @param time The existing time value.
+ * @param hour The new hour component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_hour(smalltime time, int hour)
+static inline smalltime smalltime_with_hour(smalltime time, int hour)
 {
     return (time & ~SMALLTIME_MASK_HOUR) | ((smalltime)hour << SMALLTIME_BITSHIFT_HOUR);
 }
@@ -172,7 +173,7 @@ static inline smalltime smalltime_set_hour(smalltime time, int hour)
 /**
  * Get the minute component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the minute component.
  */
 static inline int smalltime_get_minute(smalltime time)
@@ -181,15 +182,15 @@ static inline int smalltime_get_minute(smalltime time)
 }
 
 /**
- * Set the minute component of a time value.
+ * Get a new time based on an existing one, with a new minute component.
  * Valid range is 0-59.
  * Note: Input is NOT validated!
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @param minute The minute component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_minute(smalltime time, int minute)
+static inline smalltime smalltime_with_minute(smalltime time, int minute)
 {
     return (time & ~SMALLTIME_MASK_MINUTE) | ((smalltime)minute << SMALLTIME_BITSHIFT_MINUTE);
 }
@@ -197,7 +198,7 @@ static inline smalltime smalltime_set_minute(smalltime time, int minute)
 /**
  * Get the second component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the second component.
  */
 static inline int smalltime_get_second(smalltime time)
@@ -206,16 +207,16 @@ static inline int smalltime_get_second(smalltime time)
 }
 
 /**
- * Set the second component of a time value.
+ * Get a new time based on an existing one, with a new second component.
  * Valid range is 0-60.
  * The value 60 is to support leap seconds.
  * Note: Input is NOT validated!
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @param second The second component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_second(smalltime time, int second)
+static inline smalltime smalltime_with_second(smalltime time, int second)
 {
     return (time & ~SMALLTIME_MASK_SECOND) | ((smalltime)second << SMALLTIME_BITSHIFT_SECOND);
 }
@@ -223,7 +224,7 @@ static inline smalltime smalltime_set_second(smalltime time, int second)
 /**
  * Get the microsecond component from a time value.
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @return the microsecond component.
  */
 static inline int smalltime_get_microsecond(smalltime time)
@@ -232,15 +233,15 @@ static inline int smalltime_get_microsecond(smalltime time)
 }
 
 /**
- * Set the microsecond component of a time value.
+ * Get a new time based on an existing one, with a new microsecond component.
  * Valid range is 0-999999.
  * Note: Input is NOT validated!
  *
- * @param time The time value.
+ * @param time The existing time value.
  * @param microsecond The microsecond component.
  * @return the new time value.
  */
-static inline smalltime smalltime_set_microsecond(smalltime time, int microsecond)
+static inline smalltime smalltime_with_microsecond(smalltime time, int microsecond)
 {
     return (time & ~SMALLTIME_MASK_MICROSECOND) | microsecond;
 }

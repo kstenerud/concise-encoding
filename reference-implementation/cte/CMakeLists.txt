@@ -8,6 +8,7 @@ else()
 endif()
 
 
+
 #################
 # Configuration #
 #################
@@ -16,9 +17,9 @@ endif()
 set(LOCAL_PROJECT_VERSION     "1.0.0")
 set(LOCAL_PROJECT_VENDOR      "Karl Stenerud")
 set(LOCAL_PROJECT_NAMESPACE   "KS")
-set(LOCAL_PROJECT_NAME        "CTELib")
+set(LOCAL_PROJECT_NAME        "CTE")
 set(LOCAL_PROJECT_OUTPUT_NAME "cte")
-set(LOCAL_PROJECT_DESCRIPTION "Safe binary to text encoding")
+set(LOCAL_PROJECT_DESCRIPTION "Concise Text Encoding - a general purpose, human readable representation of semi-structured hierarchical data.")
 
 project(${LOCAL_PROJECT_NAME}
         VERSION ${LOCAL_PROJECT_VERSION}

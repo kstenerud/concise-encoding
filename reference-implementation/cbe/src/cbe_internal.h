@@ -7,12 +7,6 @@ extern "C" {
 #include "cbe/cbe.h"
 
 
-// Maximum container depth allowed in a document.
-// Adding lists or maps will exit with an error code
-// if this depth is exceeded.
-#define MAX_CONTAINER_DEPTH 500
-
-
 typedef enum
 {
     TYPE_SMALLINT_MIN      = -110,

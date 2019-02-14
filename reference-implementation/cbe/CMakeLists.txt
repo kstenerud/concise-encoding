@@ -17,9 +17,9 @@ endif()
 set(LOCAL_PROJECT_VERSION     "1.0.0")
 set(LOCAL_PROJECT_VENDOR      "Karl Stenerud")
 set(LOCAL_PROJECT_NAMESPACE   "KS")
-set(LOCAL_PROJECT_NAME        "CBELib")
+set(LOCAL_PROJECT_NAME        "CBE")
 set(LOCAL_PROJECT_OUTPUT_NAME "cbe")
-set(LOCAL_PROJECT_DESCRIPTION "Safe binary to text encoding")
+set(LOCAL_PROJECT_DESCRIPTION "Concise Binary Encoding - a general purpose, machine-readable, compact representation of semi-structured hierarchical data.")
 
 project(${LOCAL_PROJECT_NAME}
         VERSION ${LOCAL_PROJECT_VERSION}
