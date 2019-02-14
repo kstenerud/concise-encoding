@@ -19,6 +19,7 @@ struct cbe_decode_process
 {
     const cbe_decode_callbacks* callbacks;
     void* user_context;
+    int64_t stream_offset;
     struct
     {
         const uint8_t* start;
@@ -43,64 +44,85 @@ typedef struct cbe_decode_process cbe_decode_process;
 
 
 // ==============
+// Utility Macros
+// ==============
+
+#define likely_if(TEST_FOR_TRUTH) if(__builtin_expect(TEST_FOR_TRUTH, 1))
+#define unlikely_if(TEST_FOR_TRUTH) if(__builtin_expect(TEST_FOR_TRUTH, 0))
+
+#define UPDATE_STREAM_OFFSET(PROCESS) \
+    (PROCESS)->stream_offset += (PROCESS)->buffer.position - (PROCESS)->buffer.start
+
+
+// ==============
 // Error Handlers
 // ==============
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, BYTE_COUNT) \
-    if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(BYTE_COUNT)) \
+    unlikely_if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(BYTE_COUNT)) \
     { \
-        KSLOG_DEBUG("STOP AND EXIT: Require %d bytes but only %d available.", (BYTE_COUNT), get_remaining_space_in_buffer(PROCESS)); \
+        KSLOG_DEBUG("STOP AND EXIT: Require %d bytes but only %d available.", \
+            (BYTE_COUNT), get_remaining_space_in_buffer(PROCESS)); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_STATUS_NEED_MORE_DATA; \
     }
 
 #define STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(PROCESS) \
-    if((PROCESS)->array.is_inside_array) \
+    unlikely_if((PROCESS)->array.is_inside_array) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: We're inside an array when we shouldn't be"); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_ERROR_INCOMPLETE_FIELD; \
     }
 
 #define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
-    if((PROCESS)->container.level != 0) \
+    unlikely_if((PROCESS)->container.level != 0) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: There are still open containers when there shouldn't be"); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_ERROR_UNBALANCED_CONTAINERS; \
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    if((PROCESS)->container.level < (PROCESS)->container.max_depth) \
-        if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && !(PROCESS)->container.next_object_is_map_key) \
-        { \
-            KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
-            return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY; \
-        }
+    unlikely_if((PROCESS)->container.level < (PROCESS)->container.max_depth && \
+        (PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+        !(PROCESS)->container.next_object_is_map_key) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
+        return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY; \
+    }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    if((PROCESS)->container.level < (PROCESS)->container.max_depth) \
-    if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && (PROCESS)->container.next_object_is_map_key) \
+    unlikely_if((PROCESS)->container.level < (PROCESS)->container.max_depth && \
+        (PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+        (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
         KSLOG_TRACE("container_level: %d, is_inside_map: %d, next_object_is_map_key %d", \
             (PROCESS)->container.level, \
             (PROCESS)->container.is_inside_map[(PROCESS)->container.level], \
              (PROCESS)->container.next_object_is_map_key); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_ERROR_INCORRECT_KEY_TYPE; \
     }
 
-#define STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(...) \
+#define STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(PROCESS, ...) \
 { \
     cbe_decode_status inner_status = __VA_ARGS__; \
-    if(inner_status != CBE_DECODE_STATUS_OK) \
+    unlikely_if(inner_status != CBE_DECODE_STATUS_OK) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: API call returned non-ok value %d", inner_status); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return inner_status; \
     } \
 }
 
-#define STOP_AND_EXIT_IF_FAILED_CALLBACK(...) \
-    if(!__VA_ARGS__) \
+#define STOP_AND_EXIT_IF_FAILED_CALLBACK(PROCESS, ...) \
+    unlikely_if(!__VA_ARGS__) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Callback returned false"); \
+        UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK; \
     }
 
@@ -109,12 +131,12 @@ typedef struct cbe_decode_process cbe_decode_process;
 // Utility
 // =======
 
-static int get_max_container_depth_or_default(int max_container_depth)
+static inline int get_max_container_depth_or_default(int max_container_depth)
 {
     return max_container_depth > 0 ? max_container_depth : g_default_max_container_depth;
 }
 
-static void zero_memory(void* const memory, const unsigned byte_count)
+static inline void zero_memory(void* const memory, const int byte_count)
 {
     uint8_t* ptr = memory;
     uint8_t* const end = ptr + byte_count;
@@ -224,7 +246,7 @@ static cbe_decode_status begin_array(cbe_decode_process* const process,
     const int64_t array_byte_count = read_array_length(process);
 
     KSLOG_DEBUG("Length: %d", array_byte_count);
-    STOP_AND_EXIT_IF_FAILED_CALLBACK(on_begin_array(process, array_byte_count));
+    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, on_begin_array(process, array_byte_count));
     internal_begin_array(process, array_byte_count);
 
     return CBE_DECODE_STATUS_OK;
@@ -238,7 +260,7 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 
     KSLOG_DEBUG("Length: arr %d vs buf %d: %d bytes", bytes_in_array, space_in_buffer, bytes_to_stream);
     KSLOG_DATA_TRACE(process->buffer.position, bytes_to_stream, NULL);
-    STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_data(process, process->buffer.position, bytes_to_stream));
+    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_data(process, process->buffer.position, bytes_to_stream));
 
     consume_bytes(process, bytes_to_stream);
     process->array.current_offset += bytes_to_stream;
@@ -268,7 +290,7 @@ cbe_decode_status cbe_decode_begin(cbe_decode_process* const process,
                                    void* const user_context)
 {
     KSLOG_DEBUG("(process %p, callbacks %p, user_context %p)", process, callbacks, user_context);
-    if(process == NULL || callbacks == NULL)
+    unlikely_if(process == NULL || callbacks == NULL)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
@@ -292,7 +314,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                                   const int64_t byte_count)
 {
     KSLOG_DEBUG("(process %p, data_start %p, byte_count %ld)", process, data_start, byte_count);
-    if(process == NULL || data_start == NULL || byte_count < 0)
+    unlikely_if(process == NULL || data_start == NULL || byte_count < 0)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
@@ -304,15 +326,15 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
     process->buffer.end = data_start + byte_count;
 
     #define BEGIN_OBJECT(SIZE) \
-        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_object(process, SIZE));
+        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_object(process, SIZE));
     #define BEGIN_NONKEYABLE_OBJECT(SIZE) \
-        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_nonkeyable_object(process, SIZE));
+        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_nonkeyable_object(process, SIZE));
     #define END_OBJECT() \
         end_object(process)
 
-    if(process->array.is_inside_array)
+    unlikely_if(process->array.is_inside_array)
     {
-        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
+        STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
     }
 
     while(process->buffer.position < process->buffer.end)
@@ -329,27 +351,27 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_EMPTY:
                 KSLOG_DEBUG("<Empty>");
                 BEGIN_NONKEYABLE_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_nil(process));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_nil(process));
                 END_OBJECT();
                 break;
             case TYPE_FALSE:
                 KSLOG_DEBUG("<False>");
                 BEGIN_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_boolean(process, false));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_boolean(process, false));
                 END_OBJECT();
                 break;
             case TYPE_TRUE:
                 KSLOG_DEBUG("<True>");
                 BEGIN_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_boolean(process, true));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_boolean(process, true));
                 END_OBJECT();
                 break;
             case TYPE_LIST:
                 KSLOG_DEBUG("<List>");
                 BEGIN_NONKEYABLE_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_list_begin(process));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_list_begin(process));
                 process->container.level++;
-                if(process->container.level < process->container.max_depth)
+                likely_if(process->container.level < process->container.max_depth)
                 {
                     process->container.is_inside_map[process->container.level] = false;
                 }
@@ -358,9 +380,9 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_MAP:
                 KSLOG_DEBUG("<Map>");
                 BEGIN_NONKEYABLE_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_map_begin(process));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_map_begin(process));
                 process->container.level++;
-                if(process->container.level < process->container.max_depth)
+                likely_if(process->container.level < process->container.max_depth)
                 {
                     process->container.is_inside_map[process->container.level] = true;
                 }
@@ -371,15 +393,15 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
                 if(process->container.is_inside_map[process->container.level])
                 {
-                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_map_end(process));
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_map_end(process));
                 }
                 else
                 {
-                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_list_end(process));
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_list_end(process));
                 }
                 END_OBJECT();
                 process->container.level--;
-                if(process->container.level < process->container.max_depth)
+                likely_if(process->container.level < process->container.max_depth)
                 {
                     process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
                 }
@@ -392,16 +414,16 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             {
                 const int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
                 KSLOG_DEBUG("<String %d>", array_byte_count);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_string_begin(process, array_byte_count));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
                 internal_begin_array(process, array_byte_count);
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
 
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
                 KSLOG_DEBUG("<" #TYPE ">"); \
                 BEGIN_OBJECT(sizeof(TYPE)); \
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_ ## NAME_FRAGMENT(process, read_ ## NAME_FRAGMENT(process))); \
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_ ## NAME_FRAGMENT(process, read_ ## NAME_FRAGMENT(process))); \
                 END_OBJECT();
             case TYPE_INT_16:
                 HANDLE_CASE_SCALAR(int16_t, int_16);
@@ -439,36 +461,37 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_STRING:
             {
                 KSLOG_DEBUG("<String>");
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_array(process, process->callbacks->on_string_begin));
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, process->callbacks->on_string_begin));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
             case TYPE_BINARY_DATA:
             {
                 KSLOG_DEBUG("<Binary>");
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(begin_array(process, process->callbacks->on_binary_begin));
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(stream_array(process));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, process->callbacks->on_binary_begin));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
             default:
                 KSLOG_DEBUG("<Small %d>", type);
                 BEGIN_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process->callbacks->on_int_8(process, type));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_8(process, type));
                 END_OBJECT();
                 break;
         }
-        if(process->container.level <= 0)
+        unlikely_if(process->container.level <= 0)
         {
             break;
         }
     }
+    UPDATE_STREAM_OFFSET(process);
     return CBE_DECODE_STATUS_OK;
 }
 
 int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    if(process == NULL)
+    unlikely_if(process == NULL)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
@@ -476,10 +499,21 @@ int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
     return process->buffer.position - process->buffer.start;
 }
 
+int64_t cbe_decode_get_stream_offset(cbe_decode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return process->stream_offset;
+}
+
 cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    if(process == NULL)
+    unlikely_if(process == NULL)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
@@ -499,7 +533,7 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
 {
     KSLOG_DEBUG("(callbacks %p, user_context %p, document %p, document_length %d)",
         callbacks, user_context, document, document_length);
-    if(callbacks == NULL || document == NULL || document_length < 0)
+    unlikely_if(callbacks == NULL || document == NULL || document_length < 0)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
@@ -507,13 +541,13 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
     char decode_process_backing_store[cbe_decode_process_size(max_container_depth)];
     cbe_decode_process* process = (cbe_decode_process*)decode_process_backing_store;
     cbe_decode_status status = cbe_decode_begin(process, callbacks, max_container_depth, user_context);
-    if(status != CBE_DECODE_STATUS_OK)
+    unlikely_if(status != CBE_DECODE_STATUS_OK)
     {
         return status;
     }
 
     status = cbe_decode_feed(process, document, document_length);
-    if(status != CBE_DECODE_STATUS_OK && status != CBE_DECODE_STATUS_NEED_MORE_DATA)
+    unlikely_if(status != CBE_DECODE_STATUS_OK && status != CBE_DECODE_STATUS_NEED_MORE_DATA)
     {
         return status;
     }

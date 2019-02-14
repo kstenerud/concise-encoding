@@ -217,9 +217,9 @@ int cbe_decode_process_size(int max_container_depth);
  * @return The current decoder status.
  */
 cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
-                      const cbe_decode_callbacks* callbacks,
-                      int max_container_depth,
-                      void* user_context);
+                                   const cbe_decode_callbacks* callbacks,
+                                   int max_container_depth,
+                                   void* user_context);
 
 /**
  * Get the user context information from a decode process.
@@ -280,6 +280,15 @@ cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
  * @return The current offset.
  */
 int64_t cbe_decode_get_buffer_offset(struct cbe_decode_process* decode_process);
+
+/**
+ * Get the current offset into the overall stream of data.
+ * This is the total bytes read across all calls to cbe_decode_feed().
+ *
+ * @param decode_process The decode process.
+ * @return The current offset.
+ */
+int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
 
 /**
  * End a decoding process, checking for document validity.

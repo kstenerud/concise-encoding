@@ -1,8 +1,5 @@
 #ifndef cbe_internal_H
 #define cbe_internal_H
-#ifdef __cplusplus 
-extern "C" {
-#endif
 
 #include "cbe/cbe.h"
 
@@ -84,7 +81,4 @@ DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
 DEFINE_SAFE_STRUCT(safe_time,        smalltime);
 
-#ifdef __cplusplus 
-}
-#endif
 #endif // cbe_internal_H
