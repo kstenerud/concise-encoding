@@ -259,7 +259,7 @@ cbe_encode_status cbe_encoder::encode(enc::container_end_encoding& e)
 
 cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 {
-	cbe_encode_status result = cbe_encode_begin(_process, MAX_CONTAINER_DEPTH, _buffer.data(), _buffer.size());
+	cbe_encode_status result = cbe_encode_begin(_process, _buffer.data(), _buffer.size(), MAX_CONTAINER_DEPTH);
 	if(result != CBE_ENCODE_STATUS_OK)
 	{
 		return result;

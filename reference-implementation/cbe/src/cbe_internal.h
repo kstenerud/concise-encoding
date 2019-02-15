@@ -3,7 +3,6 @@
 
 #include "cbe/cbe.h"
 
-
 typedef enum
 {
     TYPE_SMALLINT_MIN      = -110,
@@ -45,23 +44,6 @@ typedef enum
     TYPE_STRING            = 0x90,
     TYPE_BINARY_DATA       = 0x91,
 } cbe_type_field;
-
-typedef uint8_t cbe_encoded_type_field;
-
-typedef enum
-{
-    ARRAY_LENGTH_FIELD_WIDTH_6_BIT  = 0,
-    ARRAY_LENGTH_FIELD_WIDTH_14_BIT = 1,
-    ARRAY_LENGTH_FIELD_WIDTH_30_BIT = 2,
-    ARRAY_LENGTH_FIELD_WIDTH_62_BIT = 3,
-} cbe_array_length_field_width;
-
-typedef enum
-{
-    MAX_VALUE_6_BIT  = 0x3f,
-    MAX_VALUE_14_BIT = 0x3fff,
-    MAX_VALUE_30_BIT = 0x3fffffff,
-} cbe_max_value;
 
 
 // Force the compiler to generate handler code for unaligned accesses.

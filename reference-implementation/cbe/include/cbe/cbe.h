@@ -18,6 +18,19 @@ extern "C" {
 
 
 
+// ========
+// Defaults
+// ========
+
+#ifndef CBE_DEFAULT_MAX_CONTAINER_DEPTH
+    #define CBE_DEFAULT_MAX_CONTAINER_DEPTH 500
+#endif
+
+
+// -----------
+// Library API
+// -----------
+
 /**
  * Get the current library version as a semantic version (e.g. "1.5.2").
  *
@@ -98,7 +111,7 @@ typedef enum
  */
 typedef struct
 {
-    // An nil field was decoded.
+    // A nil field was decoded.
     bool (*on_nil) (struct cbe_decode_process* decode_process);
 
     // An boolean field was decoded.
@@ -199,7 +212,7 @@ typedef struct
  *     std::vector<char> process_backing_store(cbe_decode_process_size(max_depth));
  *     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)process_backing_store.data();
  *
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
 int cbe_decode_process_size(int max_container_depth);
@@ -212,14 +225,14 @@ int cbe_decode_process_size(int max_container_depth);
  *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @param user_context Whatever data you want to be available to the callbacks.
  * @return The current decoder status.
  */
 cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
                                    const cbe_decode_callbacks* callbacks,
-                                   int max_container_depth,
-                                   void* user_context);
+                                   void* user_context,
+                                   int max_container_depth);
 
 /**
  * Get the user context information from a decode process.
@@ -307,15 +320,15 @@ cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
  *
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @param document_start The start of the document.
  * @param byte_count The number of bytes in the document.
  */
 cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
                              void* user_context,
-                             int max_container_depth,
                              const uint8_t* document_start,
-                             int64_t byte_count);
+                             int64_t byte_count,
+                             int max_container_depth);
 
 
 // ------------
@@ -332,7 +345,7 @@ typedef enum
     /**
      * Completed successfully.
      */
-    CBE_ENCODE_STATUS_OK,
+    CBE_ENCODE_STATUS_OK = 0,
 
     /**
      * The encoder has reached the end of the buffer and needs more room to
@@ -383,6 +396,7 @@ typedef enum
 
 } cbe_encode_status;
 
+
 /**
  * Get the size of the encode process data.
  * Use this to create a backing store for the process data like so:
@@ -394,27 +408,27 @@ typedef enum
  *     std::vector<char> process_backing_store(cbe_encode_process_size());
  *     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)process_backing_store.data();
  *
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
 int cbe_encode_process_size(int max_container_depth);
 
 /**
- * Begin a new encoding process, setting up an initial document buffer.
+ * Begin a new encoding process.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The encode process has begun.
  *
  * @param encode_process The encode process to initialize.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default of 500).
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current encoder status.
  */
 cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
-                                   int max_container_depth,
                                    uint8_t* document_buffer,
-                                   int64_t byte_count);
+                                   int64_t byte_count,
+                                   int max_container_depth);
 
 /**
  * Replace the document buffer in an encode process.

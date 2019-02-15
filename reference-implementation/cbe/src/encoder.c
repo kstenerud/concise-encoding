@@ -4,13 +4,6 @@
 #include "kslogger.h"
 
 
-// ========
-// Defaults
-// ========
-
-static const int g_default_max_container_depth = 500;
-
-
 // ====
 // Data
 // ====
@@ -38,6 +31,23 @@ struct cbe_encode_process
     } container;
 };
 typedef struct cbe_encode_process cbe_encode_process;
+
+typedef uint8_t cbe_encoded_type_field;
+
+typedef enum
+{
+    ARRAY_LENGTH_FIELD_WIDTH_6_BIT  = 0,
+    ARRAY_LENGTH_FIELD_WIDTH_14_BIT = 1,
+    ARRAY_LENGTH_FIELD_WIDTH_30_BIT = 2,
+    ARRAY_LENGTH_FIELD_WIDTH_62_BIT = 3,
+} cbe_array_length_field_width;
+
+typedef enum
+{
+    MAX_VALUE_6_BIT  = 0x3f,
+    MAX_VALUE_14_BIT = 0x3fff,
+    MAX_VALUE_30_BIT = 0x3fffffff,
+} cbe_max_value;
 
 
 // ==============
@@ -132,7 +142,7 @@ typedef struct cbe_encode_process cbe_encode_process;
 
 static inline int get_max_container_depth_or_default(const int max_container_depth)
 {
-    return max_container_depth > 0 ? max_container_depth : g_default_max_container_depth;
+    return max_container_depth > 0 ? max_container_depth : CBE_DEFAULT_MAX_CONTAINER_DEPTH;
 }
 
 static inline void zero_memory(void* const memory, const int byte_count)
@@ -385,9 +395,9 @@ int cbe_encode_process_size(const int max_container_depth)
 
 
 cbe_encode_status cbe_encode_begin(struct cbe_encode_process* const process,
-                                   const int max_container_depth,
                                    uint8_t* const document_buffer,
-                                   const int64_t byte_count)
+                                   const int64_t byte_count,
+                                   const int max_container_depth)
 {
     KSLOG_TRACE("(process %p, max_container_depth %d, document_buffer %p, byte_count %d)",
         process, max_container_depth, document_buffer, byte_count);

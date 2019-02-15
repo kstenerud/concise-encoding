@@ -4,13 +4,6 @@
 #include "kslogger.h"
 
 
-// ========
-// Defaults
-// ========
-
-static const int g_default_max_container_depth = 500;
-
-
 // ====
 // Data
 // ====
@@ -133,7 +126,7 @@ typedef struct cbe_decode_process cbe_decode_process;
 
 static inline int get_max_container_depth_or_default(int max_container_depth)
 {
-    return max_container_depth > 0 ? max_container_depth : g_default_max_container_depth;
+    return max_container_depth > 0 ? max_container_depth : CBE_DEFAULT_MAX_CONTAINER_DEPTH;
 }
 
 static inline void zero_memory(void* const memory, const int byte_count)
@@ -286,8 +279,8 @@ int cbe_decode_process_size(const int max_container_depth)
 
 cbe_decode_status cbe_decode_begin(cbe_decode_process* const process,
                                    const cbe_decode_callbacks* const callbacks,
-                                   const int max_container_depth,
-                                   void* const user_context)
+                                   void* const user_context,
+                                   const int max_container_depth)
 {
     KSLOG_DEBUG("(process %p, callbacks %p, user_context %p)", process, callbacks, user_context);
     unlikely_if(process == NULL || callbacks == NULL)
@@ -527,9 +520,9 @@ cbe_decode_status cbe_decode_end(cbe_decode_process* const process)
 
 cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
                              void* const user_context,
-                             const int max_container_depth,
                              const uint8_t* const document,
-                             const int64_t document_length)
+                             const int64_t document_length,
+                             const int max_container_depth)
 {
     KSLOG_DEBUG("(callbacks %p, user_context %p, document %p, document_length %d)",
         callbacks, user_context, document, document_length);
@@ -540,7 +533,7 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
 
     char decode_process_backing_store[cbe_decode_process_size(max_container_depth)];
     cbe_decode_process* process = (cbe_decode_process*)decode_process_backing_store;
-    cbe_decode_status status = cbe_decode_begin(process, callbacks, max_container_depth, user_context);
+    cbe_decode_status status = cbe_decode_begin(process, callbacks, user_context, max_container_depth);
     unlikely_if(status != CBE_DECODE_STATUS_OK)
     {
         return status;

@@ -205,7 +205,7 @@ TEST(List, too_deep)
 
     char cbe_encode_process_data[cbe_encode_process_size(MAX_CONTAINER_DEPTH)];
     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)&cbe_encode_process_data ;
-    cbe_encode_begin(encode_process, MAX_CONTAINER_DEPTH, memory.data(), memory.size());
+    cbe_encode_begin(encode_process, memory.data(), memory.size(), MAX_CONTAINER_DEPTH);
 	cbe_encode_status status;
 	for(int i = 0; i < depth_too_far; i++)
 	{
