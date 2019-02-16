@@ -2,21 +2,26 @@
 #include <cte/cte.h>
 #include <stdio.h>
 
+#define DEFAULT_DEPTH 500
+#define DEFAULT_INDENT_SPACES 0
+#define DEFAULT_FLOAT_DIGITS_PRECISION 15
+
 TEST(CTE_Examples, encode)
 {
     int indent_spaces = 4;
     uint8_t buffer[1000];
-    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size());
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size(DEFAULT_DEPTH));
     cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data();
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process,
-                                                                buffer,
-                                                                sizeof(buffer),
-                                                                indent_spaces,
-                                                                DEFAULT_FLOAT_DIGITS_PRECISION));
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process,
+                                                     buffer,
+                                                     sizeof(buffer),
+                                                     DEFAULT_DEPTH,
+                                                     DEFAULT_FLOAT_DIGITS_PRECISION,
+                                                     indent_spaces));
 
     cte_encode_begin_map(process);
     cte_encode_add_string(process, "null");
-    cte_encode_add_empty(process);
+    cte_encode_add_nil(process);
     cte_encode_add_string(process, "one");
     cte_encode_add_int_64(process, 1);
     cte_encode_add_string(process, "list");
@@ -65,18 +70,31 @@ static void on_error(cte_decode_process* decode_process, const char* message)
     printf("Error: %s\n", message);
 }
 
-static bool on_string(cte_decode_process* decode_process, const char* str)
+static bool on_string_begin(cte_decode_process* decode_process)
 {
+    (void)decode_process;
+    return true;
+}
 
+static bool on_string_data(cte_decode_process* decode_process, const char* str, int64_t byte_count)
+{
+    // TODO
+    (void)byte_count;
     indent(get_context(decode_process));
     printf("\"%s\"\n", str);
     return true;
 }
 
-static bool on_empty(cte_decode_process* decode_process)
+static bool on_string_end(cte_decode_process* decode_process)
+{
+    (void)decode_process;
+    return true;
+}
+
+static bool on_nil(cte_decode_process* decode_process)
 {
     indent(get_context(decode_process));
-    printf("empty\n");
+    printf("nil\n");
     return true;
 }
     
@@ -143,11 +161,13 @@ static bool on_map_end(cte_decode_process* decode_process)
 TEST(CTE_Examples, decode)
 {
     cte_decode_callbacks callbacks;
-    callbacks.on_empty = on_empty;
+    callbacks.on_nil = on_nil;
     callbacks.on_boolean = on_boolean;
     callbacks.on_int_64 = on_int_64;
     callbacks.on_float_64 = on_float_64;
-    callbacks.on_string = on_string;
+    callbacks.on_string_begin = on_string_begin;
+    callbacks.on_string_data = on_string_data;
+    callbacks.on_string_end = on_string_end;
     callbacks.on_error = on_error;
     callbacks.on_list_begin = on_list_begin;
     callbacks.on_list_end = on_list_end;
@@ -155,11 +175,11 @@ TEST(CTE_Examples, decode)
     callbacks.on_map_end = on_map_end;
 
     decode_context context = {0};
-    const char* cte_string = "{\"null\":empty \"one\":1 \"list\":[1 2 3 {\"a\":1 \"b\":2 \"c\":3}] \"true\":true}";
+    const char* cte_string = "{\"null\":nil \"one\":1 \"list\":[1 2 3 {\"a\":1 \"b\":2 \"c\":3}] \"true\":true}";
 
-    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size(DEFAULT_DEPTH));
     cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, &context));
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, &context, DEFAULT_DEPTH));
     ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte_string, strlen(cte_string)));
     cte_decode_end(decode_process);
 }

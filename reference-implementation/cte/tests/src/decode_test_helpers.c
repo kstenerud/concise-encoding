@@ -84,23 +84,77 @@ static bool decode_add_bool(decode_test_context* context, bool value)
 
 static void on_error(struct cte_decode_process* process, const char* message)
 {
-    printf("Error: %s\n", message);
+    printf("Error = %s\n", message);
     decode_add_string(decode_get_context(process), TYPE_ERROR, message);
 }
 
-static bool on_string(struct cte_decode_process* process, const char* str)
+static bool on_string_begin(struct cte_decode_process* process)
 {
+    (void)process;
+    // Nothing to do
+    return true;
+}
+
+static bool on_string_data(struct cte_decode_process* process, const char* str, int64_t byte_count)
+{
+    // TODO
+    (void)byte_count;
     return decode_add_string(decode_get_context(process), TYPE_STRING, str);
 }
 
-static bool on_empty(struct cte_decode_process* process)
+static bool on_string_end(struct cte_decode_process* process)
 {
-    return decode_add_type(decode_get_context(process), TYPE_EMPTY);
+    (void)process;
+    // TODO
+    return true;
+}
+
+static bool on_binary_begin(struct cte_decode_process* process)
+{
+    (void)process;
+    // Nothing to do
+    return true;
+}
+
+static bool on_binary_data(struct cte_decode_process* process, const uint8_t* data, int64_t byte_count)
+{
+    // TODO
+    (void)process;
+    (void)data;
+    (void)byte_count;
+    return true;
+}
+
+static bool on_binary_end(struct cte_decode_process* process)
+{
+    (void)process;
+    // TODO
+    return true;
+}
+
+static bool on_nil(struct cte_decode_process* process)
+{
+    return decode_add_type(decode_get_context(process), TYPE_NIL);
 }
     
-static bool on_bool(struct cte_decode_process* process, bool value)
+static bool on_boolean(struct cte_decode_process* process, bool value)
 {
     return decode_add_bool(decode_get_context(process), value);
+}
+    
+static bool on_int_8(struct cte_decode_process* process, int8_t value)
+{
+    return decode_add_int(decode_get_context(process), value);
+}
+    
+static bool on_int_16(struct cte_decode_process* process, int16_t value)
+{
+    return decode_add_int(decode_get_context(process), value);
+}
+    
+static bool on_int_32(struct cte_decode_process* process, int32_t value)
+{
+    return decode_add_int(decode_get_context(process), value);
 }
     
 static bool on_int_64(struct cte_decode_process* process, int64_t value)
@@ -108,9 +162,56 @@ static bool on_int_64(struct cte_decode_process* process, int64_t value)
     return decode_add_int(decode_get_context(process), value);
 }
     
+static bool on_int_128(struct cte_decode_process* process, __int128 value)
+{
+    return decode_add_int(decode_get_context(process), value);
+}
+
+static bool on_float_32(struct cte_decode_process* process, float value)
+{
+    return decode_add_float(decode_get_context(process), value);
+}
+
 static bool on_float_64(struct cte_decode_process* process, double value)
 {
     return decode_add_float(decode_get_context(process), value);
+}
+
+static bool on_float_128(struct cte_decode_process* process, __float128 value)
+{
+    return decode_add_float(decode_get_context(process), value);
+}
+
+static bool on_decimal_32(struct cte_decode_process* process, _Decimal32 value)
+{
+    // TODO
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool on_decimal_64(struct cte_decode_process* process, _Decimal64 value)
+{
+    // TODO
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool on_decimal_128(struct cte_decode_process* process, _Decimal128 value)
+{
+    // TODO
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool on_time(struct cte_decode_process* process, const char* value)
+{
+    // TODO
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool on_list_begin(struct cte_decode_process* process)
@@ -135,17 +236,32 @@ static bool on_map_end(struct cte_decode_process* process)
 
 cte_decode_callbacks decode_new_callbacks()
 {
-    cte_decode_callbacks callbacks;
-    // sorry, unimplemented: non-trivial designated initializers not supported
-        callbacks.on_empty = on_empty;
-        callbacks.on_boolean = on_bool;
-        callbacks.on_int_64 = on_int_64;
-        callbacks.on_float_64 = on_float_64;
-        callbacks.on_string = on_string;
-        callbacks.on_error = on_error;
-        callbacks.on_list_begin = on_list_begin;
-        callbacks.on_list_end = on_list_end;
-        callbacks.on_map_begin = on_map_begin;
-        callbacks.on_map_end = on_map_end;
+    cte_decode_callbacks callbacks = {
+        .on_error = on_error,
+        .on_nil = on_nil,
+        .on_boolean = on_boolean,
+        .on_int_8 = on_int_8,
+        .on_int_16 = on_int_16,
+        .on_int_32 = on_int_32,
+        .on_int_64 = on_int_64,
+        .on_int_128 = on_int_128,
+        .on_float_32 = on_float_32,
+        .on_float_64 = on_float_64,
+        .on_float_128 = on_float_128,
+        .on_decimal_32 = on_decimal_32,
+        .on_decimal_64 = on_decimal_64,
+        .on_decimal_128 = on_decimal_128,
+        .on_time = on_time,
+        .on_list_begin = on_list_begin,
+        .on_list_end = on_list_end,
+        .on_map_begin = on_map_begin,
+        .on_map_end = on_map_end,
+        .on_string_begin = on_string_begin,
+        .on_string_data = on_string_data,
+        .on_string_end = on_string_end,
+        .on_binary_begin = on_binary_begin,
+        .on_binary_data = on_binary_data,
+        .on_binary_end = on_binary_end,
+    };
 	return callbacks;	
 }

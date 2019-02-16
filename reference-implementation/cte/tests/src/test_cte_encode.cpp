@@ -1,14 +1,23 @@
 #include <gtest/gtest.h>
 #include <cte/cte.h>
 
+#define DEFAULT_DEPTH 500
+#define DEFAULT_INDENT_SPACES 0
+#define DEFAULT_FLOAT_DIGITS_PRECISION 15
+
 #define DEFINE_ENCODE_TEST(NAME, EXPECTED, ...) \
 TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size(DEFAULT_DEPTH)); \
     cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, buff, sizeof(buff))); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, \
+                                                     buff, \
+                                                     sizeof(buff), \
+                                                     DEFAULT_DEPTH, \
+                                                     DEFAULT_FLOAT_DIGITS_PRECISION, \
+                                                     DEFAULT_INDENT_SPACES)); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -20,13 +29,14 @@ TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size(DEFAULT_DEPTH)); \
     cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process, \
-                                                                buff, \
-                                                                sizeof(buff), \
-                                                                DEFAULT_INDENT_SPACES, \
-                                                                DIGITS)); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, \
+                                                     buff, \
+                                                     sizeof(buff), \
+                                                     DEFAULT_DEPTH, \
+                                                     DIGITS, \
+                                                     DEFAULT_INDENT_SPACES)); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -38,13 +48,14 @@ TEST(CTE_Encode, NAME) \
 { \
     const char* expected = EXPECTED; \
     uint8_t buff[1000]; \
-    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size(DEFAULT_DEPTH)); \
     cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin_with_config(process, \
-                                                                buff, \
-                                                                sizeof(buff), \
-                                                                INDENTATION, \
-                                                                DEFAULT_FLOAT_DIGITS_PRECISION)); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, \
+                                                     buff, \
+                                                     sizeof(buff), \
+                                                     DEFAULT_DEPTH, \
+                                                     DEFAULT_FLOAT_DIGITS_PRECISION, \
+                                                     INDENTATION)); \
     __VA_ARGS__ \
     fflush(stdout); \
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process)); \
@@ -55,14 +66,19 @@ TEST(CTE_Encode, NAME) \
 TEST(CTE_Encode, NAME) \
 { \
     uint8_t buff[BUFFER_SIZE]; \
-    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size()); \
+    std::vector<uint8_t> encode_process_backing_store(cte_encode_process_size(DEFAULT_DEPTH)); \
     cte_encode_process* process = (cte_encode_process*)encode_process_backing_store.data(); \
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, buff, sizeof(buff))); \
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_encode_begin(process, \
+                                                     buff, \
+                                                     sizeof(buff), \
+                                                     DEFAULT_DEPTH, \
+                                                     DEFAULT_FLOAT_DIGITS_PRECISION, \
+                                                     DEFAULT_INDENT_SPACES)); \
     __VA_ARGS__ \
     fflush(stdout); \
 }
 
-DEFINE_ENCODE_TEST(empty, "empty", { ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_empty(process)); })
+DEFINE_ENCODE_TEST(nil, "nil", { ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_nil(process)); })
 DEFINE_ENCODE_TEST(false, "f", { ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_boolean(process, false)); })
 DEFINE_ENCODE_TEST(true, "t", { ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_boolean(process, true)); })
 DEFINE_ENCODE_TEST(int_1000, "1000", { ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_int_64(process, 1000)); })
@@ -135,11 +151,11 @@ DEFINE_ENCODE_TEST(single_map, "{\"a\":1}",
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_end(process));
 })
 
-DEFINE_ENCODE_TEST(complex, "{\"empty\":empty,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":t}",
+DEFINE_ENCODE_TEST(complex, "{\"nil\":nil,\"one\":1,\"list\":[1,2,3,{\"a\":1,\"b\":2,\"c\":3}],\"true\":t}",
 {
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_begin_map(process));
-    ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_string(process, "empty"));
-    ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_empty(process));
+    ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_string(process, "nil"));
+    ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_nil(process));
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_string(process, "one"));
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_int_64(process, 1));
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_add_string(process, "list"));
@@ -182,9 +198,9 @@ DEFINE_ENCODE_FAIL_TEST(fail_string_size_10,10,
     ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_add_string(process, "this is a test"));
 })
 
-DEFINE_ENCODE_FAIL_TEST(fail_empty,3,
+DEFINE_ENCODE_FAIL_TEST(fail_nil,1,
 {
-    ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_add_empty(process));
+    ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_add_nil(process));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_completion,1,
@@ -237,10 +253,10 @@ DEFINE_ENCODE_FAIL_TEST(fail_too_many_map_closes,100,
     ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_end_container(process));
 })
 
-DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_empty,100,
+DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_nil,100,
 {
     ASSERT_EQ(CTE_ENCODE_STATUS_OK, cte_encode_begin_map(process));
-    ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_add_empty(process));
+    ASSERT_NE(CTE_ENCODE_STATUS_OK, cte_encode_add_nil(process));
 })
 
 DEFINE_ENCODE_FAIL_TEST(fail_map_key_is_boolean,100,

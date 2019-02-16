@@ -4,6 +4,8 @@
 #include "managed_allocator.h"
 #include <stdarg.h>
 
+#define DEFAULT_DEPTH 500
+
 void expect_decoded(const char* cte, ...)
 {
     decode_test_context test_context =
@@ -16,9 +18,9 @@ void expect_decoded(const char* cte, ...)
     decode_test_context* context = &test_context;
     cte_decode_callbacks callbacks = decode_new_callbacks();
 
-    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size(DEFAULT_DEPTH));
     cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context));
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context, DEFAULT_DEPTH));
     ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte, strlen(cte)));
     cte_decode_end(decode_process);
     fflush(stdout);
@@ -94,9 +96,9 @@ void expect_decode_failure(const char* cte)
     void* context = &test_context;
     cte_decode_callbacks callbacks = decode_new_callbacks();
 
-    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size());
+    std::vector<uint8_t> decode_process_backing_store(cte_decode_process_size(DEFAULT_DEPTH));
     cte_decode_process* decode_process = (cte_decode_process*)decode_process_backing_store.data();
-    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context));
+    ASSERT_EQ(CTE_DECODE_STATUS_OK, cte_decode_begin(decode_process, &callbacks, context, DEFAULT_DEPTH));
     ASSERT_NE(CTE_DECODE_STATUS_OK, cte_decode_feed(decode_process, cte, strlen(cte)));
     cte_decode_end(decode_process);
 }
@@ -185,18 +187,18 @@ TEST(CTE_Decode, boolean)
     expect_decoded("false", TYPE_BOOLEAN, (int)false, 0);
 }
 
-TEST(CTE_Decode, empty)
+TEST(CTE_Decode, nil)
 {
-    expect_decoded("empty", TYPE_EMPTY, 0);
+    expect_decoded("nil", TYPE_NIL, 0);
 }
 
 TEST(CTE_Decode, mixed)
 {
-    expect_decoded("{\"a\": [1 2 3] \"b\": false \"c\": empty}",
+    expect_decoded("{\"a\": [1 2 3] \"b\": false \"c\": nil}",
         TYPE_MAP_START,
             TYPE_STRING, "a", TYPE_LIST_START, TYPE_INT, 1, TYPE_INT, 2, TYPE_INT, 3, TYPE_LIST_END,
             TYPE_STRING, "b", TYPE_BOOLEAN, (int)false,
-            TYPE_STRING, "c", TYPE_EMPTY,
+            TYPE_STRING, "c", TYPE_NIL,
         TYPE_MAP_END,
         0);
 }

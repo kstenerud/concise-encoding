@@ -10,7 +10,7 @@ extern "C" {
 typedef struct
 {
     void (*on_error)             (struct cte_decode_process* decode_process, const char* message);
-    bool (*on_empty)             (struct cte_decode_process* decode_process);
+    bool (*on_nil)               (struct cte_decode_process* decode_process);
     bool (*on_true)              (struct cte_decode_process* decode_process);
     bool (*on_false)             (struct cte_decode_process* decode_process);
     bool (*on_int)               (struct cte_decode_process* decode_process, int base, char* value);

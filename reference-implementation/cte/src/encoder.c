@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <cte/cte.h>
 
+// #define KSLogger_LocalLevel DEBUG
+#include "kslogger.h"
+
 
 // ====
 // Data
@@ -17,11 +20,12 @@ struct cte_encode_process
     int indent_spaces;
     int float_digits_precision;
     int container_level;
-    bool is_inside_map[200];
     bool is_first_in_document;
     bool is_first_in_container;
     bool next_object_is_map_key;
     // TODO: allowed_types
+    int max_container_depth;
+    bool is_inside_map[];
 };
 typedef struct cte_encode_process cte_encode_process;
 
@@ -34,39 +38,57 @@ typedef struct cte_encode_process cte_encode_process;
     if((size_t)((PROCESS)->end - (PROCESS)->pos) < (size_t)(REQUIRED_BYTES)) \
         return CTE_ENCODE_STATUS_NEED_MORE_ROOM
 
-int cte_encode_process_size()
+
+static inline int get_max_container_depth_or_default(int max_container_depth)
 {
-    return sizeof(cte_encode_process);
+    return max_container_depth > 0 ? max_container_depth : CTE_DEFAULT_MAX_CONTAINER_DEPTH;
 }
 
-cte_encode_status cte_encode_begin_with_config(
-                        cte_encode_process* process,
-                        uint8_t* const document_buffer,
-                        int64_t byte_count,
-                        int indent_spaces,
-                        int float_digits_precision)
+static inline int get_indent_spaces_or_default(int indent_spaces)
 {
-    process->start = document_buffer;
-    process->pos = document_buffer;
-    process->end = document_buffer + byte_count;
-    process->indent_spaces = indent_spaces;
-    process->float_digits_precision = float_digits_precision;
-    process->container_level = 0;
-    process->is_first_in_document = true;
-    process->is_first_in_container = false;
-    process->next_object_is_map_key = false;
-    return CTE_ENCODE_STATUS_OK;
+    return indent_spaces >= 0 ? indent_spaces : CTE_DEFAULT_INDENT_SPACES;
+}
+
+static inline int get_float_digits_precision_or_default(int float_digits_precision)
+{
+    return float_digits_precision >= 0 ? float_digits_precision : CTE_DEFAULT_FLOAT_DIGITS_PRECISION;
+}
+
+static inline void zero_memory(void* const memory, const int byte_count)
+{
+    uint8_t* ptr = memory;
+    uint8_t* const end = ptr + byte_count;
+    while(ptr < end)
+    {
+        *ptr++ = 0;
+    }
+}
+
+
+int cte_encode_process_size(const int max_container_depth)
+{
+    KSLOG_DEBUG("(max_container_depth %d", max_container_depth);
+    return sizeof(cte_encode_process) + max_container_depth;
 }
 
 cte_encode_status cte_encode_begin(cte_encode_process* process,
                                    uint8_t* const document_buffer,
-                                   int64_t byte_count)
+                                   int64_t byte_count,
+                                   int max_container_depth,
+                                   int float_digits_precision,
+                                   int indent_spaces)
 {
-    return cte_encode_begin_with_config(process,
-                                        document_buffer,
-                                        byte_count,
-                                        DEFAULT_INDENT_SPACES,
-                                        DEFAULT_FLOAT_DIGITS_PRECISION);
+    KSLOG_DEBUG("(process %p, document_buffer %p, byte_count %d, max_container_depth %d, float_digits_precision %d, indent_spaces %d)",
+        process, document_buffer, byte_count, max_container_depth, float_digits_precision, indent_spaces);
+    zero_memory(process, sizeof(process) + 1);
+    process->start = document_buffer;
+    process->pos = document_buffer;
+    process->end = document_buffer + byte_count;
+    process->indent_spaces = get_indent_spaces_or_default(indent_spaces);
+    process->float_digits_precision = get_float_digits_precision_or_default(float_digits_precision);
+    process->max_container_depth = get_max_container_depth_or_default(max_container_depth);
+    process->is_first_in_document = true;
+    return CTE_ENCODE_STATUS_OK;
 }
 
 static void add_bytes(cte_encode_process* const process, const char* bytes, size_t length)
@@ -142,20 +164,23 @@ static cte_encode_status add_object(cte_encode_process* const process, const cha
     return status;
 }
 
-cte_encode_status cte_encode_add_empty(cte_encode_process* const process)
+cte_encode_status cte_encode_add_nil(cte_encode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     if(process->next_object_is_map_key) return 9999;
-    return add_object(process, "empty");
+    return add_object(process, "nil");
 }
 
 cte_encode_status cte_encode_add_boolean(cte_encode_process* const process, const bool value)
 {
+    KSLOG_DEBUG("(process %p, value %d)", process, value);
     if(process->next_object_is_map_key) return 9999;
     return add_object(process, value ? "t" : "f");
 }
 
 cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, const int64_t value)
 {
+    KSLOG_DEBUG("(process %p, value %d)", process, value);
     if(process->next_object_is_map_key) return 9999;
     char buffer[21];
     sprintf(buffer, "%ld", value);
@@ -164,6 +189,7 @@ cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, const
 
 cte_encode_status cte_encode_add_float_64(cte_encode_process* const process, const double value)
 {
+    KSLOG_DEBUG("(process %p, value %f)", process, value);
     if(process->next_object_is_map_key) return 9999;
     char fmt[10];
     sprintf(fmt, "%%.%dlg", process->float_digits_precision);
@@ -211,6 +237,7 @@ static cte_encode_status add_substring_with_escaping(cte_encode_process* const p
 
 cte_encode_status cte_encode_add_substring(cte_encode_process* const process, const char* const start, const int64_t byte_count)
 {
+    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, byte_count);
     cte_encode_status status = CTE_ENCODE_STATUS_OK;
     if((status = add_object(process, "\"")) != CTE_ENCODE_STATUS_OK) return status;
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count + 1);
@@ -221,6 +248,7 @@ cte_encode_status cte_encode_add_substring(cte_encode_process* const process, co
 
 cte_encode_status cte_encode_add_string(cte_encode_process* const process, const char* const str)
 {
+    KSLOG_DEBUG("(process %p, str %p)", process, str);
     return cte_encode_add_substring(process, str, strlen(str));
 }
 
@@ -240,16 +268,19 @@ static cte_encode_status start_container(cte_encode_process* const process, bool
 
 cte_encode_status cte_encode_begin_list(cte_encode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     return start_container(process, false);
 }
 
 cte_encode_status cte_encode_begin_map(cte_encode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     return start_container(process, true);
 }
 
 cte_encode_status cte_encode_end_container(cte_encode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     cte_encode_status status = CTE_ENCODE_STATUS_OK;
     if(process->container_level <= 0)
     {
@@ -271,6 +302,7 @@ cte_encode_status cte_encode_end_container(cte_encode_process* const process)
 
 cte_encode_status cte_encode_end(cte_encode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     while(process->container_level > 0)
     {
         if(!cte_encode_end_container(process))

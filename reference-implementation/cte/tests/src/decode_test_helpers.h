@@ -12,7 +12,7 @@ typedef enum
     TYPE_UNSET      = 0,
     TYPE_ERROR      = 1,
     TYPE_UNEXPECTED = 2,
-    TYPE_EMPTY      = 3,
+    TYPE_NIL        = 3,
     TYPE_BOOLEAN    = 4,
     TYPE_STRING     = 5,
     TYPE_INT        = 6,

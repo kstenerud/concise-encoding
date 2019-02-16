@@ -27,7 +27,7 @@ TYPE_FLOAT      [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?
 TYPE_DECIMAL    [-+]?[0-9]*\.?[0-9]*([e][-+]?[0-9]+)?d
 TYPE_TIME_DD    -?[0-9]{4,}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
 TYPE_TIME_DDD   -?[0-9]{4,}-[0-9]{3}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]*)?Z|([-+][0-9]{2}:[0-9]{2})
-VALUE_EMPTY     empty
+VALUE_NIL       nil
 VALUE_TRUE      t|true
 VALUE_FALSE     f|false
 
@@ -42,7 +42,7 @@ VALUE_FALSE     f|false
 ")"             { return TOKEN_BINARY_DATA_END; }
 {COMMENT}       { /* Ignored */ }
 {WHITESPACE}    { /* Ignored */ }
-{VALUE_EMPTY}   { return TOKEN_EMPTY; }
+{VALUE_NIL}     { return TOKEN_NIL; }
 {VALUE_TRUE}    { return TOKEN_TRUE; }
 {VALUE_FALSE}   { return TOKEN_FALSE; }
 {TYPE_INT_2}    { yylval->string_v = yytext; return TOKEN_INTEGER_2; }
@@ -66,8 +66,10 @@ void yyerror(const void* const scanner, cte_decode_process* process, const char*
 
 cte_decode_status cte_decode_begin(cte_decode_process* process,
                                    const cte_decode_callbacks* callbacks,
-                                   void* user_context)
+                                   void* user_context,
+                                   int max_container_depth)
 {
+  (void)max_container_depth;
     process->callbacks = callbacks;
     process->user_context = user_context;
     process->parse_callbacks = g_cte_parse_callbacks;

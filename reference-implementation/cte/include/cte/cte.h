@@ -18,6 +18,26 @@ extern "C" {
 
 
 
+// ========
+// Defaults
+// ========
+
+#ifndef CTE_DEFAULT_MAX_CONTAINER_DEPTH
+    #define CTE_DEFAULT_MAX_CONTAINER_DEPTH 500
+#endif
+#ifndef CTE_DEFAULT_INDENT_SPACES
+    #define CTE_DEFAULT_INDENT_SPACES 4
+#endif
+#ifndef CTE_DEFAULT_FLOAT_DIGITS_PRECISION
+    #define CTE_DEFAULT_FLOAT_DIGITS_PRECISION 15
+#endif
+
+
+
+// -----------
+// Library API
+// -----------
+
 /**
  * Get the current library version as a semantic version (e.g. "1.5.2").
  *
@@ -69,6 +89,11 @@ typedef enum
     CTE_DECODE_STATUS_STOPPED_IN_CALLBACK,
 
     /**
+     * One or more of the arguments was invalid.
+     */
+    CTE_DECODE_ERROR_INVALID_ARGUMENT,
+
+    /**
      * Unbalanced list/map begin and end markers were detected.
      */
     CTE_DECODE_ERROR_UNBALANCED_CONTAINERS,
@@ -101,8 +126,8 @@ typedef struct
     // An error occurred
     void (*on_error) (struct cte_decode_process* decode_process, const char* message);
 
-    // An empty field was decoded.
-    bool (*on_empty) (struct cte_decode_process* decode_process);
+    // A nil field was decoded.
+    bool (*on_nil) (struct cte_decode_process* decode_process);
 
     // An boolean field was decoded.
     bool (*on_boolean) (struct cte_decode_process* decode_process, bool value);
@@ -143,24 +168,73 @@ typedef struct
     // A time field was decoded.
     bool (*on_time) (struct cte_decode_process* decode_process, const char* value);
 
-    // A list container has been opened.
+    // A list has been opened.
     bool (*on_list_begin) (struct cte_decode_process* decode_process);
 
-    // A list container has been closed.
+    // The current list has been closed.
     bool (*on_list_end) (struct cte_decode_process* decode_process);
 
-    // A map container has been opened.
+    // A map has been opened.
     bool (*on_map_begin) (struct cte_decode_process* decode_process);
 
-    // A map container has been closed.
+    // The current map has been closed.
     bool (*on_map_end) (struct cte_decode_process* decode_process);
 
-    // TODO: How to split thsse up?
-    bool (*on_string) (struct cte_decode_process* decode_process, const char* value);
+    /**
+     * A string has been opened. Expect subsequent calls to
+     * on_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_data`, the field is considered
+     * "complete" and is closed.
+     *
+     * @param decode_process The decode process.
+     */
+    bool (*on_string_begin) (struct cte_decode_process* decode_process);
 
-    bool (*on_binary_data_begin) (struct cte_decode_process* decode_process);
+    /**
+     * String data was decoded, and should be added to the current string field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_string_data) (struct cte_decode_process* decode_process,
+                            const char* start,
+                            int64_t byte_count);
 
-    bool (*on_binary_data_end) (struct cte_decode_process* decode_process);
+    /**
+     * The current string has been closed.
+     *
+     * @param decode_process The decode process.
+     */
+    bool (*on_string_end) (struct cte_decode_process* decode_process);
+
+    /**
+     * A binary data array has been opened. Expect subsequent calls to
+     * on_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_data`, the field is considered
+     * "complete" and is closed.
+     *
+     * @param byte_count The total length of the array.
+     */
+    bool (*on_binary_begin) (struct cte_decode_process* decode_process);
+
+    /**
+     * Binary data was decoded, and should be added to the current binary field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_binary_data) (struct cte_decode_process* decode_process,
+                            const uint8_t* start,
+                            int64_t byte_count);
+
+    /**
+     * The current binary array has been closed.
+     *
+     * @param decode_process The decode process.
+     */
+    bool (*on_binary_end) (struct cte_decode_process* decode_process);
 } cte_decode_callbacks;
 
 
@@ -175,9 +249,10 @@ typedef struct
  *     std::vector<char> process_backing_store(cte_decode_process_size());
  *     struct cte_decode_process* decode_process = (struct cte_decode_process*)process_backing_store.data();
  *
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cte_decode_process_size();
+int cte_decode_process_size(int max_container_depth);
 
 /**
  * Begin a new decoding process.
@@ -191,11 +266,13 @@ int cte_decode_process_size();
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current decoder status.
  */
 cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
                                    const cte_decode_callbacks* callbacks,
-                                   void* user_context);
+                                   void* user_context,
+                                   int max_container_depth);
 
 /**
  * Get the user context information from a decode process.
@@ -249,6 +326,22 @@ cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
                                   int64_t byte_count);
 
 /**
+ * Get the current line offset into the overall stream of data.
+ *
+ * @param decode_process The decode process.
+ * @return The current line offset.
+ */
+int64_t cte_decode_get_stream_line_offset(struct cte_decode_process* decode_process);
+
+/**
+ * Get the character offset into the current line in the overall stream of data.
+ *
+ * @param decode_process The decode process.
+ * @return The current character offset.
+ */
+int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode_process);
+
+/**
  * End a decoding process, checking for document validity.
  *
  * Possible error codes:
@@ -260,14 +353,26 @@ cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
  */
 cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
 
+/**
+ * Decode an entire CTE document.
+ *
+ * @param callbacks The callbacks to call while decoding the document.
+ * @param user_context Whatever data you want to be available to the callbacks.
+ * @param document_start The start of the document.
+ * @param byte_count The number of bytes in the document.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
+ */
+cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
+                             void* user_context,
+                             const char* document_start,
+                             int64_t byte_count,
+                             int max_container_depth);
 
 
 // ------------
 // Encoding API
 // ------------
 
-#define DEFAULT_INDENT_SPACES 0
-#define DEFAULT_FLOAT_DIGITS_PRECISION 15
 
 struct cte_encode_process;
 
@@ -286,6 +391,11 @@ typedef enum
      * encode this object.
      */
     CTE_ENCODE_STATUS_NEED_MORE_ROOM = 400,
+
+    /**
+     * One or more of the arguments was invalid.
+     */
+    CTE_ENCODE_ERROR_INVALID_ARGUMENT,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -336,9 +446,10 @@ typedef enum
  *     std::vector<char> process_backing_store(cte_encode_process_size());
  *     struct cte_encode_process* encode_process = (struct cte_encode_process*)process_backing_store.data();
  *
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cte_encode_process_size();
+int cte_encode_process_size(int max_container_depth);
 
 /**
  * Begin a new encoding process.
@@ -348,31 +459,18 @@ int cte_encode_process_size();
  *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
- * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print).
- * @param float_digits_precision The number of significant digits to print for floating point numbers.
- * @return The new encode process.
- */
-cte_encode_status cte_encode_begin_with_config(
-                        struct cte_encode_process* encode_process,
-                        uint8_t* const document_buffer,
-                        int64_t byte_count,
-                        int indent_spaces,
-                        int float_digits_precision);
-
-/**
- * Begin a new encoding process with the default configuration.
- *
- * Successful status codes:
- * - CTE_ENCODE_STATUS_OK: The encode process has begun.
- *
- * @param document_buffer A buffer to store the document in.
- * @param byte_count Size of the buffer in bytes.
+ * @param max_container_depth The maximum container depth to suppport (<= 0 use default).
+ * @param float_digits_precision The number of significant digits to print for floating point numbers (<= 0 use default).
+ * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print, < 0 use default).
  * @return The new encode process.
  */
 cte_encode_status cte_encode_begin(
                         struct cte_encode_process* encode_process,
                         uint8_t* const document_buffer,
-                        int64_t byte_count);
+                        int64_t byte_count,
+                        int max_container_depth,
+                        int float_digits_precision,
+                        int indent_spaces);
 
 /**
  * Replace the document buffer in an encode process.
@@ -420,7 +518,7 @@ int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
 cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
 
 /**
- * Add an empty object to the document.
+ * Add a nil object to the document.
  *
  * Possible error codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -430,7 +528,7 @@ cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_empty(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
 
 /**
  * Add a boolean value to the document.

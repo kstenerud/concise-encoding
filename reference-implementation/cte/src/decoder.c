@@ -132,9 +132,9 @@ static void on_error(cte_decode_process* process, const char* message)
 	process->callbacks->on_error(process, message);
 }
 
-static bool on_empty(cte_decode_process* process)
+static bool on_nil(cte_decode_process* process)
 {
-    return process->callbacks->on_empty(process);
+    return process->callbacks->on_nil(process);
 }
 
 static bool on_true(cte_decode_process* process)
@@ -215,7 +215,11 @@ static bool on_string(cte_decode_process* process, char* value)
     	process->callbacks->on_error(process, "Bad string");
     	return false;
     }
-    return process->callbacks->on_string(process, value);
+    bool result = process->callbacks->on_string_begin(process);
+    if(!result) return false;
+    result = process->callbacks->on_string_data(process, value, strlen(value));
+    if(!result) return false;
+    return process->callbacks->on_string_end(process);
 }
 
 static bool on_binary_data_begin(cte_decode_process* process)
@@ -227,14 +231,14 @@ static bool on_binary_data_begin(cte_decode_process* process)
 
 static bool on_binary_data_end(cte_decode_process* process)
 {
-    return process->callbacks->on_binary_data_end(process);
+    return process->callbacks->on_binary_end(process);
 }
 
 // Exposed global so that cte.l can see it
 internal_parse_callbacks g_cte_parse_callbacks =
 {
     .on_error = on_error,
-    .on_empty = on_empty,
+    .on_nil = on_nil,
     .on_true = on_true,
     .on_false = on_false,
     .on_int = on_int,
@@ -250,8 +254,9 @@ internal_parse_callbacks g_cte_parse_callbacks =
     .on_binary_data_end = on_binary_data_end,
 };
 
-int cte_decode_process_size()
+int cte_decode_process_size(int max_container_depth)
 {
+    (void)max_container_depth;
     return sizeof(cte_decode_process);
 }
 
