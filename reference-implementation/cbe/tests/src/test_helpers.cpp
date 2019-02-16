@@ -51,8 +51,9 @@ DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, list_end) \
 DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, map_begin) \
 DEFINE_EMPTY_DECODE_CALLBACK_0_PARAMETER(RETURN_BOOL, map_end) \
 DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, string_begin, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_2_PARAMETER(RETURN_BOOL, string_data, const char*, int64_t) \
 DEFINE_EMPTY_DECODE_CALLBACK_1_PARAMETER(RETURN_BOOL, binary_begin, int64_t) \
-DEFINE_EMPTY_DECODE_CALLBACK_2_PARAMETER(RETURN_BOOL, data, const uint8_t*, int64_t) \
+DEFINE_EMPTY_DECODE_CALLBACK_2_PARAMETER(RETURN_BOOL, binary_data, const uint8_t*, int64_t) \
 
 DEFINE_EMPTY_DECODE_CALLBACK_SUITE(false)
 DEFINE_EMPTY_DECODE_CALLBACK_SUITE(true)
@@ -78,8 +79,9 @@ DEFINE_EMPTY_DECODE_CALLBACK_SUITE(true)
     (CALLBACKS_PTR)->on_map_begin = RETURN_BOOL ## _on_map_begin; \
     (CALLBACKS_PTR)->on_map_end = RETURN_BOOL ## _on_map_end; \
     (CALLBACKS_PTR)->on_string_begin = RETURN_BOOL ## _on_string_begin; \
+    (CALLBACKS_PTR)->on_string_data = RETURN_BOOL ## _on_string_data; \
     (CALLBACKS_PTR)->on_binary_begin = RETURN_BOOL ## _on_binary_begin; \
-    (CALLBACKS_PTR)->on_data = RETURN_BOOL ## _on_data; \
+    (CALLBACKS_PTR)->on_binary_data = RETURN_BOOL ## _on_binary_data; \
 }
 
 

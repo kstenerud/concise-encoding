@@ -31,7 +31,8 @@ public:
 	bool set_next(std::shared_ptr<enc::encoding> encoding);
 	bool string_begin(int64_t byte_count);
 	bool binary_begin(int64_t byte_count);
-	bool add_data(const std::vector<uint8_t>& data);
+	bool add_string_data(const std::string& data);
+	bool add_binary_data(const std::vector<uint8_t>& data);
 
 public:
 	cbe_decoder();

@@ -111,11 +111,18 @@ static bool on_binary_begin(struct cbe_decode_process* process, int64_t byte_cou
     return get_decoder(process)->binary_begin(byte_count);
 }
 
-static bool on_data(struct cbe_decode_process* process,
-                     const uint8_t* start,
-                     int64_t byte_count)
+static bool on_string_data(struct cbe_decode_process* process,
+                           const char* start,
+                           int64_t byte_count)
 {
-    return get_decoder(process)->add_data(std::vector<uint8_t>(start, start + byte_count));
+    return get_decoder(process)->add_string_data(std::string(start, start + byte_count));
+}
+
+static bool on_binary_data(struct cbe_decode_process* process,
+                           const uint8_t* start,
+                           int64_t byte_count)
+{
+    return get_decoder(process)->add_binary_data(std::vector<uint8_t>(start, start + byte_count));
 }
 
 
@@ -140,8 +147,9 @@ static const cbe_decode_callbacks g_callbacks =
     on_map_begin: on_map_begin,
     on_map_end: on_map_end,
     on_string_begin: on_string_begin,
+    on_string_data: on_string_data,
     on_binary_begin: on_binary_begin,
-    on_data: on_data,
+    on_binary_data: on_binary_data,
 };
 
 cbe_decoder::cbe_decoder()
@@ -237,12 +245,12 @@ bool cbe_decoder::binary_begin(int64_t byte_count)
     return true;
 }
 
-bool cbe_decoder::add_data(const std::vector<uint8_t>& data)
+bool cbe_decoder::add_string_data(const std::string& data)
 {
-    KSLOG_DEBUG("Add data %d bytes", data.size());
-    if(_currently_decoding_type == CBE_DECODING_OTHER)
+    KSLOG_DEBUG("Add string data %d bytes", data.size());
+    if(_currently_decoding_type != CBE_DECODING_STRING)
     {
-        KSLOG_ERROR("Expecting _currently_decoding_type DATA, not OTHER");
+        KSLOG_ERROR("Expecting _currently_decoding_type STRING, not %d", _currently_decoding_type);
         return false;
     }
 
@@ -258,17 +266,36 @@ bool cbe_decoder::add_data(const std::vector<uint8_t>& data)
 
     if(_currently_decoding_offset == _currently_decoding_length)
     {
-        cbe_decoding_type current_type = _currently_decoding_type;
         _currently_decoding_type = CBE_DECODING_OTHER;
+        return set_next(enc::str(std::string(_currently_decoding_data.begin(), _currently_decoding_data.end())));
+    }
 
-        if(current_type == CBE_DECODING_BINARY)
-        {
-            return set_next(enc::bin(_currently_decoding_data));
-        }
-        else
-        {
-            return set_next(enc::str(std::string(_currently_decoding_data.begin(), _currently_decoding_data.end())));
-        }
+    return true;
+}
+
+bool cbe_decoder::add_binary_data(const std::vector<uint8_t>& data)
+{
+    KSLOG_DEBUG("Add binary data %d bytes", data.size());
+    if(_currently_decoding_type != CBE_DECODING_BINARY)
+    {
+        KSLOG_ERROR("Expecting _currently_decoding_type BINARY, not %d", _currently_decoding_type);
+        return false;
+    }
+
+    if(_currently_decoding_offset + (int64_t)data.size() > _currently_decoding_length)
+    {
+        KSLOG_ERROR("_currently_decoding_offset + data.size() (%d) > _currently_decoding_length (%d)",
+            _currently_decoding_offset + (int64_t)data.size(), _currently_decoding_length);
+        return false;
+    }
+
+    _currently_decoding_data.insert(_currently_decoding_data.end(), data.begin(), data.end());
+    _currently_decoding_offset += data.size();
+
+    if(_currently_decoding_offset == _currently_decoding_length)
+    {
+        _currently_decoding_type = CBE_DECODING_OTHER;
+        return set_next(enc::bin(_currently_decoding_data));
     }
 
     return true;

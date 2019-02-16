@@ -8,6 +8,12 @@
 // Data
 // ====
 
+typedef enum
+{
+    ARRAY_TYPE_STRING,
+    ARRAY_TYPE_BINARY,
+} array_type;
+
 struct cbe_decode_process
 {
     const cbe_decode_callbacks* callbacks;
@@ -22,6 +28,7 @@ struct cbe_decode_process
     struct
     {
         bool is_inside_array;
+        array_type type;
         int64_t current_offset;
         int64_t byte_count;
     } array;
@@ -223,15 +230,15 @@ static inline void end_object(cbe_decode_process* process)
     swap_map_key_value_status(process);
 }
 
-static inline void internal_begin_array(cbe_decode_process* const process, int64_t byte_count)
+static inline void internal_begin_array(cbe_decode_process* const process, array_type type, int64_t byte_count)
 {
     process->array.is_inside_array = true;
+    process->array.type = type;
     process->array.current_offset = 0;
     process->array.byte_count = byte_count;
 }
 
-static cbe_decode_status begin_array(cbe_decode_process* const process,
-                                     bool (*on_begin_array)(struct cbe_decode_process* process, int64_t byte_count))
+static cbe_decode_status begin_array(cbe_decode_process* const process, array_type type)
 {
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, peek_array_length_field_width(process));
@@ -239,8 +246,15 @@ static cbe_decode_status begin_array(cbe_decode_process* const process,
     const int64_t array_byte_count = read_array_length(process);
 
     KSLOG_DEBUG("Length: %d", array_byte_count);
-    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, on_begin_array(process, array_byte_count));
-    internal_begin_array(process, array_byte_count);
+    if(type == ARRAY_TYPE_BINARY)
+    {
+        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_begin(process, array_byte_count));
+    }
+    else
+    {
+        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
+    }
+    internal_begin_array(process, type, array_byte_count);
 
     return CBE_DECODE_STATUS_OK;
 }
@@ -253,7 +267,14 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 
     KSLOG_DEBUG("Length: arr %d vs buf %d: %d bytes", bytes_in_array, space_in_buffer, bytes_to_stream);
     KSLOG_DATA_TRACE(process->buffer.position, bytes_to_stream, NULL);
-    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_data(process, process->buffer.position, bytes_to_stream));
+    if(process->array.type == ARRAY_TYPE_STRING)
+    {
+        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
+    }
+    else
+    {
+        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_data(process, process->buffer.position, bytes_to_stream));
+    }
 
     consume_bytes(process, bytes_to_stream);
     process->array.current_offset += bytes_to_stream;
@@ -408,7 +429,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 const int64_t array_byte_count = (int64_t)(type - TYPE_STRING_0);
                 KSLOG_DEBUG("<String %d>", array_byte_count);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
-                internal_begin_array(process, array_byte_count);
+                internal_begin_array(process, ARRAY_TYPE_STRING, array_byte_count);
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
@@ -454,14 +475,14 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_STRING:
             {
                 KSLOG_DEBUG("<String>");
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, process->callbacks->on_string_begin));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_STRING));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
             case TYPE_BINARY_DATA:
             {
                 KSLOG_DEBUG("<Binary>");
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, process->callbacks->on_binary_begin));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_BINARY));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }

@@ -177,6 +177,17 @@ typedef struct
     bool (*on_string_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
 
     /**
+     * String data was decoded, and should be added to the current string field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_string_data) (struct cbe_decode_process* decode_process,
+                            const char* start,
+                            int64_t byte_count);
+
+    /**
      * A binary data array has been opened. Expect subsequent calls to
      * on_data() until the array has been filled. Once `byte_count`
      * bytes have been added via `on_data`, the field is considered
@@ -188,16 +199,15 @@ typedef struct
     bool (*on_binary_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
 
     /**
-     * Array data was decoded, and should be added to the current array field
-     * (string or binary).
+     * Binary data was decoded, and should be added to the current binary field.
      *
      * @param decode_process The decode process.
      * @param start The start of the data.
      * @param byte_count The number of bytes in this array fragment.
      */
-    bool (*on_data) (struct cbe_decode_process* decode_process,
-                     const uint8_t* start,
-                     int64_t byte_count);
+    bool (*on_binary_data) (struct cbe_decode_process* decode_process,
+                            const uint8_t* start,
+                            int64_t byte_count);
 } cbe_decode_callbacks;
 
 
