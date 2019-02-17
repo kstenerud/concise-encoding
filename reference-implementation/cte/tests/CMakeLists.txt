@@ -1,33 +1,17 @@
-########################
-# Download Google Test #
-########################
+###############
+# Google Test #
+###############
 
 # https://github.com/google/googletest/blob/master/googletest/README.md
 
-# Download and unpack googletest at configure time
-configure_file(GTestCMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
+# Use a local copy so it doesn't re-download every time the project files change.
 
-# Prevent overriding the parent project's compiler/linker
-# settings on Windows
+# Prevent overriding the parent project's compiler/linker settings on Windows.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Add googletest directly to our build. This defines
 # the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
-                 EXCLUDE_FROM_ALL)
+add_subdirectory(googletest-src EXCLUDE_FROM_ALL)
 
 
 #########
@@ -81,5 +65,5 @@ endmacro()
 package_add_test(cte_tests
     src/managed_allocator.c
     src/decode_test_helpers.c
-    src/test_cte_encode.cpp
+    src/test_cte_decode.cpp
 )
