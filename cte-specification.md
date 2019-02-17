@@ -374,9 +374,9 @@ Comments
 
 Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to preserve or discard comments.
 
-A comment begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). Comment contents may contain any printable or non-linebreaking whitespace UTF-8 characters.
+A comment with a payload begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). The comment payload begins after the `# ` sequence; everything including whitespace after this point is preserved. Comment contents may contain any printable or non-linebreaking whitespace UTF-8 characters.
 
-If a parser wishes to preserve comments, the contents of a comment are everything between the `# ` (# space) sequence and the carriage return or newline. All whitespace after the comment initiator `# ` should be preserved.
+A comment with no payload (an empty comment) begins with a '#' character, followed by zero or more whitespace characters, and terminates at the next carriage return (U+000D) or newline (U+000A). The whitespace in an empty comment is not preserved.
 
 Example:
 
@@ -389,6 +389,7 @@ Example:
         "joe@average.org"
         "numbers" # Comment after numbers
         =
+        #
         # Comment before some binary data (but not inside it)
         h/01 02 03 04 05 06 07 08 09 0a/
     }
