@@ -166,7 +166,7 @@ typedef struct
     bool (*on_decimal_128) (struct cte_decode_process* decode_process, _Decimal128 value);
 
     // A time field was decoded.
-    bool (*on_time) (struct cte_decode_process* decode_process, const char* value);
+    bool (*on_time) (struct cte_decode_process* decode_process, smalltime);
 
     // A list has been opened.
     bool (*on_list_begin) (struct cte_decode_process* decode_process);

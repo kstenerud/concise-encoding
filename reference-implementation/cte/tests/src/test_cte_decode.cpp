@@ -110,7 +110,7 @@ TEST(CTE_Decode, string)
 
 TEST(CTE_Decode, comment)
 {
-    expect_decoded("#\"this is a string\"\n\"a\"", TYPE_STRING, "a", 0);
+    expect_decoded("# \"this is a string\"\n\"a\"", TYPE_STRING, "a", 0);
 }
 
 TEST(CTE_Decode, string_multiline)
@@ -157,33 +157,31 @@ TEST(CTE_Decode, integer)
 
 TEST(CTE_Decode, int_2)
 {
-    expect_decoded("1000b", TYPE_INT, (int64_t)8, 0);
+    expect_decoded("b:1000", TYPE_INT, (int64_t)8, 0);
 }
 
 TEST(CTE_Decode, int_8)
 {
-    expect_decoded("1000o", TYPE_INT, (int64_t)512, 0);
+    expect_decoded("o:1000", TYPE_INT, (int64_t)512, 0);
 }
 
 TEST(CTE_Decode, int_16)
 {
-    expect_decoded("1000h", TYPE_INT, (int64_t)4096, 0);
+    expect_decoded("h:1000", TYPE_INT, (int64_t)4096, 0);
 }
 
-TEST(CTE_Decode, float)
-{
-    expect_decoded("1.1", TYPE_FLOAT, 1.1, 0);
-    expect_decoded("-41.1964", TYPE_FLOAT, -41.1964, 0);
-    expect_decoded("-1.84e9", TYPE_FLOAT, -1.84e9, 0);
-    expect_decoded("-1.84e+9", TYPE_FLOAT, -1.84e+9, 0);
-    expect_decoded("-1.84e-9", TYPE_FLOAT, -1.84e-9, 0);
-}
+// TEST(CTE_Decode, float)
+// {
+//     expect_decoded("1.1", TYPE_FLOAT, 1.1, 0);
+//     expect_decoded("-41.1964", TYPE_FLOAT, -41.1964, 0);
+//     expect_decoded("-1.84e9", TYPE_FLOAT, -1.84e9, 0);
+//     expect_decoded("-1.84e+9", TYPE_FLOAT, -1.84e+9, 0);
+//     expect_decoded("-1.84e-9", TYPE_FLOAT, -1.84e-9, 0);
+// }
 
 TEST(CTE_Decode, boolean)
 {
-    expect_decoded("t", TYPE_BOOLEAN, (int)true, 0);
     expect_decoded("true", TYPE_BOOLEAN, (int)true, 0);
-    expect_decoded("f", TYPE_BOOLEAN, (int)false, 0);
     expect_decoded("false", TYPE_BOOLEAN, (int)false, 0);
 }
 
@@ -194,7 +192,7 @@ TEST(CTE_Decode, nil)
 
 TEST(CTE_Decode, mixed)
 {
-    expect_decoded("{\"a\": [1 2 3] \"b\": false \"c\": nil}",
+    expect_decoded("{\"a\"= [1 2 3] \"b\"= false \"c\"= nil}",
         TYPE_MAP_START,
             TYPE_STRING, "a", TYPE_LIST_START, TYPE_INT, 1, TYPE_INT, 2, TYPE_INT, 3, TYPE_LIST_END,
             TYPE_STRING, "b", TYPE_BOOLEAN, (int)false,
@@ -211,38 +209,38 @@ TEST(CTE_Decode, list_commas)
 
 TEST(CTE_Decode, map_commas)
 {
-    expect_decoded("{1: 10  2: 20 }", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_MAP_END, 0);
-    expect_decoded("{1: 10  2: 20 3: 30}", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_INT, 3, TYPE_INT, 30, TYPE_MAP_END, 0);
+    expect_decoded("{1 = 10  2 = 20 }", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_MAP_END, 0);
+    expect_decoded("{1 = 10  2 = 20 3= 30}", TYPE_MAP_START, TYPE_INT, 1, TYPE_INT, 10, TYPE_INT, 2, TYPE_INT, 20, TYPE_INT, 3, TYPE_INT, 30, TYPE_MAP_END, 0);
 }
 
-TEST(CTE_Decode, fail_decode)
-{
-    expect_decode_failure("w{\"a\": [1 2 3]}");
-}
+// TEST(CTE_Decode, fail_decode)
+// {
+//     expect_decode_failure("w{\"a\"= [1 2 3]}");
+// }
 
-TEST(CTE_Decode, fail_unbalanced_list)
-{
-    expect_decode_failure("[1 2 3");
-}
+// TEST(CTE_Decode, fail_unbalanced_list)
+// {
+//     expect_decode_failure("[1 2 3");
+// }
 
-TEST(CTE_Decode, fail_unbalanced_map)
-{
-    expect_decode_failure("{1: 10 2: 20 3: 30");
-}
+// TEST(CTE_Decode, fail_unbalanced_map)
+// {
+//     expect_decode_failure("{1: 10 2: 20 3: 30");
+// }
 
-TEST(CTE_Decode, fail_bad_map)
-{
-    expect_decode_failure("{1: 10 2: 20 3}");
-    expect_decode_failure("{1: 10 2: 20 3: }");
-    expect_decode_failure("{1: 10 2: 20 3  30}");
-}
+// TEST(CTE_Decode, fail_bad_map)
+// {
+//     expect_decode_failure("{1: 10 2: 20 3}");
+//     expect_decode_failure("{1: 10 2: 20 3: }");
+//     expect_decode_failure("{1: 10 2: 20 3  30}");
+// }
 
-TEST(CTE_Decode, fail_bad_slash)
-{
-    expect_decode_failure("\"\\\"");
-    expect_decode_failure("\"\\q\"");
-    expect_decode_failure("\"\\u\"");
-    expect_decode_failure("\"\\u0\"");
-    expect_decode_failure("\"\\u00\"");
-    expect_decode_failure("\"\\u000\"");
-}
+// TEST(CTE_Decode, fail_bad_slash)
+// {
+//     expect_decode_failure("\"\\\"");
+//     expect_decode_failure("\"\\q\"");
+//     expect_decode_failure("\"\\u\"");
+//     expect_decode_failure("\"\\u0\"");
+//     expect_decode_failure("\"\\u00\"");
+//     expect_decode_failure("\"\\u000\"");
+// }

@@ -26,19 +26,17 @@ project(${LOCAL_PROJECT_NAME}
         DESCRIPTION ${LOCAL_PROJECT_DESCRIPTION}
         LANGUAGES C CXX)
 
-find_package(BISON)
-find_package(FLEX)
-bison_target(BisonParser src/cte.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
-flex_target(FlexScanner src/cte.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.c)
-add_flex_bison_dependency(FlexScanner BisonParser)
+# Find Ragel
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
+find_package(RAGEL 6.6 REQUIRED)
+
+RAGEL_TARGET(cte_target src/decode.rl.c ${CMAKE_CURRENT_BINARY_DIR}/decode.c)
 
 # Our build target is a static library. Other options are SHARED and MODULE.
 add_library(ctelib_target STATIC
-        src/decoder.c
         src/encoder.c
         src/library.c
-        ${BISON_BisonParser_OUTPUTS}
-        ${FLEX_FlexScanner_OUTPUTS}
+        ${RAGEL_cte_target_OUTPUTS}
 )
 
 # Also make it accessible via namespace
