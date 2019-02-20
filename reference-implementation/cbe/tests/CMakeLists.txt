@@ -84,6 +84,7 @@ package_add_test(cbe_tests
     src/encoding.cpp
     src/general_tests.cpp
     src/library.cpp
+    src/readme_examples.c
     src/spec_examples.cpp
     src/test_helpers.cpp
     src/test_utils.cpp

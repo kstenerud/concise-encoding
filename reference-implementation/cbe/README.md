@@ -1,7 +1,15 @@
-Reference Library for the Safe16 Encoding System
-================================================
+Reference Implementation for Concise Binary Encoding
+====================================================
 
-A C implementation to demonstrate a simple SAFE16 codec.
+A C implementation to demonstrate a CBE codec.
+
+
+Assumptions
+-----------
+
+ * Assumes densely packed decimal encoding for C decimal types (_Decimal32, _Decimal64, _Decimal128). This is the default for gcc and other compilers using decNumber.
+ * Assumes a little endian host.
+
 
 
 Requirements
@@ -12,11 +20,14 @@ Requirements
   * A C++ compiler (for the unit tests)
 
 
+
 Dependencies
 ------------
 
+ * decimal/decimal (if using C++): For C++ decimal float types
  * stdbool.h: For bool type
  * stdint.h: Fot int types
+
 
 
 Building
@@ -28,99 +39,101 @@ Building
     make
 
 
+
 Running Tests
 -------------
 
-    make test
+    ./test/cbe_test
 
-or:
-
-    ./tests/Safe16
 
 
 Usage
 -----
 
-Note: Using C++ to make the string & data code simpler.
-
 ### Decoding
 
-```c++
-    std::string my_source_data = "21d17d3f21c18899714596adcc9679d8";
-
-    int64_t decoded_length = safe16_get_decoded_length(my_source_data.size());
-    std::vector<unsigned char> decode_buffer(decoded_length);
-
-    int64_t used_bytes = safe16_decode(my_source_data.data(),
-                                       my_source_data.size(),
-                                       decode_buffer.data(),
-                                       decode_buffer.size());
-    if(used_bytes < 0)
+```c
+    const int max_container_depth = 500;
+    char backing_store[cbe_decode_process_size(max_container_depth)];
+    struct cbe_decode_process* decode_process = (struct cbe_decode_process*)backing_store;
+    const cbe_decode_callbacks callbacks =
     {
-        // TODO: used_bytes is an error code.
+        .on_nil           = my_on_nil,
+        .on_boolean       = my_on_boolean,
+        .on_int_8         = my_on_int_8,
+        .on_int_16        = my_on_int_16,
+        .on_int_32        = my_on_int_32,
+        .on_int_64        = my_on_int_64,
+        .on_int_128       = my_on_int_128,
+        .on_float_32      = my_on_float_32,
+        .on_float_64      = my_on_float_64,
+        .on_float_128     = my_on_float_128,
+        .on_decimal_32    = my_on_decimal_32,
+        .on_decimal_64    = my_on_decimal_64,
+        .on_decimal_128   = my_on_decimal_128,
+        .on_time          = my_on_time,
+        .on_list_begin    = my_on_list_begin,
+        .on_list_end      = my_on_list_end,
+        .on_map_begin     = my_on_map_begin,
+        .on_map_end       = my_on_map_end,
+        .on_string_begin  = my_on_string_begin,
+        .on_string_data   = my_on_string_data,
+        .on_binary_begin  = my_on_binary_begin,
+        .on_binary_data   = my_on_binary_data,
+        .on_comment_begin = my_on_comment_begin,
+        .on_comment_data  = my_on_comment_data,
+    };
+
+    cbe_decode_status status = cbe_decode(&callbacks,
+                                          my_context_data,
+                                          my_document,
+                                          my_document_size,
+                                          max_container_depth);
+    if(status != CBE_DECODE_STATUS_OK)
+    {
+        my_report_decode_error(decode_process, status);
+        return false;
     }
-    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
-    my_receive_decoded_data_function(decoded_data);
+    return true;
 ```
 
-### Decoding (with length field)
-
-```c++
-    std::string my_source_data = "a021d17d3f21c18899714596adcc9679d8";
-
-    int64_t decoded_length = safe16_get_decoded_length(my_source_data.size());
-    std::vector<unsigned char> decode_buffer(decoded_length);
-
-    int64_t used_bytes = safe16l_decode(my_source_data.data(),
-                                        my_source_data.size(),
-                                        decode_buffer.data(),
-                                        decode_buffer.size());
-    if(used_bytes < 0)
-    {
-        // TODO: used_bytes is an error code.
-    }
-    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
-    my_receive_decoded_data_function(decoded_data);
-```
 
 ### Encoding
 
-```C++
-    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+```c
+    uint8_t buffer[1000];
+    const int max_container_depth = 500;
+    char backing_store[cbe_encode_process_size(max_container_depth)];
+    struct cbe_encode_process* encode_process = (struct cbe_encode_process*)backing_store;
 
-    bool should_include_length = false;
-    int64_t encoded_length = safe16_get_encoded_length(my_source_data.size(), should_include_length);
-    std::vector<char> encode_buffer(encoded_length);
-
-    int64_t used_bytes = safe16_encode(my_source_data.data(),
-                                       my_source_data.size(),
-                                       encode_buffer.data(),
-                                       encode_buffer.size());
-    if(used_bytes < 0)
+    cbe_encode_status status = cbe_encode_begin(encode_process,
+                                                buffer,
+                                                sizeof(buffer),
+                                                max_container_depth);
+    if(status != CBE_ENCODE_STATUS_OK)
     {
-        // TODO: used_bytes is an error code.
+        my_report_encode_error(encode_process, status);
+        return false;
     }
-    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
-    my_receive_encoded_data_function(encoded_data);
-```
 
-### Encoding (with length field)
-
-```c++
-    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
-
-    bool should_include_length = true;
-    int64_t encoded_length = safe16_get_encoded_length(my_source_data.size(), should_include_length);
-    std::vector<char> encode_buffer(encoded_length);
-
-    int64_t used_bytes = safe16l_encode(my_source_data.data(),
-                                        my_source_data.size(),
-                                        encode_buffer.data(),
-                                        encode_buffer.size());
-    if(used_bytes < 0)
+    // TODO: Check for errors on all cbe calls
+    status = cbe_encode_list_begin(encode_process);
+    if(status == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
     {
-        // TODO: used_bytes is an error code.
+        my_flush_buffer(buffer, cbe_encode_get_buffer_offset(encode_process));
+        cbe_encode_set_buffer(encode_process, buffer, sizeof(buffer));
     }
-    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
-    my_receive_encoded_data_function(encoded_data);
+
+    // TODO: Check for out of room on all cbe calls
+    status = cbe_encode_add_int_8(encode_process, 1);
+    status = cbe_encode_add_string(encode_process, "Testing");
+    status = cbe_encode_container_end(encode_process);
+    status = cbe_encode_end(encode_process);
+
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        my_report_encode_error(encode_process, status);
+        return false;
+    }
+    return true;
 ```
