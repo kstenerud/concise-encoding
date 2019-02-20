@@ -91,7 +91,7 @@ True or false.
 
 Examples:
 
-    [78] = false
+    [7a] = false
     [79] = true
 
 
@@ -119,7 +119,7 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 Examples:
 
     [72 00 00 48 41] = 12.5
-    [73 66 66 66 66 66 42 A0 40] = 1281.2
+    [73 cd cc cc cc cc 04 94 40] = 1281.2
 
 
 ### Decimal Floating Point
@@ -128,7 +128,8 @@ IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bit
 
 Example:
 
-    [76 D0 03 00 00 00 00 30 A2] = -7.50
+    [75 4b 00 00 b2] = -7.5
+    [75 0c 32 00 32] = 1281.2
 
 
 ### Time
@@ -167,9 +168,9 @@ Second goes to 60 to support leap seconds.
 
 Example:
 
-| Encoded Value     | ISO8601 Equivalent        | Meaning                           |
-| ----------------- | ------------------------- | --------------------------------- |
-| 0x1f06568590dbc2e | 1985-299T08:22:16.900142Z | Oct 26th, 1985 8:22:16.900142 UTC |
+| Encoded Value                  | ISO8601 Equivalent        | Meaning                           |
+| ------------------------------ | ------------------------- | --------------------------------- |
+| `[78 2e bc 0d 59 68 65 f0 01]` | 1985-299T08:22:16.900142Z | Oct 26th, 1985 8:22:16.900142 UTC |
 
 
 
@@ -211,6 +212,10 @@ An array of octets. This data type should only be used as a last resort if the o
 
     [91] [Length] [Octet 0] ... [Octet (Length-1)]
 
+Examples:
+
+    [91 14 01 02 03 04 05] = binary array {0x01, 0x02, 0x03, 0x04, 0x05}
+
 
 ### String
 
@@ -234,15 +239,18 @@ Examples:
 
 ### Comment
 
-Comments are string metadata that may accompany a document. A comment contains the UTF-8 representation of a string WITHOUT a byte order mark (BOM). Comments must only contain printable characters, and whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed). The length field contains the byte length (length in octets), NOT the character length.
+Comments are string metadata that may accompany a document. A comment contains the UTF-8 representation of a string WITHOUT a byte order mark (BOM). A decoder is free to discard or preserve comments. 
+
+Comments must only contain printable characters, and valid UTF-8 whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed). The length field contains the byte length (length in octets), NOT the character length.
 
     [92] [Length] [Octet 0] ... [Octet (Length-1)]
 
-A decoder is not required to preserve comments. 
-
 Example:
 
-    [92 30 53 70 65 63 69 61 6C 20 63 61 73 65] = Special case
+    [92 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
+     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
+     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
+    = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
 
@@ -257,7 +265,7 @@ List elements are simply objects (type field + possible payload). The list is te
 
 Example:
 
-    [7b 01 68 88 13 7d] = A list containing integers (1, 5000)
+    [7b 01 6e 88 13 7d] = A list containing integers (1, 5000)
 
 
 ### Map

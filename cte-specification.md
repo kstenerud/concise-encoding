@@ -374,9 +374,11 @@ Comments
 
 Comments may be placed before or after any object. Any number of comments may occur in a row. A parser is free to preserve or discard comments.
 
-A comment with a payload begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). The comment payload begins after the `# ` sequence; everything including whitespace after this point is preserved. Comment contents may contain any printable or non-linebreaking whitespace UTF-8 characters.
+Comments must only contain printable characters, and valid UTF-8 whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed).
 
-A comment with no payload (an empty comment) begins with a '#' character, followed by zero or more whitespace characters, and terminates at the next carriage return (U+000D) or newline (U+000A). The whitespace in an empty comment is not preserved.
+A comment with a payload begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). The comment payload begins after the `# ` sequence; everything including whitespace after this point, up to but not including the carriage return or newline, is preserved.
+
+Special case: An empty comment contains only the initiator `#` (no space), followed immediately by a carriage return or newline.
 
 Example:
 

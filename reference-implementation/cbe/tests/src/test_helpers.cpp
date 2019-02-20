@@ -207,7 +207,7 @@ void expect_decode_produces_data_and_status(
     ASSERT_EQ(*expected_encoding, *actual_encoding);
 }
 
-static void expect_encode_decode_produces_data_and_status(
+void expect_encode_decode_produces_data_and_status(
     int buffer_size,
     std::shared_ptr<enc::encoding> expected_encoding,
     const std::vector<uint8_t> expected_memory,

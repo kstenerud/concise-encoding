@@ -24,6 +24,13 @@ void expect_decode_produces_data_and_status(
 	std::shared_ptr<enc::encoding> expected_encoding,
 	cbe_decode_status expected_status);
 
+void expect_encode_decode_produces_data_and_status(
+    int buffer_size,
+    std::shared_ptr<enc::encoding> expected_encoding,
+    const std::vector<uint8_t> expected_memory,
+    cbe_encode_status expected_encode_status,
+    cbe_decode_status expected_decode_status);
+
 void expect_encode_decode_with_shrinking_buffer_size(
 	int min_buffer_size,
 	std::shared_ptr<enc::encoding> expected_encoding,
@@ -64,15 +71,23 @@ TEST(TESTCASE, NAME) \
 	cbe_test::expect_decode_produces_data_and_status(BUFFER_SIZE, memory, ENCODING, CBE_DECODE_STATUS_OK); \
 }
 
+// Test that encoding and decoding results in success.
+#define TEST_ENCODE_DECODE(TESTCASE, NAME, BUFFER_SIZE, ENCODING, ...) \
+TEST(TESTCASE, NAME) \
+{ \
+	std::vector<uint8_t> memory = __VA_ARGS__; \
+	cbe_test::expect_encode_decode_produces_data_and_status(BUFFER_SIZE, ENCODING, memory, CBE_ENCODE_STATUS_OK, CBE_DECODE_STATUS_OK); \
+}
+
 // Test that encoding and decoding produces the specified memory, and reproduces the equivalent encoding.
-#define TEST_ENCODE_DECODE(TESTCASE, NAME, ENCODING, ...) \
+#define TEST_ENCODE_DECODE_SHRINKING(TESTCASE, NAME, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
 	cbe_test::expect_encode_decode_with_shrinking_buffer_size(0, ENCODING, __VA_ARGS__); \
 }
 
 // Test that encoding and decoding produces the specified memory, and reproduces the equivalent encoding.
-#define TEST_ENCODE_DECODE_CONTAINER(TESTCASE, NAME, MIN_BUFFER_SIZE, ENCODING, ...) \
+#define TEST_ENCODE_DECODE_SHRINKING_CONTAINER(TESTCASE, NAME, MIN_BUFFER_SIZE, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
 	cbe_test::expect_encode_decode_with_shrinking_buffer_size(MIN_BUFFER_SIZE, ENCODING, __VA_ARGS__); \
