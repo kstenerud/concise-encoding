@@ -5,7 +5,7 @@
 
 typedef enum
 {
-    TYPE_SMALLINT_MIN      = -110,
+    TYPE_SMALLINT_MIN      = -109,
     TYPE_SMALLINT_MAX      = 109,
     TYPE_INT_16            = 0x6e,
     TYPE_INT_32            = 0x6f,
@@ -43,7 +43,16 @@ typedef enum
     TYPE_STRING_15         = 0x8f,
     TYPE_STRING            = 0x90,
     TYPE_BINARY_DATA       = 0x91,
+    TYPE_COMMENT           = 0x92,
 } cbe_type_field;
+
+typedef enum
+{
+    ARRAY_TYPE_STRING,
+    ARRAY_TYPE_BINARY,
+    ARRAY_TYPE_COMMENT,
+} array_type;
+
 
 
 // Force the compiler to generate handler code for unaligned accesses.

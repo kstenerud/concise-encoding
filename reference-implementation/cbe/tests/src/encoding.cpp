@@ -27,64 +27,69 @@
 namespace enc
 {
 
-major_type get_major_type(bool value)
+major_type get_major_type(const bool value)
 {
     (void) value; return ENCODE_TYPE_BOOLEAN;
 }
 
-major_type get_major_type(int8_t value)
+major_type get_major_type(const int8_t value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(int16_t value)
+major_type get_major_type(const int16_t value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(int32_t value)
+major_type get_major_type(const int32_t value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(int64_t value)
+major_type get_major_type(const int64_t value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(__int128 value)
+major_type get_major_type(const __int128 value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(float value)
+major_type get_major_type(const float value)
 {
     (void) value; return ENCODE_TYPE_FLOAT;
 }
 
-major_type get_major_type(double value)
+major_type get_major_type(const double value)
 {
     (void) value; return ENCODE_TYPE_FLOAT;
 }
 
-major_type get_major_type(__float128 value)
+major_type get_major_type(const __float128 value)
 {
     (void) value; return ENCODE_TYPE_FLOAT;
 }
 
-major_type get_major_type(_Decimal32 value)
+major_type get_major_type(const _Decimal32 value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
 }
 
-major_type get_major_type(_Decimal64 value)
+major_type get_major_type(const _Decimal64 value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
 }
 
-major_type get_major_type(_Decimal128 value)
+major_type get_major_type(const _Decimal128 value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
+}
+
+major_type get_major_type(const smalltime_wrapper& value)
+{
+    (void) value; return ENCODE_TYPE_TIME;
 }
 
 major_type get_major_type(const std::string& value)
@@ -95,6 +100,11 @@ major_type get_major_type(const std::string& value)
 major_type get_major_type(const std::vector<uint8_t>& value)
 {
     (void) value; return ENCODE_TYPE_BINARY;
+}
+
+major_type get_major_type(const comment_wrapper& value)
+{
+    (void) value; return ENCODE_TYPE_COMMENT;
 }
 
 
@@ -131,7 +141,7 @@ unsigned int ymd_to_doy(int year, unsigned int month, unsigned int day)
     return days;
 }
 
-static std::string to_string(__int128 value)
+static std::string to_string(const __int128 value)
 {
     char buffer[50];
     char* ptr = buffer + sizeof(buffer) - 1;
@@ -157,7 +167,7 @@ static std::string to_string(__int128 value)
     return ptr;
 }
 
-static std::string to_string(__float128 value)
+static std::string to_string(const __float128 value)
 {
     char buffer[50];
     int precision = 20;
@@ -212,18 +222,27 @@ static std::string to_string(const std::string& value, int max_length)
     return value.substr(0, max_length);
 }
 
-static std::string to_time_string(smalltime value)
+static std::string to_string(const comment_wrapper& value, int max_length)
+{
+    if(value._value.size() <= (unsigned)max_length)
+    {
+        return value._value;
+    }
+    return value._value.substr(0, max_length);
+}
+
+static std::string to_string(const smalltime_wrapper& value)
 {
     char buff[30];
     snprintf(buff, sizeof(buff),
         "%04d-%03d:%02d-%02d-%02d",
-        smalltime_get_year(value),
-        smalltime_get_day(value),
-        smalltime_get_hour(value),
-        smalltime_get_minute(value),
-        smalltime_get_second(value)
+        smalltime_get_year(value._value),
+        smalltime_get_day(value._value),
+        smalltime_get_hour(value._value),
+        smalltime_get_minute(value._value),
+        smalltime_get_second(value._value)
         );
-    int usec = smalltime_get_microsecond(value);
+    int usec = smalltime_get_microsecond(value._value);
     int length = strlen(buff);
     if(usec != 0)
     {
@@ -235,35 +254,36 @@ static std::string to_time_string(smalltime value)
 }
 
 // TODO: These are only approximations
-static std::string to_string(_Decimal32 value)
+static std::string to_string(const _Decimal32 value)
 {
-    return "~" + std::to_string((double)value);
+    return "~" + std::to_string((const double)value);
 }
-static std::string to_string(_Decimal64 value)
+static std::string to_string(const _Decimal64 value)
 {
-    return "~" + std::to_string((double)value);
+    return "~" + std::to_string((const double)value);
 }
-static std::string to_string(_Decimal128 value)
+static std::string to_string(const _Decimal128 value)
 {
-    return "~" + to_string((__float128)value);
+    return "~" + to_string((const __float128)value);
 }
 
-std::string to_id_string(bool value)        {return std::string("bl(")   + std::to_string(value) + ")";}
-std::string to_id_string(int8_t value)      {return std::string("i8(")   + std::to_string(value) + ")";}
-std::string to_id_string(int16_t value)     {return std::string("i16(")  + std::to_string(value) + ")";}
-std::string to_id_string(int32_t value)     {return std::string("i32(")  + std::to_string(value) + ")";}
-std::string to_id_string(int64_t value)     {return std::string("i64(")  + std::to_string(value) + ")";}
-std::string to_id_string(__int128 value)    {return std::string("i128(") + to_string(value)      + ")";}
-std::string to_id_string(float value)       {return std::string("f32(")  + std::to_string(value) + ")";}
-std::string to_id_string(double value)      {return std::string("f64(")  + std::to_string(value) + ")";}
-std::string to_id_string(__float128 value)  {return std::string("f128(") + to_string(value)      + ")";}
-std::string to_id_string(_Decimal32 value)  {return std::string("d32(")  + to_string(value)      + ")";}
-std::string to_id_string(_Decimal64 value)  {return std::string("d64(")  + to_string(value)      + ")";}
-std::string to_id_string(_Decimal128 value) {return std::string("d128(") + to_string(value)      + ")";}
+std::string to_id_string(const bool value)        {return std::string("bl(")   + std::to_string(value) + ")";}
+std::string to_id_string(const int8_t value)      {return std::string("i8(")   + std::to_string(value) + ")";}
+std::string to_id_string(const int16_t value)     {return std::string("i16(")  + std::to_string(value) + ")";}
+std::string to_id_string(const int32_t value)     {return std::string("i32(")  + std::to_string(value) + ")";}
+std::string to_id_string(const int64_t value)     {return std::string("i64(")  + std::to_string(value) + ")";}
+std::string to_id_string(const __int128 value)    {return std::string("i128(") + to_string(value)      + ")";}
+std::string to_id_string(const float value)       {return std::string("f32(")  + std::to_string(value) + ")";}
+std::string to_id_string(const double value)      {return std::string("f64(")  + std::to_string(value) + ")";}
+std::string to_id_string(const __float128 value)  {return std::string("f128(") + to_string(value)      + ")";}
+std::string to_id_string(const _Decimal32 value)  {return std::string("d32(")  + to_string(value)      + ")";}
+std::string to_id_string(const _Decimal64 value)  {return std::string("d64(")  + to_string(value)      + ")";}
+std::string to_id_string(const _Decimal128 value) {return std::string("d128(") + to_string(value)      + ")";}
 std::string to_id_string(const std::string& value) {return std::string("s(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
 std::string to_id_string(const std::vector<uint8_t>& value) {return std::string("b(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
-std::string to_id_string_time(smalltime value) {return std::string("t(") + to_time_string(value)  + ")";}
+std::string to_id_string(const smalltime_wrapper& value) {return std::string("t(") + to_string(value)  + ")";}
 std::string to_id_string(const std::string& name, int64_t value) {return name + "(" + std::to_string(value) + ")";}
+std::string to_id_string(const comment_wrapper& value) {return std::string("c(") + to_string(value._value, IDENTIFIER_MAX_LENGTH) + ")";}
 
 
 encoding::encoding(const enc::major_type type, const size_t size, const std::string& string_value)
@@ -400,12 +420,22 @@ bool encoding::has_value(_Decimal128 value) const
     (void) value; return false;
 }
 
+bool encoding::has_value(const smalltime_wrapper& value) const
+{
+    (void) value; return false;
+}
+
 bool encoding::has_value(const std::string& value) const
 {
     (void) value; return false;
 }
 
 bool encoding::has_value(const std::vector<uint8_t>& value) const
+{
+    (void) value; return false;
+}
+
+bool encoding::has_value(const comment_wrapper& value) const
 {
     (void) value; return false;
 }
@@ -454,6 +484,11 @@ cbe_encode_status string_encoding::encode(encoder& encoder)
     return encoder.encode(*this);
 }
 
+cbe_encode_status comment_encoding::encode(encoder& encoder)
+{
+    return encoder.encode(*this);
+}
+
 cbe_encode_status binary_encoding::encode(encoder& encoder)
 {
     return encoder.encode(*this);
@@ -465,6 +500,11 @@ cbe_encode_status string_header_encoding::encode(encoder& encoder)
 }
 
 cbe_encode_status binary_header_encoding::encode(encoder& encoder)
+{
+    return encoder.encode(*this);
+}
+
+cbe_encode_status comment_header_encoding::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
@@ -544,8 +584,10 @@ std::shared_ptr<encoding> encoding::pad(int count)                   {return thi
 std::shared_ptr<encoding> encoding::smtime(smalltime value)          {return this->set_next(enc::smtime(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)    {return this->set_next(enc::str(value));}
 std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
+std::shared_ptr<encoding> encoding::comment(const std::string& value){return this->set_next(enc::comment(value));}
 std::shared_ptr<encoding> encoding::strh(int64_t byte_count)         {return this->set_next(enc::strh(byte_count));}
 std::shared_ptr<encoding> encoding::binh(int64_t byte_count)         {return this->set_next(enc::binh(byte_count));}
+std::shared_ptr<encoding> encoding::commenth(int64_t byte_count)     {return this->set_next(enc::commenth(byte_count));}
 std::shared_ptr<encoding> encoding::data(const std::vector<uint8_t>& value) {return this->set_next(enc::data(value));}
 std::shared_ptr<encoding> encoding::bl(bool value)                   {return this->set_next(enc::bl(value));}
 std::shared_ptr<encoding> encoding::i8(int8_t value)                 {return this->set_next(enc::i8(value));}
@@ -569,8 +611,10 @@ std::shared_ptr<time_encoding>                 smtime(smalltime value)          
 std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::ymd_to_doy(year, month, day), hour, minute, second, usec));}
 std::shared_ptr<string_encoding>               str(const std::string& value)    {return std::make_shared<string_encoding>(value);}
 std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
+std::shared_ptr<comment_encoding>              comment(const std::string& value){return std::make_shared<comment_encoding>(value);}
 std::shared_ptr<string_header_encoding>        strh(int64_t byte_count)         {return std::make_shared<string_header_encoding>(byte_count);}
 std::shared_ptr<binary_header_encoding>        binh(int64_t byte_count)         {return std::make_shared<binary_header_encoding>(byte_count);}
+std::shared_ptr<comment_header_encoding>       commenth(int64_t byte_count)     {return std::make_shared<comment_header_encoding>(byte_count);}
 std::shared_ptr<data_encoding>                 data(const std::vector<uint8_t>& value) {return std::make_shared<data_encoding>(value);}
 std::shared_ptr<boolean_encoding>              bl(bool value)                   {return std::make_shared<boolean_encoding>(value);}
 std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value)                 {return std::make_shared<number_encoding<int8_t>>(value);}

@@ -13,7 +13,23 @@ typedef std::decimal::decimal128::__decfloat128 _Decimal128;
 #include <smalltime/smalltime.h>
 #include <cbe/cbe.h>
 
+class smalltime_wrapper
+{
+public:
+    const smalltime _value;
+    smalltime_wrapper(const smalltime value)
+    : _value(value)
+    {}
+};
 
+class comment_wrapper
+{
+public:
+    const std::string _value;
+    comment_wrapper(const std::string& value)
+    : _value(value)
+    {}
+};
 
 namespace enc
 {
@@ -27,8 +43,10 @@ typedef enum
     ENCODE_TYPE_TIME,
     ENCODE_TYPE_STRING,
     ENCODE_TYPE_BINARY,
+    ENCODE_TYPE_COMMENT,
     ENCODE_TYPE_STRING_HEADER,
     ENCODE_TYPE_BINARY_HEADER,
+    ENCODE_TYPE_COMMENT_HEADER,
     ENCODE_TYPE_ARRAY_DATA,
     ENCODE_TYPE_LIST,
     ENCODE_TYPE_MAP,
@@ -37,39 +55,42 @@ typedef enum
     ENCODE_TYPE_PADDING,
 } major_type;
 
-major_type get_major_type(bool value);
-major_type get_major_type(int8_t value);
-major_type get_major_type(int16_t value);
-major_type get_major_type(int32_t value);
-major_type get_major_type(int64_t value);
-major_type get_major_type(__int128 value);
-major_type get_major_type(float value);
-major_type get_major_type(double value);
-major_type get_major_type(__float128 value);
-major_type get_major_type(_Decimal32 value);
-major_type get_major_type(_Decimal64 value);
-major_type get_major_type(_Decimal128 value);
+major_type get_major_type(const bool value);
+major_type get_major_type(const int8_t value);
+major_type get_major_type(const int16_t value);
+major_type get_major_type(const int32_t value);
+major_type get_major_type(const int64_t value);
+major_type get_major_type(const __int128 value);
+major_type get_major_type(const float value);
+major_type get_major_type(const double value);
+major_type get_major_type(const __float128 value);
+major_type get_major_type(const _Decimal32 value);
+major_type get_major_type(const _Decimal64 value);
+major_type get_major_type(const _Decimal128 value);
+major_type get_major_type(const smalltime_wrapper& value);
 major_type get_major_type(const std::string& value);
 major_type get_major_type(const std::vector<uint8_t>& value);
+major_type get_major_type(const comment_wrapper& value);
 
-unsigned int to_doy(int year, unsigned int month, unsigned int day);
+unsigned int to_doy(const int year, const unsigned int month, const unsigned int day);
 
-std::string to_id_string(bool value);
-std::string to_id_string(int8_t value);
-std::string to_id_string(int16_t value);
-std::string to_id_string(int32_t value);
-std::string to_id_string(int64_t value);
-std::string to_id_string(__int128 value);
-std::string to_id_string(float value);
-std::string to_id_string(double value);
-std::string to_id_string(__float128 value);
-std::string to_id_string(_Decimal32 value);
-std::string to_id_string(_Decimal64 value);
-std::string to_id_string(_Decimal128 value);
+std::string to_id_string(const bool value);
+std::string to_id_string(const int8_t value);
+std::string to_id_string(const int16_t value);
+std::string to_id_string(const int32_t value);
+std::string to_id_string(const int64_t value);
+std::string to_id_string(const __int128 value);
+std::string to_id_string(const float value);
+std::string to_id_string(const double value);
+std::string to_id_string(const __float128 value);
+std::string to_id_string(const _Decimal32 value);
+std::string to_id_string(const _Decimal64 value);
+std::string to_id_string(const _Decimal128 value);
+std::string to_id_string(const smalltime_wrapper& value);
 std::string to_id_string(const std::string& value); 
 std::string to_id_string(const std::vector<uint8_t>& value);
-std::string to_id_string_time(smalltime value);
 std::string to_id_string(const std::string& name, int64_t value);
+std::string to_id_string(const comment_wrapper& value);
 
 
 namespace adl_helper
@@ -110,8 +131,10 @@ public:
     std::shared_ptr<encoding> smtime(smalltime value);
     std::shared_ptr<encoding> str(const std::string& value);
     std::shared_ptr<encoding> bin(const std::vector<uint8_t>& value);
+    std::shared_ptr<encoding> comment(const std::string& value);
     std::shared_ptr<encoding> strh(int64_t length);
     std::shared_ptr<encoding> binh(int64_t length);
+    std::shared_ptr<encoding> commenth(int64_t length);
     std::shared_ptr<encoding> data(const std::vector<uint8_t>& value);
     std::shared_ptr<encoding> bl(bool value);
     std::shared_ptr<encoding> i8(int8_t value);
@@ -151,8 +174,10 @@ public:
     virtual bool has_value(_Decimal32 value) const;
     virtual bool has_value(_Decimal64 value) const;
     virtual bool has_value(_Decimal128 value) const;
+    virtual bool has_value(const smalltime_wrapper& value) const;
     virtual bool has_value(const std::string& value) const;
     virtual bool has_value(const std::vector<uint8_t>& value) const;
+    virtual bool has_value(const comment_wrapper& value) const;
 
     virtual cbe_encode_status encode(encoder& encoder) = 0;
 
@@ -214,7 +239,7 @@ class time_encoding: public encoding
 private:
     const smalltime _value;
 public:
-    time_encoding(smalltime value): encoding(enc::ENCODE_TYPE_TIME, sizeof(value), enc::to_id_string_time(value)), _value(value) {}
+    time_encoding(smalltime value): encoding(enc::ENCODE_TYPE_TIME, sizeof(value), enc::to_id_string(smalltime_wrapper(value))), _value(value) {}
     cbe_encode_status encode(encoder& encoder);
     bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_value); }
     bool has_value(smalltime value) const { return _value == value; }
@@ -332,6 +357,18 @@ public:
     std::vector<uint8_t> value() {return _value;}
 };
 
+class comment_encoding: public encoding
+{
+private:
+    const std::string _value;
+public:
+    comment_encoding(const std::string& value): encoding(ENCODE_TYPE_COMMENT, 1, enc::to_id_string(comment_wrapper(value))), _value(value) {}
+    cbe_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_value); }
+    bool has_value(const std::string& value) const       { return _value == value; }
+    std::string value() {return _value;}
+};
+
 class string_header_encoding: public encoding
 {
 private:
@@ -350,6 +387,18 @@ private:
     const int64_t _byte_count;
 public:
     binary_header_encoding(int64_t byte_count): encoding(enc::ENCODE_TYPE_BINARY_HEADER, 1, enc::to_id_string("binh", byte_count)), _byte_count(byte_count) {}
+    cbe_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_byte_count); }
+    bool has_value(int64_t value) const { return _byte_count == value; }
+    int64_t byte_count() {return _byte_count;}
+};
+
+class comment_header_encoding: public encoding
+{
+private:
+    const int64_t _byte_count;
+public:
+    comment_header_encoding(int64_t byte_count): encoding(enc::ENCODE_TYPE_COMMENT_HEADER, 1, enc::to_id_string("commenth", byte_count)), _byte_count(byte_count) {}
     cbe_encode_status encode(encoder& encoder);
     bool is_equal(const encoding& rhs) const { return get_type() == rhs.get_type() && rhs.has_value(_byte_count); }
     bool has_value(int64_t value) const { return _byte_count == value; }
@@ -380,8 +429,10 @@ public:
     virtual cbe_encode_status encode(time_encoding& encoding) = 0;
     virtual cbe_encode_status encode(string_encoding& encoding) = 0;
     virtual cbe_encode_status encode(binary_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(comment_encoding& encoding) = 0;
     virtual cbe_encode_status encode(string_header_encoding& encoding) = 0;
     virtual cbe_encode_status encode(binary_header_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(comment_header_encoding& encoding) = 0;
     virtual cbe_encode_status encode(data_encoding& encoding) = 0;
     virtual cbe_encode_status encode(boolean_encoding& encoding) = 0;
     virtual cbe_encode_status encode(number_encoding<int8_t>& encoding) = 0;
@@ -406,8 +457,10 @@ std::shared_ptr<time_encoding>               smtime(smalltime value);
 std::shared_ptr<time_encoding>               smtime(int year, int month, int day, int hour, int minute, int second, int usec);
 std::shared_ptr<string_encoding>             str(const std::string& value);
 std::shared_ptr<binary_encoding>             bin(const std::vector<uint8_t>& value);
+std::shared_ptr<comment_encoding>            comment(const std::string& value);
 std::shared_ptr<string_header_encoding>      strh(int64_t byte_count);
 std::shared_ptr<binary_header_encoding>      binh(int64_t byte_count);
+std::shared_ptr<comment_header_encoding>     commenth(int64_t byte_count);
 std::shared_ptr<data_encoding>               data(const std::vector<uint8_t>& value);
 std::shared_ptr<boolean_encoding>            bl(bool value);
 std::shared_ptr<number_encoding<int8_t>>     i8(int8_t value);

@@ -8,12 +8,6 @@
 // Data
 // ====
 
-typedef enum
-{
-    ARRAY_TYPE_STRING,
-    ARRAY_TYPE_BINARY,
-} array_type;
-
 struct cbe_decode_process
 {
     const cbe_decode_callbacks* callbacks;
@@ -246,13 +240,20 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
     const int64_t array_byte_count = read_array_length(process);
 
     KSLOG_DEBUG("Length: %d", array_byte_count);
-    if(type == ARRAY_TYPE_BINARY)
+    switch(type)
     {
-        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_begin(process, array_byte_count));
-    }
-    else
-    {
-        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
+        case ARRAY_TYPE_BINARY:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_begin(process, array_byte_count));
+            break;
+        case ARRAY_TYPE_STRING:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
+            break;
+        case ARRAY_TYPE_COMMENT:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_comment_begin(process, array_byte_count));
+            break;
+        default:
+            KSLOG_ERROR("%d: Unknown array type", type);
+            return CBE_DECODE_ERROR_INTERNAL;
     }
     internal_begin_array(process, type, array_byte_count);
 
@@ -267,15 +268,21 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 
     KSLOG_DEBUG("Length: arr %d vs buf %d: %d bytes", bytes_in_array, space_in_buffer, bytes_to_stream);
     KSLOG_DATA_TRACE(process->buffer.position, bytes_to_stream, NULL);
-    if(process->array.type == ARRAY_TYPE_STRING)
+    switch(process->array.type)
     {
-        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
+        case ARRAY_TYPE_BINARY:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_data(process, process->buffer.position, bytes_to_stream));
+            break;
+        case ARRAY_TYPE_STRING:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
+            break;
+        case ARRAY_TYPE_COMMENT:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_comment_data(process, (const char*)process->buffer.position, bytes_to_stream));
+            break;
+        default:
+            KSLOG_ERROR("%d: Unknown array type", process->array.type);
+            return CBE_DECODE_ERROR_INTERNAL;
     }
-    else
-    {
-        STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_data(process, process->buffer.position, bytes_to_stream));
-    }
-
     consume_bytes(process, bytes_to_stream);
     process->array.current_offset += bytes_to_stream;
 
@@ -486,8 +493,15 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
+            case TYPE_COMMENT:
+            {
+                KSLOG_DEBUG("<Comment>");
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_COMMENT));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
+                break;
+            }
             default:
-                KSLOG_DEBUG("<Small %d>", type);
+                KSLOG_DEBUG("<Small %d>", (int8_t)type);
                 BEGIN_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_8(process, type));
                 END_OBJECT();

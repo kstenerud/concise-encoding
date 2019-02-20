@@ -19,6 +19,7 @@ struct cbe_encode_process
     struct
     {
         bool is_inside_array;
+        array_type type;
         int64_t current_offset;
         int64_t byte_count;
     } array;
@@ -769,6 +770,25 @@ cbe_encode_status cbe_encode_string_begin(cbe_encode_process* const process, con
 
     const bool should_reserve_payload = false;
     return encode_string_header(process, byte_count, should_reserve_payload);
+}
+
+cbe_encode_status cbe_encode_comment_begin(cbe_encode_process* const process, const int64_t byte_count)
+{
+    KSLOG_DEBUG("(process %p, byte_count %d)", process, byte_count);
+    unlikely_if(process == NULL || byte_count < 0)
+    {
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_array_length_field_width(byte_count));
+
+    add_primitive_type(process, TYPE_COMMENT);
+    add_array_length_field(process, byte_count);
+    begin_array(process, byte_count);
+    swap_map_key_value_status(process);
+
+    return CBE_ENCODE_STATUS_OK;
 }
 
 cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,

@@ -74,7 +74,8 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  8f  | String: 15 bytes   | [15 octets of data]                           |
 |  90  | String             | [byte length] [UTF-8 encoded string]          |
 |  91  | Binary Data        | [byte length] [data]                          |
-|  92  | Integer value -110 |                                               |
+|  92  | Comment            | [byte length] [UTF-8 encoded string]          |
+|  93  | Integer value -109 |                                               |
 | ...  | ...                |                                               |
 |  fe  | Integer value -2   |                                               |
 |  ff  | Integer value -1   |                                               |
@@ -215,7 +216,14 @@ An array of octets. This data type should only be used as a last resort if the o
 
 Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), NOT the character length.
 
+    [90] [Length] [Octet 0] ... [Octet (Length-1)]
+
 For byte lengths from 0 to 15, there are special top-level inferred-length string types (0x80 - 0x8f). For longer strings, use the general (0x90) string type.
+
+    [80]
+    [81] [octet 0]
+    [82] [octet 0] [octet 1]
+    ...
 
 Examples:
 
@@ -223,46 +231,18 @@ Examples:
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [90 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
-#### Null Termination
 
-Since all objects contain a type field, implementations requiring null terminated strings can artificially do so in a copy-free manner by keeping track of the subsequent object's metadata, and then overwriting its type field with 0. This complicates the code, but may be useful in environments where memory is at a premium, or for documents containing long strings that are expensive to copy.
+### Comment
 
-##### Example: Map containing {"alpha": 1, "beta": 2}
+Comments are string metadata that may accompany a document. A comment contains the UTF-8 representation of a string WITHOUT a byte order mark (BOM). Comments must only contain printable characters, and whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed). The length field contains the byte length (length in octets), NOT the character length.
 
-Original data:
+    [92] [Length] [Octet 0] ... [Octet (Length-1)]
 
-| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7  | 8      | 9  | 10 | 11 | 12 | 13 | 14            |
-| --- | ------ | -- | -- | -- | -- | -- | -- | ------ | -- | -- | -- | -- | -- | ------------- |
-| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | 01 | 84     | 62 | 65 | 74 | 61 | 02 | 7d            |
-| Map | String | a  | l  | p  | h  | a  | 1  | String | b  | e  | t  | a  | 2  | End container |
+A decoder is not required to preserve comments. 
 
-First, extract metadata (simple values `1` and `2`), and pointers to offset 2 ("alpha") and offset 9 ("beta").
+Example:
 
-Next, apply null termination by overwriting the type field of the next object following each string:
-
-| 0   | 1      | 2  | 3  | 4  | 5  | 6  | 7       | 8      | 9  | 10 | 11 | 12 | 13      | 14            |
-| --- | ------ | -- | -- | -- | -- | -- | ------- | ------ | -- | -- | -- | -- | ------- | ------------- |
-| 7c  | 85     | 61 | 6c | 70 | 68 | 61 | **00**  | 84     | 62 | 65 | 74 | 61 | **00**  | 7d            |
-| Map | String | a  | l  | p  | h  | a  | **nul** | String | b  | e  | t  | a  | **nul** | End container |
-
-
-##### Special Case Example: Document containing single string object "test"
-
-In this case, there's no subsequent object whose type field we can use, so we must always ensure the "real" buffer is 1 byte longer than reported.
-
-Original data:
-
-| 0      | 1  | 2  | 3  | 4  | 5                    |
-| ------ | -- | -- | -- | -- | -------------------- |
-| 0x84   | 74 | 65 | 73 | 74 | xx                   |
-| String | t  | e  | s  | t  | spare byte in buffer |
-
-Apply termination:
-
-| 0      | 1  | 2  | 3  | 4  | 5                    |
-| ------ | -- | -- | -- | -- | -------------------- |
-| 0x84   | 74 | 65 | 73 | 74 | **00**               |
-| String | t  | e  | s  | t  | **nul**              |
+    [92 30 53 70 65 63 69 61 6C 20 63 61 73 65] = Special case
 
 
 

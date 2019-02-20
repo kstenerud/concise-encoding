@@ -72,9 +72,9 @@ TEST_ENCODE_DECODE_INT8(_0,                                       0, {0x00})
 TEST_ENCODE_DECODE_INT8(_1,                                       1, {0x01})
 TEST_ENCODE_DECODE_INT8(_109,                                   109, {0x6d})
 TEST_ENCODE_DECODE_INT8(_n1,                                     -1, {0xff})
-TEST_ENCODE_DECODE_INT8(_n110,                                 -110, {0x92})
+TEST_ENCODE_DECODE_INT8(_n110,                                 -109, {0x93})
 TEST_ENCODE_DECODE_INT8(_110,                                   110, {0x6e, 0x6e, 0x00})
-TEST_ENCODE_DECODE_INT8(_n111,                                 -111, {0x6e, 0x91, 0xff})
+TEST_ENCODE_DECODE_INT8(_n111,                                 -110, {0x6e, 0x92, 0xff})
 TEST_ENCODE_DECODE_INT8(_7f,                                   0x7f, {0x6e, 0x7f, 0x00})
 TEST_ENCODE_DECODE_INT8(_n80,                                 -0x80, {0x6e, 0x80, 0xff})
 TEST_ENCODE_DECODE_INT16(_7fff,                              0x7fff, {0x6e, 0xff, 0x7f})
@@ -187,6 +187,9 @@ TEST_ENCODE_STATUS(Binary, string, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->d
 TEST_ENCODE_STATUS(Binary, string16, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->str("1234567890123456"));
 TEST_ENCODE_STATUS(Binary, binary, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, binh(5)->data({0x30})->bin({0x00}));
 TEST_DECODE_STATUS(BinaryDecode, too_short, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {0x91, 0x40, 0x30});
+
+TEST_ENCODE_DECODE_CONTAINER(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
+TEST_ENCODE_DECODE_CONTAINER(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
 
 TEST_ENCODE_DECODE_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})

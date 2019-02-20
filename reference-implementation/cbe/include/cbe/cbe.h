@@ -100,6 +100,11 @@ typedef enum
      */
     CBE_DECODE_ERROR_FIELD_LENGTH_EXCEEDED,
 
+    /**
+     * An internal bug triggered an error.
+     */
+    CBE_DECODE_ERROR_INTERNAL,
+
 } cbe_decode_status;
 
 /**
@@ -208,6 +213,28 @@ typedef struct
     bool (*on_binary_data) (struct cbe_decode_process* decode_process,
                             const uint8_t* start,
                             int64_t byte_count);
+
+    /**
+     * A comment has been opened. Expect subsequent calls to
+     * on_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via `on_data`, the field is considered
+     * "complete" and is closed.
+     *
+     * @param decode_process The decode process.
+     * @param byte_count The total length of the comment.
+     */
+    bool (*on_comment_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
+
+    /**
+     * String data was decoded, and should be added to the current comment field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_comment_data) (struct cbe_decode_process* decode_process,
+                             const char* start,
+                             int64_t byte_count);
 } cbe_decode_callbacks;
 
 
@@ -764,6 +791,68 @@ cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process
 cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_process);
 
 /**
+ * Convenience function: add a UTF-8 encoded string and its data to a document.
+ * Note: Do not include a byte order marker (BOM).
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param str The string to add.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process, const char* str);
+
+/**
+ * Convenience function: add a binary data blob to a document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param data The data to add.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_process,
+                                        const uint8_t* data,
+                                        int64_t byte_count);
+
+/**
+ * Convenience function: add a UTF-8 encoded comment and its data to a document.
+ * Note: Do not include a byte order marker (BOM).
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param str The comment to add.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_process, const char* str);
+
+/**
+ * Begin a string in the document. The string data will be UTF-8 without a BOM.
+ *
+ * This function "opens" a string field, encoding the type and length portions.
+ * The encode process will expect subsequent cbe_encode_add_data() calls
+ * to fill up the field.
+ * Once the field has been filled, it is considered "closed", and other fields
+ * may now be added to the document.
+ *
+ * Possible error codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room for the length field.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param byte_count The total length of the string to add in bytes.
+ * @return The current encoder status.
+ */
+cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+
+/**
  * Begin an array of binary data in the document.
  *
  * This function "opens" a binary field, encoding the type and length portions.
@@ -783,10 +872,10 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
 cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
- * Begin a string in the document. The string data will be UTF-8 without a BOM.
+ * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
  *
- * This function "opens" a string field, encoding the type and length portions.
- * The encode process will expect subsequent cbe_encode_add_string_data() calls
+ * This function "opens" a comment field, encoding the type and length portions.
+ * The encode process will expect subsequent cbe_encode_add_data() calls
  * to fill up the field.
  * Once the field has been filled, it is considered "closed", and other fields
  * may now be added to the document.
@@ -796,13 +885,13 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param byte_count The total length of the string to add in bytes.
+ * @param byte_count The total length of the comment to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
- * Add data to the currently opened array field (string or binary).
+ * Add data to the currently opened array field (string, binary, comment).
  * You can call this as many times as you like until the array field has been
  * completely filled, at which point it is automatically considered "completed"
  * and is closed.
@@ -820,20 +909,6 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
 cbe_encode_status cbe_encode_add_data(struct cbe_encode_process* encode_process,
                                       const uint8_t* start,
                                       int64_t byte_count);
-
-/**
- * Convenience function: add a UTF-8 encoded string and its data to a document.
- * Note: Do not include a byte order marker (BOM).
- *
- * Possible error codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param str The string to add.
- * @return The current encoder status.
- */
-cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process, const char* str);
 
 
 
