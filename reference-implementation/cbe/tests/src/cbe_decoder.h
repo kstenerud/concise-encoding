@@ -25,6 +25,7 @@ private:
 	int64_t _currently_decoding_length;
 	int64_t _currently_decoding_offset;
 	std::vector<uint8_t> _currently_decoding_data;
+	bool _callback_return_value;
 
 public:
 	// Internal functions
@@ -35,7 +36,7 @@ public:
 	bool add_binary_data(const std::vector<uint8_t>& data);
 
 public:
-	cbe_decoder();
+	cbe_decoder(bool callback_return_value = true);
 
 	// Begin the decoding process.
 	cbe_decode_status begin();
@@ -54,4 +55,6 @@ public:
 
 	// Get the decoded encoding objects.
 	std::shared_ptr<enc::encoding> decoded();
+
+	bool get_callback_return_value();
 };

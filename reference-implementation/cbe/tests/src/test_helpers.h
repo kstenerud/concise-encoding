@@ -42,6 +42,9 @@ void expect_decode_produces_status(
     std::vector<uint8_t> document,
     cbe_decode_status expected_decode_status);
 
+void expect_decode_stop_in_callback(
+    std::shared_ptr<enc::encoding> encoding);
+
 } // namespace cbe_test
 
 
@@ -94,4 +97,11 @@ TEST(TESTCASE, NAME) \
 TEST(TESTCASE, NAME) \
 { \
 	cbe_test::expect_decode_produces_status(__VA_ARGS__, EXPECTED_DECODE_STATUS); \
+}
+
+// Test that decoding results in the specified status code.
+#define TEST_STOP_IN_CALLBACK(TESTCASE, NAME, ...) \
+TEST(TESTCASE, NAME) \
+{ \
+	cbe_test::expect_decode_stop_in_callback(__VA_ARGS__); \
 }

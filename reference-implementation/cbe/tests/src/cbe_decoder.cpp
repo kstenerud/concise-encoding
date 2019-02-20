@@ -13,116 +13,116 @@ static cbe_decoder* get_decoder(struct cbe_decode_process* process)
 
 static bool on_nil(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(enc::nil());
+    return get_decoder(process)->set_next(enc::nil()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_boolean(struct cbe_decode_process* process, bool value)
 {
-    return get_decoder(process)->set_next(enc::bl(value));
+    return get_decoder(process)->set_next(enc::bl(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_8(struct cbe_decode_process* process, int8_t value)
 {
-    return get_decoder(process)->set_next(enc::i8(value));
+    return get_decoder(process)->set_next(enc::i8(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_16(struct cbe_decode_process* process, int16_t value)
 {
-    return get_decoder(process)->set_next(enc::i16(value));
+    return get_decoder(process)->set_next(enc::i16(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_32(struct cbe_decode_process* process, int32_t value)
 {
-    return get_decoder(process)->set_next(enc::i32(value));
+    return get_decoder(process)->set_next(enc::i32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_64(struct cbe_decode_process* process, int64_t value)
 {
-    return get_decoder(process)->set_next(enc::i64(value));
+    return get_decoder(process)->set_next(enc::i64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_128(struct cbe_decode_process* process, __int128 value)
 {
-    return get_decoder(process)->set_next(enc::i128(value));
+    return get_decoder(process)->set_next(enc::i128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_32(struct cbe_decode_process* process, float value)
 {
-    return get_decoder(process)->set_next(enc::f32(value));
+    return get_decoder(process)->set_next(enc::f32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_64(struct cbe_decode_process* process, double value)
 {
-    return get_decoder(process)->set_next(enc::f64(value));
+    return get_decoder(process)->set_next(enc::f64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_128(struct cbe_decode_process* process, __float128 value)
 {
-    return get_decoder(process)->set_next(enc::f128(value));
+    return get_decoder(process)->set_next(enc::f128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_32(struct cbe_decode_process* process, _Decimal32 value)
 {
-    return get_decoder(process)->set_next(enc::d32(value));
+    return get_decoder(process)->set_next(enc::d32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_64(struct cbe_decode_process* process, _Decimal64 value)
 {
-    return get_decoder(process)->set_next(enc::d64(value));
+    return get_decoder(process)->set_next(enc::d64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_128(struct cbe_decode_process* process, _Decimal128 value)
 {
-    return get_decoder(process)->set_next(enc::d128(value));
+    return get_decoder(process)->set_next(enc::d128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_time(struct cbe_decode_process* process, smalltime value)
 {
-    return get_decoder(process)->set_next(enc::smtime(value));
+    return get_decoder(process)->set_next(enc::smtime(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_list_begin(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(enc::list());
+    return get_decoder(process)->set_next(enc::list()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_list_end(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(enc::end());
+    return get_decoder(process)->set_next(enc::end()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_map_begin(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(enc::map());
+    return get_decoder(process)->set_next(enc::map()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_map_end(struct cbe_decode_process* process)
 {
-    return get_decoder(process)->set_next(enc::end());
+    return get_decoder(process)->set_next(enc::end()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_string_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-    return get_decoder(process)->string_begin(byte_count);
+    return get_decoder(process)->string_begin(byte_count) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_binary_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-    return get_decoder(process)->binary_begin(byte_count);
+    return get_decoder(process)->binary_begin(byte_count) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_string_data(struct cbe_decode_process* process,
                            const char* start,
                            int64_t byte_count)
 {
-    return get_decoder(process)->add_string_data(std::string(start, start + byte_count));
+    return get_decoder(process)->add_string_data(std::string(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_binary_data(struct cbe_decode_process* process,
                            const uint8_t* start,
                            int64_t byte_count)
 {
-    return get_decoder(process)->add_binary_data(std::vector<uint8_t>(start, start + byte_count));
+    return get_decoder(process)->add_binary_data(std::vector<uint8_t>(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
 
@@ -152,10 +152,16 @@ static const cbe_decode_callbacks g_callbacks =
     on_binary_data: on_binary_data,
 };
 
-cbe_decoder::cbe_decoder()
+cbe_decoder::cbe_decoder(bool callback_return_value)
 : _process_backing_store(cbe_decode_process_size(MAX_CONTAINER_DEPTH))
 , _process((cbe_decode_process*)_process_backing_store.data())
+, _callback_return_value(callback_return_value)
 {
+}
+
+bool cbe_decoder::get_callback_return_value()
+{
+    return _callback_return_value;
 }
 
 std::vector<uint8_t>& cbe_decoder::received_data()

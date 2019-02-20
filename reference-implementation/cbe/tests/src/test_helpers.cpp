@@ -290,4 +290,19 @@ void expect_decode_produces_status(
     ASSERT_EQ(decode_status, expected_decode_status);
 }
 
+void expect_decode_stop_in_callback(
+    std::shared_ptr<enc::encoding> encoding)
+{
+    cbe_encode_status expected_encode_status = CBE_ENCODE_STATUS_OK;
+    cbe_encode_status encode_status = CBE_ENCODE_STATUS_OK;
+    int buffer_size = 100;
+    std::vector<uint8_t> data = encode_data(buffer_size, encoding, encode_status);
+    ASSERT_EQ(encode_status, expected_encode_status);
+
+    cbe_decode_status expected_decode_status = CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+    cbe_decoder decoder(false);
+    cbe_decode_status decode_status = decoder.decode(data);
+    ASSERT_EQ(decode_status, expected_decode_status);
+}
+
 } // namespace cbe_test

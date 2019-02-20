@@ -84,7 +84,6 @@ package_add_test(cbe_tests
     src/encoding.cpp
     src/general_tests.cpp
     src/library.cpp
-    src/stop_in_callback.cpp
     src/test_helpers.cpp
     src/test_utils.cpp
 )
