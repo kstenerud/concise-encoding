@@ -222,14 +222,14 @@ static std::string to_string(const std::string& value, int max_length)
     return value.substr(0, max_length);
 }
 
-static std::string to_string(const comment_wrapper& value, int max_length)
-{
-    if(value._value.size() <= (unsigned)max_length)
-    {
-        return value._value;
-    }
-    return value._value.substr(0, max_length);
-}
+// static std::string to_string(const comment_wrapper& value, int max_length)
+// {
+//     if(value._value.size() <= (unsigned)max_length)
+//     {
+//         return value._value;
+//     }
+//     return value._value.substr(0, max_length);
+// }
 
 static std::string to_string(const smalltime_wrapper& value)
 {

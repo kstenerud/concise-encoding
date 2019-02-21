@@ -8,10 +8,6 @@
 namespace cbe_test
 {
 
-const cbe_decode_callbacks* get_always_false_decode_callbacks();
-
-const cbe_decode_callbacks* get_always_true_decode_callbacks();
-
 bool expect_encode_produces_data_and_status(
 	int buffer_size,
 	std::shared_ptr<enc::encoding> encoding,
