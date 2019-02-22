@@ -72,4 +72,23 @@ DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
 DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
 DEFINE_SAFE_STRUCT(safe_time,        smalltime);
 
+
+
+static inline int get_max_container_depth_or_default(int max_container_depth)
+{
+    return max_container_depth > 0 ? max_container_depth : CBE_DEFAULT_MAX_CONTAINER_DEPTH;
+}
+
+static inline void zero_memory(void* const memory, const int byte_count)
+{
+    uint8_t* ptr = memory;
+    uint8_t* const end = ptr + byte_count;
+    while(ptr < end)
+    {
+        *ptr++ = 0;
+    }
+}
+
+bool cbe_verify_comment_data(const char* const start, const int64_t byte_count);
+
 #endif // cbe_internal_H

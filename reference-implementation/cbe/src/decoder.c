@@ -125,21 +125,6 @@ typedef struct cbe_decode_process cbe_decode_process;
 // Utility
 // =======
 
-static inline int get_max_container_depth_or_default(int max_container_depth)
-{
-    return max_container_depth > 0 ? max_container_depth : CBE_DEFAULT_MAX_CONTAINER_DEPTH;
-}
-
-static inline void zero_memory(void* const memory, const int byte_count)
-{
-    uint8_t* ptr = memory;
-    uint8_t* const end = ptr + byte_count;
-    while(ptr < end)
-    {
-        *ptr++ = 0;
-    }
-}
-
 static inline int64_t get_remaining_space_in_buffer(cbe_decode_process* process)
 {
     return process->buffer.end - process->buffer.position;
@@ -197,7 +182,7 @@ static inline int peek_array_length_field_width(const cbe_decode_process* const 
 
 static inline int64_t read_array_length(cbe_decode_process* const process)
 {
-    KSLOG_DEBUG(NULL);
+    KSLOG_DEBUG("(process %p)", process);
     switch(peek_array_length_field_width(process))
     {
         case 1:  return (int64_t)(read_uint_8(process) >> 2);
@@ -209,23 +194,27 @@ static inline int64_t read_array_length(cbe_decode_process* const process)
 
 static inline cbe_decode_status begin_object(cbe_decode_process* process, const int64_t initial_byte_count)
 {
+    KSLOG_DEBUG("(process %p, initial_byte_count %d)", process, initial_byte_count);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, initial_byte_count);
     return CBE_DECODE_STATUS_OK;
 }
 
 static inline cbe_decode_status begin_nonkeyable_object(cbe_decode_process* process, const int64_t initial_byte_count)
 {
+    KSLOG_DEBUG("(process %p, initial_byte_count)", process, initial_byte_count);
     STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
     return begin_object(process, initial_byte_count);
 }
 
 static inline void end_object(cbe_decode_process* process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     swap_map_key_value_status(process);
 }
 
 static inline void internal_begin_array(cbe_decode_process* const process, array_type type, int64_t byte_count)
 {
+    KSLOG_DEBUG("(process %p, array_type %d, byte_count %d)", process, type, byte_count);
     process->array.is_inside_array = true;
     process->array.type = type;
     process->array.current_offset = 0;
@@ -234,6 +223,7 @@ static inline void internal_begin_array(cbe_decode_process* const process, array
 
 static cbe_decode_status begin_array(cbe_decode_process* const process, array_type type)
 {
+    KSLOG_DEBUG("(process %p, array_type %d)", process, type);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, peek_array_length_field_width(process));
 
@@ -262,6 +252,7 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
 
 static cbe_decode_status stream_array(cbe_decode_process* const process)
 {
+    KSLOG_DEBUG("(process %p)", process);
     const int64_t bytes_in_array = process->array.byte_count - process->array.current_offset;
     const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
     const int64_t bytes_to_stream = bytes_in_array <= space_in_buffer ? bytes_in_array : space_in_buffer;
@@ -277,6 +268,10 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_COMMENT:
+            if(!cbe_verify_comment_data((const char*)process->buffer.position, bytes_to_stream))
+            {
+                return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+            }
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_comment_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         default:
@@ -559,8 +554,8 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
                              const int64_t document_length,
                              const int max_container_depth)
 {
-    KSLOG_DEBUG("(callbacks %p, user_context %p, document %p, document_length %d)",
-        callbacks, user_context, document, document_length);
+    KSLOG_DEBUG("(callbacks %p, user_context %p, document %p, document_length %d, max_container_depth %d)",
+        callbacks, user_context, document, document_length, max_container_depth);
     unlikely_if(callbacks == NULL || document == NULL || document_length < 0)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;

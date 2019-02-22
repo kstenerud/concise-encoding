@@ -190,6 +190,8 @@ TEST_DECODE_STATUS(BinaryDecode, too_short, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {
 
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
+TEST_ENCODE_STATUS(Comment, encode_bad_data, CBE_ENCODE_ERROR_INVALID_ARGUMENT, comment("Test\nblah"));
+TEST_DECODE_STATUS(Comment, decode_bad_data, CBE_DECODE_ERROR_INVALID_ARGUMENT, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
 
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})
