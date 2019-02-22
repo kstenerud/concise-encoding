@@ -54,6 +54,8 @@ public:
 	// Encode an encoding object and all linked objects.
 	cbe_encode_status encode(std::shared_ptr<enc::encoding> enc);
 
+	cbe_encode_status encode_comment(std::vector<uint8_t> value);
+
 	// Get the complete raw encoded data.
 	std::vector<uint8_t>& encoded_data() {return _encoded_data;}
 };

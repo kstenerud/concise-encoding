@@ -89,6 +89,8 @@ static inline void zero_memory(void* const memory, const int byte_count)
     }
 }
 
-bool cbe_verify_comment_data(const char* const start, const int64_t byte_count);
+bool cbe_validate_string(const uint8_t* const start, const int64_t byte_count);
+
+bool cbe_validate_comment(const uint8_t* const start, const int64_t byte_count);
 
 #endif // cbe_internal_H

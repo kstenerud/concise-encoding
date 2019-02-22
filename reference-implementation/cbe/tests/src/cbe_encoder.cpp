@@ -244,6 +244,22 @@ cbe_encode_status cbe_encoder::encode(enc::comment_encoding& e)
     return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
 }
 
+cbe_encode_status cbe_encoder::encode_comment(std::vector<uint8_t> value)
+{
+	KSLOG_DEBUG("size %d", value.size());
+    cbe_encode_status status = flush_and_retry([&]
+	{
+		return cbe_encode_comment_begin(_process, value.size());
+	});
+
+    if(status != CBE_ENCODE_STATUS_OK)
+	{
+		return status;
+	}
+
+    return stream_array(value);
+}
+
 cbe_encode_status cbe_encoder::encode(enc::string_header_encoding& e)
 {
 	return flush_and_retry([&]

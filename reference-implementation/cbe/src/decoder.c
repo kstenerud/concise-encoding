@@ -265,10 +265,14 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_data(process, process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_STRING:
+            if(!cbe_validate_string(process->buffer.position, bytes_to_stream))
+            {
+                return CBE_DECODE_ERROR_INVALID_ARGUMENT;
+            }
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_COMMENT:
-            if(!cbe_verify_comment_data((const char*)process->buffer.position, bytes_to_stream))
+            if(!cbe_validate_comment(process->buffer.position, bytes_to_stream))
             {
                 return CBE_DECODE_ERROR_INVALID_ARGUMENT;
             }

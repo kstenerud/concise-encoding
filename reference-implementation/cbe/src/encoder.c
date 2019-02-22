@@ -361,7 +361,15 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
 
     if(process->array.type == ARRAY_TYPE_COMMENT)
     {
-        if(!cbe_verify_comment_data((const char*)start, bytes_to_copy))
+        if(!cbe_validate_comment(start, bytes_to_copy))
+        {
+            return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+        }
+    }
+
+    if(process->array.type == ARRAY_TYPE_STRING)
+    {
+        if(!cbe_validate_string(start, bytes_to_copy))
         {
             return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
         }

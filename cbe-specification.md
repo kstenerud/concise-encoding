@@ -239,11 +239,26 @@ Examples:
 
 ### Comment
 
-Comments are string metadata that may accompany a document. A comment contains the UTF-8 representation of a string WITHOUT a byte order mark (BOM). A decoder is free to discard or preserve comments. 
+Comments are string metadata that may be placed inside a document. While they may be placed anywhere an object may be placed, they are semantically ignored by the parser (they do not constitute values). For example, the sequence [(list) (int8 value 1) (comment "this is a comment") (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the comment's occurrence (at the decoder's discretion).
 
-Comments must only contain printable characters, and valid UTF-8 whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed). The length field contains the byte length (length in octets), NOT the character length.
+A decoder is free to discard or preserve comments. 
+
+The length field contains the byte length (length in octets), NOT the character length.
 
     [92] [Length] [Octet 0] ... [Octet (Length-1)]
+
+#### Character Restrictions
+
+The following characters are disallowed:
+
+ * Control characters (Unicode 0000-001f, 007f-009f) EXCEPT for TAB (u+0009), which is allowed
+ * Line breaking characters (such as u+2028, u+2029)
+ * Byte order mark
+
+The following characters are allowed if they don't also appear in the disallowed list:
+
+ * UTF-8 printable characters
+ * UTF-8 whitespace characters
 
 Example:
 
