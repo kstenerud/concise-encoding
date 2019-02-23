@@ -177,7 +177,7 @@ typedef struct
 
     /**
      * A string has been opened. Expect subsequent calls to
-     * on_data() until the array has been filled. Once `byte_count`
+     * on_string_data() until the array has been filled. Once `byte_count`
      * bytes have been added via `on_data`, the field is considered
      * "complete" and is closed.
      *
@@ -199,7 +199,7 @@ typedef struct
 
     /**
      * A binary data array has been opened. Expect subsequent calls to
-     * on_data() until the array has been filled. Once `byte_count`
+     * on_binary_data() until the array has been filled. Once `byte_count`
      * bytes have been added via `on_data`, the field is considered
      * "complete" and is closed.
      *
@@ -221,7 +221,7 @@ typedef struct
 
     /**
      * A comment has been opened. Expect subsequent calls to
-     * on_data() until the array has been filled. Once `byte_count`
+     * on_comment_data() until the array has been filled. Once `byte_count`
      * bytes have been added via `on_data`, the field is considered
      * "complete" and is closed.
      *
@@ -242,6 +242,51 @@ typedef struct
                              int64_t byte_count);
 } cbe_decode_callbacks;
 
+
+// ------------------
+// Decoder Simple API
+// ------------------
+
+/**
+ * Get the user context information from a decode process.
+ * This is meant to be called by a decode callback function.
+ *
+ * @param decode_process The decode process.
+ * @return The user context.
+ */
+void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
+
+/**
+ * Decode an entire CBE document.
+ *
+ * Successful status codes:
+ * - CBE_DECODE_STATUS_OK: document has been completely decoded.
+ *
+ * Unrecoverable codes:
+ * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
+ * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
+ * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
+ *
+ * @param callbacks The callbacks to call while decoding the document.
+ * @param user_context Whatever data you want to be available to the callbacks.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
+ * @param document_start The start of the document.
+ * @param byte_count The number of bytes in the document.
+ */
+cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
+                             void* user_context,
+                             const uint8_t* document_start,
+                             int64_t byte_count,
+                             int max_container_depth);
+
+
+
+// -----------------
+// Decoder Power API
+// -----------------
 
 /**
  * Get the size of the decode process data.
@@ -265,6 +310,9 @@ int cbe_decode_process_size(int max_container_depth);
  * Successful status codes:
  * - CBE_DECODE_STATUS_OK: The decode process has begun.
  *
+ * Unrecoverable codes:
+ * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
@@ -277,15 +325,6 @@ cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
                                    int max_container_depth);
 
 /**
- * Get the user context information from a decode process.
- * This is meant to be called by a decode callback function.
- *
- * @param decode_process The decode process.
- * @return The user context.
- */
-void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
-
-/**
  * Decode part of a CBE document.
  *
  * Note: data_start is not const because 
@@ -295,9 +334,11 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * - CBE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
  *
  * Unrecoverable codes:
+ * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
  *
  * Recoverable codes:
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
@@ -348,7 +389,11 @@ int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
 /**
  * End a decoding process, checking for document validity.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_DECODE_STATUS_OK: document has been completely decoded.
+ *
+ * Unrecoverable codes:
+ * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
  * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: a field has not been completely filled yet.
  *
@@ -356,21 +401,6 @@ int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
  * @return The final decoder status.
  */
 cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
-
-/**
- * Decode an entire CBE document.
- *
- * @param callbacks The callbacks to call while decoding the document.
- * @param user_context Whatever data you want to be available to the callbacks.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
- * @param document_start The start of the document.
- * @param byte_count The number of bytes in the document.
- */
-cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
-                             void* user_context,
-                             const uint8_t* document_start,
-                             int64_t byte_count,
-                             int max_container_depth);
 
 
 // ------------
@@ -466,6 +496,9 @@ int cbe_encode_process_size(int max_container_depth);
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The encode process has begun.
  *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ *
  * @param encode_process The encode process to initialize.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
@@ -480,6 +513,12 @@ cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
 /**
  * Replace the document buffer in an encode process.
  * This also resets the buffer offset.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  *
  * @param encode_process The encode process.
  * @param document_buffer A buffer to store the document in.
@@ -526,7 +565,11 @@ int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
 /**
  * End an encoding process, checking the document for validity.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: a field has not been completed yet.
  *
@@ -538,8 +581,14 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
 /**
  * Add padding to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -551,8 +600,14 @@ cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_proce
 /**
  * Add an nil object to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
@@ -564,8 +619,14 @@ cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
 /**
  * Add a boolean value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -577,8 +638,14 @@ cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_proce
 /**
  * Add an integer value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -590,8 +657,14 @@ cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, 
 /**
  * Add an integer value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -604,8 +677,14 @@ cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process
  * Add a 16 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -618,8 +697,14 @@ cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_proces
  * Add a 32 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -632,8 +717,14 @@ cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_proces
  * Add a 64 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -646,8 +737,14 @@ cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_proces
  * Add a 128 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -660,8 +757,14 @@ cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_proce
  * Add a 32 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -674,8 +777,14 @@ cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_proc
  * Add a 64 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -688,8 +797,14 @@ cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_proc
  * Add a 128 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -702,8 +817,14 @@ cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_pro
  * Add a 32 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -716,8 +837,14 @@ cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_pr
  * Add a 64 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -730,8 +857,14 @@ cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_pr
  * Add a 128 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -744,8 +877,14 @@ cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_p
  * Add a time value to the document.
  * Use cbe_new_time() to generate a time value.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -757,8 +896,14 @@ cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process,
 /**
  * Begin a list in the document. Must be matched by an end container.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
@@ -774,8 +919,14 @@ cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_proces
  * Map entries must be added in pairs. Every even item is a key, and every
  * odd item is a corresponding value.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
@@ -790,8 +941,14 @@ cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process
  * If calling this function would result in too many end containers,
  * the operation is aborted and returns CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: we're not in a container.
  *
@@ -804,8 +961,14 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  * Convenience function: add a UTF-8 encoded string and its data to a document.
  * Note: Do not include a byte order marker (BOM).
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -817,8 +980,14 @@ cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_proces
 /**
  * Convenience function: add a binary data blob to a document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -833,8 +1002,14 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
  * Note: Do not include a byte order marker (BOM).
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -852,8 +1027,14 @@ cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_proce
  * Once the field has been filled, it is considered "closed", and other fields
  * may now be added to the document.
  *
- * Possible error codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room for the length field.
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -871,8 +1052,14 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
  * Once the field has been filled, it is considered "closed", and other fields
  * may now be added to the document.
  *
- * Possible error codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room for the length field.
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -890,8 +1077,14 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  * Once the field has been filled, it is considered "closed", and other fields
  * may now be added to the document.
  *
- * Possible error codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room for the length field.
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -906,10 +1099,16 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  * completely filled, at which point it is automatically considered "completed"
  * and is closed.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
- * - CBE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
+ * - CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
  * @param start The start of the data to add.
