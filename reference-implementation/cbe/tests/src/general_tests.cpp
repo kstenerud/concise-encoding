@@ -291,61 +291,48 @@ TEST_STOP_IN_CALLBACK(SIC, map, map()->end())
 TEST_STOP_IN_CALLBACK(SIC, string, str("test"))
 TEST_STOP_IN_CALLBACK(SIC, binary, bin(std::vector<uint8_t>()))
 
+static std::string g_bad_chars[] =
+{
+	/*"\u0000",*/ "\u0001", "\u0002", "\u0003", "\u0004", "\u0005", "\u0006", "\u0007",
+	"\u0008", /*"\u0009",*/ "\u000a", "\u000b", "\u000c", "\u000d", "\u000e", "\u000f",
+	"\u0010", "\u0011", "\u0012", "\u0013", "\u0014", "\u0015", "\u0016", "\u0017",
+	"\u0018", "\u0019", "\u001a", "\u001b", "\u001c", "\u001d", "\u001e", "\u001f",
+	"\u007f",
+	"\u0080", "\u0081", "\u0082", "\u0083", "\u0084", "\u0085", "\u0086", "\u0087",
+	"\u0088", "\u0089", "\u008a", "\u008b", "\u008c", "\u008d", "\u008e", "\u008f",
+	"\u2028", // line separator
+	"\u2029", // paragraph separator
+};
+static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
+
 TEST(Comment, encode_bad_chars)
 {
-	std::string bad_chars[] =
-	{
-		/*"\u0000",*/ "\u0001", "\u0002", "\u0003", "\u0004", "\u0005", "\u0006", "\u0007",
-		"\u0008", /*"\u0009",*/ "\u000a", "\u000b", "\u000c", "\u000d", "\u000e", "\u000f",
-		"\u0010", "\u0011", "\u0012", "\u0013", "\u0014", "\u0015", "\u0016", "\u0017",
-		"\u0018", "\u0019", "\u001a", "\u001b", "\u001c", "\u001d", "\u001e", "\u001f",
-		"\u007f",
-		"\u0085", // next line
-		"\u2028", // line separator
-		"\u2029", // paragraph separator
-	};
-	int bad_chars_count = sizeof(bad_chars) / sizeof(*bad_chars);
-	for(int i = 0; i < bad_chars_count; i++)
-	{
-		std::string str = std::string("test") + bad_chars[i] + std::string("blah");
-		cbe_test::expect_encode_produces_status(comment(str), CBE_ENCODE_ERROR_INVALID_ARGUMENT);
-	}
-}
-
-TEST(Comment, encode_zero_character)
-{
-	cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+	const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_ARGUMENT;
 	std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x00, 0x43, 0x44};
 	cbe_encoder encoder;
 	cbe_encode_status status = encoder.encode_comment(data);
 	EXPECT_EQ(expected_status, status);
+
+	for(int i = 0; i < g_bad_chars_count; i++)
+	{
+		std::string str = std::string("test") + g_bad_chars[i] + std::string("blah");
+		cbe_test::expect_encode_produces_status(comment(str), expected_status);
+	}
 }
 
 TEST(Comment, decode_bad_character)
 {
-	char bad_chars[] =
+	const cbe_decode_status expected_status = CBE_DECODE_ERROR_INVALID_ARGUMENT;
+	uint8_t data[] = {0x92, 0x24, 0x61, 0x00, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
+	cbe_test::expect_decode_produces_status(std::vector<uint8_t>(data, data + sizeof(data)), expected_status);
+
+	uint8_t header[] = {0x92, 0x00};
+	for(int i = 0; i < g_bad_chars_count; i++)
 	{
-		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-		0x08, /*0x09,*/ 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-		0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-	};
-
-	// TODO:
-	// "\u0085", // next line
-	// "\u2028", // line separator
-	// "\u2029", // paragraph separator
-
-	uint8_t data[] = {0x92, 0x24, 0x61, 0x20, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
-
-	int bad_chars_count = sizeof(bad_chars) / sizeof(*bad_chars);
-	for(int i = 0; i < bad_chars_count; i++)
-	{
-		data[3] = bad_chars[i];
-		cbe_test::expect_decode_produces_status(std::vector<uint8_t>(data, data + sizeof(data)), CBE_DECODE_ERROR_INVALID_ARGUMENT);
+		std::string str = std::string("test") + g_bad_chars[i] + std::string("blah");
+		std::vector<uint8_t> string_data((uint8_t*)str.data(), (uint8_t*)str.data() + str.size());
+		header[1] = (uint8_t)str.size() << 2;
+		string_data.insert(string_data.begin(), header, header + sizeof(header));
+		cbe_test::expect_decode_produces_status(string_data, expected_status);
 	}
 }
-
-TEST_ENCODE_STATUS(Comment, encode_0085, CBE_ENCODE_ERROR_INVALID_ARGUMENT, comment("Test\u0085blah"))
-TEST_ENCODE_STATUS(Comment, encode_2028, CBE_ENCODE_ERROR_INVALID_ARGUMENT, comment("Test\u2028blah"))
-TEST_ENCODE_STATUS(Comment, encode_2029, CBE_ENCODE_ERROR_INVALID_ARGUMENT, comment("Test\u2029blah"))
