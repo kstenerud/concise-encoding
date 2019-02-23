@@ -363,7 +363,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     {
         if(!cbe_validate_comment(start, bytes_to_copy))
         {
-            return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+            return CBE_ENCODE_ERROR_INVALID_DATA;
         }
     }
 
@@ -371,7 +371,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     {
         if(!cbe_validate_string(start, bytes_to_copy))
         {
-            return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+            return CBE_ENCODE_ERROR_INVALID_DATA;
         }
     }
 

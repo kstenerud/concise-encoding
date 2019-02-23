@@ -75,6 +75,11 @@ typedef enum
     CBE_DECODE_ERROR_INVALID_ARGUMENT,
 
     /**
+     * The data to be decoded (string or comment) was invalid.
+     */
+    CBE_DECODE_ERROR_INVALID_DATA,
+
+    /**
      * Unbalanced list/map begin and end markers were detected.
      */
     CBE_DECODE_ERROR_UNBALANCED_CONTAINERS,
@@ -394,6 +399,11 @@ typedef enum
      * One or more of the arguments was invalid.
      */
     CBE_ENCODE_ERROR_INVALID_ARGUMENT,
+
+    /**
+     * The data to be encoded (string or comment) was invalid.
+     */
+    CBE_ENCODE_ERROR_INVALID_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.

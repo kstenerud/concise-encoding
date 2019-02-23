@@ -190,8 +190,8 @@ TEST_DECODE_STATUS(BinaryDecode, too_short, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {
 
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
-TEST_ENCODE_STATUS(Comment, encode_bad_data, CBE_ENCODE_ERROR_INVALID_ARGUMENT, comment("Test\nblah"));
-TEST_DECODE_STATUS(Comment, decode_bad_data, CBE_DECODE_ERROR_INVALID_ARGUMENT, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
+TEST_ENCODE_STATUS(Comment, encode_bad_data, CBE_ENCODE_ERROR_INVALID_DATA, comment("Test\nblah"));
+TEST_DECODE_STATUS(Comment, decode_bad_data, CBE_DECODE_ERROR_INVALID_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
 
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(List, size_0, 1, list()->end(), {0x7b, 0x7d})
 TEST_ENCODE_DECODE_SHRINKING_CONTAINER(List, size_1, 1, list()->i8(1)->end(), {0x7b, 0x01, 0x7d})
@@ -307,7 +307,7 @@ static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
 
 TEST(Comment, encode_bad_chars)
 {
-	const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+	const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
 	std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x00, 0x43, 0x44};
 	cbe_encoder encoder;
 	cbe_encode_status status = encoder.encode_comment(data);
@@ -322,7 +322,7 @@ TEST(Comment, encode_bad_chars)
 
 TEST(Comment, decode_bad_character)
 {
-	const cbe_decode_status expected_status = CBE_DECODE_ERROR_INVALID_ARGUMENT;
+	const cbe_decode_status expected_status = CBE_DECODE_ERROR_INVALID_DATA;
 	uint8_t data[] = {0x92, 0x24, 0x61, 0x00, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
 	cbe_test::expect_decode_produces_status(std::vector<uint8_t>(data, data + sizeof(data)), expected_status);
 
