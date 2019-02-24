@@ -264,6 +264,7 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  *
  * Unrecoverable codes:
  * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
@@ -335,6 +336,7 @@ cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
  *
  * Unrecoverable codes:
  * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
@@ -969,6 +971,7 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INVALID_DATA: The string contained invalid data.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -1010,6 +1013,7 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INVALID_DATA: The comment contained invalid data.
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -1107,6 +1111,7 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INVALID_DATA: The array contained invalid data.
  * - CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
  * - CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
