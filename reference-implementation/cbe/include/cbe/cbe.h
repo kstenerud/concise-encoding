@@ -178,7 +178,7 @@ typedef struct
     /**
      * A string has been opened. Expect subsequent calls to
      * on_string_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_data`, the field is considered
+     * bytes have been added via `on_string_data`, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -200,7 +200,7 @@ typedef struct
     /**
      * A binary data array has been opened. Expect subsequent calls to
      * on_binary_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_data`, the field is considered
+     * bytes have been added via `on_binary_data`, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -222,7 +222,7 @@ typedef struct
     /**
      * A comment has been opened. Expect subsequent calls to
      * on_comment_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_data`, the field is considered
+     * bytes have been added via `on_comment_data`, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
