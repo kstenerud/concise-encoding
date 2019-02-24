@@ -75,7 +75,7 @@ typedef enum
     CBE_DECODE_ERROR_INVALID_ARGUMENT,
 
     /**
-     * The data to be decoded (string or comment) was invalid.
+     * The array data was invalid.
      */
     CBE_DECODE_ERROR_INVALID_DATA,
 
@@ -431,7 +431,7 @@ typedef enum
     CBE_ENCODE_ERROR_INVALID_ARGUMENT,
 
     /**
-     * The data to be encoded (string or comment) was invalid.
+     * The array data was invalid.
      */
     CBE_ENCODE_ERROR_INVALID_DATA,
 
