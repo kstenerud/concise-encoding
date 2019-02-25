@@ -64,18 +64,6 @@ typedef enum
     CTE_DECODE_STATUS_OK = 0,
 
     /**
-     * Bison parser exited due to invalid input.
-     * Matches return from yyabortlab.
-     */
-    CTE_DECODE_ERROR_PARSER_INVALID_INPUT = 1,
-
-    /**
-     * Bison parser ran out of memory.
-     * Matches return from yyexhaustedlab.
-     */
-    CTE_DECODE_ERROR_PARSER_OUT_OF_MEMORY = 2,
-
-    /**
      * The decoder has reached the end of the buffer and needs more data to
      * finish decoding the document.
      */
@@ -94,6 +82,11 @@ typedef enum
     CTE_DECODE_ERROR_INVALID_ARGUMENT,
 
     /**
+     * The array data was invalid.
+     */
+    CTE_DECODE_ERROR_INVALID_DATA,
+
+    /**
      * Unbalanced list/map begin and end markers were detected.
      */
     CTE_DECODE_ERROR_UNBALANCED_CONTAINERS,
@@ -109,9 +102,9 @@ typedef enum
     CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Bison parser failed to initialize.
+     * An internal bug triggered an error.
      */
-    CTE_DECODE_ERROR_PARSER_INITIALIZATION_ERROR,
+    CTE_DECODE_ERROR_INTERNAL,
 } cte_decode_status;
 
 /**
@@ -123,9 +116,6 @@ typedef enum
  */
 typedef struct
 {
-    // An error occurred
-    void (*on_error) (struct cte_decode_process* decode_process, const char* message);
-
     // A nil field was decoded.
     bool (*on_nil) (struct cte_decode_process* decode_process);
 
@@ -166,7 +156,7 @@ typedef struct
     bool (*on_decimal_128) (struct cte_decode_process* decode_process, _Decimal128 value);
 
     // A time field was decoded.
-    bool (*on_time) (struct cte_decode_process* decode_process, smalltime);
+    bool (*on_time) (struct cte_decode_process* decode_process, smalltime value);
 
     // A list has been opened.
     bool (*on_list_begin) (struct cte_decode_process* decode_process);
@@ -182,8 +172,8 @@ typedef struct
 
     /**
      * A string has been opened. Expect subsequent calls to
-     * on_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_data`, the field is considered
+     * on_string_data() until the array has been filled. Once
+     * `on_string_end` is called, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -210,8 +200,8 @@ typedef struct
 
     /**
      * A binary data array has been opened. Expect subsequent calls to
-     * on_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_data`, the field is considered
+     * on_binary_data() until the array has been filled. Once
+     * `on_binary_end` is called, the field is considered
      * "complete" and is closed.
      *
      * @param byte_count The total length of the array.
@@ -235,8 +225,82 @@ typedef struct
      * @param decode_process The decode process.
      */
     bool (*on_binary_end) (struct cte_decode_process* decode_process);
+
+    /**
+     * A comment has been opened. Expect subsequent calls to
+     * on_comment_data() until the array has been filled. Once
+     * `on_comment_end` is called, the field is considered
+     * "complete" and is closed.
+     *
+     * @param decode_process The decode process.
+     */
+    bool (*on_comment_begin) (struct cte_decode_process* decode_process);
+
+    /**
+     * String data was decoded, and should be added to the current comment field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_comment_data) (struct cte_decode_process* decode_process,
+                             const char* start,
+                             int64_t byte_count);
+
+    /**
+     * The current comment has been closed.
+     *
+     * @param decode_process The decode process.
+     */
+    bool (*on_comment_end) (struct cte_decode_process* decode_process);
 } cte_decode_callbacks;
 
+
+// ------------------
+// Decoder Simple API
+// ------------------
+
+/**
+ * Get the user context information from a decode process.
+ * This is meant to be called by a decode callback function.
+ *
+ * @param decode_process The decode process.
+ * @return The user context.
+ */
+void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
+
+/**
+ * Decode an entire CTE document.
+ *
+ * Successful status codes:
+ * - CTE_DECODE_STATUS_OK: document has been completely decoded.
+ *
+ * Unrecoverable codes:
+ * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
+ * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
+ * - CTE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
+ * - CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
+ *
+ * @param callbacks The callbacks to call while decoding the document.
+ * @param user_context Whatever data you want to be available to the callbacks.
+ * @param document_start The start of the document.
+ * @param byte_count The number of bytes in the document.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
+ */
+cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
+                             void* user_context,
+                             const char* document_start,
+                             int64_t byte_count,
+                             int max_container_depth);
+
+
+
+// -----------------
+// Decoder Power API
+// -----------------
 
 /**
  * Get the size of the decode process data.
@@ -261,7 +325,7 @@ int cte_decode_process_size(int max_container_depth);
  * - CTE_DECODE_STATUS_OK: The decode process has begun.
  *
  * Unrecoverable codes:
- * - CTE_DECODE_ERROR_PARSER_INITIALIZATION_ERROR
+ * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
@@ -275,15 +339,6 @@ cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
                                    int max_container_depth);
 
 /**
- * Get the user context information from a decode process.
- * This is meant to be called by a decode callback function.
- *
- * @param decode_process The decode process.
- * @return The user context.
- */
-void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
-
-/**
  * Decode part of a CTE document.
  *
  * Note: data_start is not const because 
@@ -293,9 +348,12 @@ void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
  * - CTE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
  *
  * Unrecoverable codes:
+ * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
  * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
  * - CTE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
  *
  * Recoverable codes:
  * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
@@ -344,7 +402,11 @@ int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode
 /**
  * End a decoding process, checking for document validity.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_DECODE_STATUS_OK: document has been completely decoded.
+ *
+ * Unrecoverable codes:
+ * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
  * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: a field has not been completely filled yet.
  *
@@ -352,21 +414,6 @@ int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode
  * @return The final decoder status.
  */
 cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
-
-/**
- * Decode an entire CTE document.
- *
- * @param callbacks The callbacks to call while decoding the document.
- * @param user_context Whatever data you want to be available to the callbacks.
- * @param document_start The start of the document.
- * @param byte_count The number of bytes in the document.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
- */
-cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
-                             void* user_context,
-                             const char* document_start,
-                             int64_t byte_count,
-                             int max_container_depth);
 
 
 // ------------
@@ -396,6 +443,11 @@ typedef enum
      * One or more of the arguments was invalid.
      */
     CTE_ENCODE_ERROR_INVALID_ARGUMENT,
+
+    /**
+     * The array data was invalid.
+     */
+    CTE_ENCODE_ERROR_INVALID_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -457,6 +509,9 @@ int cte_encode_process_size(int max_container_depth);
  * Successful status codes:
  * - CTE_ENCODE_STATUS_OK: The encode process has begun.
  *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ *
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  * @param max_container_depth The maximum container depth to suppport (<= 0 use default).
@@ -464,23 +519,30 @@ int cte_encode_process_size(int max_container_depth);
  * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print, < 0 use default).
  * @return The new encode process.
  */
-cte_encode_status cte_encode_begin(
-                        struct cte_encode_process* encode_process,
-                        uint8_t* const document_buffer,
-                        int64_t byte_count,
-                        int max_container_depth,
-                        int float_digits_precision,
-                        int indent_spaces);
+cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
+                                   uint8_t* const document_buffer,
+                                   int64_t byte_count,
+                                   int max_container_depth,
+                                   int float_digits_precision,
+                                   int indent_spaces);
 
 /**
  * Replace the document buffer in an encode process.
  * This also resets the buffer offset.
  *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ *
  * @param encode_process The encode process.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  */
-void cte_encode_set_buffer(struct cte_encode_process* encode_process, uint8_t* const document_buffer, int64_t byte_count);
+cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_process,
+                                        uint8_t* const document_buffer,
+                                        int64_t byte_count);
 
 /**
  * Get the current write offset into the encode buffer.
@@ -508,7 +570,11 @@ int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
 /**
  * End an encoding process, checking the document for validity.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The encode process has ended.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: a field has not been completed yet.
  *
@@ -520,8 +586,14 @@ cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
 /**
  * Add a nil object to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
@@ -533,8 +605,14 @@ cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
 /**
  * Add a boolean value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -546,8 +624,14 @@ cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_proce
 /**
  * Add an integer value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -559,8 +643,14 @@ cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, 
 /**
  * Add an integer value to the document.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -573,8 +663,14 @@ cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process
  * Add a 16 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -587,8 +683,14 @@ cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_proces
  * Add a 32 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -601,8 +703,14 @@ cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_proces
  * Add a 64 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -615,8 +723,14 @@ cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_proces
  * Add a 128 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -629,8 +743,14 @@ cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_proce
  * Add a 32 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -643,8 +763,14 @@ cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_proc
  * Add a 64 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -657,8 +783,14 @@ cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_proc
  * Add a 128 bit floating point value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -671,8 +803,14 @@ cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_pro
  * Add a 32 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -685,8 +823,14 @@ cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_pr
  * Add a 64 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -699,8 +843,14 @@ cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_pr
  * Add a 128 bit decimal value to the document.
  * Note that this will add a narrower type if it will fit.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -713,8 +863,14 @@ cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_p
  * Add a time value to the document.
  * Use cte_new_time() to generate a time value.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
@@ -724,39 +880,16 @@ cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_p
 cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process, smalltime value);
 
 /**
- * Add a UTF-8 encoded string and its data to a document.
- * Note: Do not include a byte order marker (BOM).
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param str The string to add.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_process, const char* str);
-
-/**
- * Add a substring of a UTF-8 encoded string value to the document.
- * Do not include a byte order marker (BOM)
- *
- * Possible error codes:
- * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param string_start The start of the substring to add.
- * @param byte_count The length of the substring in bytes.
- * @return The current encoder status.
- */
-cte_encode_status cte_encode_add_substring(struct cte_encode_process* encode_process, const char* string_start, int64_t byte_count);
-
-/**
  * Begin a list in the document. Must be matched by an end container.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The list has been opened.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
@@ -764,7 +897,7 @@ cte_encode_status cte_encode_add_substring(struct cte_encode_process* encode_pro
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_list(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_list_begin(struct cte_encode_process* encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -772,8 +905,14 @@ cte_encode_status cte_encode_begin_list(struct cte_encode_process* encode_proces
  * Map entries must be added in pairs. Every even item is a key, and every
  * odd item is a corresponding value.
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The map has been opened.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
@@ -781,36 +920,207 @@ cte_encode_status cte_encode_begin_list(struct cte_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin_map(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_map_begin(struct cte_encode_process* encode_process);
 
 /**
  * End the current container (list or map) in the document.
  * If calling this function would result in too many end containers,
  * the operation is aborted and returns CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The container has been closed.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  * - CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS: we're not in a container.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_end_container(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_process);
 
 /**
-* TODO: Streaming
- * Add an array of binary data to the document.
+ * Convenience function: add a UTF-8 encoded string and its data to a document.
+ * Note: Do not include a byte order marker (BOM).
  *
- * Possible error codes:
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INVALID_DATA: The string contained invalid data.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
  * @param encode_process The encode process.
- * @param start The start of the data.
+ * @param string_start The start of the string to add.
+ * @param byte_count The number of bytes in the string.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_process,
+                                        const char* string_start,
+                                        int64_t byte_count);
+
+/**
+ * Convenience function: add a binary data blob to a document.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param data The data to add.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_process,
+                                        const uint8_t* data,
+                                        int64_t byte_count);
+
+/**
+ * Convenience function: add a UTF-8 encoded comment and its data to a document.
+ * Note: Do not include a byte order marker (BOM).
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INVALID_DATA: The comment contained invalid data.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param comment_start The start of the string to add.
+ * @param byte_count The number of bytes in the string.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_add_comment(struct cte_encode_process* encode_process,
+                                         const char* comment_start,
+                                         int64_t byte_count);
+
+/**
+ * Begin a string in the document. The string data will be UTF-8 without a BOM.
+ *
+ * This function "opens" a string field, encoding the type and length portions.
+ * The encode process will expect subsequent cte_encode_add_data() calls
+ * to fill up the field, and a final call to cte_encode_array_end() to close the field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The string has been opened.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_process);
+
+/**
+ * Begin an array of binary data in the document.
+ *
+ * This function "opens" a binary field, encoding the type and length portions.
+ * The encode process will expect subsequent cte_encode_add_binary_data() calls
+ * to fill up the field, and a final call to cte_encode_array_end() to close the field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The array has been opened.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_process);
+
+/**
+ * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
+ *
+ * This function "opens" a string field, encoding the type and length portions.
+ * The encode process will expect subsequent cte_encode_add_data() calls
+ * to fill up the field, and a final call to cte_encode_comment_end() to close the field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The comment has been opened.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_process);
+
+/**
+ * Add data to the currently opened array field (string, binary, comment).
+ * Call this function repeatedly until all data has been added, then call
+ * cte_encode_array_end() to close the field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The encode process has begun.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INVALID_DATA: The array contained invalid data.
+ * - CTE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
+ * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
+ *
+ * @param encode_process The encode process.
+ * @param start The start of the data to add.
  * @param byte_count The length of the data in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_binary_data(struct cte_encode_process* encode_process, const uint8_t* start, int64_t byte_count);
+cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
+                                      const uint8_t* start,
+                                      int64_t byte_count);
+
+/**
+ * End an array (string, binary, comment) in the document.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The array has been closed.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_array_end(struct cte_encode_process* encode_process);
 
 
 

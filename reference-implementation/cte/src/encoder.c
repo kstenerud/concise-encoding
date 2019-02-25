@@ -235,7 +235,7 @@ static cte_encode_status add_substring_with_escaping(cte_encode_process* const p
     return CTE_ENCODE_STATUS_OK;
 }
 
-cte_encode_status cte_encode_add_substring(cte_encode_process* const process, const char* const start, const int64_t byte_count)
+cte_encode_status cte_encode_add_string(cte_encode_process* const process, const char* const start, const int64_t byte_count)
 {
     KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, byte_count);
     cte_encode_status status = CTE_ENCODE_STATUS_OK;
@@ -244,12 +244,6 @@ cte_encode_status cte_encode_add_substring(cte_encode_process* const process, co
     add_substring_with_escaping(process, start, byte_count);
     add_bytes(process, "\"", 1);
     return status;
-}
-
-cte_encode_status cte_encode_add_string(cte_encode_process* const process, const char* const str)
-{
-    KSLOG_DEBUG("(process %p, str %p)", process, str);
-    return cte_encode_add_substring(process, str, strlen(str));
 }
 
 static cte_encode_status start_container(cte_encode_process* const process, bool is_map)

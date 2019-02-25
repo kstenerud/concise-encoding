@@ -4,7 +4,7 @@
 #include <memory.h>
 #include <stdio.h>
 
-#define KSLogger_LocalLevel DEBUG
+// #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
 static decode_test_context* decode_get_context(struct cte_decode_process* process)
@@ -87,13 +87,6 @@ static bool decode_add_bool(decode_test_context* context, bool value)
     context->data[context->index] = newvalue;
     decode_add_type(context, TYPE_BOOLEAN);
     return true;
-}
-
-static void on_error(struct cte_decode_process* process, const char* message)
-{
-    KSLOG_DEBUG("(process %p, message %s)", process, message);
-    printf("Error = %s\n", message);
-    decode_add_string(decode_get_context(process), TYPE_ERROR, message);
 }
 
 static bool on_string_begin(struct cte_decode_process* process)
@@ -269,7 +262,6 @@ static bool on_map_end(struct cte_decode_process* process)
 cte_decode_callbacks decode_new_callbacks()
 {
     cte_decode_callbacks callbacks = {
-        .on_error = on_error,
         .on_nil = on_nil,
         .on_boolean = on_boolean,
         .on_int_8 = on_int_8,

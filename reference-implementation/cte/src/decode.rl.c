@@ -2,7 +2,7 @@
 #include <math.h>
 #include <limits.h>
 
-#define KSLogger_LocalLevel TRACE
+// #define KSLogger_LocalLevel TRACE
 #include "kslogger.h"
 
 #define ARRAY_BUFFER_SIZE 1000
@@ -318,7 +318,8 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
         memcpy(buffer+used_bytes, process->token_start, token_length);
         buffer[used_bytes+token_length] = 0;
     }
-    process->callbacks->on_error(process, buffer);
+    // TODO: Use return code instead
+    // process->callbacks->on_error(process, buffer);
 }
 
 %%{
@@ -335,7 +336,8 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
         KSLOG_TRACE("prepush");
         if(process->top >= process->max_container_depth)
         {
-            process->callbacks->on_error(process, "Document max depth exceeded");
+            // TODO: Use return code instead
+            // process->callbacks->on_error(process, "Document max depth exceeded");
             fbreak;
         }
     }
