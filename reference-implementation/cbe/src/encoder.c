@@ -814,29 +814,40 @@ cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,
     return encode_array_contents(process, (const uint8_t*)start, byte_count);
 }
 
-cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process, const char* const str)
+cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process,
+                                        const char* const string_start,
+                                        const int64_t byte_count)
 {
-    KSLOG_DEBUG("(process %p, str %p)", process, str);
-    unlikely_if(process == NULL || str == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    KSLOG_DEBUG("Length: %d", strlen(str));
-    KSLOG_DATA_TRACE(str, strlen(str), NULL);
-
-    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
-
-    const bool should_reserve_payload = true;
-    const int64_t byte_count = strlen(str);
-
-    cbe_encode_status status = encode_string_header(process, byte_count, should_reserve_payload);
+    cbe_encode_status status = cbe_encode_string_begin(process, byte_count);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         return status;
     }
+    return cbe_encode_add_data(process, (const uint8_t*)string_start, byte_count);
+}
 
-    return encode_array_contents(process, (const uint8_t*)str, byte_count);
+cbe_encode_status cbe_encode_add_binary(cbe_encode_process* const process,
+                                        const uint8_t* const data,
+                                        const int64_t byte_count)
+{
+    cbe_encode_status status = cbe_encode_binary_begin(process, byte_count);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+    return cbe_encode_add_data(process, data, byte_count);
+}
+
+cbe_encode_status cbe_encode_add_comment(cbe_encode_process* const process,
+                                        const char* const comment_start,
+                                        const int64_t byte_count)
+{
+    cbe_encode_status status = cbe_encode_binary_begin(process, byte_count);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+    return cbe_encode_add_data(process, (const uint8_t*)comment_start, byte_count);
 }
 
 cbe_encode_status cbe_encode_end(cbe_encode_process* const process)

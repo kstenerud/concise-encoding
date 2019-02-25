@@ -265,7 +265,7 @@ bool encode()
 
     // TODO: Check for out of room on all cbe calls
     status = cbe_encode_add_int_8(encode_process, 1);
-    status = cbe_encode_add_string(encode_process, "Testing");
+    status = cbe_encode_add_string(encode_process, "Testing", 7);
     status = cbe_encode_container_end(encode_process);
     status = cbe_encode_end(encode_process);
 

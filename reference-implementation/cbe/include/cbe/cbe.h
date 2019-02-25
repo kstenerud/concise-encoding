@@ -517,7 +517,7 @@ cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
  * This also resets the buffer offset.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
@@ -568,7 +568,7 @@ int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
  * End an encoding process, checking the document for validity.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The encode process has ended.
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
@@ -584,7 +584,7 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
  * Add padding to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -603,7 +603,7 @@ cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_proce
  * Add an nil object to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -622,7 +622,7 @@ cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
  * Add a boolean value to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -641,7 +641,7 @@ cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_proce
  * Add an integer value to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -660,7 +660,7 @@ cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, 
  * Add an integer value to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -680,7 +680,7 @@ cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -700,7 +700,7 @@ cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_proces
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -720,7 +720,7 @@ cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_proces
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -740,7 +740,7 @@ cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_proces
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -760,7 +760,7 @@ cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_proce
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -780,7 +780,7 @@ cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_proc
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -800,7 +800,7 @@ cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_proc
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -820,7 +820,7 @@ cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_pro
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -840,7 +840,7 @@ cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_pr
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -860,7 +860,7 @@ cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_pr
  * Note that this will add a narrower type if it will fit.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -880,7 +880,7 @@ cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_p
  * Use cbe_new_time() to generate a time value.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -899,7 +899,7 @@ cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process,
  * Begin a list in the document. Must be matched by an end container.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The list has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -922,7 +922,7 @@ cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_proces
  * odd item is a corresponding value.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The map has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -944,7 +944,7 @@ cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process
  * the operation is aborted and returns CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The container has been closed.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -964,7 +964,7 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -975,16 +975,19 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param str The string to add.
+ * @param string_start The start of the string to add.
+ * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process, const char* str);
+cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process,
+                                        const char* string_start,
+                                        int64_t byte_count);
 
 /**
  * Convenience function: add a binary data blob to a document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1006,7 +1009,7 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1017,10 +1020,13 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param str The comment to add.
+ * @param comment_start The start of the string to add.
+ * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_process, const char* str);
+cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_process,
+                                         const char* comment_start,
+                                         int64_t byte_count);
 
 /**
  * Begin a string in the document. The string data will be UTF-8 without a BOM.
@@ -1032,7 +1038,7 @@ cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_proce
  * may now be added to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The string has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1057,7 +1063,7 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
  * may now be added to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The array has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1082,7 +1088,7 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  * may now be added to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The comment has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1104,7 +1110,7 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  * and is closed.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
