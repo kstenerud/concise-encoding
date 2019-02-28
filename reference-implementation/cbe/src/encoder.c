@@ -359,10 +359,12 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
     const int64_t bytes_to_copy = minimum_int64(byte_count, space_in_buffer);
 
+    KSLOG_DEBUG("Type: %d", process->array.type);
     if(process->array.type == ARRAY_TYPE_COMMENT)
     {
         if(!cbe_validate_comment(start, bytes_to_copy))
         {
+            KSLOG_DEBUG("invalid data");
             return CBE_ENCODE_ERROR_INVALID_DATA;
         }
     }
@@ -371,6 +373,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     {
         if(!cbe_validate_string(start, bytes_to_copy))
         {
+            KSLOG_DEBUG("invalid data");
             return CBE_ENCODE_ERROR_INVALID_DATA;
         }
     }
@@ -818,36 +821,54 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process,
                                         const char* const string_start,
                                         const int64_t byte_count)
 {
+    uint8_t* const last_position = process->buffer.position;
     cbe_encode_status status = cbe_encode_string_begin(process, byte_count);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         return status;
     }
-    return cbe_encode_add_data(process, (const uint8_t*)string_start, byte_count);
+    status = cbe_encode_add_data(process, (const uint8_t*)string_start, byte_count);
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
 }
 
 cbe_encode_status cbe_encode_add_binary(cbe_encode_process* const process,
                                         const uint8_t* const data,
                                         const int64_t byte_count)
 {
+    uint8_t* const last_position = process->buffer.position;
     cbe_encode_status status = cbe_encode_binary_begin(process, byte_count);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         return status;
     }
-    return cbe_encode_add_data(process, data, byte_count);
+    status = cbe_encode_add_data(process, data, byte_count);
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
 }
 
 cbe_encode_status cbe_encode_add_comment(cbe_encode_process* const process,
                                         const char* const comment_start,
                                         const int64_t byte_count)
 {
-    cbe_encode_status status = cbe_encode_binary_begin(process, byte_count);
+    uint8_t* const last_position = process->buffer.position;
+    cbe_encode_status status = cbe_encode_comment_begin(process, byte_count);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         return status;
     }
-    return cbe_encode_add_data(process, (const uint8_t*)comment_start, byte_count);
+    status = cbe_encode_add_data(process, (const uint8_t*)comment_start, byte_count);
+    if(status != CBE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
 }
 
 cbe_encode_status cbe_encode_end(cbe_encode_process* const process)

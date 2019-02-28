@@ -961,6 +961,9 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
 
 /**
  * Convenience function: add a UTF-8 encoded string and its data to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
@@ -985,6 +988,9 @@ cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_proces
 
 /**
  * Convenience function: add a binary data blob to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The operation was successful.
@@ -1006,6 +1012,9 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
 
 /**
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
@@ -1105,6 +1114,8 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
+ * If there's not enough room in the buffer, this function will add as much data
+ * as it can to the encoded buffer before returning CBE_ENCODE_STATUS_NEED_MORE_ROOM.
  * You can call this as many times as you like until the array field has been
  * completely filled, at which point it is automatically considered "completed"
  * and is closed.

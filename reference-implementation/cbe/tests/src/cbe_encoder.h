@@ -54,7 +54,13 @@ public:
 	// Encode an encoding object and all linked objects.
 	cbe_encode_status encode(std::shared_ptr<enc::encoding> enc);
 
+	// Encode entire array objects. If the entire object won't fit,
+	// returns with failure.
+	cbe_encode_status encode_string(std::vector<uint8_t> value);
+	cbe_encode_status encode_binary(std::vector<uint8_t> value);
 	cbe_encode_status encode_comment(std::vector<uint8_t> value);
+
+	int64_t get_encode_buffer_offset();
 
 	// Get the complete raw encoded data.
 	std::vector<uint8_t>& encoded_data() {return _encoded_data;}

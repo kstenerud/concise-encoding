@@ -109,6 +109,7 @@ bool cbe_validate_string(const uint8_t* const start, const int64_t byte_count)
         uint8_t ch = *ptr++;
         if(!validate_utf8(&context, ch))
         {
+            KSLOG_DEBUG("UTF-8 validation failed");
             return false;
         }
     }
@@ -127,12 +128,14 @@ bool cbe_validate_comment(const uint8_t* const start, const int64_t byte_count)
         uint8_t ch = *ptr++;
         if(!validate_utf8(&context, ch))
         {
+            KSLOG_DEBUG("UTF-8 validation failed");
             return false;
         }
         if(context.bytes_remaining == 0)
         {
             if(!validate_comment(context.accumulator))
             {
+                KSLOG_DEBUG("Comment validation failed");
                 return false;
             }
         }

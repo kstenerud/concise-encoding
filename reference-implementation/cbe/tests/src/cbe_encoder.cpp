@@ -244,21 +244,33 @@ cbe_encode_status cbe_encoder::encode(enc::comment_encoding& e)
     return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
 }
 
+cbe_encode_status cbe_encoder::encode_string(std::vector<uint8_t> value)
+{
+	KSLOG_DEBUG("size %d", value.size());
+	return flush_and_retry([&]
+	{
+		return cbe_encode_add_string(_process, (const char*)value.data(), value.size());
+	});
+}
+
 cbe_encode_status cbe_encoder::encode_comment(std::vector<uint8_t> value)
 {
 	KSLOG_DEBUG("size %d", value.size());
-    cbe_encode_status status = flush_and_retry([&]
+	return flush_and_retry([&]
 	{
-		return cbe_encode_comment_begin(_process, value.size());
+		return cbe_encode_add_comment(_process, (const char*)value.data(), value.size());
 	});
-
-    if(status != CBE_ENCODE_STATUS_OK)
-	{
-		return status;
-	}
-
-    return stream_array(value);
 }
+
+cbe_encode_status cbe_encoder::encode_binary(std::vector<uint8_t> value)
+{
+	KSLOG_DEBUG("size %d", value.size());
+	return flush_and_retry([&]
+	{
+		return cbe_encode_add_binary(_process, value.data(), value.size());
+	});
+}
+
 
 cbe_encode_status cbe_encoder::encode(enc::string_header_encoding& e)
 {
@@ -318,6 +330,11 @@ cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 
 	flush_buffer();
 	return cbe_encode_end(_process);
+}
+
+int64_t cbe_encoder::get_encode_buffer_offset()
+{
+	return cbe_encode_get_buffer_offset(_process);
 }
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,
