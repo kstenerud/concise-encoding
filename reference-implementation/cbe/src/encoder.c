@@ -88,9 +88,9 @@ typedef enum
         return CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD; \
     }
 
-#define STOP_AND_EXIT_IF_ARRAY_LENGTH_EXCEEDED(PROCESS) \
+#define STOP_AND_EXIT_IF_ARRAY_LENGTH_EXCEEDED(PROCESS, BYTE_COUNT) \
 { \
-    int64_t new_array_offset = (PROCESS)->array.current_offset + byte_count; \
+    int64_t new_array_offset = (PROCESS)->array.current_offset + (BYTE_COUNT); \
     unlikely_if(new_array_offset > (PROCESS)->array.byte_count) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Attempted to write %d bytes to array with only %d availale", \
@@ -350,39 +350,44 @@ static inline cbe_encode_status encode_string_header(cbe_encode_process* const p
 }
 
 static cbe_encode_status encode_array_contents(cbe_encode_process* const process, 
-                                               const uint8_t* start,
-                                               const int64_t byte_count)
+                                               const uint8_t* const start,
+                                               int64_t* const byte_count)
 {
-    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, byte_count);
+    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, *byte_count);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 0);
 
-    const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
-    const int64_t bytes_to_copy = minimum_int64(byte_count, space_in_buffer);
-
-    KSLOG_DEBUG("Type: %d", process->array.type);
-    if(process->array.type == ARRAY_TYPE_COMMENT)
+    likely_if(*byte_count > 0)
     {
-        if(!cbe_validate_comment(start, bytes_to_copy))
+        const int64_t want_to_copy = *byte_count;
+        const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+        const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
+
+        KSLOG_DEBUG("Type: %d", process->array.type);
+        if(process->array.type == ARRAY_TYPE_COMMENT)
         {
-            KSLOG_DEBUG("invalid data");
-            return CBE_ENCODE_ERROR_INVALID_DATA;
+            unlikely_if(!cbe_validate_comment(start, bytes_to_copy))
+            {
+                KSLOG_DEBUG("invalid data");
+                return CBE_ENCODE_ERROR_INVALID_DATA;
+            }
         }
-    }
 
-    if(process->array.type == ARRAY_TYPE_STRING)
-    {
-        if(!cbe_validate_string(start, bytes_to_copy))
+        if(process->array.type == ARRAY_TYPE_STRING)
         {
-            KSLOG_DEBUG("invalid data");
-            return CBE_ENCODE_ERROR_INVALID_DATA;
+            unlikely_if(!cbe_validate_string(start, bytes_to_copy))
+            {
+                KSLOG_DEBUG("invalid data");
+                return CBE_ENCODE_ERROR_INVALID_DATA;
+            }
         }
+
+        add_primitive_bytes(process, start, bytes_to_copy);
+        process->array.current_offset += bytes_to_copy;
+        *byte_count = bytes_to_copy;
+
+        KSLOG_DEBUG("Streamed %d bytes into array", bytes_to_copy);
+        STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, want_to_copy - bytes_to_copy);
     }
-
-    add_primitive_bytes(process, start, bytes_to_copy);
-    process->array.current_offset += bytes_to_copy;
-
-    KSLOG_DEBUG("Streamed %d bytes into array", bytes_to_copy);
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count - space_in_buffer);
 
     if(process->array.current_offset == process->array.byte_count)
     {
@@ -449,12 +454,6 @@ int64_t cbe_encode_get_buffer_offset(cbe_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
     return process->buffer.position - process->buffer.start;
-}
-
-int64_t cbe_encode_get_array_offset(cbe_encode_process* const process)
-{
-    KSLOG_DEBUG("(process %p)", process);
-    return process->array.current_offset;
 }
 
 int cbe_encode_get_container_level(cbe_encode_process* const process)
@@ -802,17 +801,22 @@ cbe_encode_status cbe_encode_comment_begin(cbe_encode_process* const process, co
 
 cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,
                                       const uint8_t* const start,
-                                      const int64_t byte_count)
+                                      int64_t* const byte_count)
 {
-    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, byte_count);
-    unlikely_if(process == NULL || start == NULL || byte_count < 0)
+    KSLOG_DEBUG("(process %p, start %p, byte_count %d)",
+        process, start, byte_count == NULL ? -123456789 : *byte_count);
+    unlikely_if(start == NULL && *byte_count != 0)
     {
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
-    KSLOG_DATA_TRACE(start, byte_count, NULL);
+    unlikely_if(process == NULL || byte_count == NULL || *byte_count < 0)
+    {
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+    KSLOG_DATA_TRACE(start, *byte_count, NULL);
 
     STOP_AND_EXIT_IF_IS_NOT_INSIDE_ARRAY(process);
-    STOP_AND_EXIT_IF_ARRAY_LENGTH_EXCEEDED(process);
+    STOP_AND_EXIT_IF_ARRAY_LENGTH_EXCEEDED(process, *byte_count);
 
     return encode_array_contents(process, (const uint8_t*)start, byte_count);
 }
@@ -827,8 +831,9 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process,
     {
         return status;
     }
-    status = cbe_encode_add_data(process, (const uint8_t*)string_start, byte_count);
-    if(status != CBE_ENCODE_STATUS_OK)
+    int64_t byte_count_copy = byte_count;
+    status = cbe_encode_add_data(process, (const uint8_t*)string_start, &byte_count_copy);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         process->buffer.position = last_position;
     }
@@ -845,8 +850,9 @@ cbe_encode_status cbe_encode_add_binary(cbe_encode_process* const process,
     {
         return status;
     }
-    status = cbe_encode_add_data(process, data, byte_count);
-    if(status != CBE_ENCODE_STATUS_OK)
+    int64_t byte_count_copy = byte_count;
+    status = cbe_encode_add_data(process, data, &byte_count_copy);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         process->buffer.position = last_position;
     }
@@ -863,8 +869,9 @@ cbe_encode_status cbe_encode_add_comment(cbe_encode_process* const process,
     {
         return status;
     }
-    status = cbe_encode_add_data(process, (const uint8_t*)comment_start, byte_count);
-    if(status != CBE_ENCODE_STATUS_OK)
+    int64_t byte_count_copy = byte_count;
+    status = cbe_encode_add_data(process, (const uint8_t*)comment_start, &byte_count_copy);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         process->buffer.position = last_position;
     }

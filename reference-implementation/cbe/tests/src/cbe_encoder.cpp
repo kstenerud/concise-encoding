@@ -159,38 +159,29 @@ cbe_encode_status cbe_encoder::encode(enc::padding_encoding& e)
 	});
 }
 
-// Workaround for bizarre vector behavior that produces null pointers on 0 length
-static const uint8_t g_dummy_pointer[] = {0};
-
 cbe_encode_status cbe_encoder::stream_array(const std::vector<uint8_t>& data)
 {
-	int64_t offset = 0;
-	KSLOG_DEBUG("Streaming %d bytes", data.size());
-	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
 	const uint8_t* data_pointer = data.data();
-	if(data_pointer == NULL)
+	const int64_t total_byte_count = data.size();
+	const uint8_t* const data_end = data_pointer + total_byte_count;
+	KSLOG_DEBUG("Streaming %d bytes", total_byte_count);
+
+	cbe_encode_status status = CBE_ENCODE_STATUS_OK;
+
+	while(data_pointer <= data_end)
 	{
-		if(data.size() != 0)
-		{
-			KSLOG_ERROR("data.data() is null!");
-			return (cbe_encode_status)99999999;
-		}
-		data_pointer = g_dummy_pointer;
-	}
-	while((status = cbe_encode_add_data(_process, data_pointer+offset, data.size()-offset)) == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
-	{
-		int64_t old_offset = offset;
-		(void)old_offset;
-		offset = cbe_encode_get_array_offset(_process);
-		KSLOG_DEBUG("Streamed %d bytes", offset - old_offset);
-		flush_buffer();
-		int64_t remaining_bytes = data.size() - offset;
-		KSLOG_DEBUG("Remaining bytes to stream: %d", remaining_bytes);
-		if(remaining_bytes <= 0)
+		int64_t byte_count = data_end - data_pointer;
+		status = cbe_encode_add_data(_process, data_pointer, &byte_count);
+		if(status != CBE_ENCODE_STATUS_NEED_MORE_ROOM)
 		{
 			break;
 		}
+		KSLOG_DEBUG("Streamed %d bytes", byte_count);
+		flush_buffer();
+		data_pointer += byte_count;
 	}
+
+	KSLOG_DEBUG("Done");
 	return status;
 }
 

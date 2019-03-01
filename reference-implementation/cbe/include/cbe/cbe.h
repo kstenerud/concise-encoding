@@ -95,8 +95,7 @@ typedef enum
     CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Attempted to add a new field before the existing field was completely
-     * filled.
+     * An array field was not completed before ending the decode process.
      */
     CBE_DECODE_ERROR_INCOMPLETE_FIELD,
 
@@ -178,7 +177,7 @@ typedef struct
     /**
      * A string has been opened. Expect subsequent calls to
      * on_string_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_string_data`, the field is considered
+     * bytes have been added via on_string_data(), the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -200,7 +199,7 @@ typedef struct
     /**
      * A binary data array has been opened. Expect subsequent calls to
      * on_binary_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_binary_data`, the field is considered
+     * bytes have been added via on_binary_data(), the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -222,7 +221,7 @@ typedef struct
     /**
      * A comment has been opened. Expect subsequent calls to
      * on_comment_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via `on_comment_data`, the field is considered
+     * bytes have been added via on_comment_data(), the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -273,9 +272,9 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  *
  * @param callbacks The callbacks to call while decoding the document.
  * @param user_context Whatever data you want to be available to the callbacks.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @param document_start The start of the document.
  * @param byte_count The number of bytes in the document.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  */
 cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
                              void* user_context,
@@ -316,8 +315,8 @@ int cbe_decode_process_size(int max_container_depth);
  *
  * @param decode_process The decode process to initialize.
  * @param callbacks The callbacks to call while decoding the document.
- * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @param user_context Whatever data you want to be available to the callbacks.
+ * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current decoder status.
  */
 cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
@@ -541,16 +540,6 @@ cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_proces
 int64_t cbe_encode_get_buffer_offset(struct cbe_encode_process* encode_process);
 
 /**
- * Get the current write offset into the array being encoded.
- * Use this value when encoding an array in multiple steps.
- * This value is only valid while encoding an array.
- *
- * @param encode_process The encode process.
- * @return The current offset.
- */
-int64_t cbe_encode_get_array_offset(struct cbe_encode_process* encode_process);
-
-/**
  * Get the document depth. This is the total depth of lists or maps that
  * haven't yet been terminated with an "end container". It must be 0 in order
  * to successfully complete a document.
@@ -600,7 +589,7 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
 cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_process, int byte_count);
 
 /**
- * Add an nil object to the document.
+ * Add a nil object to the document.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The operation was successful.
@@ -978,7 +967,7 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param string_start The start of the string to add.
+ * @param string_start The string to add. May be NULL iff byte_count = 0.
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
@@ -1003,7 +992,7 @@ cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_proces
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param data The data to add.
+ * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
 cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_process,
@@ -1029,7 +1018,7 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param comment_start The start of the string to add.
+ * @param comment_start The comment to add. May be NULL iff byte_count = 0.
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
@@ -1120,6 +1109,9 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  * completely filled, at which point it is automatically considered "completed"
  * and is closed.
  *
+ * Note: You must call this function even for zero length arrays, as it is the
+ *       only way to terminate an array.
+ *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
@@ -1133,13 +1125,13 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  * - CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
- * @param start The start of the data to add.
- * @param byte_count The length of the data in bytes.
+ * @param start The start of the data to add. May be NULL iff *byte_count = 0.
+ * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current encoder status.
  */
 cbe_encode_status cbe_encode_add_data(struct cbe_encode_process* encode_process,
                                       const uint8_t* start,
-                                      int64_t byte_count);
+                                      int64_t* byte_count);
 
 
 
