@@ -329,7 +329,7 @@ int64_t cbe_encoder::get_encode_buffer_offset()
 cbe_encoder::cbe_encoder(int64_t buffer_size,
 	                     int max_container_depth,
 					     std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
-: _process_backing_store(cbe_encode_process_size(_max_container_depth))
+: _process_backing_store(cbe_encode_process_size(max_container_depth))
 , _process((cbe_encode_process*)_process_backing_store.data())
 , _buffer(buffer_size)
 , _max_container_depth(max_container_depth)
