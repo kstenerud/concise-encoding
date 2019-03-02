@@ -8,9 +8,9 @@ using namespace enc;
 #define TEST_ENCODE_DECODE_SHRINKING_TIME(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC, ...) \
 TEST(Time, time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-	cbe_test::expect_encode_decode_with_shrinking_buffer_size(0, \
-		smtime(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC), \
-		 __VA_ARGS__); \
+    cbe_test::expect_encode_decode_with_shrinking_buffer_size(0, \
+        smtime(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC), \
+         __VA_ARGS__); \
 }
 
 

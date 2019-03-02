@@ -2,192 +2,192 @@
 
 static bool my_on_nil(struct cbe_decode_process* process)
 {
-	(void)process;
-	return true;
+    (void)process;
+    return true;
 }
 
 static bool my_on_boolean(struct cbe_decode_process* process, bool value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_int_8(struct cbe_decode_process* process, int8_t value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_int_16(struct cbe_decode_process* process, int16_t value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_int_32(struct cbe_decode_process* process, int32_t value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_int_64(struct cbe_decode_process* process, int64_t value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_int_128(struct cbe_decode_process* process, __int128 value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_float_32(struct cbe_decode_process* process, float value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_float_64(struct cbe_decode_process* process, double value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_float_128(struct cbe_decode_process* process, __float128 value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_decimal_32(struct cbe_decode_process* process, _Decimal32 value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_decimal_64(struct cbe_decode_process* process, _Decimal64 value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_decimal_128(struct cbe_decode_process* process, _Decimal128 value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_time(struct cbe_decode_process* process, smalltime value)
 {
-	(void)process;
-	(void)value;
-	return true;
+    (void)process;
+    (void)value;
+    return true;
 }
 
 static bool my_on_list_begin(struct cbe_decode_process* process)
 {
-	(void)process;
-	return true;
+    (void)process;
+    return true;
 }
 
 static bool my_on_list_end(struct cbe_decode_process* process)
 {
-	(void)process;
-	return true;
+    (void)process;
+    return true;
 }
 
 static bool my_on_map_begin(struct cbe_decode_process* process)
 {
-	(void)process;
-	return true;
+    (void)process;
+    return true;
 }
 
 static bool my_on_map_end(struct cbe_decode_process* process)
 {
-	(void)process;
-	return true;
+    (void)process;
+    return true;
 }
 
 static bool my_on_string_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-	(void)process;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)byte_count;
+    return true;
 }
 
 static bool my_on_binary_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-	(void)process;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)byte_count;
+    return true;
 }
 
 static bool my_on_comment_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-	(void)process;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)byte_count;
+    return true;
 }
 
 static bool my_on_string_data(struct cbe_decode_process* process,
                            const char* start,
                            int64_t byte_count)
 {
-	(void)process;
-	(void)start;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)start;
+    (void)byte_count;
+    return true;
 }
 
 static bool my_on_binary_data(struct cbe_decode_process* process,
                            const uint8_t* start,
                            int64_t byte_count)
 {
-	(void)process;
-	(void)start;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)start;
+    (void)byte_count;
+    return true;
 }
 
 static bool my_on_comment_data(struct cbe_decode_process* process,
                            const char* start,
                            int64_t byte_count)
 {
-	(void)process;
-	(void)start;
-	(void)byte_count;
-	return true;
+    (void)process;
+    (void)start;
+    (void)byte_count;
+    return true;
 }
 
 static void my_report_decode_error(struct cbe_decode_process* process, cbe_decode_status status)
 {
-	(void)process;
-	(void)status;
+    (void)process;
+    (void)status;
 }
 
 static void my_report_encode_error(struct cbe_encode_process* process, cbe_encode_status status)
 {
-	(void)process;
-	(void)status;
+    (void)process;
+    (void)status;
 }
 
 static void my_flush_buffer(const uint8_t* buffer, int64_t buffer_length)
 {
-	(void)buffer;
-	(void)buffer_length;
+    (void)buffer;
+    (void)buffer_length;
 }
 
 // ==================================================================
@@ -226,41 +226,41 @@ bool decode(const uint8_t* my_document, int64_t my_document_size, void* my_conte
     };
 
     cbe_decode_status status = cbe_decode(&callbacks,
-    	                                  my_context_data,
-    	                                  my_document,
-    	                                  my_document_size,
-    	                                  max_container_depth);
+                                          my_context_data,
+                                          my_document,
+                                          my_document_size,
+                                          max_container_depth);
     if(status != CBE_DECODE_STATUS_OK)
     {
-    	my_report_decode_error(decode_process, status);
-    	return false;
+        my_report_decode_error(decode_process, status);
+        return false;
     }
     return true;
 }
 
 bool encode()
 {
-	uint8_t buffer[1000];
+    uint8_t buffer[1000];
     const int max_container_depth = 500;
     char backing_store[cbe_encode_process_size(max_container_depth)];
     struct cbe_encode_process* encode_process = (struct cbe_encode_process*)backing_store;
 
     cbe_encode_status status = cbe_encode_begin(encode_process,
-    	                                        buffer,
-    	                                        sizeof(buffer),
-    	                                        max_container_depth);
+                                                buffer,
+                                                sizeof(buffer),
+                                                max_container_depth);
     if(status != CBE_ENCODE_STATUS_OK)
     {
-    	my_report_encode_error(encode_process, status);
-    	return false;
+        my_report_encode_error(encode_process, status);
+        return false;
     }
 
     // TODO: Check for errors on all cbe calls
     status = cbe_encode_list_begin(encode_process);
     if(status == CBE_ENCODE_STATUS_NEED_MORE_ROOM)
     {
-    	my_flush_buffer(buffer, cbe_encode_get_buffer_offset(encode_process));
-    	cbe_encode_set_buffer(encode_process, buffer, sizeof(buffer));
+        my_flush_buffer(buffer, cbe_encode_get_buffer_offset(encode_process));
+        cbe_encode_set_buffer(encode_process, buffer, sizeof(buffer));
     }
 
     // TODO: Check for out of room on all cbe calls
@@ -271,8 +271,8 @@ bool encode()
 
     if(status != CBE_ENCODE_STATUS_OK)
     {
-    	my_report_encode_error(encode_process, status);
-    	return false;
+        my_report_encode_error(encode_process, status);
+        return false;
     }
     return true;
 }

@@ -20,9 +20,9 @@ std::vector<uint8_t> make_7f_bytes(int length);
 std::vector<uint8_t> make_bytes(int length, int start_value=0);
 
 std::vector<uint8_t> concat(
-	const std::vector<uint8_t>& v1,
-	const std::vector<uint8_t>& v2,
-	const std::vector<uint8_t>& v3 = std::vector<uint8_t>(),
-	const std::vector<uint8_t>& v4 = std::vector<uint8_t>(),
-	const std::vector<uint8_t>& v5 = std::vector<uint8_t>()
-	);
+    const std::vector<uint8_t>& v1,
+    const std::vector<uint8_t>& v2,
+    const std::vector<uint8_t>& v3 = std::vector<uint8_t>(),
+    const std::vector<uint8_t>& v4 = std::vector<uint8_t>(),
+    const std::vector<uint8_t>& v5 = std::vector<uint8_t>()
+    );
