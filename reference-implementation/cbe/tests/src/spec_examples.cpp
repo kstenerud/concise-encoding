@@ -8,58 +8,58 @@ using namespace enc;
 
 // Boolean
 
-TEST_ENCODE_DECODE(Spec_Boolean, false, 100, bl(false), {0x7a})
-TEST_ENCODE_DECODE(Spec_Boolean, true,  100, bl(true),  {0x79})
+TEST_ENCODE_DECODE_DATA(Spec_Boolean, false, 99, 9, bl(false), {0x7a})
+TEST_ENCODE_DECODE_DATA(Spec_Boolean, true,  99, 9, bl(true),  {0x79})
 
 
 // Integer
 
-TEST_ENCODE_DECODE(Spec_Integer, p96,            100, i8(96),              {0x60})
-TEST_ENCODE_DECODE(Spec_Integer, p0,             100, i8(0),               {0x00})
-TEST_ENCODE_DECODE(Spec_Integer, n54,            100, i8(-54),             {0xca})
-TEST_ENCODE_DECODE(Spec_Integer, p127,           100, i16(127),            {0x6e, 0x7f, 0x00})
-TEST_ENCODE_DECODE(Spec_Integer, p1000000,       100, i32(1000000),        {0x6f, 0x40, 0x42, 0x0f, 0x00})
-TEST_ENCODE_DECODE(Spec_Integer, n1000000000000, 100, i64(-1000000000000), {0x70, 0x00, 0xf0, 0x5a, 0x2b, 0x17, 0xff, 0xff, 0xff})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p96,            99, 9, i8(96),              {0x60})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p0,             99, 9, i8(0),               {0x00})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, n54,            99, 9, i8(-54),             {0xca})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p127,           99, 9, i16(127),            {0x6e, 0x7f, 0x00})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p1000000,       99, 9, i32(1000000),        {0x6f, 0x40, 0x42, 0x0f, 0x00})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, n1000000000000, 99, 9, i64(-1000000000000), {0x70, 0x00, 0xf0, 0x5a, 0x2b, 0x17, 0xff, 0xff, 0xff})
 
 
 // Binary Floating Point
 
-TEST_ENCODE_DECODE(Spec_BinaryFloat, p12_5,   100, f32(12.5),   {0x72, 0x00, 0x00, 0x48, 0x41})
-TEST_ENCODE_DECODE(Spec_BinaryFloat, p1281_2, 100, f64(1281.2), {0x73, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0x04, 0x94, 0x40})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p12_5,   99, 9, f32(12.5),   {0x72, 0x00, 0x00, 0x48, 0x41})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p1281_2, 99, 9, f64(1281.2), {0x73, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0x04, 0x94, 0x40})
 
 
 // Decinal Floating Point
 
-TEST_ENCODE_DECODE(Spec_DecimalFloat, n7_5,    100, d32(-7.5df),   {0x75, 0x4b, 0x00, 0x00, 0xb2})
-TEST_ENCODE_DECODE(Spec_DecimalFloat, p1281_2, 100, d32(1281.2df), {0x75, 0x0c, 0x32, 0x00, 0x32})
+TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, n7_5,    99, 9, d32(-7.5df),   {0x75, 0x4b, 0x00, 0x00, 0xb2})
+TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, p1281_2, 99, 9, d32(1281.2df), {0x75, 0x0c, 0x32, 0x00, 0x32})
 
 
 // Time
 
-TEST_ENCODE_DECODE(Spec_Time, time, 100, smtime(1985, 10, 26, 8, 22, 16, 900142),
+TEST_ENCODE_DECODE_DATA(Spec_Time, time, 99, 9, smtime(1985, 10, 26, 8, 22, 16, 900142),
 	{0x78, 0x2e, 0xbc, 0x0d, 0x59, 0x68, 0x65, 0xf0, 0x01})
 
 
 // Binary Array
 
-TEST_ENCODE_DECODE(Spec_Binary, binary, 100, bin({0x01, 0x02, 0x03, 0x04, 0x05}),
+TEST_ENCODE_DECODE_DATA(Spec_Binary, binary, 99, 9, bin({0x01, 0x02, 0x03, 0x04, 0x05}),
 	{0x91, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05})
 
 
 // String
 
-TEST_ENCODE_DECODE(Spec_String, string1, 100, str("Main Street"),
+TEST_ENCODE_DECODE_DATA(Spec_String, string1, 99, 9, str("Main Street"),
 	{0x8b, 0x4d, 0x61, 0x69, 0x6e, 0x20, 0x53, 0x74, 0x72, 0x65, 0x65, 0x74})
-TEST_ENCODE_DECODE(Spec_String, string2, 100, str("Rödelstraße"),
+TEST_ENCODE_DECODE_DATA(Spec_String, string2, 99, 9, str("Rödelstraße"),
 	{0x8d, 0x52, 0xc3, 0xb6, 0x64, 0x65, 0x6c, 0x73, 0x74, 0x72, 0x61, 0xc3, 0x9f, 0x65})
-TEST_ENCODE_DECODE(Spec_String, string3, 100, str("覚王山　日泰寺"),
+TEST_ENCODE_DECODE_DATA(Spec_String, string3, 99, 9, str("覚王山　日泰寺"),
 	{0x90, 0x54, 0xe8, 0xa6, 0x9a, 0xe7, 0x8e, 0x8b, 0xe5, 0xb1, 0xb1, 0xe3, 0x80, 0x80,
 	 0xe6, 0x97, 0xa5, 0xe6, 0xb3, 0xb0, 0xe5, 0xaf, 0xba})
 
 
 // Comment
 
-TEST_ENCODE_DECODE(Spec_comment, comment, 100,
+TEST_ENCODE_DECODE_DATA(Spec_comment, comment, 99, 9,
 	comment("Bug #95512: System fails to start on arm64 unless B latch is set"),
 	{0x92, 0x01, 0x01, 0x42, 0x75, 0x67, 0x20, 0x23, 0x39, 0x35, 0x35, 0x31, 0x32, 0x3a,
 	 0x20, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x20, 0x66, 0x61, 0x69, 0x6c, 0x73, 0x20,
@@ -70,21 +70,21 @@ TEST_ENCODE_DECODE(Spec_comment, comment, 100,
 
 // List
 
-TEST_ENCODE_DECODE(Spec_List, values_1_and_5000, 100, list()->i8(1)->i16(5000)->end(),
+TEST_ENCODE_DECODE_DATA(Spec_List, values_1_and_5000, 99, 9, list()->i8(1)->i16(5000)->end(),
 	{0x7b, 0x01, 0x6e, 0x88, 0x13, 0x7d})
 
 
 // Map
 
-TEST_ENCODE_DECODE(Spec_Map, a_1_b_2, 100, map()->str("a")->i8(1)->str("b")->i8(2)->end(),
+TEST_ENCODE_DECODE_DATA(Spec_Map, a_1_b_2, 99, 9, map()->str("a")->i8(1)->str("b")->i8(2)->end(),
 	{0x7c, 0x81, 0x61, 0x01, 0x81, 0x62, 0x02, 0x7d})
 
 
 // Nil
 
-TEST_ENCODE_DECODE(Spec_Nil, nil, 100, nil(), {0x7e})
+TEST_ENCODE_DECODE_DATA(Spec_Nil, nil, 99, 9, nil(), {0x7e})
 
 
 // Padding
 
-TEST_ENCODE(Spec_Padding, padding1, 100, pad(3)->i32(0x8f000000), {0x7f, 0x7f, 0x7f, 0x6f, 0x00, 0x00, 0x00, 0x8f})
+TEST_ENCODE_DATA(Spec_Padding, padding1, 99, 9, pad(3)->i32(0x8f000000), {0x7f, 0x7f, 0x7f, 0x6f, 0x00, 0x00, 0x00, 0x8f})

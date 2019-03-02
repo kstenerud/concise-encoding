@@ -20,18 +20,18 @@ static std::string g_bad_chars[] =
 static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
 
 
-TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
-TEST_ENCODE_DECODE_SHRINKING_CONTAINER(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
+TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
+TEST_ENCODE_DECODE_SHRINKING(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
 
-TEST_ENCODE_STATUS(Comment, encode_bad_data, CBE_ENCODE_ERROR_INVALID_DATA, comment("Test\nblah"));
-TEST_DECODE_STATUS(Comment, decode_bad_data, CBE_DECODE_ERROR_INVALID_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
+TEST_ENCODE_STATUS(Comment, encode_bad_data, 99, 9, CBE_ENCODE_ERROR_INVALID_DATA, comment("Test\nblah"));
+TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
 
 TEST(Comment, encode_bad_chars)
 {
-    const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
-    std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x00, 0x43, 0x44};
     const int64_t buffer_size = 100;
     const int max_container_depth = 100;
+    const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
+    std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x00, 0x43, 0x44};
     cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_comment(data);
     EXPECT_EQ(expected_status, status);
@@ -39,15 +39,22 @@ TEST(Comment, encode_bad_chars)
     for(int i = 0; i < g_bad_chars_count; i++)
     {
         std::string str = std::string("test") + g_bad_chars[i] + std::string("blah");
-        cbe_test::expect_encode_produces_status(comment(str), expected_status);
+        cbe_test::expect_encode_produces_status(buffer_size, max_container_depth, comment(str), expected_status);
     }
 }
 
 TEST(Comment, decode_bad_character)
 {
+    const int64_t buffer_size = 100;
+    const int max_container_depth = 100;
+    const bool callback_return_value = true;
     const cbe_decode_status expected_status = CBE_DECODE_ERROR_INVALID_DATA;
     uint8_t data[] = {0x92, 0x24, 0x61, 0x00, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
-    cbe_test::expect_decode_produces_status(std::vector<uint8_t>(data, data + sizeof(data)), expected_status);
+    cbe_test::expect_decode_produces_status(buffer_size,
+                                            max_container_depth,
+                                            callback_return_value,
+                                            std::vector<uint8_t>(data, data + sizeof(data)),
+                                            expected_status);
 
     uint8_t header[] = {0x92, 0x00};
     for(int i = 0; i < g_bad_chars_count; i++)
@@ -56,7 +63,11 @@ TEST(Comment, decode_bad_character)
         std::vector<uint8_t> string_data((uint8_t*)str.data(), (uint8_t*)str.data() + str.size());
         header[1] = (uint8_t)str.size() << 2;
         string_data.insert(string_data.begin(), header, header + sizeof(header));
-        cbe_test::expect_decode_produces_status(string_data, expected_status);
+        cbe_test::expect_decode_produces_status(buffer_size,
+                                            max_container_depth,
+                                            callback_return_value,
+                                            string_data,
+                                            expected_status);
     }
 }
 
