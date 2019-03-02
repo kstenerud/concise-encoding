@@ -102,6 +102,11 @@ typedef enum
     CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
 
     /**
+     * An array field was not completed before ending the decode process.
+     */
+    CTE_DECODE_ERROR_INCOMPLETE_FIELD,
+
+    /**
      * An internal bug triggered an error.
      */
     CTE_DECODE_ERROR_INTERNAL,
@@ -173,7 +178,7 @@ typedef struct
     /**
      * A string has been opened. Expect subsequent calls to
      * on_string_data() until the array has been filled. Once
-     * `on_string_end` is called, the field is considered
+     * on_string_end() is called, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -201,7 +206,7 @@ typedef struct
     /**
      * A binary data array has been opened. Expect subsequent calls to
      * on_binary_data() until the array has been filled. Once
-     * `on_binary_end` is called, the field is considered
+     * on_binary_end() is called, the field is considered
      * "complete" and is closed.
      *
      * @param byte_count The total length of the array.
@@ -229,7 +234,7 @@ typedef struct
     /**
      * A comment has been opened. Expect subsequent calls to
      * on_comment_data() until the array has been filled. Once
-     * `on_comment_end` is called, the field is considered
+     * on_comment_end() is called, the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
@@ -305,12 +310,12 @@ cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
 /**
  * Get the size of the decode process data.
  * Use this to create a backing store for the process data like so:
- *     char process_backing_store[cte_decode_process_size()];
+ *     char process_backing_store[cte_decode_process_size(max_depth)];
  *     struct cte_decode_process* decode_process = (struct cte_decode_process*)process_backing_store;
  * or
  *     struct cte_decode_process* decode_process = (struct cte_decode_process*)malloc(cte_decode_process_size());
  * or
- *     std::vector<char> process_backing_store(cte_decode_process_size());
+ *     std::vector<char> process_backing_store(cte_decode_process_size(max_depth));
  *     struct cte_decode_process* decode_process = (struct cte_decode_process*)process_backing_store.data();
  *
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
@@ -484,6 +489,7 @@ typedef enum
      * Max container depth (default 500) was exceeded.
      */
     CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
+
 } cte_encode_status;
 
 
@@ -512,12 +518,13 @@ int cte_encode_process_size(int max_container_depth);
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  *
+ * @param encode_process The encode process to initialize.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
- * @param max_container_depth The maximum container depth to suppport (<= 0 use default).
+ * @param max_container_depth The maximum container depth to suppport (<= 0 means use default).
  * @param float_digits_precision The number of significant digits to print for floating point numbers (<= 0 use default).
  * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print, < 0 use default).
- * @return The new encode process.
+ * @return The current encoder status.
  */
 cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
                                    uint8_t* const document_buffer,
@@ -539,9 +546,10 @@ cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
  * @param encode_process The encode process.
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
+ * @return The current encoder status.
  */
 cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_process,
-                                        uint8_t* const document_buffer,
+                                        uint8_t* document_buffer,
                                         int64_t byte_count);
 
 /**
@@ -945,6 +953,9 @@ cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_pro
 
 /**
  * Convenience function: add a UTF-8 encoded string and its data to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
@@ -959,7 +970,7 @@ cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_pro
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param string_start The start of the string to add.
+ * @param string_start The string to add. May be NULL iff byte_count = 0.
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
@@ -969,6 +980,9 @@ cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_proces
 
 /**
  * Convenience function: add a binary data blob to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  *
  * Successful status codes:
  * - CTE_ENCODE_STATUS_OK: The operation was successful.
@@ -981,7 +995,7 @@ cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_proces
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param data The data to add.
+ * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
 cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_process,
@@ -990,6 +1004,9 @@ cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_proces
 
 /**
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
  * Note: Do not include a byte order marker (BOM).
  *
  * Successful status codes:
@@ -1004,7 +1021,7 @@ cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_proces
  * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
  *
  * @param encode_process The encode process.
- * @param comment_start The start of the string to add.
+ * @param comment_start The comment to add. May be NULL iff byte_count = 0.
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
@@ -1059,7 +1076,7 @@ cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_proc
 /**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
  *
- * This function "opens" a string field, encoding the type and length portions.
+ * This function "opens" a comment field, encoding the type and length portions.
  * The encode process will expect subsequent cte_encode_add_data() calls
  * to fill up the field, and a final call to cte_encode_comment_end() to close the field.
  *
@@ -1080,8 +1097,10 @@ cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_pro
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
- * Call this function repeatedly until all data has been added, then call
- * cte_encode_array_end() to close the field.
+ * If there's not enough room in the buffer, this function will add as much data
+ * as it can to the encoded buffer before returning CBE_ENCODE_STATUS_NEED_MORE_ROOM.
+ * You can call this as many times as you like until the array field has been
+ * completely filled, and then call cte_encode_array_end() to close the field.
  *
  * Successful status codes:
  * - CTE_ENCODE_STATUS_OK: The encode process has begun.
@@ -1092,17 +1111,20 @@ cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_pro
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_INVALID_DATA: The array contained invalid data.
- * - CTE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
  * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
- * @param start The start of the data to add.
- * @param byte_count The length of the data in bytes.
+ * @param start The start of the data to add. May be NULL iff *byte_count = 0.
+ * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current encoder status.
  */
 cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
                                       const uint8_t* start,
-                                      int64_t byte_count);
+                                      int64_t* byte_count);
+
+cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_comment_end(struct cte_encode_process* encode_process);
 
 /**
  * End an array (string, binary, comment) in the document.
