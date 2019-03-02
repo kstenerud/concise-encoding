@@ -79,13 +79,14 @@ endmacro()
 #########
 
 package_add_test(cbe_tests
-    src/cbe_decoder.cpp
-    src/cbe_encoder.cpp
-    src/encoding.cpp
+    src/helpers/cbe_decoder.cpp
+    src/helpers/cbe_encoder.cpp
+    src/helpers/encoding.cpp
+    src/helpers/test_helpers.cpp
+    src/helpers/test_utils.cpp
+
     src/general_tests.cpp
     src/library.cpp
     src/readme_examples.c
     src/spec_examples.cpp
-    src/test_helpers.cpp
-    src/test_utils.cpp
 )
