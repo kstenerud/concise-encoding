@@ -51,18 +51,7 @@ TEST_ENCODE_STATUS(String, binary,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD,
 TEST_DECODE_STATUS(String, decode_too_short,  99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {0x85, 0x30, 0x30});
 TEST_DECODE_STATUS(String, decode_too_short2, 99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {0x90, 0x40, 0x30});
 
-// TEST_ENCODE_STATUS(String, encode_bad_chars, 99, 9, CBE_ENCODE_ERROR_INVALID_DATA)
-
-TEST(String, encode_bad_chars)
-{
-    const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
-    std::vector<uint8_t> data = {0x40, 0x81, 0x42, 0x43, 0x44};
-    const int64_t buffer_size = 100;
-    const int max_container_depth = 100;
-    cbe_encoder encoder(buffer_size, max_container_depth);
-    cbe_encode_status status = encoder.encode_string(data);
-    EXPECT_EQ(expected_status, status);
-}
+TEST_ENCODE_STATUS(String, encode_bad_chars, 99, 9, CBE_ENCODE_ERROR_INVALID_DATA, str({0x40, (char)0x81, 0x42, 0x43, 0x44}));
 
 TEST_DECODE_STATUS(String, decode_bad_character,  99, 9, true, CBE_DECODE_ERROR_INVALID_DATA, {0x89, 0x61, 0x80, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74});
 
