@@ -85,8 +85,13 @@ package_add_test(cbe_tests
     src/helpers/test_helpers.cpp
     src/helpers/test_utils.cpp
 
-    src/general_tests.cpp
+    src/binary.cpp
+    src/comment.cpp
+    src/general.cpp
     src/library.cpp
+    src/list.cpp
+    src/map.cpp
     src/readme_examples.c
     src/spec_examples.cpp
+    src/string.cpp
 )
