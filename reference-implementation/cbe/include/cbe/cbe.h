@@ -105,6 +105,11 @@ typedef enum
     CBE_DECODE_ERROR_FIELD_LENGTH_EXCEEDED,
 
     /**
+     * Max container depth (default 500) was exceeded.
+     */
+    CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
+
+    /**
      * An internal bug triggered an error.
      */
     CBE_DECODE_ERROR_INTERNAL,
@@ -268,6 +273,7 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
  * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
  * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: Containers run too deep in the document.
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
  * @param callbacks The callbacks to call while decoding the document.

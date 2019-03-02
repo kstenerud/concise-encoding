@@ -3,8 +3,6 @@
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
-#define MAX_CONTAINER_DEPTH 500
-
 bool cbe_encoder::flush_buffer()
 {
 	bool result = false;
@@ -303,7 +301,7 @@ cbe_encode_status cbe_encoder::encode(enc::container_end_encoding& e)
 
 cbe_encode_status cbe_encoder::encode(std::shared_ptr<enc::encoding> enc)
 {
-	cbe_encode_status result = cbe_encode_begin(_process, _buffer.data(), _buffer.size(), MAX_CONTAINER_DEPTH);
+	cbe_encode_status result = cbe_encode_begin(_process, _buffer.data(), _buffer.size(), _max_container_depth);
 	if(result != CBE_ENCODE_STATUS_OK)
 	{
 		return result;
@@ -329,10 +327,12 @@ int64_t cbe_encoder::get_encode_buffer_offset()
 }
 
 cbe_encoder::cbe_encoder(int64_t buffer_size,
-	std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
-: _process_backing_store(cbe_encode_process_size(MAX_CONTAINER_DEPTH))
+	                     int max_container_depth,
+					     std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
+: _process_backing_store(cbe_encode_process_size(_max_container_depth))
 , _process((cbe_encode_process*)_process_backing_store.data())
 , _buffer(buffer_size)
+, _max_container_depth(max_container_depth)
 , _on_data_ready(on_data_ready)
 {
 	KSLOG_DEBUG("New cbe_encoder with buffer size %d", _buffer.size());

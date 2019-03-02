@@ -309,7 +309,9 @@ TEST(Comment, encode_bad_chars)
 {
 	const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
 	std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x00, 0x43, 0x44};
-	cbe_encoder encoder;
+    const int64_t buffer_size = 100;
+    const int max_container_depth = 100;
+	cbe_encoder encoder(buffer_size, max_container_depth);
 	cbe_encode_status status = encoder.encode_comment(data);
 	EXPECT_EQ(expected_status, status);
 
@@ -341,7 +343,9 @@ TEST(String, encode_bad_chars)
 {
     const cbe_encode_status expected_status = CBE_ENCODE_ERROR_INVALID_DATA;
     std::vector<uint8_t> data = {0x40, 0x81, 0x42, 0x43, 0x44};
-    cbe_encoder encoder;
+    const int64_t buffer_size = 100;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_string(data);
     EXPECT_EQ(expected_status, status);
 }
@@ -357,7 +361,9 @@ TEST(Binary, encode_convenience)
 {
     const cbe_encode_status expected_status = CBE_ENCODE_STATUS_OK;
     std::vector<uint8_t> data = {0x40, 0x81, 0x42, 0x43, 0x44};
-    cbe_encoder encoder;
+    const int64_t buffer_size = 100;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_binary(data);
     EXPECT_EQ(expected_status, status);
 }
@@ -366,7 +372,9 @@ TEST(Binary, encode_convenience_fail)
 {
     const cbe_encode_status expected_status = CBE_ENCODE_STATUS_NEED_MORE_ROOM;
     std::vector<uint8_t> data = {0x40, 0x81, 0x42, 0x43, 0x44};
-    cbe_encoder encoder(4);
+    const int64_t buffer_size = 4;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_binary(data);
     EXPECT_EQ(expected_status, status);
     EXPECT_EQ(0, encoder.get_encode_buffer_offset());
@@ -376,7 +384,9 @@ TEST(String, encode_convenience_fail)
 {
     const cbe_encode_status expected_status = CBE_ENCODE_STATUS_NEED_MORE_ROOM;
     std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x43, 0x44};
-    cbe_encoder encoder(4);
+    const int64_t buffer_size = 4;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_string(data);
     EXPECT_EQ(expected_status, status);
     EXPECT_EQ(0, encoder.get_encode_buffer_offset());
@@ -388,7 +398,9 @@ TEST(String, encode_convenience_fail_long)
     std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
                                  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
                                  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47};
-    cbe_encoder encoder(10);
+    const int64_t buffer_size = 10;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_string(data);
     EXPECT_EQ(expected_status, status);
     EXPECT_EQ(0, encoder.get_encode_buffer_offset());
@@ -398,7 +410,9 @@ TEST(Comment, encode_convenience_fail)
 {
     const cbe_encode_status expected_status = CBE_ENCODE_STATUS_NEED_MORE_ROOM;
     std::vector<uint8_t> data = {0x40, 0x41, 0x42, 0x43, 0x44};
-    cbe_encoder encoder(4);
+    const int64_t buffer_size = 4;
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size, max_container_depth);
     cbe_encode_status status = encoder.encode_comment(data);
     EXPECT_EQ(expected_status, status);
     EXPECT_EQ(0, encoder.get_encode_buffer_offset());

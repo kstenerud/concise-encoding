@@ -78,9 +78,8 @@ typedef struct cbe_decode_process cbe_decode_process;
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    unlikely_if((PROCESS)->container.level < (PROCESS)->container.max_depth && \
-        (PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
-        !(PROCESS)->container.next_object_is_map_key) \
+    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+                !(PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
         UPDATE_STREAM_OFFSET(PROCESS); \
@@ -88,9 +87,8 @@ typedef struct cbe_decode_process cbe_decode_process;
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    unlikely_if((PROCESS)->container.level < (PROCESS)->container.max_depth && \
-        (PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
-        (PROCESS)->container.next_object_is_map_key) \
+    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+                (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
         KSLOG_TRACE("container_level: %d, is_inside_map: %d, next_object_is_map_key %d", \
@@ -118,6 +116,13 @@ typedef struct cbe_decode_process cbe_decode_process;
         KSLOG_DEBUG("STOP AND EXIT: Callback returned false"); \
         UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_STATUS_STOPPED_IN_CALLBACK; \
+    }
+
+#define STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(PROCESS) \
+    unlikely_if((PROCESS)->container.level + 1 >= (PROCESS)->container.max_depth) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Max depth %d exceeded", (PROCESS)->container.max_depth); \
+        return CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED; \
     }
 
 
@@ -388,24 +393,20 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 break;
             case TYPE_LIST:
                 KSLOG_DEBUG("<List>");
+                STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process)
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_list_begin(process));
                 process->container.level++;
-                likely_if(process->container.level < process->container.max_depth)
-                {
-                    process->container.is_inside_map[process->container.level] = false;
-                }
+                process->container.is_inside_map[process->container.level] = false;
                 process->container.next_object_is_map_key = false;
                 break;
             case TYPE_MAP:
                 KSLOG_DEBUG("<Map>");
+                STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process)
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_map_begin(process));
                 process->container.level++;
-                likely_if(process->container.level < process->container.max_depth)
-                {
-                    process->container.is_inside_map[process->container.level] = true;
-                }
+                process->container.is_inside_map[process->container.level] = true;
                 process->container.next_object_is_map_key = true;
                 break;
             case TYPE_END_CONTAINER:
@@ -421,10 +422,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 }
                 END_OBJECT();
                 process->container.level--;
-                likely_if(process->container.level < process->container.max_depth)
-                {
-                    process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
-                }
+                process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:

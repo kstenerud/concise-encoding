@@ -11,6 +11,7 @@ private:
 	cbe_encode_process* _process;
 	std::vector<uint8_t> _buffer;
 	std::vector<uint8_t> _encoded_data;
+	int _max_container_depth;
 	std::function<bool(uint8_t* data_start, int64_t length)> _on_data_ready;
 
 protected:
@@ -47,9 +48,11 @@ public:
 	cbe_encode_status encode(enc::container_end_encoding& e);
 
 public:
-	cbe_encoder(int64_t buffer_size=10000,
-		std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready =
-			[](uint8_t* data_start, int64_t length){(void)data_start; (void)length; return true;});
+	cbe_encoder(int64_t buffer_size,
+		        int max_container_depth,
+				std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready =
+					[](uint8_t* data_start, int64_t length)
+					{(void)data_start; (void)length; return true;});
 
 	// Encode an encoding object and all linked objects.
 	cbe_encode_status encode(std::shared_ptr<enc::encoding> enc);

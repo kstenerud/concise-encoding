@@ -4,8 +4,6 @@
 #include "kslogger.h"
 #include "test_utils.h"
 
-#define MAX_CONTAINER_DEPTH 500
-
 static cbe_decoder* get_decoder(struct cbe_decode_process* process)
 {
     return (cbe_decoder*)cbe_decode_get_user_context(process);
@@ -166,10 +164,11 @@ static const cbe_decode_callbacks g_callbacks =
     on_comment_data: on_comment_data,
 };
 
-cbe_decoder::cbe_decoder(bool callback_return_value)
-: _process_backing_store(cbe_decode_process_size(MAX_CONTAINER_DEPTH))
+cbe_decoder::cbe_decoder(int max_container_depth, bool callback_return_value)
+: _process_backing_store(cbe_decode_process_size(max_container_depth))
 , _process((cbe_decode_process*)_process_backing_store.data())
 , _callback_return_value(callback_return_value)
+, _max_container_depth(max_container_depth)
 {
 }
 
@@ -200,7 +199,7 @@ cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
 
 cbe_decode_status cbe_decoder::begin()
 {
-    return cbe_decode_begin(_process, &g_callbacks, (void*)this, MAX_CONTAINER_DEPTH);
+    return cbe_decode_begin(_process, &g_callbacks, (void*)this, _max_container_depth);
 }
 
 cbe_decode_status cbe_decoder::end()
@@ -216,7 +215,7 @@ cbe_decode_status cbe_decoder::end()
 
 cbe_decode_status cbe_decoder::decode(std::vector<uint8_t>& document)
 {
-    return cbe_decode(&g_callbacks, (void*)this, document.data(), document.size(), MAX_CONTAINER_DEPTH);
+    return cbe_decode(&g_callbacks, (void*)this, document.data(), document.size(), _max_container_depth);
 }
 
 bool cbe_decoder::set_next(std::shared_ptr<enc::encoding> encoding)

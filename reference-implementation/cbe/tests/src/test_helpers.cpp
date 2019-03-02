@@ -15,7 +15,10 @@ static std::vector<uint8_t> encode_data(
     std::vector<uint8_t> actual_memory;
 
     KSLOG_DEBUG("Encode %s with buffer size %d", encoding->as_string().c_str(), buffer_size);
-    cbe_encoder encoder(buffer_size, [&](uint8_t* data_start, int64_t length)
+    const int max_container_depth = 100;
+    cbe_encoder encoder(buffer_size,
+        max_container_depth,
+        [&](uint8_t* data_start, int64_t length)
         {
             KSLOG_DEBUG("Encoded data of length %d", length);
             actual_memory.insert(actual_memory.end(), data_start, data_start + length);
@@ -31,7 +34,9 @@ static std::shared_ptr<enc::encoding> decode_data(
     std::vector<uint8_t> data,
     cbe_decode_status& status)
 {
-    cbe_decoder decoder;
+    const int max_container_depth = 500;
+    const bool callback_return_value = true;
+    cbe_decoder decoder(max_container_depth, callback_return_value);
     status = decoder.begin();
     if(status != CBE_DECODE_STATUS_OK)
     {
@@ -68,7 +73,9 @@ static std::shared_ptr<enc::encoding> decode(
     std::vector<uint8_t> data,
     cbe_decode_status& status)
 {
-    cbe_decoder decoder;
+    const int max_container_depth = 500;
+    const bool callback_return_value = true;
+    cbe_decoder decoder(max_container_depth, callback_return_value);
     status = decoder.decode(data);
     KSLOG_DEBUG("Status = %d", status);
     return decoder.decoded();
@@ -198,7 +205,9 @@ void expect_decode_stop_in_callback(
     ASSERT_EQ(encode_status, expected_encode_status);
 
     cbe_decode_status expected_decode_status = CBE_DECODE_STATUS_STOPPED_IN_CALLBACK;
-    cbe_decoder decoder(false);
+    const int max_container_depth = 500;
+    const bool callback_return_value = false;
+    cbe_decoder decoder(max_container_depth, callback_return_value);
     cbe_decode_status decode_status = decoder.decode(data);
     ASSERT_EQ(decode_status, expected_decode_status);
 }

@@ -27,6 +27,7 @@ private:
 	int64_t _currently_decoding_offset;
 	std::vector<uint8_t> _currently_decoding_data;
 	bool _callback_return_value;
+	int _max_container_depth;
 
 public:
 	// Internal functions
@@ -39,7 +40,7 @@ public:
 	bool add_comment_data(const std::string& data);
 
 public:
-	cbe_decoder(bool callback_return_value = true);
+	cbe_decoder(int max_container_depth, bool callback_return_value);
 
 	// Begin the decoding process.
 	cbe_decode_status begin();
