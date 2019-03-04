@@ -246,7 +246,7 @@ cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const process, c
     // TODO
     (void)process;
     (void)value;
-    return CTE_DECODE_ERROR_INTERNAL;
+    return CTE_DECODE_ERROR_INTERNAL_BUG;
 }
 
 cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, const _Decimal64 value)
@@ -254,7 +254,7 @@ cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, c
     // TODO
     (void)process;
     (void)value;
-    return CTE_DECODE_ERROR_INTERNAL;
+    return CTE_DECODE_ERROR_INTERNAL_BUG;
 }
 
 cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, const _Decimal128 value)
@@ -262,7 +262,7 @@ cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, 
     // TODO
     (void)process;
     (void)value;
-    return CTE_DECODE_ERROR_INTERNAL;
+    return CTE_DECODE_ERROR_INTERNAL_BUG;
 }
 
 cte_encode_status cte_encode_add_time(cte_encode_process* const process, const smalltime value)
@@ -270,7 +270,7 @@ cte_encode_status cte_encode_add_time(cte_encode_process* const process, const s
     // TODO
     (void)process;
     (void)value;
-    return CTE_DECODE_ERROR_INTERNAL;
+    return CTE_DECODE_ERROR_INTERNAL_BUG;
 }
 
 static char get_escape_char(char ch)

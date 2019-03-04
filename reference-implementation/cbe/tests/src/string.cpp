@@ -24,36 +24,36 @@ TEST_ENCODE_DECODE_SHRINKING(String,  size_15, 1, str(make_string(15)), concat({
 TEST_ENCODE_DECODE_SHRINKING(String,  size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
 TEST_ENCODE_DECODE_SHRINKING(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
 
-TEST_ENCODE_STATUS(String, too_long,   99, 9, CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED, strh(1)->data({0x30, 0x30}));
-TEST_ENCODE_STATUS(String, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30, 0x30}));
-TEST_ENCODE_STATUS(String, int8,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->i8(0));
-TEST_ENCODE_STATUS(String, int16,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->i16(0x7ff));
-TEST_ENCODE_STATUS(String, int32,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->i32(0x7ffff));
-TEST_ENCODE_STATUS(String, int64,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->i64(0x7ffffffffl));
-TEST_ENCODE_STATUS(String, int128,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->i128(0x7ffffffffl, 0));
-TEST_ENCODE_STATUS(String, float32,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->f32(0.1));
-TEST_ENCODE_STATUS(String, float64,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->f64(0.1));
-TEST_ENCODE_STATUS(String, float128,   99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->f128(0.1));
-TEST_ENCODE_STATUS(String, decimal32,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->d32(0.1));
-TEST_ENCODE_STATUS(String, decimal64,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->d64(0.1));
-TEST_ENCODE_STATUS(String, decimal128, 99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->d128(0.1));
-TEST_ENCODE_STATUS(String, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->smtime(0));
-TEST_ENCODE_STATUS(String, boolean,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->bl(false));
-TEST_ENCODE_STATUS(String, list,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->list()->end());
-TEST_ENCODE_STATUS(String, map,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->map()->end());
-TEST_ENCODE_STATUS(String, end,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->end());
-TEST_ENCODE_STATUS(String, nil,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->nil());
-TEST_ENCODE_STATUS(String, padding,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->pad(1));
-TEST_ENCODE_STATUS(String, string,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->str("a"));
-TEST_ENCODE_STATUS(String, string16,   99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->str("1234567890123456"));
-TEST_ENCODE_STATUS(String, binary,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_FIELD, strh(5)->data({0x30})->bin({0x00}));
+TEST_ENCODE_STATUS(String, too_long,   99, 9, CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED, strh(1)->data({0x30, 0x30}));
+TEST_ENCODE_STATUS(String, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30, 0x30}));
+TEST_ENCODE_STATUS(String, int8,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->i8(0));
+TEST_ENCODE_STATUS(String, int16,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->i16(0x7ff));
+TEST_ENCODE_STATUS(String, int32,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->i32(0x7ffff));
+TEST_ENCODE_STATUS(String, int64,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->i64(0x7ffffffffl));
+TEST_ENCODE_STATUS(String, int128,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->i128(0x7ffffffffl, 0));
+TEST_ENCODE_STATUS(String, float32,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->f32(0.1));
+TEST_ENCODE_STATUS(String, float64,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->f64(0.1));
+TEST_ENCODE_STATUS(String, float128,   99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->f128(0.1));
+TEST_ENCODE_STATUS(String, decimal32,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->d32(0.1));
+TEST_ENCODE_STATUS(String, decimal64,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->d64(0.1));
+TEST_ENCODE_STATUS(String, decimal128, 99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->d128(0.1));
+TEST_ENCODE_STATUS(String, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->smtime(0));
+TEST_ENCODE_STATUS(String, boolean,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->bl(false));
+TEST_ENCODE_STATUS(String, list,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->list()->end());
+TEST_ENCODE_STATUS(String, map,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->map()->end());
+TEST_ENCODE_STATUS(String, end,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->end());
+TEST_ENCODE_STATUS(String, nil,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->nil());
+TEST_ENCODE_STATUS(String, padding,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->pad(1));
+TEST_ENCODE_STATUS(String, string,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->str("a"));
+TEST_ENCODE_STATUS(String, string16,   99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->str("1234567890123456"));
+TEST_ENCODE_STATUS(String, binary,     99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->bin({0x00}));
 
-TEST_DECODE_STATUS(String, decode_too_short,  99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {0x85, 0x30, 0x30});
-TEST_DECODE_STATUS(String, decode_too_short2, 99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_FIELD, {0x90, 0x40, 0x30});
+TEST_DECODE_STATUS(String, decode_too_short,  99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD, {0x85, 0x30, 0x30});
+TEST_DECODE_STATUS(String, decode_too_short2, 99, 9, true, CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD, {0x90, 0x40, 0x30});
 
-TEST_ENCODE_STATUS(String, encode_bad_chars, 99, 9, CBE_ENCODE_ERROR_INVALID_DATA, str({0x40, (char)0x81, 0x42, 0x43, 0x44}));
+TEST_ENCODE_STATUS(String, encode_bad_chars, 99, 9, CBE_ENCODE_ERROR_INVALID_ARRAY_DATA, str({0x40, (char)0x81, 0x42, 0x43, 0x44}));
 
-TEST_DECODE_STATUS(String, decode_bad_character,  99, 9, true, CBE_DECODE_ERROR_INVALID_DATA, {0x89, 0x61, 0x80, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74});
+TEST_DECODE_STATUS(String, decode_bad_character,  99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x89, 0x61, 0x80, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74});
 
 TEST(String, encode_convenience_fail)
 {

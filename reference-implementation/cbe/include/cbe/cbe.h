@@ -77,7 +77,7 @@ typedef enum
     /**
      * The array data was invalid.
      */
-    CBE_DECODE_ERROR_INVALID_DATA,
+    CBE_DECODE_ERROR_INVALID_ARRAY_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -87,22 +87,22 @@ typedef enum
     /**
      * An invalid data type was used as a map key.
      */
-    CBE_DECODE_ERROR_INCORRECT_KEY_TYPE,
+    CBE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-    CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
+    CBE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY,
 
     /**
      * An array field was not completed before ending the decode process.
      */
-    CBE_DECODE_ERROR_INCOMPLETE_FIELD,
+    CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD,
 
     /**
      * The currently open field is smaller than the data being added.
      */
-    CBE_DECODE_ERROR_FIELD_LENGTH_EXCEEDED,
+    CBE_DECODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED,
 
     /**
      * Max container depth (default 500) was exceeded.
@@ -112,7 +112,7 @@ typedef enum
     /**
      * An internal bug triggered an error.
      */
-    CBE_DECODE_ERROR_INTERNAL,
+    CBE_DECODE_ERROR_INTERNAL_BUG,
 
 } cbe_decode_status;
 
@@ -268,11 +268,11 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  *
  * Unrecoverable codes:
  * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
+ * - CBE_DECODE_ERROR_INVALID_ARRAY_DATA: An array type contained invalid data.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
- * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
- * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
- * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CBE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE: a map has an invalid key type.
+ * - CBE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: An array was not completed before document end.
  * - CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: Containers run too deep in the document.
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
@@ -336,16 +336,16 @@ cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
  * Note: data_start is not const because 
  *
  * Successful status codes:
- * - CBE_DECODE_STATUS_OK: document has been completely decoded.
- * - CBE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
+ * - CBE_DECODE_STATUS_OK: document fragment was completely decoded.
+ * - CBE_DECODE_STATUS_NEED_MORE_DATA: The document fragment was mostly decoded, and needs more data.
  *
  * Unrecoverable codes:
  * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
+ * - CBE_DECODE_ERROR_INVALID_ARRAY_DATA: An array type contained invalid data.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
- * - CBE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
- * - CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
- * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CBE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE: a map has an invalid key type.
+ * - CBE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: An array was not completed before document end.
  *
  * Recoverable codes:
  * - CBE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
@@ -402,7 +402,7 @@ int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
  * Unrecoverable codes:
  * - CBE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
- * - CBE_DECODE_ERROR_INCOMPLETE_FIELD: a field has not been completely filled yet.
+ * - CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: an array field has not been completely filled yet.
  *
  * @param decode_process The decode process.
  * @return The final decoder status.
@@ -440,7 +440,7 @@ typedef enum
     /**
      * The array data was invalid.
      */
-    CBE_ENCODE_ERROR_INVALID_DATA,
+    CBE_ENCODE_ERROR_INVALID_ARRAY_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -450,23 +450,23 @@ typedef enum
     /**
      * An invalid data type was used as a map key.
      */
-    CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE,
+    CBE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-    CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
+    CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Attempted to add a new field or close the document before the existing
-     * field was completely filled.
+     * Attempted to add a new array field or close the document before the
+     * currently open field was completely filled.
      */
-    CBE_ENCODE_ERROR_INCOMPLETE_FIELD,
+    CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD,
 
     /**
      * The currently open field is smaller than the data being added.
      */
-    CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED,
+    CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED,
 
     /**
      * We're not inside an array field.
@@ -501,7 +501,7 @@ int cbe_encode_process_size(int max_container_depth);
  * Begin a new encoding process.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
@@ -568,7 +568,7 @@ int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: a field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: a field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The final encoder status.
@@ -586,7 +586,7 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param byte_count The number of bytes of padding to add.
@@ -605,8 +605,8 @@ cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -624,7 +624,7 @@ cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -643,7 +643,7 @@ cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -662,7 +662,7 @@ cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, 
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -682,7 +682,7 @@ cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -702,7 +702,7 @@ cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -722,7 +722,7 @@ cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -742,7 +742,7 @@ cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -762,7 +762,7 @@ cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -782,7 +782,7 @@ cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -802,7 +802,7 @@ cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -822,7 +822,7 @@ cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -842,7 +842,7 @@ cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_pr
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -862,7 +862,7 @@ cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_pr
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -882,7 +882,7 @@ cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_p
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -901,8 +901,8 @@ cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process,
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
@@ -924,8 +924,8 @@ cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CBE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
@@ -946,7 +946,7 @@ cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS: we're not in a container.
  *
  * @param encode_process The encode process.
@@ -969,8 +969,8 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INVALID_DATA: The string contained invalid data.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INVALID_ARRAY_DATA: The string contained invalid data.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param string_start The string to add. May be NULL iff byte_count = 0.
@@ -995,7 +995,7 @@ cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param data The data to add. May be NULL iff byte_count = 0.
@@ -1020,8 +1020,8 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INVALID_DATA: The comment contained invalid data.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INVALID_ARRAY_DATA: The comment contained invalid data.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param comment_start The comment to add. May be NULL iff byte_count = 0.
@@ -1049,7 +1049,7 @@ cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param byte_count The total length of the string to add in bytes.
@@ -1067,14 +1067,14 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
  * may now be added to the document.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The array has been opened.
+ * - CBE_ENCODE_STATUS_OK: The binary array has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param byte_count The total length of the data to add in bytes.
@@ -1099,7 +1099,7 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param byte_count The total length of the comment to add in bytes.
@@ -1126,8 +1126,8 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INVALID_DATA: The array contained invalid data.
- * - CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
+ * - CBE_ENCODE_ERROR_INVALID_ARRAY_DATA: The array contained invalid data.
+ * - CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED: would add too much data to the field.
  * - CBE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.

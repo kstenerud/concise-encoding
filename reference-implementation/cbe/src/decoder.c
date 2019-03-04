@@ -66,7 +66,7 @@ typedef struct cbe_decode_process cbe_decode_process;
     { \
         KSLOG_DEBUG("STOP AND EXIT: We're inside an array when we shouldn't be"); \
         UPDATE_STREAM_OFFSET(PROCESS); \
-        return CBE_DECODE_ERROR_INCOMPLETE_FIELD; \
+        return CBE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD; \
     }
 
 #define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
@@ -83,7 +83,7 @@ typedef struct cbe_decode_process cbe_decode_process;
     { \
         KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
         UPDATE_STREAM_OFFSET(PROCESS); \
-        return CBE_DECODE_ERROR_MISSING_VALUE_FOR_KEY; \
+        return CBE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY; \
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
@@ -96,7 +96,7 @@ typedef struct cbe_decode_process cbe_decode_process;
             (PROCESS)->container.is_inside_map[(PROCESS)->container.level], \
              (PROCESS)->container.next_object_is_map_key); \
         UPDATE_STREAM_OFFSET(PROCESS); \
-        return CBE_DECODE_ERROR_INCORRECT_KEY_TYPE; \
+        return CBE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE; \
     }
 
 #define STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(PROCESS, ...) \
@@ -248,7 +248,7 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
             break;
         default:
             KSLOG_ERROR("%d: Unknown array type", type);
-            return CBE_DECODE_ERROR_INTERNAL;
+            return CBE_DECODE_ERROR_INTERNAL_BUG;
     }
     internal_begin_array(process, type, array_byte_count);
 
@@ -272,20 +272,20 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
         case ARRAY_TYPE_STRING:
             if(!cbe_validate_string(process->buffer.position, bytes_to_stream))
             {
-                return CBE_DECODE_ERROR_INVALID_DATA;
+                return CBE_DECODE_ERROR_INVALID_ARRAY_DATA;
             }
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_COMMENT:
             if(!cbe_validate_comment(process->buffer.position, bytes_to_stream))
             {
-                return CBE_DECODE_ERROR_INVALID_DATA;
+                return CBE_DECODE_ERROR_INVALID_ARRAY_DATA;
             }
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_comment_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         default:
             KSLOG_ERROR("%d: Unknown array type", process->array.type);
-            return CBE_DECODE_ERROR_INTERNAL;
+            return CBE_DECODE_ERROR_INTERNAL_BUG;
     }
     consume_bytes(process, bytes_to_stream);
     process->array.current_offset += bytes_to_stream;

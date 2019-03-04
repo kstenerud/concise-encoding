@@ -78,7 +78,7 @@ typedef enum
     unlikely_if((PROCESS)->array.is_inside_array) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: We're inside an array when we shouldn't be"); \
-        return CBE_ENCODE_ERROR_INCOMPLETE_FIELD; \
+        return CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD; \
     }
 
 #define STOP_AND_EXIT_IF_IS_NOT_INSIDE_ARRAY(PROCESS) \
@@ -95,7 +95,7 @@ typedef enum
     { \
         KSLOG_DEBUG("STOP AND EXIT: Attempted to write %d bytes to array with only %d availale", \
             new_array_offset, (PROCESS)->array.byte_count); \
-        return CBE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED; \
+        return CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED; \
     } \
 }
 
@@ -125,7 +125,7 @@ typedef enum
         !(PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: No map value provided for previous key"); \
-        return CBE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY; \
+        return CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY; \
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
@@ -133,7 +133,7 @@ typedef enum
         (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
-        return CBE_ENCODE_ERROR_INCORRECT_KEY_TYPE; \
+        return CBE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE; \
     }
 
 
@@ -368,7 +368,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
             unlikely_if(!cbe_validate_comment(start, bytes_to_copy))
             {
                 KSLOG_DEBUG("invalid data");
-                return CBE_ENCODE_ERROR_INVALID_DATA;
+                return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
             }
         }
 
@@ -377,7 +377,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
             unlikely_if(!cbe_validate_string(start, bytes_to_copy))
             {
                 KSLOG_DEBUG("invalid data");
-                return CBE_ENCODE_ERROR_INVALID_DATA;
+                return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
             }
         }
 

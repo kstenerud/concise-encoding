@@ -84,7 +84,7 @@ typedef enum
     /**
      * The array data was invalid.
      */
-    CTE_DECODE_ERROR_INVALID_DATA,
+    CTE_DECODE_ERROR_INVALID_ARRAY_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -94,22 +94,27 @@ typedef enum
     /**
      * An invalid data type was used as a map key.
      */
-    CTE_DECODE_ERROR_INCORRECT_KEY_TYPE,
+    CTE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-    CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY,
+    CTE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY,
 
     /**
      * An array field was not completed before ending the decode process.
      */
-    CTE_DECODE_ERROR_INCOMPLETE_FIELD,
+    CTE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD,
+
+    /**
+     * Max container depth (default 500) was exceeded.
+     */
+    CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
 
     /**
      * An internal bug triggered an error.
      */
-    CTE_DECODE_ERROR_INTERNAL,
+    CTE_DECODE_ERROR_INTERNAL_BUG,
 } cte_decode_status;
 
 /**
@@ -282,11 +287,12 @@ void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
  *
  * Unrecoverable codes:
  * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
+ * - CTE_DECODE_ERROR_INVALID_ARRAY_DATA: An array type contained invalid data.
  * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
- * - CTE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
- * - CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
- * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CTE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE: a map has an invalid key type.
+ * - CTE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CTE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: An array was not completed before document end.
+ * - CTE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: Containers run too deep in the document.
  * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
  *
  * @param callbacks The callbacks to call while decoding the document.
@@ -349,16 +355,16 @@ cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
  * Note: data_start is not const because 
  *
  * Successful status codes:
- * - CTE_DECODE_STATUS_OK: document has been completely decoded.
- * - CTE_DECODE_STATUS_NEED_MORE_DATA: out of data but not at end of document.
+ * - CTE_DECODE_STATUS_OK: document fragment was completely decoded.
+ * - CTE_DECODE_STATUS_NEED_MORE_DATA: The document fragment was mostly decoded, and needs more data.
  *
  * Unrecoverable codes:
  * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_DECODE_ERROR_INVALID_DATA: An array type contained invalid data.
+ * - CTE_DECODE_ERROR_INVALID_ARRAY_DATA: An array type contained invalid data.
  * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: a map or list is missing an end marker.
- * - CTE_DECODE_ERROR_INCORRECT_KEY_TYPE: document has an invalid key type.
- * - CTE_DECODE_ERROR_MISSING_VALUE_FOR_KEY: document has a map key with no value.
- * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: An array was not completed before document end.
+ * - CTE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE: a map has an invalid key type.
+ * - CTE_DECODE_ERROR_MAP_MISSING_VALUE_FOR_KEY: document has a map key with no value.
+ * - CTE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: An array was not completed before document end.
  *
  * Recoverable codes:
  * - CTE_DECODE_STATUS_STOPPED_IN_CALLBACK: a callback function returned false.
@@ -413,7 +419,7 @@ int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode
  * Unrecoverable codes:
  * - CTE_DECODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_DECODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
- * - CTE_DECODE_ERROR_INCOMPLETE_FIELD: a field has not been completely filled yet.
+ * - CTE_DECODE_ERROR_INCOMPLETE_ARRAY_FIELD: an array field has not been completely filled yet.
  *
  * @param decode_process The decode process.
  * @return The final decoder status.
@@ -424,7 +430,6 @@ cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
 // ------------
 // Encoding API
 // ------------
-
 
 struct cte_encode_process;
 
@@ -452,7 +457,7 @@ typedef enum
     /**
      * The array data was invalid.
      */
-    CTE_ENCODE_ERROR_INVALID_DATA,
+    CTE_ENCODE_ERROR_INVALID_ARRAY_DATA,
 
     /**
      * Unbalanced list/map begin and end markers were detected.
@@ -462,23 +467,23 @@ typedef enum
     /**
      * An invalid data type was used as a map key.
      */
-    CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE,
+    CTE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE,
 
     /**
      * A map contained a key with no value.
      */
-    CTE_ENCODE_ERROR_MISSING_VALUE_FOR_KEY,
+    CTE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY,
 
     /**
-     * Attempted to add a new field or close the document before the existing
-     * field was completely filled.
+     * Attempted to add a new array field or close the document before the
+     * currently open field was completely filled.
      */
-    CTE_ENCODE_ERROR_INCOMPLETE_FIELD,
+    CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD,
 
     /**
      * The currently open field is smaller than the data being added.
      */
-    CTE_ENCODE_ERROR_FIELD_LENGTH_EXCEEDED,
+    CTE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED,
 
     /**
      * We're not inside an array field.
@@ -513,7 +518,7 @@ int cte_encode_process_size(int max_container_depth);
  * Begin a new encoding process.
  *
  * Successful status codes:
- * - CTE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
@@ -584,7 +589,7 @@ int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
  * - CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS: one or more containers were not closed.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: a field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: a field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The final encoder status.
@@ -602,8 +607,8 @@ cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -621,7 +626,7 @@ cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -640,7 +645,7 @@ cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -659,7 +664,7 @@ cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, 
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -679,7 +684,7 @@ cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -699,7 +704,7 @@ cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -719,7 +724,7 @@ cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -739,7 +744,7 @@ cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -759,7 +764,7 @@ cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -779,7 +784,7 @@ cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -799,7 +804,7 @@ cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -819,7 +824,7 @@ cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -839,7 +844,7 @@ cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_pr
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -859,7 +864,7 @@ cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_pr
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -879,7 +884,7 @@ cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_p
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param value The value to add.
@@ -898,8 +903,8 @@ cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process,
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
@@ -921,8 +926,8 @@ cte_encode_status cte_encode_list_begin(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCORRECT_KEY_TYPE: this can't be used as a map key.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE: this can't be used as a map key.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED: container depth too deep.
  *
  * @param encode_process The encode process.
@@ -943,7 +948,7 @@ cte_encode_status cte_encode_map_begin(struct cte_encode_process* encode_process
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  * - CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS: we're not in a container.
  *
  * @param encode_process The encode process.
@@ -966,8 +971,8 @@ cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_pro
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INVALID_DATA: The string contained invalid data.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INVALID_ARRAY_DATA: The string contained invalid data.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param string_start The string to add. May be NULL iff byte_count = 0.
@@ -992,7 +997,7 @@ cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param data The data to add. May be NULL iff byte_count = 0.
@@ -1017,8 +1022,8 @@ cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_proces
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INVALID_DATA: The comment contained invalid data.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INVALID_ARRAY_DATA: The comment contained invalid data.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @param comment_start The comment to add. May be NULL iff byte_count = 0.
@@ -1044,7 +1049,7 @@ cte_encode_status cte_encode_add_comment(struct cte_encode_process* encode_proce
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -1059,14 +1064,14 @@ cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_proc
  * to fill up the field, and a final call to cte_encode_array_end() to close the field.
  *
  * Successful status codes:
- * - CTE_ENCODE_STATUS_OK: The array has been opened.
+ * - CTE_ENCODE_STATUS_OK: The binary array has been opened.
  *
  * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -1088,7 +1093,7 @@ cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_proc
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
@@ -1103,14 +1108,14 @@ cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_pro
  * completely filled, and then call cte_encode_array_end() to close the field.
  *
  * Successful status codes:
- * - CTE_ENCODE_STATUS_OK: The encode process has begun.
+ * - CTE_ENCODE_STATUS_OK: The operation was successful.
  *
  * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INVALID_DATA: The array contained invalid data.
+ * - CTE_ENCODE_ERROR_INVALID_ARRAY_DATA: The array contained invalid data.
  * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
@@ -1122,28 +1127,59 @@ cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
                                       const uint8_t* start,
                                       int64_t* byte_count);
 
-cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_process);
-cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_process);
-cte_encode_status cte_encode_comment_end(struct cte_encode_process* encode_process);
-
 /**
- * End an array (string, binary, comment) in the document.
+ * End a string field.
  *
  * Successful status codes:
- * - CTE_ENCODE_STATUS_OK: The array has been closed.
+ * - CTE_ENCODE_STATUS_OK: The string has been closed.
  *
  * Recoverable codes:
  * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
  *
  * Unrecoverable codes:
  * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CTE_ENCODE_ERROR_INCOMPLETE_FIELD: an existing field has not been completed yet.
+ * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
  *
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_array_end(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_process);
 
+/**
+ * End a binary array field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The binary array has been closed.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_process);
+
+/**
+ * End a comment field.
+ *
+ * Successful status codes:
+ * - CTE_ENCODE_STATUS_OK: The comment has been closed.
+ *
+ * Recoverable codes:
+ * - CTE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CTE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD: we're not inside an array field.
+ *
+ * @param encode_process The encode process.
+ * @return The current encoder status.
+ */
+cte_encode_status cte_encode_comment_end(struct cte_encode_process* encode_process);
 
 
 #ifdef __cplusplus
