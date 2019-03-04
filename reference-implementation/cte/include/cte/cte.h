@@ -371,28 +371,22 @@ cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
  *
  * Encountering CTE_DECODE_STATUS_NEED_MORE_DATA means that cte_decode_feed()
  * has decoded everything it can from the current buffer, and is ready to
- * receive the next buffer of encoded data. It is important to get the
- * current buffer offset after receiving this status code, because some bytes
- * at the end of the current buffer may not have been consumed; these
- * unconsumed bytes must be prepended to the subsequent buffer for the next
- * call to cte_decode_feed().
+ * receive the next buffer of encoded data. THE PROCESS MAY NOT HAVE CONSUMED
+ * ALL BYTES IN THE BUFFER. You must read the output value in byte_count to see
+ * how many bytes were consumed, move the unconsumed bytes to the beginning of
+ * the new buffer, add more bytes after that, then call cbe_decode_feed() again.
  *
  * If an unrecoverable code is returned, the document is invalid, and must be
  * discarded.
  *
- * If a recoverable code is returned, the decoder process points to the field
- * that caused the code to be returned. If you can fix the problem that led to
- * the recoverable code, you may run `cte_decode_feed()` again using the same
- * buffer + the current offset from `cte_decode_get_buffer_offset()`.
- *
  * @param decode_process The decode process.
  * @param data_start The start of the document.
- * @param byte_count The number of bytes in the document fragment.
+ * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current decoder status.
  */
 cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
                                   const char* data_start,
-                                  int64_t byte_count);
+                                  int64_t* byte_count);
 
 /**
  * Get the current line offset into the overall stream of data.
@@ -560,6 +554,9 @@ cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_proces
 /**
  * Get the current write offset into the encode buffer.
  * This points to one past the last byte written to the current buffer.
+ *
+ * When a function returns CBE_ENCODE_STATUS_NEED_MORE_ROOM, you'll need to
+ * flush the buffer up to this point, then call cbe_encode_set_buffer() again.
  *
  * @param encode_process The encode process.
  * @return The current offset.
@@ -1102,10 +1099,14 @@ cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_pro
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
- * If there's not enough room in the buffer, this function will add as much data
- * as it can to the encoded buffer before returning CBE_ENCODE_STATUS_NEED_MORE_ROOM.
- * You can call this as many times as you like until the array field has been
- * completely filled, and then call cte_encode_array_end() to close the field.
+ *
+ * If there's not enough room in the buffer, this function will add as much
+ * data as it can to the encoded buffer before setting the output value of
+ * byte_count to the number of bytes consumed, and then returning
+ * CBE_ENCODE_STATUS_NEED_MORE_ROOM.
+ *
+ * Once you've finished adding the data for your array field, call
+ * cte_encode_array_end() to close the field.
  *
  * Successful status codes:
  * - CTE_ENCODE_STATUS_OK: The operation was successful.

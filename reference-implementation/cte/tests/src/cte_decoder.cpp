@@ -211,7 +211,8 @@ cte_decode_status cte_decoder::feed(std::vector<uint8_t>& data)
     KSLOG_DEBUG("Feeding %d bytes", data.size());
     KSLOG_TRACE("Feeding %s", as_string(data).c_str());
     _received_data.insert(_received_data.begin(), data.begin(), data.end());
-    cte_decode_status status = cte_decode_feed(_process, (const char*)data.data(), data.size());
+    int64_t byte_count = data.size();
+    cte_decode_status status = cte_decode_feed(_process, (const char*)data.data(), &byte_count);
     return status;
 }
 

@@ -1047,9 +1047,10 @@ cte_decode_status cte_decode_feed_internal(cte_decode_process* const process,
 
 cte_decode_status cte_decode_feed(cte_decode_process* const process,
                                   const char* const data_start,
-                                  const int64_t byte_count)
+                                  int64_t* const byte_count)
 {
-    return cte_decode_feed_internal(process, data_start, byte_count, false);
+    // TODO: Not touching byte count because I'm not text-to-binary decoding yet.
+    return cte_decode_feed_internal(process, data_start, *byte_count, false);
 }
 
 cte_decode_status cte_decode_end(cte_decode_process* const process)
