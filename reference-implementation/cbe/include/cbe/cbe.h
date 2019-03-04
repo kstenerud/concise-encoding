@@ -352,37 +352,22 @@ cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
  *
  * Encountering CBE_DECODE_STATUS_NEED_MORE_DATA means that cbe_decode_feed()
  * has decoded everything it can from the current buffer, and is ready to
- * receive the next buffer of encoded data. It is important to get the
- * current buffer offset after receiving this status code, because some bytes
- * at the end of the current buffer may not have been consumed; these
- * unconsumed bytes must be prepended to the subsequent buffer for the next
- * call to cbe_decode_feed().
+ * receive the next buffer of encoded data. THE PROCESS MAY NOT HAVE CONSUMED
+ * ALL BYTES IN THE BUFFER. You must read the output value in byte_count to see
+ * how many bytes were consumed, move the unconsumed bytes to the beginning of
+ * the new buffer, add more bytes after that, then call cbe_decode_feed() again.
  *
  * If an unrecoverable code is returned, the document is invalid, and must be
  * discarded.
  *
- * If a recoverable code is returned, the decoder process points to the field
- * that caused the code to be returned. If you can fix the problem that led to
- * the recoverable code, you may run `cbe_decode_feed()` again using the same
- * buffer + the current offset from `cbe_decode_get_buffer_offset()`.
- *
  * @param decode_process The decode process.
  * @param data_start The start of the document.
- * @param byte_count The number of bytes in the document fragment.
+ * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current decoder status.
  */
 cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
                                   const uint8_t* data_start,
-                                  int64_t byte_count);
-
-/**
- * Get the current read offset into the decode buffer.
- * The offset points to one past the last byte consumed by cbe_decode_feed().
- *
- * @param decode_process The decode process.
- * @return The current offset.
- */
-int64_t cbe_decode_get_buffer_offset(struct cbe_decode_process* decode_process);
+                                  int64_t* byte_count);
 
 /**
  * Get the current offset into the overall stream of data.
@@ -539,6 +524,9 @@ cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_proces
 /**
  * Get the current write offset into the encode buffer.
  * This points to one past the last byte written to the current buffer.
+ *
+ * When a function returns CBE_ENCODE_STATUS_NEED_MORE_ROOM, you'll need to
+ * flush the buffer up to this point, then call cbe_encode_set_buffer() again.
  *
  * @param encode_process The encode process.
  * @return The current offset.
@@ -1039,7 +1027,8 @@ cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_proce
  * The encode process will expect subsequent cbe_encode_add_data() calls
  * to fill up the field.
  * Once the field has been filled, it is considered "closed", and other fields
- * may now be added to the document.
+ * may now be added to the document. A zero-length array is automatically closed
+ * in this function.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The string has been opened.
@@ -1064,7 +1053,8 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
  * The encode process will expect subsequent cbe_encode_add_binary_data() calls
  * to fill up the field.
  * Once the field has been filled, it is considered "closed", and other fields
- * may now be added to the document.
+ * may now be added to the document. A zero-length array is automatically closed
+ * in this function.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The binary array has been opened.
@@ -1089,7 +1079,8 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  * The encode process will expect subsequent cbe_encode_add_data() calls
  * to fill up the field.
  * Once the field has been filled, it is considered "closed", and other fields
- * may now be added to the document.
+ * may now be added to the document. A zero-length array is automatically closed
+ * in this function.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The comment has been opened.
@@ -1109,14 +1100,17 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
- * If there's not enough room in the buffer, this function will add as much data
- * as it can to the encoded buffer before returning CBE_ENCODE_STATUS_NEED_MORE_ROOM.
- * You can call this as many times as you like until the array field has been
- * completely filled, at which point it is automatically considered "completed"
- * and is closed.
  *
- * Note: You must call this function even for zero length arrays, as it is the
- *       only way to terminate an array.
+ * If there's not enough room in the buffer, this function will add as much
+ * data as it can to the encoded buffer before setting the output value of
+ * byte_count to the number of bytes consumed, and then returning
+ * CBE_ENCODE_STATUS_NEED_MORE_ROOM.
+ *
+ * Once enough bytes have been consumed to fill the array's data, the field
+ * is considered "completed", and is closed.
+ *
+ * Note: You don't need to call this function for zero-length arrays. Calling
+ *       with *byte_count == 0 does nothing and returns CBE_ENCODE_STATUS_OK.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The operation was successful.

@@ -192,8 +192,9 @@ cbe_decode_status cbe_decoder::feed(std::vector<uint8_t>& data)
     KSLOG_DEBUG("Feeding %d bytes", data.size());
     KSLOG_TRACE("Feeding %s", as_string(data).c_str());
     _received_data.insert(_received_data.begin(), data.begin(), data.end());
-    cbe_decode_status status = cbe_decode_feed(_process, data.data(), data.size());
-    _read_offset += cbe_decode_get_buffer_offset(_process);
+    int64_t byte_count = data.size();
+    cbe_decode_status status = cbe_decode_feed(_process, data.data(), &byte_count);
+    _read_offset += byte_count;
     return status;
 }
 

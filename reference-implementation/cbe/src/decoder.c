@@ -18,6 +18,7 @@ struct cbe_decode_process
         const uint8_t* start;
         const uint8_t* end;
         const uint8_t* position;
+        int64_t* bytes_consumed;
     } buffer;
     struct
     {
@@ -45,7 +46,8 @@ typedef struct cbe_decode_process cbe_decode_process;
 #define unlikely_if(TEST_FOR_TRUTH) if(__builtin_expect(TEST_FOR_TRUTH, 0))
 
 #define UPDATE_STREAM_OFFSET(PROCESS) \
-    (PROCESS)->stream_offset += (PROCESS)->buffer.position - (PROCESS)->buffer.start
+    *(PROCESS)->buffer.bytes_consumed = (PROCESS)->buffer.position - (PROCESS)->buffer.start; \
+    (PROCESS)->stream_offset += *(PROCESS)->buffer.bytes_consumed
 
 
 // ==============
@@ -336,19 +338,20 @@ void* cbe_decode_get_user_context(cbe_decode_process* const process)
 
 cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                                   const uint8_t* const data_start,
-                                  const int64_t byte_count)
+                                  int64_t* const byte_count)
 {
-    KSLOG_DEBUG("(process %p, data_start %p, byte_count %ld)", process, data_start, byte_count);
-    unlikely_if(process == NULL || data_start == NULL || byte_count < 0)
+    KSLOG_DEBUG("(process %p, data_start %p, byte_count %ld)", process, data_start, byte_count == NULL ? -123456789 : *byte_count);
+    unlikely_if(process == NULL || data_start == NULL || byte_count == NULL || *byte_count < 0)
     {
         return CBE_DECODE_ERROR_INVALID_ARGUMENT;
     }
 
-    KSLOG_DATA_TRACE(data_start, byte_count, NULL);
+    KSLOG_DATA_TRACE(data_start, *byte_count, NULL);
 
     process->buffer.start = data_start;
     process->buffer.position = data_start;
-    process->buffer.end = data_start + byte_count;
+    process->buffer.end = data_start + *byte_count;
+    process->buffer.bytes_consumed = byte_count;
 
     #define BEGIN_OBJECT(SIZE) \
         STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_object(process, SIZE));
@@ -513,17 +516,6 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
     return CBE_DECODE_STATUS_OK;
 }
 
-int64_t cbe_decode_get_buffer_offset(cbe_decode_process* const process)
-{
-    KSLOG_DEBUG("(process %p)", process);
-    unlikely_if(process == NULL)
-    {
-        return CBE_DECODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    return process->buffer.position - process->buffer.start;
-}
-
 int64_t cbe_decode_get_stream_offset(cbe_decode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
@@ -571,7 +563,8 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* const callbacks,
         return status;
     }
 
-    status = cbe_decode_feed(process, document, document_length);
+    int64_t byte_count = document_length;
+    status = cbe_decode_feed(process, document, &byte_count);
     unlikely_if(status != CBE_DECODE_STATUS_OK && status != CBE_DECODE_STATUS_NEED_MORE_DATA)
     {
         return status;

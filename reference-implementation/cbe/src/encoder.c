@@ -345,6 +345,10 @@ static inline cbe_encode_status encode_string_header(cbe_encode_process* const p
     begin_array(process, ARRAY_TYPE_STRING, byte_count);
 
     swap_map_key_value_status(process);
+    unlikely_if(byte_count == 0)
+    {
+        end_array(process);
+    }
 
     return CBE_ENCODE_STATUS_OK;
 }
@@ -762,6 +766,10 @@ cbe_encode_status cbe_encode_binary_begin(cbe_encode_process* const process, con
     add_array_length_field(process, byte_count);
     begin_array(process, ARRAY_TYPE_BINARY, byte_count);
     swap_map_key_value_status(process);
+    unlikely_if(byte_count == 0)
+    {
+        end_array(process);
+    }
 
     return CBE_ENCODE_STATUS_OK;
 }
@@ -795,6 +803,10 @@ cbe_encode_status cbe_encode_comment_begin(cbe_encode_process* const process, co
     add_array_length_field(process, byte_count);
     begin_array(process, ARRAY_TYPE_COMMENT, byte_count);
     swap_map_key_value_status(process);
+    unlikely_if(byte_count == 0)
+    {
+        end_array(process);
+    }
 
     return CBE_ENCODE_STATUS_OK;
 }
@@ -805,11 +817,15 @@ cbe_encode_status cbe_encode_add_data(cbe_encode_process* const process,
 {
     KSLOG_DEBUG("(process %p, start %p, byte_count %d)",
         process, start, byte_count == NULL ? -123456789 : *byte_count);
-    unlikely_if(start == NULL && *byte_count != 0)
+    unlikely_if(process == NULL || byte_count == NULL || *byte_count < 0)
     {
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
-    unlikely_if(process == NULL || byte_count == NULL || *byte_count < 0)
+    unlikely_if(*byte_count == 0)
+    {
+        return CBE_ENCODE_STATUS_OK;
+    }
+    unlikely_if(start == NULL)
     {
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
