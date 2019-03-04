@@ -63,11 +63,11 @@ endmacro()
 #########
 
 package_add_test(cte_tests
+    src/helpers/cte_decoder.cpp
+    src/helpers/encoding.cpp
+    src/helpers/test_utils.cpp
+
     src/managed_allocator.c
     src/decode_test_helpers.c
     src/test_cte_decode.cpp
-
-    src/test_utils.cpp
-    src/encoding.cpp
-    src/cte_decoder.cpp
 )
