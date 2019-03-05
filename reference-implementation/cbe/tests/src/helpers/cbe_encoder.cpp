@@ -273,7 +273,7 @@ cbe_encode_status cbe_encoder::encode(enc::binary_header_encoding& e)
 {
     return flush_and_retry([&]
     {
-        return cbe_encode_string_begin(_process, e.byte_count());
+        return cbe_encode_binary_begin(_process, e.byte_count());
     });
 }
 
