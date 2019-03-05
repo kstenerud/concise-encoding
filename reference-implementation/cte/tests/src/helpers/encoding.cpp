@@ -554,17 +554,17 @@ cte_encode_status int128_encoding::encode(encoder& encoder)
     return encoder.encode(*this);
 }
 
-template <> cte_encode_status number_encoding<float>::encode(encoder& encoder)
+template <> cte_encode_status float_encoding<float>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-template <> cte_encode_status number_encoding<double>::encode(encoder& encoder)
+template <> cte_encode_status float_encoding<double>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-template <> cte_encode_status number_encoding<__float128>::encode(encoder& encoder)
+template <> cte_encode_status float_encoding<__float128>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
@@ -608,9 +608,9 @@ std::shared_ptr<encoding> encoding::i32(int32_t value)               {return thi
 std::shared_ptr<encoding> encoding::i64(int64_t value)               {return this->set_next(enc::i64(value));}
 std::shared_ptr<encoding> encoding::i128(__int128 value)             {return this->set_next(enc::i128(value));}
 std::shared_ptr<encoding> encoding::i128(int64_t high, uint64_t low) {return this->set_next(enc::i128(high, low));}
-std::shared_ptr<encoding> encoding::f32(float value)                 {return this->set_next(enc::f32(value));}
-std::shared_ptr<encoding> encoding::f64(double value)                {return this->set_next(enc::f64(value));}
-std::shared_ptr<encoding> encoding::f128(__float128 value)           {return this->set_next(enc::f128(value));}
+std::shared_ptr<encoding> encoding::f32(int precision, float value)       {return this->set_next(enc::f32(precision, value));}
+std::shared_ptr<encoding> encoding::f64(int precision, double value)      {return this->set_next(enc::f64(precision, value));}
+std::shared_ptr<encoding> encoding::f128(int precision, __float128 value) {return this->set_next(enc::f128(precision, value));}
 std::shared_ptr<encoding> encoding::d32(_Decimal32 value)            {return this->set_next(enc::d32(value));}
 std::shared_ptr<encoding> encoding::d64(_Decimal64 value)            {return this->set_next(enc::d64(value));}
 std::shared_ptr<encoding> encoding::d128(_Decimal128 value)          {return this->set_next(enc::d128(value));}
@@ -638,9 +638,9 @@ std::shared_ptr<number_encoding<int32_t>>      i32(int32_t value)               
 std::shared_ptr<number_encoding<int64_t>>      i64(int64_t value)               {return std::make_shared<number_encoding<int64_t>>(value);}
 std::shared_ptr<int128_encoding>               i128(__int128 value)             {return std::make_shared<int128_encoding>(value);}
 std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low) {return i128((((__int128)high) << 64) + low);}
-std::shared_ptr<number_encoding<float>>        f32(float value)                 {return std::make_shared<number_encoding<float>>(value);}
-std::shared_ptr<number_encoding<double>>       f64(double value)                {return std::make_shared<number_encoding<double>>(value);}
-std::shared_ptr<number_encoding<__float128>>   f128(__float128 value)           {return std::make_shared<number_encoding<__float128>>(value);}
+std::shared_ptr<float_encoding<float>>         f32(int precision, float value)       {return std::make_shared<float_encoding<float>>(precision, value);}
+std::shared_ptr<float_encoding<double>>        f64(int precision, double value)      {return std::make_shared<float_encoding<double>>(precision, value);}
+std::shared_ptr<float_encoding<__float128>>    f128(int precision, __float128 value) {return std::make_shared<float_encoding<__float128>>(precision, value);}
 std::shared_ptr<dfp_encoding<_Decimal32>>      d32(_Decimal32 value)            {return std::make_shared<dfp_encoding<_Decimal32>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal64>>      d64(_Decimal64 value)            {return std::make_shared<dfp_encoding<_Decimal64>>(value);}
 std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value)          {return std::make_shared<dfp_encoding<_Decimal128>>(value);}

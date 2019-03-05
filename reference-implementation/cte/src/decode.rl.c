@@ -1086,7 +1086,8 @@ cte_decode_status cte_decode(const cte_decode_callbacks* const callbacks,
         return status;
     }
 
-    status = cte_decode_feed(process, document, document_length);
+    int64_t byte_count = document_length;
+    status = cte_decode_feed(process, document, &byte_count);
     if(status != CTE_DECODE_STATUS_OK)
     {
         return status;

@@ -24,6 +24,7 @@ private:
     cte_decoding_type _currently_decoding_type = CTE_DECODING_OTHER;
     std::vector<uint8_t> _currently_decoding_data;
     bool _callback_return_value;
+    int _max_container_depth;
 
 public:
     // Internal functions
@@ -39,7 +40,7 @@ public:
     bool comment_end();
 
 public:
-    cte_decoder(bool callback_return_value = true);
+    cte_decoder(int max_container_depth, bool callback_return_value);
 
     // Begin the decoding process.
     cte_decode_status begin();

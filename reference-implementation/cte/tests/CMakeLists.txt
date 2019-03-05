@@ -64,7 +64,9 @@ endmacro()
 
 package_add_test(cte_tests
     src/helpers/cte_decoder.cpp
+    src/helpers/cte_encoder.cpp
     src/helpers/encoding.cpp
+    src/helpers/test_helpers.cpp
     src/helpers/test_utils.cpp
 
     src/managed_allocator.c

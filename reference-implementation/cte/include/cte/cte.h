@@ -28,9 +28,6 @@ extern "C" {
 #ifndef CTE_DEFAULT_INDENT_SPACES
     #define CTE_DEFAULT_INDENT_SPACES 4
 #endif
-#ifndef CTE_DEFAULT_FLOAT_DIGITS_PRECISION
-    #define CTE_DEFAULT_FLOAT_DIGITS_PRECISION 15
-#endif
 
 
 
@@ -521,7 +518,6 @@ int cte_encode_process_size(int max_container_depth);
  * @param document_buffer A buffer to store the document in.
  * @param byte_count Size of the buffer in bytes.
  * @param max_container_depth The maximum container depth to suppport (<= 0 means use default).
- * @param float_digits_precision The number of significant digits to print for floating point numbers (<= 0 use default).
  * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print, < 0 use default).
  * @return The current encoder status.
  */
@@ -529,7 +525,6 @@ cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
                                    uint8_t* const document_buffer,
                                    int64_t byte_count,
                                    int max_container_depth,
-                                   int float_digits_precision,
                                    int indent_spaces);
 
 /**
@@ -764,10 +759,13 @@ cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_proce
  * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
+ * @param precision The maximum number of digits of precision to output after the decimal point.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_process, float value);
+cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_process,
+                                          int precision,
+                                          float value);
 
 /**
  * Add a 64 bit floating point value to the document.
@@ -784,10 +782,13 @@ cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_proc
  * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
+ * @param precision The maximum number of digits of precision to output after the decimal point.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_process, double value);
+cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_process,
+                                          int precision,
+                                          double value);
 
 /**
  * Add a 128 bit floating point value to the document.
@@ -804,10 +805,13 @@ cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_proc
  * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
+ * @param precision The maximum number of digits of precision to output after the decimal point.
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process, __float128 value);
+cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process,
+                                          int precision,
+                                          __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.

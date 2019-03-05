@@ -148,9 +148,9 @@ public:
     std::shared_ptr<encoding> i64(int64_t value);
     std::shared_ptr<encoding> i128(__int128 value);
     std::shared_ptr<encoding> i128(int64_t high, uint64_t low);
-    std::shared_ptr<encoding> f32(float value);
-    std::shared_ptr<encoding> f64(double value);
-    std::shared_ptr<encoding> f128(__float128 value);
+    std::shared_ptr<encoding> f32(int precision, float value);
+    std::shared_ptr<encoding> f64(int precision, double value);
+    std::shared_ptr<encoding> f128(int precision, __float128 value);
     std::shared_ptr<encoding> d32(_Decimal32 value);
     std::shared_ptr<encoding> d64(_Decimal64 value);
     std::shared_ptr<encoding> d128(_Decimal128 value);
@@ -278,6 +278,33 @@ public:
     T value() {return _value;}
 };
 
+template<typename T> class float_encoding: public encoding
+{
+private:
+    const T _value;
+    const int _precision;
+public:
+    float_encoding(int precision, T value)
+    : encoding(enc::get_major_type(value)
+    , sizeof(value), enc::to_id_string(value))
+    , _value(value), _precision(precision) {}
+    cte_encode_status encode(encoder& encoder);
+    bool is_equal(const encoding& rhs) const       { return rhs.has_value(_value); }
+    bool has_value(int8_t value) const             { return (int8_t)_value == value; }
+    bool has_value(int16_t value) const            { return (int16_t)_value == value; }
+    bool has_value(int32_t value) const            { return (int32_t)_value == value; }
+    bool has_value(int64_t value) const            { return (int64_t)_value == value; }
+    bool has_value(__int128 value) const           { return (__int128)_value == value; }
+    bool has_value(float value) const              { return (float)_value == value; }
+    bool has_value(double value) const             { return (double)_value == value; }
+    bool has_value(__float128 value) const         { return (__float128)_value == value; }
+    bool has_value(_Decimal32 value) const         { return (_Decimal32)_value == value; }
+    bool has_value(_Decimal64 value) const         { return (_Decimal64)_value == value; }
+    bool has_value(_Decimal128 value) const        { return (_Decimal128)_value == value; }
+    T value() {return _value;}
+    int get_precision() {return _precision;}
+};
+
 class int128_encoding: public encoding
 {
 private:
@@ -365,21 +392,21 @@ public:
 class string_begin_encoding: public no_value_encoding
 {
 public:
-    string_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "strb") {}
+    string_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_STRING_BEGIN, "strb") {}
     cte_encode_status encode(encoder& encoder);
 };
 
 class binary_begin_encoding: public no_value_encoding
 {
 public:
-    binary_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "binb") {}
+    binary_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_BINARY_BEGIN, "binb") {}
     cte_encode_status encode(encoder& encoder);
 };
 
 class comment_begin_encoding: public no_value_encoding
 {
 public:
-    comment_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "commentb") {}
+    comment_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_COMMENT_BEGIN, "commentb") {}
     cte_encode_status encode(encoder& encoder);
 };
 
@@ -398,25 +425,23 @@ public:
 class string_end_encoding: public no_value_encoding
 {
 public:
-    string_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "stre") {}
+    string_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_STRING_END, "stre") {}
     cte_encode_status encode(encoder& encoder);
 };
 
 class binary_end_encoding: public no_value_encoding
 {
 public:
-    binary_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "bine") {}
+    binary_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_BINARY_END, "bine") {}
     cte_encode_status encode(encoder& encoder);
 };
 
 class comment_end_encoding: public no_value_encoding
 {
 public:
-    comment_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_MAP, "commente") {}
+    comment_end_encoding(): no_value_encoding(enc::ENCODE_TYPE_COMMENT_END, "commente") {}
     cte_encode_status encode(encoder& encoder);
 };
-
-
 
 class encoder
 {
@@ -442,9 +467,9 @@ public:
     virtual cte_encode_status encode(number_encoding<int32_t>& encoding) = 0;
     virtual cte_encode_status encode(number_encoding<int64_t>& encoding) = 0;
     virtual cte_encode_status encode(int128_encoding& encoding) = 0;
-    virtual cte_encode_status encode(number_encoding<float>& encoding) = 0;
-    virtual cte_encode_status encode(number_encoding<double>& encoding) = 0;
-    virtual cte_encode_status encode(number_encoding<__float128>& encoding) = 0;
+    virtual cte_encode_status encode(float_encoding<float>& encoding) = 0;
+    virtual cte_encode_status encode(float_encoding<double>& encoding) = 0;
+    virtual cte_encode_status encode(float_encoding<__float128>& encoding) = 0;
     virtual cte_encode_status encode(dfp_encoding<_Decimal32>& encoding) = 0;
     virtual cte_encode_status encode(dfp_encoding<_Decimal64>& encoding) = 0;
     virtual cte_encode_status encode(dfp_encoding<_Decimal128>& encoding) = 0;
@@ -474,9 +499,9 @@ std::shared_ptr<number_encoding<int32_t>>    i32(int32_t value);
 std::shared_ptr<number_encoding<int64_t>>    i64(int64_t value);
 std::shared_ptr<int128_encoding>             i128(__int128 value);
 std::shared_ptr<int128_encoding>             i128(int64_t high, uint64_t low);
-std::shared_ptr<number_encoding<float>>      f32(float value);
-std::shared_ptr<number_encoding<double>>     f64(double value);
-std::shared_ptr<number_encoding<__float128>> f128(__float128 value);
+std::shared_ptr<float_encoding<float>>       f32(int precision, float value);
+std::shared_ptr<float_encoding<double>>      f64(int precision, double value);
+std::shared_ptr<float_encoding<__float128>>  f128(int precision, __float128 value);
 std::shared_ptr<dfp_encoding<_Decimal32>>    d32(_Decimal32 value);
 std::shared_ptr<dfp_encoding<_Decimal64>>    d64(_Decimal64 value);
 std::shared_ptr<dfp_encoding<_Decimal128>>   d128(_Decimal128 value);

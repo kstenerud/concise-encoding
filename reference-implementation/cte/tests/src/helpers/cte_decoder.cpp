@@ -4,8 +4,6 @@
 #include "kslogger.h"
 #include "test_utils.h"
 
-#define MAX_CONTAINER_DEPTH 500
-
 static cte_decoder* get_decoder(struct cte_decode_process* process)
 {
     return (cte_decoder*)cte_decode_get_user_context(process);
@@ -48,17 +46,17 @@ static bool on_int_128(struct cte_decode_process* process, __int128 value)
 
 static bool on_float_32(struct cte_decode_process* process, float value)
 {
-    return get_decoder(process)->set_next(enc::f32(value)) && get_decoder(process)->get_callback_return_value();
+    return get_decoder(process)->set_next(enc::f32(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_64(struct cte_decode_process* process, double value)
 {
-    return get_decoder(process)->set_next(enc::f64(value)) && get_decoder(process)->get_callback_return_value();
+    return get_decoder(process)->set_next(enc::f64(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_128(struct cte_decode_process* process, __float128 value)
 {
-    return get_decoder(process)->set_next(enc::f128(value)) && get_decoder(process)->get_callback_return_value();
+    return get_decoder(process)->set_next(enc::f128(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_32(struct cte_decode_process* process, _Decimal32 value)
@@ -184,10 +182,11 @@ static const cte_decode_callbacks g_callbacks =
     on_comment_end: on_comment_end,
 };
 
-cte_decoder::cte_decoder(bool callback_return_value)
-: _process_backing_store(cte_decode_process_size(MAX_CONTAINER_DEPTH))
+cte_decoder::cte_decoder(int max_container_depth, bool callback_return_value)
+: _process_backing_store(cte_decode_process_size(max_container_depth))
 , _process((cte_decode_process*)_process_backing_store.data())
 , _callback_return_value(callback_return_value)
+, _max_container_depth(max_container_depth)
 {
 }
 
@@ -218,7 +217,7 @@ cte_decode_status cte_decoder::feed(std::vector<uint8_t>& data)
 
 cte_decode_status cte_decoder::begin()
 {
-    return cte_decode_begin(_process, &g_callbacks, (void*)this, MAX_CONTAINER_DEPTH);
+    return cte_decode_begin(_process, &g_callbacks, (void*)this, _max_container_depth);
 }
 
 cte_decode_status cte_decoder::end()
@@ -234,7 +233,7 @@ cte_decode_status cte_decoder::end()
 
 cte_decode_status cte_decoder::decode(std::vector<uint8_t>& document)
 {
-    return cte_decode(&g_callbacks, (void*)this, (const char*)document.data(), document.size(), MAX_CONTAINER_DEPTH);
+    return cte_decode(&g_callbacks, (void*)this, (const char*)document.data(), document.size(), _max_container_depth);
 }
 
 bool cte_decoder::set_next(std::shared_ptr<enc::encoding> encoding)

@@ -11,6 +11,8 @@ private:
     cte_encode_process* _process;
     std::vector<uint8_t> _buffer;
     std::vector<uint8_t> _encoded_data;
+    int _max_container_depth;
+    int _indent_spaces;
     std::function<bool(uint8_t* data_start, int64_t length)> _on_data_ready;
 
 protected:
@@ -24,9 +26,9 @@ public:
     cte_encode_status encode(enc::number_encoding<int32_t>& e);
     cte_encode_status encode(enc::number_encoding<int64_t>& e);
     cte_encode_status encode(enc::int128_encoding& e);
-    cte_encode_status encode(enc::number_encoding<float>& e);
-    cte_encode_status encode(enc::number_encoding<double>& e);
-    cte_encode_status encode(enc::number_encoding<__float128>& e);
+    cte_encode_status encode(enc::float_encoding<float>& e);
+    cte_encode_status encode(enc::float_encoding<double>& e);
+    cte_encode_status encode(enc::float_encoding<__float128>& e);
     cte_encode_status encode(enc::dfp_encoding<_Decimal32>& e);
     cte_encode_status encode(enc::dfp_encoding<_Decimal64>& e);
     cte_encode_status encode(enc::dfp_encoding<_Decimal128>& e);
@@ -42,16 +44,19 @@ public:
     cte_encode_status encode(enc::string_begin_encoding& e);
     cte_encode_status encode(enc::binary_begin_encoding& e);
     cte_encode_status encode(enc::comment_begin_encoding& e);
+    cte_encode_status encode(enc::data_encoding& e);
     cte_encode_status encode(enc::string_end_encoding& e);
     cte_encode_status encode(enc::binary_end_encoding& e);
     cte_encode_status encode(enc::comment_end_encoding& e);
-    cte_encode_status encode(enc::data_encoding& e);
     cte_encode_status encode(enc::container_end_encoding& e);
 
 public:
-    cte_encoder(int64_t buffer_size=10000,
-        std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready =
-            [](uint8_t* data_start, int64_t length){(void)data_start; (void)length; return true;});
+    cte_encoder(int64_t buffer_size,
+                int max_container_depth,
+                int indent_spaces,
+                std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready =
+                    [](uint8_t* data_start, int64_t length)
+                    {(void)data_start; (void)length; return true;});
 
     // Encode an encoding object and all linked objects.
     cte_encode_status encode(std::shared_ptr<enc::encoding> enc);

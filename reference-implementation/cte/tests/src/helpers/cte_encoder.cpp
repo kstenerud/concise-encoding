@@ -3,10 +3,6 @@
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
-#define MAX_CONTAINER_DEPTH 500
-#define INDENT_SPACES 0
-#define FLOAT_DIGITS_PRECISION 10
-
 bool cte_encoder::flush_buffer()
 {
     bool result = false;
@@ -73,25 +69,25 @@ cte_encode_status cte_encoder::encode(enc::int128_encoding& e)
         return cte_encode_add_int_128(_process, e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::number_encoding<float>& e)
+cte_encode_status cte_encoder::encode(enc::float_encoding<float>& e)
 {
     return flush_and_retry([&]
     {
-        return cte_encode_add_float_32(_process, e.value());
+        return cte_encode_add_float_32(_process, e.get_precision(), e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::number_encoding<double>& e)
+cte_encode_status cte_encoder::encode(enc::float_encoding<double>& e)
 {
     return flush_and_retry([&]
     {
-        return cte_encode_add_float_64(_process, e.value());
+        return cte_encode_add_float_64(_process, e.get_precision(), e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::number_encoding<__float128>& e)
+cte_encode_status cte_encoder::encode(enc::float_encoding<__float128>& e)
 {
     return flush_and_retry([&]
     {
-        return cte_encode_add_float_128(_process, e.value());
+        return cte_encode_add_float_128(_process, e.get_precision(), e.value());
     });
 }
 cte_encode_status cte_encoder::encode(enc::dfp_encoding<_Decimal32>& e)
@@ -182,8 +178,8 @@ cte_encode_status cte_encoder::stream_array(const std::vector<uint8_t>& data)
 
 cte_encode_status cte_encoder::encode(enc::string_encoding& e)
 {
-    KSLOG_DEBUG(NULL);
     const std::string& value = e.value();
+    KSLOG_DEBUG("size %d", value.size());
     cte_encode_status status = flush_and_retry([&]
     {
         return cte_encode_string_begin(_process);
@@ -199,7 +195,7 @@ cte_encode_status cte_encoder::encode(enc::string_encoding& e)
 
 cte_encode_status cte_encoder::encode(enc::binary_encoding& e)
 {
-    KSLOG_DEBUG(NULL);
+    KSLOG_DEBUG("size %d", e.value().size());
     cte_encode_status status = flush_and_retry([&]
     {
         return cte_encode_binary_begin(_process);
@@ -215,8 +211,8 @@ cte_encode_status cte_encoder::encode(enc::binary_encoding& e)
 
 cte_encode_status cte_encoder::encode(enc::comment_encoding& e)
 {
-    KSLOG_DEBUG(NULL);
     const std::string& value = e.value();
+    KSLOG_DEBUG("size %d", value.size());
     cte_encode_status status = flush_and_retry([&]
     {
         return cte_encode_comment_begin(_process);
@@ -256,7 +252,6 @@ cte_encode_status cte_encoder::encode_binary(std::vector<uint8_t> value)
         return cte_encode_add_binary(_process, value.data(), value.size());
     });
 }
-
 
 cte_encode_status cte_encoder::encode(enc::string_begin_encoding& e)
 {
@@ -299,7 +294,7 @@ cte_encode_status cte_encoder::encode(enc::binary_end_encoding& e)
     (void)e;
     return flush_and_retry([&]
     {
-        return cte_encode_string_end(_process);
+        return cte_encode_binary_end(_process);
     });
 }
 
@@ -314,6 +309,7 @@ cte_encode_status cte_encoder::encode(enc::comment_end_encoding& e)
 
 cte_encode_status cte_encoder::encode(enc::data_encoding& e)
 {
+    (void)e;
     return stream_array(e.value());
 }
 
@@ -331,9 +327,8 @@ cte_encode_status cte_encoder::encode(std::shared_ptr<enc::encoding> enc)
     cte_encode_status result = cte_encode_begin(_process,
                                                 _buffer.data(),
                                                 _buffer.size(),
-                                                MAX_CONTAINER_DEPTH,
-                                                FLOAT_DIGITS_PRECISION,
-                                                INDENT_SPACES);
+                                                _max_container_depth,
+                                                _indent_spaces);
     if(result != CTE_ENCODE_STATUS_OK)
     {
         return result;
@@ -359,10 +354,14 @@ int64_t cte_encoder::get_encode_buffer_offset()
 }
 
 cte_encoder::cte_encoder(int64_t buffer_size,
-    std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
-: _process_backing_store(cte_encode_process_size(MAX_CONTAINER_DEPTH))
+                         int max_container_depth,
+                         int indent_spaces,
+                         std::function<bool(uint8_t* data_start, int64_t length)> on_data_ready)
+: _process_backing_store(cte_encode_process_size(max_container_depth))
 , _process((cte_encode_process*)_process_backing_store.data())
 , _buffer(buffer_size)
+, _max_container_depth(max_container_depth)
+, _indent_spaces(indent_spaces)
 , _on_data_ready(on_data_ready)
 {
     KSLOG_DEBUG("New cte_encoder with buffer size %d", _buffer.size());
