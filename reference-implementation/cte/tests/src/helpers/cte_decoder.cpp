@@ -339,7 +339,7 @@ bool cte_decoder::binary_end()
     }
 
     _currently_decoding_type = CTE_DECODING_OTHER;
-    return set_next(enc::bin(_currently_decoding_data));
+    return set_next(enc::bin(CTE_BINARY_ENCODING_RADIX_85, _currently_decoding_data));
 }
 
 bool cte_decoder::add_comment_data(const std::string& data)

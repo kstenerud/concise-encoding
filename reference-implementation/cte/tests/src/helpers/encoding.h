@@ -132,10 +132,10 @@ public:
     std::shared_ptr<encoding> nil();
     std::shared_ptr<encoding> smtime(smalltime value);
     std::shared_ptr<encoding> str(const std::string& value);
-    std::shared_ptr<encoding> bin(const std::vector<uint8_t>& value);
+    std::shared_ptr<encoding> bin(cte_binary_encoding_radix radix, const std::vector<uint8_t>& value);
     std::shared_ptr<encoding> comment(const std::string& value);
     std::shared_ptr<encoding> strb();
-    std::shared_ptr<encoding> binb();
+    std::shared_ptr<encoding> binb(cte_binary_encoding_radix radix);
     std::shared_ptr<encoding> commentb();
     std::shared_ptr<encoding> data(const std::vector<uint8_t>& value);
     std::shared_ptr<encoding> stre();
@@ -368,13 +368,18 @@ public:
 class binary_encoding: public encoding
 {
 private:
+    cte_binary_encoding_radix _radix;
     const std::vector<uint8_t> _value;
 public:
-    binary_encoding(const std::vector<uint8_t>& value): encoding(enc::get_major_type(value), 1, enc::to_id_string(value)), _value(value) {}
+    binary_encoding(cte_binary_encoding_radix radix, const std::vector<uint8_t>& value)
+    : encoding(enc::get_major_type(value), 1, enc::to_id_string(value))
+    , _radix(radix)
+    , _value(value) {}
     cte_encode_status encode(encoder& encoder);
     bool is_equal(const encoding& rhs) const    { return get_type() == rhs.get_type() && rhs.has_value(_value); }
     bool has_value(const std::vector<uint8_t>& value) const { return _value == value; }
     std::vector<uint8_t> value() {return _value;}
+    cte_binary_encoding_radix get_radix() {return _radix;}
 };
 
 class comment_encoding: public encoding
@@ -398,9 +403,14 @@ public:
 
 class binary_begin_encoding: public no_value_encoding
 {
+private:
+    cte_binary_encoding_radix _radix;
 public:
-    binary_begin_encoding(): no_value_encoding(enc::ENCODE_TYPE_BINARY_BEGIN, "binb") {}
+    binary_begin_encoding(cte_binary_encoding_radix radix)
+    : no_value_encoding(enc::ENCODE_TYPE_BINARY_BEGIN, "binb")
+    , _radix(radix) {}
     cte_encode_status encode(encoder& encoder);
+    cte_binary_encoding_radix get_radix() {return _radix;}
 };
 
 class comment_begin_encoding: public no_value_encoding
@@ -483,10 +493,10 @@ std::shared_ptr<nil_encoding>                nil();
 std::shared_ptr<time_encoding>               smtime(smalltime value);
 std::shared_ptr<time_encoding>               smtime(int year, int month, int day, int hour, int minute, int second, int usec);
 std::shared_ptr<string_encoding>             str(const std::string& value);
-std::shared_ptr<binary_encoding>             bin(const std::vector<uint8_t>& value);
+std::shared_ptr<binary_encoding>             bin(cte_binary_encoding_radix radix, const std::vector<uint8_t>& value);
 std::shared_ptr<comment_encoding>            comment(const std::string& value);
 std::shared_ptr<string_begin_encoding>       strb();
-std::shared_ptr<binary_begin_encoding>       binb();
+std::shared_ptr<binary_begin_encoding>       binb(cte_binary_encoding_radix radix);
 std::shared_ptr<comment_begin_encoding>      commentb();
 std::shared_ptr<data_encoding>               data(const std::vector<uint8_t>& value);
 std::shared_ptr<string_end_encoding>         stre();

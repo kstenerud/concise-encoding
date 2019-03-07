@@ -592,10 +592,10 @@ std::shared_ptr<encoding> encoding::end()                            {return thi
 std::shared_ptr<encoding> encoding::nil()                            {return this->set_next(enc::nil());}
 std::shared_ptr<encoding> encoding::smtime(smalltime value)          {return this->set_next(enc::smtime(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)    {return this->set_next(enc::str(value));}
-std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
+std::shared_ptr<encoding> encoding::bin(cte_binary_encoding_radix radix, const std::vector<uint8_t>& value) {return this->set_next(enc::bin(radix, value));}
 std::shared_ptr<encoding> encoding::comment(const std::string& value){return this->set_next(enc::comment(value));}
 std::shared_ptr<encoding> encoding::strb()                           {return this->set_next(enc::strb());}
-std::shared_ptr<encoding> encoding::binb()                           {return this->set_next(enc::binb());}
+std::shared_ptr<encoding> encoding::binb(cte_binary_encoding_radix radix) {return this->set_next(enc::binb(radix));}
 std::shared_ptr<encoding> encoding::commentb()                       {return this->set_next(enc::commentb());}
 std::shared_ptr<encoding> encoding::data(const std::vector<uint8_t>& value) {return this->set_next(enc::data(value));}
 std::shared_ptr<encoding> encoding::stre()                           {return this->set_next(enc::stre());}
@@ -622,10 +622,10 @@ std::shared_ptr<nil_encoding>                  nil()                            
 std::shared_ptr<time_encoding>                 smtime(smalltime value)          {return std::make_shared<time_encoding>(value);}
 std::shared_ptr<time_encoding>                 smtime(int year, int month, int day, int hour, int minute, int second, int usec) {return smtime(smalltime_new(year, enc::ymd_to_doy(year, month, day), hour, minute, second, usec));}
 std::shared_ptr<string_encoding>               str(const std::string& value)    {return std::make_shared<string_encoding>(value);}
-std::shared_ptr<binary_encoding>               bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
+std::shared_ptr<binary_encoding>               bin(cte_binary_encoding_radix radix, const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(radix, value);}
 std::shared_ptr<comment_encoding>              comment(const std::string& value){return std::make_shared<comment_encoding>(value);}
 std::shared_ptr<string_begin_encoding>         strb()                           {return std::make_shared<string_begin_encoding>();}
-std::shared_ptr<binary_begin_encoding>         binb()                           {return std::make_shared<binary_begin_encoding>();}
+std::shared_ptr<binary_begin_encoding>         binb(cte_binary_encoding_radix radix) {return std::make_shared<binary_begin_encoding>(radix);}
 std::shared_ptr<comment_begin_encoding>        commentb()                       {return std::make_shared<comment_begin_encoding>();}
 std::shared_ptr<data_encoding>                 data(const std::vector<uint8_t>& value) {return std::make_shared<data_encoding>(value);}
 std::shared_ptr<string_end_encoding>           stre()                           {return std::make_shared<string_end_encoding>();}

@@ -64,7 +64,7 @@ public:
     // Encode entire array objects. If the entire object won't fit,
     // returns with failure.
     cte_encode_status encode_string(std::vector<uint8_t> value);
-    cte_encode_status encode_binary(std::vector<uint8_t> value);
+    cte_encode_status encode_binary(cte_binary_encoding_radix radix, std::vector<uint8_t> value);
     cte_encode_status encode_comment(std::vector<uint8_t> value);
 
     int64_t get_encode_buffer_offset();

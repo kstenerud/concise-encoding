@@ -488,6 +488,11 @@ typedef enum
 
 } cte_encode_status;
 
+typedef enum
+{
+    CTE_BINARY_ENCODING_RADIX_16 = 16,
+    CTE_BINARY_ENCODING_RADIX_85 = 85,
+} cte_binary_encoding_radix;
 
 /**
  * Get the size of the encode process data.
@@ -1001,10 +1006,12 @@ cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_proces
  * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
+ * @param radix Which radix to encode at.
  * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
 cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_process,
+                                        cte_binary_encoding_radix radix,
                                         const uint8_t* data,
                                         int64_t byte_count);
 
@@ -1075,9 +1082,11 @@ cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_proc
  * - CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
  *
  * @param encode_process The encode process.
+ * @param radix Which radix to encode at.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_process);
+cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_process,
+                                          cte_binary_encoding_radix radix);
 
 /**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.

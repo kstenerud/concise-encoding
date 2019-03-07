@@ -23,6 +23,7 @@ struct cte_encode_process
         array_type type;
         int64_t current_offset;
         int64_t byte_count;
+        cte_binary_encoding_radix radix;
     } array;
     struct
     {
@@ -608,7 +609,8 @@ cte_encode_status cte_encode_container_end(cte_encode_process* const process)
     return CTE_ENCODE_STATUS_OK;
 }
 
-cte_encode_status cte_encode_binary_begin(cte_encode_process* const process)
+cte_encode_status cte_encode_binary_begin(cte_encode_process* const process,
+                                          const cte_binary_encoding_radix radix)
 {
     KSLOG_DEBUG("(process %p)", process);
     unlikely_if(process == NULL)
@@ -618,6 +620,7 @@ cte_encode_status cte_encode_binary_begin(cte_encode_process* const process)
 
     STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "b/", 2));
     begin_array(process, ARRAY_TYPE_BINARY);
+    process->array.radix = radix;
     return CTE_ENCODE_STATUS_OK;
 }
 
@@ -727,11 +730,12 @@ cte_encode_status cte_encode_add_string(cte_encode_process* const process,
 }
 
 cte_encode_status cte_encode_add_binary(cte_encode_process* const process,
+                                        const cte_binary_encoding_radix radix,
                                         const uint8_t* const data,
                                         const int64_t byte_count)
 {
     uint8_t* const last_position = process->buffer.position;
-    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, cte_encode_binary_begin(process));
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, cte_encode_binary_begin(process, radix));
     int64_t byte_count_copy = byte_count;
     cte_encode_status status = cte_encode_add_data(process, data, &byte_count_copy);
     unlikely_if(status != CTE_ENCODE_STATUS_OK)

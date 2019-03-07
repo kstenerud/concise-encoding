@@ -203,7 +203,7 @@ cte_encode_status cte_encoder::encode(enc::binary_encoding& e)
     KSLOG_DEBUG("size %d", e.value().size());
     cte_encode_status status = flush_and_retry([&]
     {
-        return cte_encode_binary_begin(_process);
+        return cte_encode_binary_begin(_process, e.get_radix());
     });
     if(status != CTE_ENCODE_STATUS_OK)
     {
@@ -259,12 +259,12 @@ cte_encode_status cte_encoder::encode_comment(std::vector<uint8_t> value)
     });
 }
 
-cte_encode_status cte_encoder::encode_binary(std::vector<uint8_t> value)
+cte_encode_status cte_encoder::encode_binary(cte_binary_encoding_radix radix, std::vector<uint8_t> value)
 {
     KSLOG_DEBUG("size %d", value.size());
     return flush_and_retry([&]
     {
-        return cte_encode_add_binary(_process, value.data(), value.size());
+        return cte_encode_add_binary(_process, radix, value.data(), value.size());
     });
 }
 
@@ -282,7 +282,7 @@ cte_encode_status cte_encoder::encode(enc::binary_begin_encoding& e)
     (void)e;
     return flush_and_retry([&]
     {
-        return cte_encode_binary_begin(_process);
+        return cte_encode_binary_begin(_process, e.get_radix());
     });
 }
 
