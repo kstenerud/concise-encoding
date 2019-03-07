@@ -184,13 +184,18 @@ cte_encode_status cte_encoder::encode(enc::string_encoding& e)
     {
         return cte_encode_string_begin(_process);
     });
-
     if(status != CTE_ENCODE_STATUS_OK)
     {
         return status;
     }
 
-    return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
+    status = stream_array(std::vector<uint8_t>(value.begin(), value.end()));
+    if(status != CTE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+
+    return cte_encode_string_end(_process);
 }
 
 cte_encode_status cte_encoder::encode(enc::binary_encoding& e)
@@ -200,13 +205,18 @@ cte_encode_status cte_encoder::encode(enc::binary_encoding& e)
     {
         return cte_encode_binary_begin(_process);
     });
-
     if(status != CTE_ENCODE_STATUS_OK)
     {
         return status;
     }
 
-    return stream_array(e.value());
+    status = stream_array(e.value());
+    if(status != CTE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+
+    return cte_encode_binary_end(_process);
 }
 
 cte_encode_status cte_encoder::encode(enc::comment_encoding& e)
@@ -217,13 +227,18 @@ cte_encode_status cte_encoder::encode(enc::comment_encoding& e)
     {
         return cte_encode_comment_begin(_process);
     });
-
     if(status != CTE_ENCODE_STATUS_OK)
     {
         return status;
     }
 
-    return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
+    status = stream_array(std::vector<uint8_t>(value.begin(), value.end()));
+    if(status != CTE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+
+    return cte_encode_comment_end(_process);
 }
 
 cte_encode_status cte_encoder::encode_string(std::vector<uint8_t> value)
@@ -267,7 +282,7 @@ cte_encode_status cte_encoder::encode(enc::binary_begin_encoding& e)
     (void)e;
     return flush_and_retry([&]
     {
-        return cte_encode_string_begin(_process);
+        return cte_encode_binary_begin(_process);
     });
 }
 

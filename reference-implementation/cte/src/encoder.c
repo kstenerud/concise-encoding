@@ -1,8 +1,4 @@
-#include <memory.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cte/cte.h>
+#include "cte_internal.h"
 
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
@@ -14,342 +10,719 @@
 
 struct cte_encode_process
 {
+    int indent_spaces;
     struct
     {
         const uint8_t* start;
         const uint8_t* end;
         uint8_t* position;
     } buffer;
-
-    int indent_spaces;
-    bool is_first_in_document;
-
+    struct
+    {
+        bool is_inside_array;
+        array_type type;
+        int64_t current_offset;
+        int64_t byte_count;
+    } array;
     struct
     {
         int max_depth;
         int level;
-        bool is_first_in_container;
         bool next_object_is_map_key;
         bool is_inside_map[];
     } container;
 };
 typedef struct cte_encode_process cte_encode_process;
 
+// ==============
+// Utility Macros
+// ==============
+
+#define likely_if(TEST_FOR_TRUTH) if(__builtin_expect(TEST_FOR_TRUTH, 1))
+#define unlikely_if(TEST_FOR_TRUTH) if(__builtin_expect(TEST_FOR_TRUTH, 0))
+
 
 // ==============
 // Error Handlers
 // ==============
 
+#define STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(PROCESS, ...) \
+{ \
+    cte_decode_status inner_status = __VA_ARGS__; \
+    unlikely_if(inner_status != CTE_DECODE_STATUS_OK) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: API call returned non-ok value %d", inner_status); \
+        return inner_status; \
+    } \
+}
+
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
-    if((size_t)((PROCESS)->buffer.end - (PROCESS)->buffer.position) < (size_t)(REQUIRED_BYTES)) \
-        return CTE_ENCODE_STATUS_NEED_MORE_ROOM
-
-
-static inline int get_max_depth_or_default(int max_depth)
-{
-    return max_depth > 0 ? max_depth : CTE_DEFAULT_MAX_CONTAINER_DEPTH;
-}
-
-static inline int get_indent_spaces_or_default(int indent_spaces)
-{
-    return indent_spaces >= 0 ? indent_spaces : CTE_DEFAULT_INDENT_SPACES;
-}
-
-static inline void zero_memory(void* const memory, const int byte_count)
-{
-    uint8_t* ptr = memory;
-    uint8_t* const end = ptr + byte_count;
-    while(ptr < end)
-    {
-        *ptr++ = 0;
-    }
-}
-
-
-int cte_encode_process_size(const int max_depth)
-{
-    KSLOG_DEBUG("(max_depth %d", max_depth);
-    return sizeof(cte_encode_process) + max_depth;
-}
-
-static void add_bytes(cte_encode_process* const process, const char* bytes, size_t length)
-{
-    memcpy(process->buffer.position, bytes, length);
-    process->buffer.position += length;
-}
-
-static cte_encode_status add_indentation(cte_encode_process* const process)
-{
-    if(process->indent_spaces <= 0)
-    {
-        return CTE_ENCODE_STATUS_OK;
+    unlikely_if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(REQUIRED_BYTES)) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Require %d bytes but only %d available.", \
+            (REQUIRED_BYTES), get_remaining_space_in_buffer(PROCESS)); \
+        return CTE_ENCODE_STATUS_NEED_MORE_ROOM; \
     }
 
-    int num_spaces = process->indent_spaces * process->container.level;
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, num_spaces + 1);
-    *process->buffer.position++ = '\n';
-    memset(process->buffer.position, ' ', num_spaces);
-    process->buffer.position += num_spaces;
+#define STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(PROCESS) \
+    unlikely_if((PROCESS)->array.is_inside_array) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: We're inside an array when we shouldn't be"); \
+        return CTE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_NOT_INSIDE_ARRAY(PROCESS) \
+    unlikely_if(!(PROCESS)->array.is_inside_array) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: We're not inside an array when we should be"); \
+        return CTE_ENCODE_ERROR_NOT_INSIDE_ARRAY_FIELD; \
+    }
+
+#define STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(PROCESS) \
+    unlikely_if((PROCESS)->container.level + 1 >= (PROCESS)->container.max_depth) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Max depth %d exceeded", (PROCESS)->container.max_depth); \
+        return CTE_ENCODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_NOT_INSIDE_CONTAINER(PROCESS) \
+    unlikely_if((PROCESS)->container.level <= 0) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: We're not inside a container"); \
+        return CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(PROCESS) \
+    unlikely_if((PROCESS)->container.level != 0) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: There are still open containers when there shouldn't be"); \
+        return CTE_ENCODE_ERROR_UNBALANCED_CONTAINERS; \
+    }
+
+#define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
+    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+        !(PROCESS)->container.next_object_is_map_key) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: No map value provided for previous key"); \
+        return CTE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY; \
+    }
+
+#define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
+    unlikely_if((PROCESS)->container.is_inside_map[process->container.level] && \
+        (PROCESS)->container.next_object_is_map_key) \
+    { \
+        KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
+        return CTE_ENCODE_ERROR_INCORRECT_MAP_KEY_TYPE; \
+    }
+
+
+// =======
+// Utility
+// =======
+
+static inline int64_t minimum_int64(const int64_t a, const int64_t b)
+{
+    return a < b ? a : b;
+}
+
+static inline int64_t get_remaining_space_in_buffer(cte_encode_process* const process)
+{
+    return process->buffer.end - process->buffer.position;
+}
+
+static inline void swap_map_key_value_status(cte_encode_process* const process)
+{
+    process->container.next_object_is_map_key = !process->container.next_object_is_map_key;
+}
+
+static inline void add_primitive_bytes(cte_encode_process* const process,
+                                       const uint8_t* const bytes,
+                                       const int64_t byte_count)
+{
+    if(byte_count < 50)
+    {
+        KSLOG_DATA_DEBUG(bytes, byte_count, "%d Bytes: ", byte_count);
+    }
+    else
+    {
+        KSLOG_DATA_TRACE(bytes, byte_count, "%d Bytes: ", byte_count);
+    }
+
+    memcpy(process->buffer.position, bytes, byte_count);
+    process->buffer.position += byte_count;
+}
+
+static inline void add_primitive_chars(cte_encode_process* const process,
+                                       const char* const bytes,
+                                       const int64_t byte_count)
+{
+    return add_primitive_bytes(process, (const uint8_t*)bytes, byte_count);
+}
+
+static inline void begin_array(cte_encode_process* const process, array_type type)
+{
+    KSLOG_DEBUG("(process %p, type %d, byte_count %d)", process, type);
+    process->array.is_inside_array = true;
+    process->array.current_offset = 0;
+    process->array.type = type;
+}
+
+static inline void end_array(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    process->array.is_inside_array = false;
+    process->array.current_offset = 0;
+}
+
+static inline cte_encode_status add_encoded_object(cte_encode_process* const process,
+                                                   const char* const object,
+                                                   const int64_t byte_count)
+{
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count);
+    swap_map_key_value_status(process);
+    add_primitive_chars(process, object, byte_count);
     return CTE_ENCODE_STATUS_OK;
 }
 
-static cte_encode_status begin_new_object(cte_encode_process* const process)
+static inline cte_encode_status add_int_64(cte_encode_process* const process, const int64_t value)
 {
-    if(process->is_first_in_document)
+    char buffer[100];
+    sprintf(buffer, "%ld", value);
+    return add_encoded_object(process, buffer, strlen(buffer));
+}
+
+static inline cte_encode_status add_float_64(cte_encode_process* const process, int precision, const double value)
+{
+    char fmt[10];
+    sprintf(fmt, "%%.%dlg", precision);
+    char buffer[100];
+    sprintf(buffer, fmt, value);
+    return add_encoded_object(process, buffer, strlen(buffer));
+}
+
+// static inline cte_encode_status encode_string_header(cte_encode_process* const process,
+//                                                      const int64_t byte_count,
+//                                                      const bool should_reserve_payload)
+// {
+//     KSLOG_DEBUG("(process %p, byte_count %d, should_reserve_payload %d)",
+//         process, byte_count, should_reserve_payload);
+
+//     cte_type_field type = 0;
+//     int reserved_count = 0;
+
+//     if(byte_count > 15)
+//     {
+//         type = TYPE_STRING;
+//         reserved_count = get_array_length_field_width(byte_count);
+//     }
+//     else
+//     {
+//         type = TYPE_STRING_0 + byte_count;
+//     }
+
+//     if(should_reserve_payload)
+//     {
+//         reserved_count += byte_count;
+//     }
+
+//     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, reserved_count);
+
+//     add_primitive_type(process, type);
+//     if(byte_count > 15)
+//     {
+//         add_array_length_field(process, byte_count);
+//     }
+//     begin_array(process, ARRAY_TYPE_STRING, byte_count);
+
+//     swap_map_key_value_status(process);
+//     unlikely_if(byte_count == 0)
+//     {
+//         end_array(process);
+//     }
+
+//     return CTE_ENCODE_STATUS_OK;
+// }
+
+static cte_encode_status encode_array_contents(cte_encode_process* const process, 
+                                               const uint8_t* const start,
+                                               int64_t* const byte_count)
+{
+    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, *byte_count);
+
+    likely_if(*byte_count > 0)
     {
-        process->is_first_in_document = false;
-        return CTE_ENCODE_STATUS_OK;
+        const int64_t want_to_copy = *byte_count;
+        const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+        const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
+
+        KSLOG_DEBUG("Type: %d", process->array.type);
+        if(process->array.type == ARRAY_TYPE_COMMENT)
+        {
+            unlikely_if(!cte_validate_comment(start, bytes_to_copy))
+            {
+                KSLOG_DEBUG("invalid data");
+                return CTE_ENCODE_ERROR_INVALID_ARRAY_DATA;
+            }
+        }
+
+        if(process->array.type == ARRAY_TYPE_STRING)
+        {
+            unlikely_if(!cte_validate_string(start, bytes_to_copy))
+            {
+                KSLOG_DEBUG("invalid data");
+                return CTE_ENCODE_ERROR_INVALID_ARRAY_DATA;
+            }
+        }
+
+        add_primitive_bytes(process, start, bytes_to_copy);
+        process->array.current_offset += bytes_to_copy;
+        *byte_count = bytes_to_copy;
+
+        KSLOG_DEBUG("Streamed %d bytes into array", bytes_to_copy);
+        STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, want_to_copy - bytes_to_copy);
     }
 
-    bool is_in_map = process->container.is_inside_map[process->container.level];
-    bool next_object_is_map_key = process->container.next_object_is_map_key;
-    cte_encode_status status = CTE_ENCODE_STATUS_OK;
+    return CTE_ENCODE_STATUS_OK;
+}
 
-    if(is_in_map)
+// ===
+// API
+// ===
+
+int cte_encode_process_size(const int max_container_depth)
+{
+    KSLOG_TRACE("(max_container_depth %d)", max_container_depth)
+    return sizeof(cte_encode_process) + get_max_container_depth_or_default(max_container_depth);
+}
+
+
+cte_encode_status cte_encode_begin(struct cte_encode_process* const process,
+                                   uint8_t* const document_buffer,
+                                   int64_t byte_count,
+                                   int max_container_depth,
+                                   int indent_spaces)
+{
+    KSLOG_TRACE("(process %p, document_buffer %p, byte_count %d, max_container_depth %d)",
+        process, document_buffer, byte_count, max_container_depth);
+    unlikely_if(process == NULL || document_buffer == NULL || byte_count < 0)
     {
-        process->container.next_object_is_map_key = !next_object_is_map_key;
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
 
-    if(process->container.is_first_in_container)
+    zero_memory(process, sizeof(*process) + 1);
+    cte_encode_status status = cte_encode_set_buffer(process, document_buffer, byte_count);
+    unlikely_if(status != CTE_ENCODE_STATUS_OK)
     {
-        if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
-        process->container.is_first_in_container = false;
         return status;
     }
+    process->container.max_depth = get_max_container_depth_or_default(max_container_depth);
+    process->indent_spaces = indent_spaces;
 
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-
-    if(!is_in_map || next_object_is_map_key)
-    {
-        *process->buffer.position++ = ',';
-        if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
-        return status;
-    }
-
-    *process->buffer.position++ = ':';
-    if(process->indent_spaces > 0)
-    {
-        STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-        *process->buffer.position++ = ' ';
-    }
     return status;
 }
 
-static cte_encode_status add_object(cte_encode_process* const process, const char* encoded_object)
+cte_encode_status cte_encode_set_buffer(cte_encode_process* const process,
+                                        uint8_t* const document_buffer,
+                                        const int64_t byte_count)
 {
-    cte_encode_status status = CTE_ENCODE_STATUS_OK;
-    if((status = begin_new_object(process)) != CTE_ENCODE_STATUS_OK) return status;
-    int length = strlen(encoded_object);
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, length);
-    add_bytes(process, encoded_object, length);
-    return status;
-}
-
-static cte_encode_status start_container(cte_encode_process* const process, bool is_map)
-{
-    if(process->container.next_object_is_map_key) return 9999;
-    begin_new_object(process);
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-    add_bytes(process, is_map ? "{" : "[", 1);
-    process->container.level++;
-    process->container.is_first_in_container = true;
-    process->container.is_inside_map[process->container.level] = is_map;
-    process->container.next_object_is_map_key = is_map;
-    return CTE_ENCODE_STATUS_OK;
-
-}
-
-static char get_escape_char(char ch)
-{
-    switch(ch)
+    KSLOG_DEBUG("(process %p, document_buffer %p, byte_count %d)",
+        process, document_buffer, byte_count);
+    unlikely_if(process == NULL || document_buffer == NULL || byte_count < 0)
     {
-        case '\\': return '\\';
-        case  '"': return '"';
-        case '\b': return 'b';
-        case '\f': return 'f';
-        case '\n': return 'n';
-        case '\r': return 'r';
-        case '\t': return 't';
-        default:   return 0;
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
-}
 
-static cte_encode_status add_string_with_escaping(cte_encode_process* const process, const char* const start, const int64_t byte_count)
-{
-    const char* end = start + byte_count;
-    for(const char* src = start; src < end; src++)
-    {
-        char ch = *src;
-        char escape_ch = get_escape_char(ch);
-        if(escape_ch != 0)
-        {
-            STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 2);
-            *process->buffer.position++ = '\\';
-            *process->buffer.position++ = escape_ch;
-        }
-        else
-        {
-            STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-            *process->buffer.position++ = ch;
-        }
-    }
+    process->buffer.start = document_buffer;
+    process->buffer.position = document_buffer;
+    process->buffer.end = document_buffer + byte_count;
+
     return CTE_ENCODE_STATUS_OK;
 }
 
+int64_t cte_encode_get_buffer_offset(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    return process->buffer.position - process->buffer.start;
+}
 
-
+int cte_encode_get_container_level(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    return process->container.level;    
+}
 
 cte_encode_status cte_encode_add_nil(cte_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    if(process->container.next_object_is_map_key) return 9999;
-    return add_object(process, "nil");
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
+
+    return add_encoded_object(process, "nil", 3);
 }
 
 cte_encode_status cte_encode_add_boolean(cte_encode_process* const process, const bool value)
 {
     KSLOG_DEBUG("(process %p, value %d)", process, value);
-    if(process->container.next_object_is_map_key) return 9999;
-    return add_object(process, value ? "true" : "false");
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    if(value)
+    {
+        return add_encoded_object(process, "true", 4);
+    }
+    else
+    {
+        return add_encoded_object(process, "false", 5);
+    }
 }
 
-cte_encode_status cte_encode_add_int_8(cte_encode_process* const process, const int8_t value)
-{
-    //TODO
-    return cte_encode_add_int_64(process, value);
-}
-
-cte_encode_status cte_encode_add_int_16(cte_encode_process* const process, const int16_t value)
-{
-    //TODO
-    return cte_encode_add_int_64(process, value);
-}
-
-cte_encode_status cte_encode_add_int_32(cte_encode_process* const process, const int32_t value)
-{
-    //TODO
-    return cte_encode_add_int_64(process, value);
-}
-
-cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, const int64_t value)
+cte_encode_status cte_encode_add_int(cte_encode_process* const process, const int value)
 {
     KSLOG_DEBUG("(process %p, value %d)", process, value);
-    if(process->container.next_object_is_map_key) return 9999;
-    char buffer[21];
-    sprintf(buffer, "%ld", value);
-    return add_object(process, buffer);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_int_64(process, value);
 }
 
-cte_encode_status cte_encode_add_int_128(cte_encode_process* const process, const __int128_t value)
+cte_encode_status cte_encode_add_int_8(cte_encode_process* const process, int8_t const value)
 {
+    KSLOG_DEBUG("(process %p, value %d)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_int_64(process, value);
+}
+
+cte_encode_status cte_encode_add_int_16(cte_encode_process* const process, int16_t const value)
+{
+    KSLOG_DEBUG("(process %p, value %d)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_int_64(process, value);
+}
+
+cte_encode_status cte_encode_add_int_32(cte_encode_process* const process, int32_t const value)
+{
+    KSLOG_DEBUG("(process %p, value %d)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_int_64(process, value);
+}
+
+cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, int64_t const value)
+{
+    KSLOG_DEBUG("(process %p, value %ld)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_int_64(process, value);
+}
+
+cte_encode_status cte_encode_add_int_128(cte_encode_process* const process, const __int128 value)
+{
+    KSLOG_DEBUG("(process %p, value 0x%016x%016x)",
+        process, (int64_t)(value>>64), (uint64_t)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
     // TODO
-    return cte_encode_add_int_64(process, (int64_t)value);
+    return add_int_64(process, (int64_t)value);
 }
 
 cte_encode_status cte_encode_add_float_32(cte_encode_process* const process,
-                                          int precision,
+                                          const int precision,
                                           const float value)
 {
-    //TODO
-    return cte_encode_add_float_64(process, precision, value);
+    KSLOG_DEBUG("(process %p, value %f)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_float_64(process, precision, value);
 }
 
 cte_encode_status cte_encode_add_float_64(cte_encode_process* const process,
                                           const int precision,
                                           const double value)
 {
-    // TODO: This is garbage
     KSLOG_DEBUG("(process %p, value %f)", process, value);
-    if(process->container.next_object_is_map_key) return 9999;
-    char fmt[10];
-    sprintf(fmt, "%%.%dlg", precision);
-    char buffer[precision + 20];
-    sprintf(buffer, fmt, value);
-    return add_object(process, buffer);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_float_64(process, precision, value);
 }
 
 cte_encode_status cte_encode_add_float_128(cte_encode_process* const process,
                                            const int precision,
                                            const __float128 value)
 {
-    //TODO
-    return cte_encode_add_float_64(process, precision, (double)value);
+    KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    // TODO
+    return add_float_64(process, precision, (double)value);
 }
 
 cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const process, const _Decimal32 value)
 {
+    KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
     // TODO
-    (void)process;
-    (void)value;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
+    return add_float_64(process, 10, (double)value);
 }
 
 cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, const _Decimal64 value)
 {
+    KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
     // TODO
-    (void)process;
-    (void)value;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
+    return add_float_64(process, 10, (double)value);
 }
 
 cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, const _Decimal128 value)
 {
+    KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
     // TODO
-    (void)process;
-    (void)value;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
+    return add_float_64(process, 10, (double)value);
 }
 
 cte_encode_status cte_encode_add_time(cte_encode_process* const process, const smalltime value)
 {
+    KSLOG_DEBUG("(process %p, value %016x)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
     // TODO
-    (void)process;
     (void)value;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
+    return add_encoded_object(process, "TODO-time", 10);
 }
 
 cte_encode_status cte_encode_list_begin(cte_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    return start_container(process, false);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
+    STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process);
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "[", 1));
+
+    process->container.level++;
+    process->container.is_inside_map[process->container.level] = false;
+    process->container.next_object_is_map_key = false;
+
+    return CTE_ENCODE_STATUS_OK;
 }
 
 cte_encode_status cte_encode_map_begin(cte_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    return start_container(process, true);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(process);
+    STOP_AND_EXIT_IF_MAX_CONTAINER_DEPTH_EXCEEDED(process);
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "{", 1));
+
+    process->container.level++;
+    process->container.is_inside_map[process->container.level] = true;
+    process->container.next_object_is_map_key = true;
+
+    return CTE_ENCODE_STATUS_OK;
 }
 
 cte_encode_status cte_encode_container_end(cte_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    cte_encode_status status = CTE_ENCODE_STATUS_OK;
-    if(process->container.level <= 0)
+    unlikely_if(process == NULL)
     {
-        return 9999;
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
-    bool is_in_map = process->container.is_inside_map[process->container.level];
-    if(is_in_map && !process->container.next_object_is_map_key)
+
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_IS_NOT_INSIDE_CONTAINER(process);
+    STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
+
+    if(process->container.is_inside_map[process->container.level])
     {
-        return 9999;
+        add_primitive_chars(process, "}", 1);
+    }
+    else
+    {
+        add_primitive_chars(process, "]", 1);
     }
 
     process->container.level--;
-    if((status = add_indentation(process)) != CTE_ENCODE_STATUS_OK) return status;
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-    add_bytes(process, is_in_map ? "}" : "]", 1);
     process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
-    return status;
+
+    return CTE_ENCODE_STATUS_OK;
 }
 
-cte_encode_status cte_encode_add_string(cte_encode_process* const process, const char* const start, const int64_t byte_count)
+cte_encode_status cte_encode_binary_begin(cte_encode_process* const process)
 {
-    KSLOG_DEBUG("(process %p, start %p, byte_count %d)", process, start, byte_count);
-    cte_encode_status status = CTE_ENCODE_STATUS_OK;
-    if((status = add_object(process, "\"")) != CTE_ENCODE_STATUS_OK) return status;
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, byte_count + 1);
-    add_string_with_escaping(process, start, byte_count);
-    add_bytes(process, "\"", 1);
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "b/", 2));
+    begin_array(process, ARRAY_TYPE_BINARY);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_string_begin(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "\"", 1));
+    begin_array(process, ARRAY_TYPE_STRING);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_comment_begin(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "#", 1));
+    begin_array(process, ARRAY_TYPE_COMMENT);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_add_data(cte_encode_process* const process,
+                                      const uint8_t* const start,
+                                      int64_t* const byte_count)
+{
+    KSLOG_DEBUG("(process %p, start %p, byte_count %d)",
+        process, start, byte_count == NULL ? -123456789 : *byte_count);
+    unlikely_if(process == NULL || byte_count == NULL || *byte_count < 0)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+    unlikely_if(*byte_count == 0)
+    {
+        return CTE_ENCODE_STATUS_OK;
+    }
+    unlikely_if(start == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+    KSLOG_DATA_TRACE(start, *byte_count, NULL);
+
+    STOP_AND_EXIT_IF_IS_NOT_INSIDE_ARRAY(process);
+
+    return encode_array_contents(process, start, byte_count);
+}
+
+cte_encode_status cte_encode_string_end(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    add_primitive_chars(process, "\"", 1);
+    end_array(process);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_binary_end(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    add_primitive_chars(process, "/", 1);
+    end_array(process);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_comment_end(cte_encode_process* const process)
+{
+    KSLOG_DEBUG("(process %p)", process);
+    unlikely_if(process == NULL)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    add_primitive_chars(process, "\n", 1);
+    end_array(process);
+    return CTE_ENCODE_STATUS_OK;
+}
+
+cte_encode_status cte_encode_add_string(cte_encode_process* const process,
+                                        const char* const string_start,
+                                        const int64_t byte_count)
+{
+    uint8_t* const last_position = process->buffer.position;
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, cte_encode_string_begin(process));
+    int64_t byte_count_copy = byte_count;
+    cte_encode_status status = cte_encode_add_data(process, (const uint8_t*)string_start, &byte_count_copy);
+    unlikely_if(status != CTE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
     return status;
 }
 
@@ -357,132 +730,43 @@ cte_encode_status cte_encode_add_binary(cte_encode_process* const process,
                                         const uint8_t* const data,
                                         const int64_t byte_count)
 {
-    // TODO;
-    (void)process;
-    (void)data;
-    (void)byte_count;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
+    uint8_t* const last_position = process->buffer.position;
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, cte_encode_binary_begin(process));
+    int64_t byte_count_copy = byte_count;
+    cte_encode_status status = cte_encode_add_data(process, data, &byte_count_copy);
+    unlikely_if(status != CTE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
 }
 
 cte_encode_status cte_encode_add_comment(cte_encode_process* const process,
-                                         const char* const comment_start,
-                                         const int64_t byte_count)
-{
-    // TODO;
-    (void)process;
-    (void)comment_start;
-    (void)byte_count;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_string_begin(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_binary_begin(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_comment_begin(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_add_data(cte_encode_process* const process,
-                                      const uint8_t* const start,
-                                      int64_t* const byte_count)
-{
-    // TODO;
-    (void)process;
-    (void)start;
-    (void)byte_count;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_string_end(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_binary_end(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_comment_end(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_set_buffer(cte_encode_process* const process,
-                                        uint8_t* const document_buffer,
+                                        const char* const comment_start,
                                         const int64_t byte_count)
 {
-    // TODO;
-    (void)process;
-    (void)document_buffer;
-    (void)byte_count;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-int64_t cte_encode_get_buffer_offset(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-int cte_encode_get_document_depth(cte_encode_process* const process)
-{
-    // TODO;
-    (void)process;
-    return CTE_DECODE_ERROR_INTERNAL_BUG;
-}
-
-cte_encode_status cte_encode_begin(cte_encode_process* process,
-                                   uint8_t* const document_buffer,
-                                   int64_t byte_count,
-                                   int max_depth,
-                                   int indent_spaces)
-{
-    KSLOG_DEBUG("(process %p, document_buffer %p, byte_count %d, max_depth %d, float_digits_precision %d, indent_spaces %d)",
-        process, document_buffer, byte_count, max_depth, float_digits_precision, indent_spaces);
-    zero_memory(process, sizeof(process) + 1);
-    process->buffer.start = document_buffer;
-    process->buffer.position = document_buffer;
-    process->buffer.end = document_buffer + byte_count;
-    process->indent_spaces = get_indent_spaces_or_default(indent_spaces);
-    process->container.max_depth = get_max_depth_or_default(max_depth);
-    process->is_first_in_document = true;
-    return CTE_ENCODE_STATUS_OK;
+    uint8_t* const last_position = process->buffer.position;
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, cte_encode_comment_begin(process));
+    int64_t byte_count_copy = byte_count;
+    cte_encode_status status = cte_encode_add_data(process, (const uint8_t*)comment_start, &byte_count_copy);
+    unlikely_if(status != CTE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
 }
 
 cte_encode_status cte_encode_end(cte_encode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    while(process->container.level > 0)
+    unlikely_if(process == NULL)
     {
-        if(!cte_encode_container_end(process))
-        {
-            return 9999;
-        }
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
-    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
-    *process->buffer.position = 0;
-    // return (const char*)process->buffer.position;
+
+    STOP_AND_EXIT_IF_IS_INSIDE_CONTAINER(process);
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+
+    KSLOG_DEBUG("Process ended successfully");
     return CTE_ENCODE_STATUS_OK;
 }
