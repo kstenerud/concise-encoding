@@ -202,49 +202,6 @@ static inline cte_encode_status add_float_64(cte_encode_process* const process, 
     return add_encoded_object(process, buffer, strlen(buffer));
 }
 
-// static inline cte_encode_status encode_string_header(cte_encode_process* const process,
-//                                                      const int64_t byte_count,
-//                                                      const bool should_reserve_payload)
-// {
-//     KSLOG_DEBUG("(process %p, byte_count %d, should_reserve_payload %d)",
-//         process, byte_count, should_reserve_payload);
-
-//     cte_type_field type = 0;
-//     int reserved_count = 0;
-
-//     if(byte_count > 15)
-//     {
-//         type = TYPE_STRING;
-//         reserved_count = get_array_length_field_width(byte_count);
-//     }
-//     else
-//     {
-//         type = TYPE_STRING_0 + byte_count;
-//     }
-
-//     if(should_reserve_payload)
-//     {
-//         reserved_count += byte_count;
-//     }
-
-//     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, reserved_count);
-
-//     add_primitive_type(process, type);
-//     if(byte_count > 15)
-//     {
-//         add_array_length_field(process, byte_count);
-//     }
-//     begin_array(process, ARRAY_TYPE_STRING, byte_count);
-
-//     swap_map_key_value_status(process);
-//     unlikely_if(byte_count == 0)
-//     {
-//         end_array(process);
-//     }
-
-//     return CTE_ENCODE_STATUS_OK;
-// }
-
 static cte_encode_status encode_array_contents(cte_encode_process* const process, 
                                                const uint8_t* const start,
                                                int64_t* const byte_count)
