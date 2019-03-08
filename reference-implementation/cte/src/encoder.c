@@ -211,7 +211,9 @@ static cte_encode_status encode_array_contents(cte_encode_process* const process
     likely_if(*byte_count > 0)
     {
         const int64_t want_to_copy = *byte_count;
-        const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+        int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+        // TODO: Do this better. Right now I'm assuming hex.
+        space_in_buffer /= 2;
         const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
 
         KSLOG_DEBUG("Type: %d", process->array.type);
@@ -233,7 +235,20 @@ static cte_encode_status encode_array_contents(cte_encode_process* const process
             }
         }
 
-        add_primitive_bytes(process, start, bytes_to_copy);
+        if(process->array.type == ARRAY_TYPE_BINARY)
+        {
+            static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+            for(int64_t i = 0; i < bytes_to_copy; i++)
+            {
+                uint8_t value = start[i];
+                *process->buffer.position++ = digits[(value >> 4) & 15];
+                *process->buffer.position++ = digits[value & 15];
+            }
+        }
+        else
+        {
+            add_primitive_bytes(process, start, bytes_to_copy);
+        }
         process->array.current_offset += bytes_to_copy;
         *byte_count = bytes_to_copy;
 
@@ -575,7 +590,20 @@ cte_encode_status cte_encode_binary_begin(cte_encode_process* const process,
         return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
 
-    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "b/", 2));
+    char header[2] = {'b', '/'};
+    switch(radix)
+    {
+        case CTE_BINARY_ENCODING_RADIX_16:
+            header[0] = 'b';
+            break;
+        case CTE_BINARY_ENCODING_RADIX_85:
+            header[0] = 's';
+            break;
+        default:
+            return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, header, sizeof(header)));
     begin_array(process, ARRAY_TYPE_BINARY);
     process->array.radix = radix;
     return CTE_ENCODE_STATUS_OK;
