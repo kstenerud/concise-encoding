@@ -69,7 +69,6 @@ package_add_test(cte_tests
     src/helpers/test_helpers.cpp
     src/helpers/test_utils.cpp
 
-    src/managed_allocator.c
-    src/decode_test_helpers.c
-    src/test_cte_decode.cpp
+    src/comment.cpp
+
 )

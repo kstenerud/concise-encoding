@@ -300,9 +300,28 @@ static bool add_string_character(cte_decode_process* process, char ch)
     return true;
 }
 
+static bool output_comment_data(cte_decode_process* process)
+{
+    bool result = process->callbacks->on_comment_data(process,
+        (char*)process->array_buffer, process->array_buffer_offset);
+    process->array_buffer_offset = 0;
+    return result;
+}
+
+static bool add_comment_character(cte_decode_process* process, char ch)
+{
+    process->array_buffer[process->array_buffer_offset++] = ch;
+
+    if(process->array_buffer_offset >= (int)sizeof(process->array_buffer))
+    {
+        return output_comment_data(process);
+    }
+    return true;
+}
+
 static void handle_error(cte_decode_process* process, const char* current_pointer)
 {
-    KSLOG_DEBUG("(process %p, current_pointer %p %c)", process, current_pointer, *current_pointer);
+    KSLOG_DEBUG("(process %p, current_pointer %p %02x: [%c])", process, current_pointer, *current_pointer, *current_pointer);
     char buffer[1000];
     if(process->token_start == NULL)
     {
@@ -695,6 +714,39 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
         process->token_start = NULL;
     }
 
+    action on_comment_begin
+    {
+        KSLOG_TRACE("on_comment_begin");
+        process->token_start = p;
+        if(!process->callbacks->on_comment_begin(process))
+        {
+            status = CTE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+            fbreak;
+        }
+    }
+
+    action on_comment_character
+    {
+        KSLOG_TRACE("on_comment_character: [%c]", *p);
+        add_comment_character(process, *p);
+    }
+
+    action on_comment_end
+    {
+        KSLOG_TRACE("on_comment_end");
+        if(!output_comment_data(process))
+        {
+            status = CTE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+            fbreak;
+        }
+        if(!process->callbacks->on_comment_end(process))
+        {
+            status = CTE_DECODE_STATUS_STOPPED_IN_CALLBACK;
+            fbreak;
+        }
+        process->token_start = NULL;
+    }
+
     action on_list_begin
     {
         KSLOG_TRACE("on_list_begin");
@@ -746,6 +798,7 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
     action on_error
     {
         KSLOG_TRACE("on_error: [%c]", *p);
+        status = CTE_DECODE_ERROR_PARSE_UNEXPECTED_CHARACTER;
         handle_error(process, p);
         fbreak;
     }
@@ -917,11 +970,14 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
         string_delimiter >on_string_end
     );
 
+    comment_initiator = '#';
+    comment_character = (any - ('\r' | '\n'));
+    comment_terminator = ('\r' | '\n');
     comment =
     (
-        "# "
-        (any - ('\r' | '\n'))*
-        ('\r' | '\n')
+        comment_initiator %on_comment_begin
+        (comment_character >on_comment_character)*
+        comment_terminator > on_comment_end
     );
 
     list = '[' @on_list_begin;

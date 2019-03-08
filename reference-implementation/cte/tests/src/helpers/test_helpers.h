@@ -18,20 +18,20 @@ cte_encode_status expect_encode_produces_data_and_status(int buffer_size,
                                                          int max_container_depth,
                                                          int indent_spaces,
                                                          std::shared_ptr<enc::encoding> encoding,
-                                                         const std::vector<uint8_t> expected_memory,
+                                                         const std::string expected_memory,
                                                          cte_encode_status expected_status);
 
 
 void expect_decode_produces_status(int buffer_size,
                                    int max_container_depth,
                                    bool callback_return_value,
-                                   std::vector<uint8_t> document,
+                                   std::string document,
                                    cte_decode_status expected_decode_status);
 
 void expect_decode_produces_data_and_status(int buffer_size,
                                             int max_container_depth,
                                             bool callback_return_value,
-                                            const std::vector<uint8_t> memory,
+                                            const std::string memory,
                                             std::shared_ptr<enc::encoding> expected_encoding,
                                             cte_decode_status expected_status);
 
@@ -48,13 +48,13 @@ void expect_encode_decode_produces_data_and_status(int buffer_size,
                                                    int max_container_depth,
                                                    int indent_spaces,
                                                    std::shared_ptr<enc::encoding> expected_encoding,
-                                                   const std::vector<uint8_t> expected_memory,
+                                                   const std::string expected_memory,
                                                    cte_encode_status expected_encode_status,
                                                    cte_decode_status expected_decode_status);
 
 void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
                                                      std::shared_ptr<enc::encoding> expected_encoding,
-                                                     const std::vector<uint8_t> expected_memory);
+                                                     const std::string expected_memory);
 } // namespace cte_test
 
 
@@ -62,7 +62,7 @@ void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
 #define TEST_ENCODE_DATA(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, INDENT, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> memory = __VA_ARGS__; \
+    const std::string memory = __VA_ARGS__; \
     cte_test::expect_encode_produces_data_and_status(BUFFER_SIZE, \
                                                      MAX_DEPTH, \
                                                      INDENT, \
@@ -86,9 +86,10 @@ TEST(TESTCASE, NAME) \
 #define TEST_DECODE_DATA(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> memory = __VA_ARGS__; \
+    const std::string memory = __VA_ARGS__; \
     cte_test::expect_decode_produces_data_and_status(BUFFER_SIZE, \
                                                      MAX_DEPTH, \
+                                                     true, \
                                                      memory, \
                                                      ENCODING, \
                                                      CTE_DECODE_STATUS_OK); \
@@ -98,7 +99,7 @@ TEST(TESTCASE, NAME) \
 #define TEST_DECODE_STATUS(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, RETURN_VALUE, EXPECTED_DECODE_STATUS, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> memory = __VA_ARGS__; \
+    const std::string memory = __VA_ARGS__; \
     cte_test::expect_decode_produces_status(BUFFER_SIZE, \
                                             MAX_DEPTH, \
                                             RETURN_VALUE, \
@@ -110,7 +111,7 @@ TEST(TESTCASE, NAME) \
 #define TEST_ENCODE_DECODE_DATA(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, INDENT, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    const std::vector<uint8_t> memory = __VA_ARGS__; \
+    const std::string memory = __VA_ARGS__; \
     cte_test::expect_encode_decode_produces_data_and_status(BUFFER_SIZE, \
                                                             MAX_DEPTH, \
                                                             INDENT, \

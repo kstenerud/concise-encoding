@@ -106,7 +106,11 @@ typedef enum
     /**
      * Max container depth (default 500) was exceeded.
      */
-    CBE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
+    CTE_DECODE_ERROR_MAX_CONTAINER_DEPTH_EXCEEDED,
+
+    /**
+     */
+    CTE_DECODE_ERROR_PARSE_UNEXPECTED_CHARACTER,
 
     /**
      * An internal bug triggered an error.
