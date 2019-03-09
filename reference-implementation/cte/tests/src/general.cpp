@@ -8,7 +8,7 @@ using namespace enc;
 #define TEST_ENCODE_DECODE_SHRINKING_TIME(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC, ...) \
 TEST(Time, time_ ## YEAR ## _ ## MONTH ## _ ## DAY ## _ ## HOUR ## _ ## MINUTE ## _ ## SECOND ## _ ## USEC) \
 { \
-    cbe_test::expect_encode_decode_with_shrinking_buffer_size(0, \
+    cte_test::expect_encode_decode_with_shrinking_buffer_size(0, \
         smtime(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, USEC), \
          __VA_ARGS__); \
 }
@@ -63,43 +63,39 @@ TEST_ENCODE_DECODE_SHRINKING_DECIMAL64(NAME, VALUE, __VA_ARGS__)
 
 // ==================================================================
 
+TEST_ENCODE_DECODE_SHRINKING(Nil, nil, 0, nil(), "nil")
 
 TEST_ENCODE_DECODE_SHRINKING(Bool, false, 0, bl(false), "false")
 TEST_ENCODE_DECODE_SHRINKING(Bool, true,  0, bl(true), "true")
 
-TEST_ENCODE_DECODE_SHRINKING_INT8(_0,                                       0, "0")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_1,                                       1, "1")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_109,                                   109, "109")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_n1,                                     -1, "-1")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_n110,                                 -109, "-109")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_110,                                   110, "110")
-TEST_ENCODE_DECODE_SHRINKING_INT8(_n111,                                 -110, "-110")
+TEST_ENCODE_DECODE_SHRINKING_INT8(p_0,                                       0, "0")
+TEST_ENCODE_DECODE_SHRINKING_INT8(p_1,                                       1, "1")
+TEST_ENCODE_DECODE_SHRINKING_INT8(p_109,                                   109, "109")
+TEST_ENCODE_DECODE_SHRINKING_INT8(n_1,                                     -1, "-1")
+TEST_ENCODE_DECODE_SHRINKING_INT8(n_109,                                 -109, "-109")
+TEST_ENCODE_DECODE_SHRINKING_INT8(p_110,                                   110, "110")
+TEST_ENCODE_DECODE_SHRINKING_INT8(n_110,                                 -110, "-110")
+TEST_ENCODE_DECODE_SHRINKING_INT16(n_1111,                              -1111, "-1111")
+TEST_ENCODE_DECODE_SHRINKING_INT32(p_9999999,                          9999999, "9999999")
+TEST_ENCODE_DECODE_SHRINKING_INT64(p_99999999999999,            99999999999999, "99999999999999")
 
-TEST_DECODE_DATA(Hex, ff, 99, 99, i8(0xff), "h:ff")
-TEST_DECODE_DATA(Hex, n_f0, 99, 99, i8(-0x0f), "h:-0f")
+TEST_DECODE_DATA(Hex,   p_ff,              99, 99, i8(0xff),                "h:ff")
+TEST_DECODE_DATA(Hex,   n_0f,              99, 99, i8(-0x0f),               "h:-0f")
+TEST_DECODE_DATA(Hex,   p_abc,             99, 99, i16(0xabc),              "h:abc")
+TEST_DECODE_DATA(Hex,   p_1fe9a00,         99, 99, i32(0x1fe9a00),          "h:1fe9a00")
+TEST_DECODE_DATA(Hex,   n_59aabe74fa13304, 99, 99, i64(-0x59aabe74fa13304), "h:-59aabe74fa13304")
 
-TEST_ENCODE_DATA(Float, 0_1, 99, 99, 0, f32(5, 0.1), "0.1")
+TEST_DECODE_DATA(Bin,   p_0,               99, 99, i8(0),                   "b:0")
+TEST_DECODE_DATA(Bin,   p_1,               99, 99, i8(1),                   "b:1")
+TEST_DECODE_DATA(Bin,   p_10,              99, 99, i8(2),                   "b:10")
+TEST_DECODE_DATA(Bin,   n_101110100101001, 99, 99, i32(-23849),             "b:-101110100101001")
 
-// TEST_ENCODE_DECODE_SHRINKING_INT8(_7f,                                   0x7f, {0x6e, 0x7f, 0x00})
-// TEST_ENCODE_DECODE_SHRINKING_INT8(_n80,                                 -0x80, {0x6e, 0x80, 0xff})
+TEST_DECODE_DATA(Octal, p_0,               99, 99, i8(0),                   "o:0")
+TEST_DECODE_DATA(Octal, n_7,               99, 99, i8(-7),                  "o:-7")
+TEST_DECODE_DATA(Octal, p_1353365,         99, 99, i32(382709),             "o:1353365")
 
-// TEST_ENCODE_DECODE_SHRINKING_INT16(_7fff,                              0x7fff, {0x6e, 0xff, 0x7f})
-// TEST_ENCODE_DECODE_SHRINKING_INT16(_n8000,                            -0x8000, {0x6e, 0x00, 0x80})
+TEST_ENCODE_DECODE_DATA(Float, _0_1, 99, 99, 0, f32(5, 0.1), "0.1")
 
-// TEST_ENCODE_DECODE_SHRINKING_INT32(_8000,                              0x8000, {0x6f, 0x00, 0x80, 0x00, 0x00})
-// TEST_ENCODE_DECODE_SHRINKING_INT32(_n8001,                            -0x8001, {0x6f, 0xff, 0x7f, 0xff, 0xff})
-// TEST_ENCODE_DECODE_SHRINKING_INT32(_7fffffff,                      0x7fffffff, {0x6f, 0xff, 0xff, 0xff, 0x7f})
-// TEST_ENCODE_DECODE_SHRINKING_INT32(_n80000000,                  -0x7fffffff-1, {0x6f, 0x00, 0x00, 0x00, 0x80})
-
-// TEST_ENCODE_DECODE_SHRINKING_INT64(_80000000,                     0x80000000L, {0x70, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00})
-// TEST_ENCODE_DECODE_SHRINKING_INT64(_n80000001,                   -0x80000001L, {0x70, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff})
-// TEST_ENCODE_DECODE_SHRINKING_INT64(_7fffffffffffffff,     0x7fffffffffffffffL, {0x70, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f})
-// TEST_ENCODE_DECODE_SHRINKING_INT64(_n8000000000000000, -0x7fffffffffffffffL-1, {0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80})
-
-// TEST_ENCODE_DECODE_SHRINKING_INT128(_10000000000000000,                  0x0000000000000001L, 0x0000000000000000L, {0x71, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
-// TEST_ENCODE_DECODE_SHRINKING_INT128(_n10000000000000000,                -0x0000000000000001L, 0x0000000000000000L, {0x71, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
-// TEST_ENCODE_DECODE_SHRINKING_INT128(_7fffffffffffffffffffffffffffffff,   0x7fffffffffffffffL, 0xffffffffffffffffL, {0x71, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f})
-// TEST_ENCODE_DECODE_SHRINKING_INT128(_n80000000000000000000000000000000, -0x8000000000000000L, 0x0000000000000000L, {0x71, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80})
 
 // TEST_ENCODE_DECODE_SHRINKING_FLOAT32(_0_1,        5, 0.1,         "0.1")
 // TEST_ENCODE_DECODE_SHRINKING_FLOAT32(n967234_125, -967234.125, {0x72, 0x22, 0x24, 0x6c, 0xc9})
@@ -113,14 +109,10 @@ TEST_ENCODE_DATA(Float, 0_1, 99, 99, 0, f32(5, 0.1), "0.1")
 // TEST_ENCODE_DECODE_SHRINKING_DECIMAL128(_1000000000000_000000000001, 1000000000000.000000000001dl, {0x77, 0x01, 0x00, 0x00, 0xa1, 0xed, 0xcc, 0xce, 0x1b, 0xc2, 0xd3, 0x00, 0x00, 0x00, 0x00, 0x28, 0x30})
 
 // TEST_ENCODE_DECODE_SHRINKING(Time, zero, 0, smtime(0), {0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
-// TEST_ENCODE_DECODE_SHRINKING_TIME(1955, 11,  5,  8, 21,  0,      0, {0x78, 0x00, 0x00, 0x00, 0x54, 0xa8, 0xe6, 0xe8, 0x01})
+TEST_ENCODE_DECODE_SHRINKING_TIME(1955, 11,  5,  8, 21,  0,      0, "1955-11-05T08:21:00Z")
 // TEST_ENCODE_DECODE_SHRINKING_TIME(2015, 10, 21, 14, 28,  9, 714000, {0x78, 0x10, 0xe5, 0x9a, 0x70, 0xce, 0xe4, 0xf7, 0x01})
 // TEST_ENCODE_DECODE_SHRINKING_TIME(1985, 10, 26,  8, 22, 16, 900142, {0x78, 0x2e, 0xbc, 0x0d, 0x59, 0x68, 0x65, 0xf0, 0x01})
 
-// TEST_ENCODE_DECODE_SHRINKING(Empty, nil, 0, nil(), {0x7e})
-
-// TEST_ENCODE_DATA(Padding, pad_1, 99, 9, pad(1), {0x7f})
-// TEST_ENCODE_DATA(Padding, pad_2, 99, 9, pad(2), {0x7f, 0x7f})
 
 // TEST_STOP_IN_CALLBACK(SIC, nil, nil())
 // TEST_STOP_IN_CALLBACK(SIC, bool, bl(false))

@@ -5,8 +5,10 @@
 
 typedef enum
 {
+    ARRAY_TYPE_NONE,
     ARRAY_TYPE_STRING,
-    ARRAY_TYPE_BINARY,
+    ARRAY_TYPE_BINARY_HEX,
+    ARRAY_TYPE_BINARY_SAFE85,
     ARRAY_TYPE_COMMENT,
 } array_type;
 
@@ -28,5 +30,8 @@ static inline void zero_memory(void* const memory, const int byte_count)
 bool cte_validate_string(const uint8_t* const start, const int64_t byte_count);
 
 bool cte_validate_comment(const uint8_t* const start, const int64_t byte_count);
+
+int cte_ymd_to_doy(int year, int month, int day);
+void cte_doy_to_month_and_day(int year, int doy, int* month_out, int* day_out);
 
 #endif // cte_internal_H

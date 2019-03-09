@@ -143,3 +143,58 @@ bool cte_validate_comment(const uint8_t* const start, const int64_t byte_count)
     }
     return true;
 }
+
+static int g_days_to_the_month[] =
+{
+    0, // Nothing
+    0, // January
+    31, // February
+    31 + 28, // March
+    31 + 28 + 31, // April
+    31 + 28 + 31 + 30, // May
+    31 + 28 + 31 + 30 + 31, // June
+    31 + 28 + 31 + 30 + 31 + 30, // July
+    31 + 28 + 31 + 30 + 31 + 30 + 31, // August
+    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31, // September
+    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30, // October
+    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31, // November
+    31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30, // December
+};
+
+static int g_doy_feb_28 = 31 + 28;
+
+static inline int is_leap_year(int year)
+{
+    return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
+}
+
+int cte_ymd_to_doy(int year, int month, int day)
+{
+    int days = g_days_to_the_month[month] + day;
+    if(is_leap_year(year) && month > 2)
+    {
+        days++;
+    }
+    KSLOG_DEBUG("year %d, month %d, day %d, doy %d", year, month, day, days);
+    return days;
+}
+
+void cte_doy_to_month_and_day(int year, int doy, int* month_out, int* day_out)
+{
+    if(is_leap_year(year) && doy > g_doy_feb_28)
+    {
+        doy--;
+    }
+    int month = 1;
+    for(month = 1; month < 12; month++)
+    {
+        if(doy < g_days_to_the_month[month])
+        {
+            break;
+        }
+    }
+    month--;
+    *month_out = month;
+    *day_out = doy - g_days_to_the_month[month];
+    KSLOG_DEBUG("year %d, doy %d, month %d, day %d", year, doy, *month_out, *day_out);
+}

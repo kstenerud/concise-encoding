@@ -214,7 +214,7 @@ static cte_encode_status encode_array_contents(cte_encode_process* const process
     {
         const int64_t want_to_copy = *byte_count;
         int64_t space_in_buffer = get_remaining_space_in_buffer(process);
-        if(process->array.type == ARRAY_TYPE_BINARY)
+        if(process->array.type == ARRAY_TYPE_BINARY_HEX)
         {
             // TODO: Do this better. Right now I'm assuming hex.
             space_in_buffer /= 2;
@@ -241,7 +241,7 @@ static cte_encode_status encode_array_contents(cte_encode_process* const process
             }
         }
 
-        if(process->array.type == ARRAY_TYPE_BINARY)
+        if(process->array.type == ARRAY_TYPE_BINARY_HEX)
         {
             static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
             for(int64_t i = 0; i < bytes_to_copy; i++)
@@ -506,6 +506,7 @@ cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, 
     return add_float_64(process, 10, (double)value);
 }
 
+
 cte_encode_status cte_encode_add_time(cte_encode_process* const process, const smalltime value)
 {
     KSLOG_DEBUG("(process %p, value %016x)", process, value);
@@ -513,10 +514,40 @@ cte_encode_status cte_encode_add_time(cte_encode_process* const process, const s
     {
         return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
+    int year = smalltime_get_year(value);
+    int doy = smalltime_get_day(value);
+    int month = 0;
+    int day = 0;
+    cte_doy_to_month_and_day(year, doy, &month, &day);
+    int hour = smalltime_get_hour(value);
+    int minute = smalltime_get_minute(value);
+    int second = smalltime_get_second(value);
+    int microsecond = smalltime_get_microsecond(value);
 
-    // TODO
-    (void)value;
-    return add_encoded_object(process, "TODO-time", 10);
+    if(month < 1        || month > 12  ||
+        doy < 1         || doy > 366   ||
+        hour < 0        || hour > 23   ||
+        minute < 0      || minute > 59 ||
+        second < 0      || second > 60 ||
+        microsecond < 0 || microsecond > 999999)
+    {
+        return CTE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    char buffer[50];
+    if(microsecond > 0)
+    {
+        snprintf(buffer, sizeof(buffer)-1, "%04d-%02d-%02dT%02d:%02d:%02d.%dZ",
+            year, month, day, hour, minute, second, microsecond);
+    }
+    else
+    {
+        snprintf(buffer, sizeof(buffer)-1, "%04d-%02d-%02dT%02d:%02d:%02dZ",
+            year, month, day, hour, minute, second);
+    }
+    buffer[sizeof(buffer)-1] = 0;
+
+    return add_encoded_object(process, buffer, strlen(buffer));
 }
 
 cte_encode_status cte_encode_list_begin(cte_encode_process* const process)
@@ -610,7 +641,7 @@ cte_encode_status cte_encode_binary_begin(cte_encode_process* const process,
     }
 
     STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, header, sizeof(header)));
-    begin_array(process, ARRAY_TYPE_BINARY);
+    begin_array(process, ARRAY_TYPE_BINARY_HEX);
     process->array.radix = radix;
     return CTE_ENCODE_STATUS_OK;
 }
