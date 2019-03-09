@@ -11,113 +11,144 @@ static cte_decoder* get_decoder(struct cte_decode_process* process)
 
 static bool on_nil(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->set_next(enc::nil()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_boolean(struct cte_decode_process* process, bool value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::bl(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_8(struct cte_decode_process* process, int8_t value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::i8(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_16(struct cte_decode_process* process, int16_t value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::i16(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_32(struct cte_decode_process* process, int32_t value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::i32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_64(struct cte_decode_process* process, int64_t value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::i64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_int_128(struct cte_decode_process* process, __int128 value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::i128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_32(struct cte_decode_process* process, float value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, (double)value);
     return get_decoder(process)->set_next(enc::f32(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_64(struct cte_decode_process* process, double value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, value);
     return get_decoder(process)->set_next(enc::f64(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_float_128(struct cte_decode_process* process, __float128 value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, value);
     return get_decoder(process)->set_next(enc::f128(15, value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_32(struct cte_decode_process* process, _Decimal32 value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, (double)value);
     return get_decoder(process)->set_next(enc::d32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_64(struct cte_decode_process* process, _Decimal64 value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, (double)value);
     return get_decoder(process)->set_next(enc::d64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_decimal_128(struct cte_decode_process* process, _Decimal128 value)
 {
+    KSLOG_DEBUG("process %p, value %f", process, (double)value);
     return get_decoder(process)->set_next(enc::d128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_time(struct cte_decode_process* process, smalltime value)
 {
+    KSLOG_DEBUG("process %p, value %d", process, value);
     return get_decoder(process)->set_next(enc::smtime(value)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_list_begin(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->set_next(enc::list()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_list_end(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->set_next(enc::end()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_map_begin(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->set_next(enc::map()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_map_end(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->set_next(enc::end()) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_string_begin(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->string_begin() && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_binary_begin(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->binary_begin() && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_comment_begin(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->comment_begin() && get_decoder(process)->get_callback_return_value();
+}
+
+static void print_string(const char* start, int64_t byte_count)
+{
+    char buffer[byte_count + 1];
+    buffer[byte_count] = 0;
+    memcpy(buffer, start, byte_count);
+    KSLOG_DEBUG("%s", buffer);
 }
 
 static bool on_string_data(struct cte_decode_process* process,
                            const char* start,
                            int64_t byte_count)
 {
+    KSLOG_DEBUG("process %p", process);
+    print_string(start, byte_count);
     return get_decoder(process)->add_string_data(std::string(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
@@ -125,6 +156,7 @@ static bool on_binary_data(struct cte_decode_process* process,
                            const uint8_t* start,
                            int64_t byte_count)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->add_binary_data(std::vector<uint8_t>(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
@@ -132,21 +164,26 @@ static bool on_comment_data(struct cte_decode_process* process,
                            const char* start,
                            int64_t byte_count)
 {
+    KSLOG_DEBUG("process %p", process);
+    print_string(start, byte_count);
     return get_decoder(process)->add_comment_data(std::string(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_string_end(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->string_end() && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_binary_end(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->binary_end() && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_comment_end(struct cte_decode_process* process)
 {
+    KSLOG_DEBUG("process %p", process);
     return get_decoder(process)->comment_end() && get_decoder(process)->get_callback_return_value();
 }
 

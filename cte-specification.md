@@ -29,12 +29,12 @@ Example:
         "list"        = [1 2 "a string"]
         "sub-map"     = {1="one" 2="two" 3=3000}
         "boolean"     = true
-        "binary int"  = -b:10001011
+        "binary int"  = b:-10001011
         "octal int"   = o:644
         "regular int" = -10000000
         "hex int"     = h:fffe0001
         "float"       = 14.125
-        "decimal"     = -d:1.02e+40
+        "decimal"     = d:-1.02e+40
         "time"        = 2018-07-01T10:53:22.001481Z
         "nil"         = nil
         "bytes"       = h/10 ff 38 9a dd 00 4f 4f 91/
@@ -83,7 +83,7 @@ Examples:
 
 | Notation   | Base | Base-10 Equivalent |
 | ---------- | ---- | ------------------ |
-| -b:1100    |   2  | -12                |
+| b:-1100    |   2  | -12                |
 | o:755      |   8  | 493                |
 | 900000     |  10  | 900000             |
 | h:deadbeef |  16  | 3735928559         |
@@ -133,7 +133,7 @@ Decimal floating point values are differentiated from binary floating point valu
 Examples:
 
     d:12.99
-    -d:100.04
+    d:-100.04
     d:2.58411e-50
 
 Decimal floating point values don't lose precision because they are internally represented as powers of 10, but they have slightly less range, and aren't supported in hardware on many platforms (yet).

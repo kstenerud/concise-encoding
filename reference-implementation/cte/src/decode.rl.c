@@ -815,89 +815,74 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
 
     boolean =
     (
-        "true" @on_true |
-        "false" @on_false
+        ("true" @on_true) |
+        ("false" @on_false)
     );
 
-    number_significand_base_2 = 
-    (
-        '0' |
-        (
-            '1' @on_number_significand_digit
-            ([0-1] @on_number_significand_digit)*
-        )
-    );
-
-    number_significand_base_8 = 
-    (
-        '0' |
-        (
-            [1-7] @on_number_significand_digit
-            ([0-7] @on_number_significand_digit)*
-        )
-    );
-
-    number_significand_base_10 = 
-    (
-        '0' |
-        (
-            [1-9] @on_number_significand_digit
-            (digit @on_number_significand_digit)*
-        )
-    );
-
-    number_significand_base_16 = 
-    (
-        '0' |
-        (
-            [1-9a-f] @on_number_significand_digit
-            ([0-9a-f] @on_number_significand_digit)*
-        )
-    );
-
+    number_significand_base_2 = ([0-1] @on_number_significand_digit)+;
+    number_significand_base_8 = ([0-7] @on_number_significand_digit)+;
+    number_significand_base_10 = (digit @on_number_significand_digit)+;
+    number_significand_base_16 = ([0-9a-f] @on_number_significand_digit)+;
     number_fractional =
     (
-        '.' @on_number_dot
-        (digit @on_number_significand_digit)+
+        ('.' @on_number_dot)
+        number_significand_base_10
         (
             'e'
             ('+' | '-' @on_number_exponent_negative)
-            [1-9] @on_number_exponent_digit
+            ([1-9] @on_number_exponent_digit)
             (digit @on_number_exponent_digit)*
         )?
 
     );
+    number_negative = ('-' @on_number_negative);
+    number_nan = ("nan" @on_number_nan);
+    number_inf =
+    (
+        number_negative?
+        ("inf" @on_number_infinity)
+    );
+    number_decimal =
+    (
+        ("d:" @on_number_decimal)
+        number_negative?
+        number_significand_base_10
+        number_fractional
+    );
+    number_base_2 =
+    (
+        ("b:" @on_number_base_2)
+        number_negative?
+        number_significand_base_2
+    );
+    number_base_8 =
+    (
+        ("o:" @on_number_base_8)
+        number_negative?
+        number_significand_base_8
+    );
+    number_base_10 =
+    (
+        number_negative?
+        number_significand_base_10
+        number_fractional?
+    );
+    number_base_16 =
+    (
+        ("h:" @on_number_base_16)
+        number_negative?
+        number_significand_base_16
+    );
 
     number =
     (
-        "nan" @on_number_nan |
-        (
-            ('-' @on_number_negative)?
-            (
-                ("inf" @on_number_infinity) |
-                (
-                    "d:" @on_number_decimal
-                    number_significand_base_10
-                    number_fractional
-                ) |
-                (
-                    "b:" @on_number_base_2
-                    number_significand_base_2
-                ) |
-                (
-                    "o:" @on_number_base_8
-                    number_significand_base_8
-                ) |
-                (
-                    "h:" @on_number_base_16
-                    number_significand_base_16
-                ) |
-                (
-                    number_significand_base_10
-                    number_fractional?
-                )
-            )
-        )
+        number_nan |
+        number_inf |
+        number_decimal |
+        number_base_2 |
+        number_base_8 |
+        number_base_10 |
+        number_base_16
     ) >on_number_begin %on_number_end;
 
     time =
@@ -933,9 +918,9 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
             ('h' @on_binary_type_hex) |
             ('s' @on_binary_type_safe85)
         )
-        '/' %on_binary_begin
+        ('/' %on_binary_begin)
         ((any - '/') >on_binary_character)*
-        '/' >on_binary_end
+        ('/' >on_binary_end)
     );
 
     string_delimiter = '"';
@@ -962,12 +947,12 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
 
     string =
     (
-        string_delimiter %on_string_begin
+        (string_delimiter %on_string_begin)
         (
             ((any - (string_delimiter | escape_initiator)) >on_string_character) |
             escaped_character
         )*
-        string_delimiter >on_string_end
+        (string_delimiter >on_string_end)
     );
 
     comment_initiator = '#';
@@ -975,20 +960,34 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
     comment_terminator = ('\r' | '\n');
     comment =
     (
-        comment_initiator %on_comment_begin
+        (comment_initiator %on_comment_begin)
         (comment_character >on_comment_character)*
-        comment_terminator > on_comment_end
+        (comment_terminator > on_comment_end)
+    );
+
+    comments =
+    (
+        (
+            space |
+            comment
+        )*
     );
 
     list = '[' @on_list_begin;
     map = '{' @on_map_begin;
 
-    map_key = boolean | number | time | string | binary;
+    keyable_value = boolean | number | time | string | binary;
 
-    value = map_key | list | map | nil;
+    value = keyable_value | list | map | nil;
 
-    key_value = map_key space* '=' space* value;
-
+    key_value_pair =
+    (
+        keyable_value
+        comments
+        '='
+        comments
+        value
+    );
 
     ############
     # Machines #
@@ -996,47 +995,34 @@ static void handle_error(cte_decode_process* process, const char* current_pointe
 
     iterate_list :=
     (
-        comment*
-        space*
         (
-            comment*
+            comments |
             value
-            (
-                space+
-                comment*
-                value
-            )*
-        )?
-        comment*
-        space*
-        comment*
-        ']' @on_list_end
+        )*
+        (']' @on_list_end)
     )
     $!on_error
     $/on_error;
 
     iterate_map :=
     (
-        comment*
-        space*
         (
-            comment*
-            key_value
-            (
-                space+
-                comment*
-                key_value
-            )*
-        )?
-        comment*
-        space*
-        comment*
-        '}' @on_map_end
+            comments |
+            key_value_pair
+        )*
+        ('}' @on_map_end)
     )
     $!on_error
     $/on_error;
 
-    main := comment* value? comment* $!on_error @/on_error;
+    main :=
+    (
+        comments
+        value?
+        comments
+    )
+    $!on_error
+    @/on_error;
 }%%
 
 %% write data;

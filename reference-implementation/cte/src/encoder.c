@@ -195,10 +195,12 @@ static inline cte_encode_status add_int_64(cte_encode_process* const process, co
 
 static inline cte_encode_status add_float_64(cte_encode_process* const process, int precision, const double value)
 {
+    KSLOG_DEBUG("process %p, precision %d, value %f", process, precision, value);
     char fmt[10];
     sprintf(fmt, "%%.%dlg", precision);
     char buffer[100];
     sprintf(buffer, fmt, value);
+    KSLOG_DEBUG("Encoded [%s]", buffer);
     return add_encoded_object(process, buffer, strlen(buffer));
 }
 
