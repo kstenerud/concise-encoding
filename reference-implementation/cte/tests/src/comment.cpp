@@ -19,14 +19,9 @@ static std::string g_bad_chars[] =
 };
 static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
 
-TEST_ENCODE_DATA(Comment,  size_0e, 99, 9, 0, comment(""),  "#\n")
-TEST_DECODE_DATA(Comment, size_0d, 99, 9, comment(""), "#\n");
 
-TEST_ENCODE_DATA(Comment,  size_17e, 99, 9, 0, comment("this is a comment"),  "#this is a comment\n")
-TEST_DECODE_DATA(Comment, size_17d, 99, 9, comment("this is a comment"), "#this is a comment\n");
-
-// TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 1, comment(make_string(0)),  "#\n")
-// TEST_ENCODE_DECODE_SHRINKING(Comment, size_17, 1, comment("this is a comment"), "#this is a comment\n")
+TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 1, comment(make_string(0)),  "#\n")
+TEST_ENCODE_DECODE_SHRINKING(Comment, size_17, 1, comment("this is a comment"), "#this is a comment\n")
 
 // TEST_ENCODE_STATUS(Comment, encode_bad_data, 99, 9, CBE_ENCODE_ERROR_INVALID_ARRAY_DATA, comment("Test\nblah"));
 // TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});

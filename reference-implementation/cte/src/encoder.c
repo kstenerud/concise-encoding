@@ -212,9 +212,13 @@ static cte_encode_status encode_array_contents(cte_encode_process* const process
     {
         const int64_t want_to_copy = *byte_count;
         int64_t space_in_buffer = get_remaining_space_in_buffer(process);
-        // TODO: Do this better. Right now I'm assuming hex.
-        space_in_buffer /= 2;
+        if(process->array.type == ARRAY_TYPE_BINARY)
+        {
+            // TODO: Do this better. Right now I'm assuming hex.
+            space_in_buffer /= 2;
+        }
         const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
+        KSLOG_DEBUG("space_in_buffer %d, bytes_to_copy %d", space_in_buffer, bytes_to_copy);
 
         KSLOG_DEBUG("Type: %d", process->array.type);
         if(process->array.type == ARRAY_TYPE_COMMENT)

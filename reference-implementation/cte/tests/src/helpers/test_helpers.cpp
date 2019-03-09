@@ -103,7 +103,14 @@ cte_encode_status expect_encode_produces_data_and_status(int buffer_size,
                                                          const std::string expected_memory,
                                                          cte_encode_status expected_status)
 {
-    KSLOG_DEBUG("Encode with buffer size %d: %s", buffer_size, encoding->as_string().c_str());
+    KSLOG_DEBUG("buffer_size %d, max_container_depth %d, indent_spaces %d, encoding %s, expected_memory %s, expected_status %d",
+        buffer_size,
+        max_container_depth,
+        indent_spaces,
+        encoding->as_string().c_str(),
+        expected_memory.c_str(),
+        expected_status);
+
     cte_encode_status actual_status = CTE_ENCODE_STATUS_OK;
     std::string actual_memory = encode_data(buffer_size,
                                                      max_container_depth,
@@ -140,7 +147,14 @@ void expect_decode_produces_data_and_status(int buffer_size,
                                             std::shared_ptr<enc::encoding> expected_encoding,
                                             cte_decode_status expected_status)
 {
-    KSLOG_DEBUG("Decode %s", as_string(memory).c_str());
+    KSLOG_DEBUG("buffer_size %d, max_container_depth %d, callback %d, memory %s, expected_encoding %s, expected_status %d",
+        buffer_size,
+        max_container_depth,
+        callback_return_value,
+        memory.c_str(),
+        expected_encoding->as_string().c_str(),
+        expected_status);
+
     cte_decode_status actual_status = CTE_DECODE_STATUS_OK;
     std::shared_ptr<enc::encoding> actual_encoding = decode_data(buffer_size,
                                                                  max_container_depth,
@@ -204,6 +218,10 @@ void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
                                                      std::shared_ptr<enc::encoding> expected_encoding,
                                                      const std::string expected_memory)
 {
+    KSLOG_DEBUG("min_buffer_size %d, encoding %s, expected_memory %s",
+        min_buffer_size,
+        expected_encoding->as_string().c_str(),
+        expected_memory.c_str());
     const int max_container_depth = 500;
     const int indent_spaces = 0;
     const int expected_buffer_size = expected_memory.size();
