@@ -70,5 +70,5 @@ package_add_test(cte_tests
     src/helpers/test_utils.cpp
 
     src/comment.cpp
-
+    src/general.cpp
 )
