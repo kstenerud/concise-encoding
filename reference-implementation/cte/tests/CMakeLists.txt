@@ -71,4 +71,5 @@ package_add_test(cte_tests
 
     src/comment.cpp
     src/general.cpp
+    src/string.cpp
 )
