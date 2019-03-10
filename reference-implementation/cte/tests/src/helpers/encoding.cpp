@@ -279,11 +279,11 @@ std::string to_id_string(const __float128 value)  {return std::string("f128(") +
 std::string to_id_string(const _Decimal32 value)  {return std::string("d32(")  + to_string(value)      + ")";}
 std::string to_id_string(const _Decimal64 value)  {return std::string("d64(")  + to_string(value)      + ")";}
 std::string to_id_string(const _Decimal128 value) {return std::string("d128(") + to_string(value)      + ")";}
-std::string to_id_string(const std::string& value) {return std::string("s(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
-std::string to_id_string(const std::vector<uint8_t>& value) {return std::string("b(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
-std::string to_id_string(const smalltime_wrapper& value) {return std::string("t(") + to_string(value)  + ")";}
+std::string to_id_string(const std::string& value) {return std::string("str(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
+std::string to_id_string(const std::vector<uint8_t>& value) {return std::string("bin(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
+std::string to_id_string(const smalltime_wrapper& value) {return std::string("time(") + to_string(value)  + ")";}
 std::string to_id_string(const std::string& name, int64_t value) {return name + "(" + std::to_string(value) + ")";}
-std::string to_id_string(const comment_wrapper& value) {return std::string("c(") + to_string(value._value, IDENTIFIER_MAX_LENGTH) + ")";}
+std::string to_id_string(const comment_wrapper& value) {return std::string("com(") + to_string(value._value, IDENTIFIER_MAX_LENGTH) + ")";}
 
 
 encoding::encoding(const enc::major_type type, const size_t size, const std::string& string_value)

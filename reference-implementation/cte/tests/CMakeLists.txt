@@ -69,7 +69,5 @@ package_add_test(cte_tests
     src/helpers/test_helpers.cpp
     src/helpers/test_utils.cpp
 
-    src/comment.cpp
-    src/general.cpp
-    src/string.cpp
+    src/binary.cpp
 )
