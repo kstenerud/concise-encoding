@@ -30,7 +30,7 @@ struct cte_decode_process
     array_type processing_array_type;
     const char* token_start;
     const char* array_start;
-    __int128_t number_significand;
+    int128_ct number_significand;
     int number_sign;
     int number_exponent;
     int number_exponent_sign;
@@ -76,7 +76,7 @@ static uint8_t g_hex_values[] =
     0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 };
 
-static _Decimal128 bugfix_cast_int128_to_decimal(__int128_t value)
+static dec128_ct bugfix_cast_int128_to_decimal(int128_ct value)
 {
     // TODO: Bug workaround:
     // Cast from int128 to decimal causes undefined reference to `__bid_floattitd'
@@ -84,19 +84,19 @@ static _Decimal128 bugfix_cast_int128_to_decimal(__int128_t value)
     // 64 bit works fine.
     if(value >= INT64_MIN && value <= INT64_MAX)
     {
-        return (_Decimal128)(int64_t)value;
+        return (dec128_ct)(int64_t)value;
     }
 
-    _Decimal128 result = (int64_t)(value >> 64);
+    dec128_ct result = (int64_t)(value >> 64);
     result *= ((uint64_t)1 << 63);
     result *= 2;
     result += (uint64_t)(value & 0xffffffffffffffffL);
     return result;
     // This may lose accuracy
-    // return (_Decimal128)(__float128)value;
+    // return (dec128_ct)(float128_ct)value;
 }
 
-static __float128 fpow128(__float128 value, int exponent)
+static float128_ct fpow128(float128_ct value, int exponent)
 {
     // TODO: Replace this once 128 bit pow is in std library
     for(int i = exponent; i > 0; i--)
@@ -110,7 +110,7 @@ static __float128 fpow128(__float128 value, int exponent)
     return value;
 }
 
-static _Decimal128 dpow128(_Decimal128 value, int exponent)
+static dec128_ct dpow128(dec128_ct value, int exponent)
 {
     // TODO: Replace this once 128 bit pow is in std library
     for(int i = exponent; i > 0; i--)
@@ -127,7 +127,7 @@ static _Decimal128 dpow128(_Decimal128 value, int exponent)
 static bool output_number(cte_decode_process* process)
 {
     KSLOG_DEBUG("(process %p)", process);
-    const __int128_t significand = process->number_significand * process->number_sign;
+    const int128_ct significand = process->number_significand * process->number_sign;
     if(process->number_is_fp)
     {
         if(process->number_is_infinity)
@@ -143,20 +143,20 @@ static bool output_number(cte_decode_process* process)
 
         if(process->number_is_decimal_fp)
         {
-            _Decimal128 value = dpow128(bugfix_cast_int128_to_decimal(significand), exponent);
+            dec128_ct value = dpow128(bugfix_cast_int128_to_decimal(significand), exponent);
 
-            if(value == (_Decimal32)value)
+            if(value == (dec32_ct)value)
             {
-                return process->callbacks->on_decimal_32(process, (_Decimal32)value);
+                return process->callbacks->on_decimal_32(process, (dec32_ct)value);
             }
-            if(value == (_Decimal64)value)
+            if(value == (dec64_ct)value)
             {
-                return process->callbacks->on_decimal_64(process, (_Decimal64)value);
+                return process->callbacks->on_decimal_64(process, (dec64_ct)value);
             }
             return process->callbacks->on_decimal_128(process, value);
         }
 
-        __float128 value = fpow128(significand, exponent);
+        float128_ct value = fpow128(significand, exponent);
 
         if(exponent >= FLOAT32_EXP_MIN && exponent <= FLOAT32_EXP_MAX &&
             significand >= -FLOAT32_SIGNIFICAND_MAX && significand <= FLOAT32_SIGNIFICAND_MAX)
@@ -174,7 +174,7 @@ static bool output_number(cte_decode_process* process)
     {
         if(significand >= INT_MIN && significand <= INT_MAX)
         {
-            if(sizeof(int) == sizeof(__int128))
+            if(sizeof(int) == sizeof(int128_ct))
             {
                 return process->callbacks->on_int_128(process, significand);
             }

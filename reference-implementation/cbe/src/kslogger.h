@@ -27,6 +27,13 @@
 #ifndef HDR_KSLoggerCommon_h
 #define HDR_KSLoggerCommon_h
 
+#ifndef ANSI_EXTENSION
+    #ifdef __GNUC__
+        #define ANSI_EXTENSION __extension__
+    #else
+        #define ANSI_EXTENSION
+    #endif
+#endif
 
 /**
  * KSLogger
@@ -311,15 +318,13 @@ static void kslog_write_log(const char* level,
 #define KSLOG_BASIC kslog_write_log_basic
 #define indirect_KSLOG_FULL kslog_write_log
 #define KSLOG_FULL(LEVEL, BINARY_DATA, BYTE_COUNT, ...) \
-    indirect_KSLOG_FULL(LEVEL, \
-                        __FILE__, \
-                        __LINE__, \
-                        __PRETTY_FUNCTION__, \
-                        (uint8_t*)BINARY_DATA, \
-                        BYTE_COUNT, \
-                        ##__VA_ARGS__)
-
-
+    ANSI_EXTENSION indirect_KSLOG_FULL(LEVEL, \
+                                       __FILE__, \
+                                       __LINE__, \
+                                       __PRETTY_FUNCTION__, \
+                                       (uint8_t*)BINARY_DATA, \
+                                       BYTE_COUNT, \
+                                       ##__VA_ARGS__)
 
 // ==========
 // Public API
@@ -438,6 +443,5 @@ static void kslog_write_log(const char* level,
     #define DEBUG KSLOG_BAK_TRACE
     #undef KSLOG_BAK_TRACE
 #endif
-
 
 #endif // HDR_KSLoggerCommon_h

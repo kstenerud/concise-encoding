@@ -39,7 +39,7 @@ static bool on_int_64(struct cbe_decode_process* process, int64_t value)
     return get_decoder(process)->set_next(enc::i64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_int_128(struct cbe_decode_process* process, __int128 value)
+static bool on_int_128(struct cbe_decode_process* process, int128_ct value)
 {
     return get_decoder(process)->set_next(enc::i128(value)) && get_decoder(process)->get_callback_return_value();
 }
@@ -54,22 +54,22 @@ static bool on_float_64(struct cbe_decode_process* process, double value)
     return get_decoder(process)->set_next(enc::f64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_float_128(struct cbe_decode_process* process, __float128 value)
+static bool on_float_128(struct cbe_decode_process* process, float128_ct value)
 {
     return get_decoder(process)->set_next(enc::f128(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_decimal_32(struct cbe_decode_process* process, _Decimal32 value)
+static bool on_decimal_32(struct cbe_decode_process* process, dec32_ct value)
 {
     return get_decoder(process)->set_next(enc::d32(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_decimal_64(struct cbe_decode_process* process, _Decimal64 value)
+static bool on_decimal_64(struct cbe_decode_process* process, dec64_ct value)
 {
     return get_decoder(process)->set_next(enc::d64(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_decimal_128(struct cbe_decode_process* process, _Decimal128 value)
+static bool on_decimal_128(struct cbe_decode_process* process, dec128_ct value)
 {
     return get_decoder(process)->set_next(enc::d128(value)) && get_decoder(process)->get_callback_return_value();
 }
@@ -136,7 +136,7 @@ static bool on_comment_data(struct cbe_decode_process* process,
 }
 
 
-static const cbe_decode_callbacks g_callbacks =
+ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
 {
     on_nil: on_nil,
     on_boolean: on_boolean,

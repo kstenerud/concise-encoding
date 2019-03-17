@@ -6,9 +6,9 @@
 
 // Use the same type names as C
 #include <decimal/decimal>
-typedef std::decimal::decimal32::__decfloat32   _Decimal32;
-typedef std::decimal::decimal64::__decfloat64   _Decimal64;
-typedef std::decimal::decimal128::__decfloat128 _Decimal128;
+typedef std::decimal::decimal32::__decfloat32   dec32_ct;
+typedef std::decimal::decimal64::__decfloat64   dec64_ct;
+typedef std::decimal::decimal128::__decfloat128 dec128_ct;
 
 #include <smalltime/smalltime.h>
 #include <cbe/cbe.h>
@@ -60,13 +60,13 @@ major_type get_major_type(const int8_t value);
 major_type get_major_type(const int16_t value);
 major_type get_major_type(const int32_t value);
 major_type get_major_type(const int64_t value);
-major_type get_major_type(const __int128 value);
+major_type get_major_type(const int128_ct value);
 major_type get_major_type(const float value);
 major_type get_major_type(const double value);
-major_type get_major_type(const __float128 value);
-major_type get_major_type(const _Decimal32 value);
-major_type get_major_type(const _Decimal64 value);
-major_type get_major_type(const _Decimal128 value);
+major_type get_major_type(const float128_ct value);
+major_type get_major_type(const dec32_ct value);
+major_type get_major_type(const dec64_ct value);
+major_type get_major_type(const dec128_ct value);
 major_type get_major_type(const smalltime_wrapper& value);
 major_type get_major_type(const std::string& value);
 major_type get_major_type(const std::vector<uint8_t>& value);
@@ -79,13 +79,13 @@ std::string to_id_string(const int8_t value);
 std::string to_id_string(const int16_t value);
 std::string to_id_string(const int32_t value);
 std::string to_id_string(const int64_t value);
-std::string to_id_string(const __int128 value);
+std::string to_id_string(const int128_ct value);
 std::string to_id_string(const float value);
 std::string to_id_string(const double value);
-std::string to_id_string(const __float128 value);
-std::string to_id_string(const _Decimal32 value);
-std::string to_id_string(const _Decimal64 value);
-std::string to_id_string(const _Decimal128 value);
+std::string to_id_string(const float128_ct value);
+std::string to_id_string(const dec32_ct value);
+std::string to_id_string(const dec64_ct value);
+std::string to_id_string(const dec128_ct value);
 std::string to_id_string(const smalltime_wrapper& value);
 std::string to_id_string(const std::string& value); 
 std::string to_id_string(const std::vector<uint8_t>& value);
@@ -142,14 +142,14 @@ public:
     std::shared_ptr<encoding> i16(int16_t value);
     std::shared_ptr<encoding> i32(int32_t value);
     std::shared_ptr<encoding> i64(int64_t value);
-    std::shared_ptr<encoding> i128(__int128 value);
+    std::shared_ptr<encoding> i128(int128_ct value);
     std::shared_ptr<encoding> i128(int64_t high, uint64_t low);
     std::shared_ptr<encoding> f32(float value);
     std::shared_ptr<encoding> f64(double value);
-    std::shared_ptr<encoding> f128(__float128 value);
-    std::shared_ptr<encoding> d32(_Decimal32 value);
-    std::shared_ptr<encoding> d64(_Decimal64 value);
-    std::shared_ptr<encoding> d128(_Decimal128 value);
+    std::shared_ptr<encoding> f128(float128_ct value);
+    std::shared_ptr<encoding> d32(dec32_ct value);
+    std::shared_ptr<encoding> d64(dec64_ct value);
+    std::shared_ptr<encoding> d128(dec128_ct value);
 
     enc::major_type get_type() const;
 
@@ -168,13 +168,13 @@ public:
     virtual bool has_value(int16_t value) const;
     virtual bool has_value(int32_t value) const;
     virtual bool has_value(int64_t value) const;
-    virtual bool has_value(__int128 value) const;
+    virtual bool has_value(int128_ct value) const;
     virtual bool has_value(float value) const;
     virtual bool has_value(double value) const;
-    virtual bool has_value(__float128 value) const;
-    virtual bool has_value(_Decimal32 value) const;
-    virtual bool has_value(_Decimal64 value) const;
-    virtual bool has_value(_Decimal128 value) const;
+    virtual bool has_value(float128_ct value) const;
+    virtual bool has_value(dec32_ct value) const;
+    virtual bool has_value(dec64_ct value) const;
+    virtual bool has_value(dec128_ct value) const;
     virtual bool has_value(const smalltime_wrapper& value) const;
     virtual bool has_value(const std::string& value) const;
     virtual bool has_value(const std::vector<uint8_t>& value) const;
@@ -276,38 +276,38 @@ public:
     bool has_value(int16_t value) const            { return (int16_t)_value == value; }
     bool has_value(int32_t value) const            { return (int32_t)_value == value; }
     bool has_value(int64_t value) const            { return (int64_t)_value == value; }
-    bool has_value(__int128 value) const           { return (__int128)_value == value; }
+    bool has_value(int128_ct value) const           { return (int128_ct)_value == value; }
     bool has_value(float value) const              { return (float)_value == value; }
     bool has_value(double value) const             { return (double)_value == value; }
-    bool has_value(__float128 value) const         { return (__float128)_value == value; }
-    bool has_value(_Decimal32 value) const         { return (_Decimal32)_value == value; }
-    bool has_value(_Decimal64 value) const         { return (_Decimal64)_value == value; }
-    bool has_value(_Decimal128 value) const        { return (_Decimal128)_value == value; }
+    bool has_value(float128_ct value) const         { return (float128_ct)_value == value; }
+    bool has_value(dec32_ct value) const         { return (dec32_ct)_value == value; }
+    bool has_value(dec64_ct value) const         { return (dec64_ct)_value == value; }
+    bool has_value(dec128_ct value) const        { return (dec128_ct)_value == value; }
     T value() {return _value;}
 };
 
 class int128_encoding: public encoding
 {
 private:
-    const __int128 _value;
+    const int128_ct _value;
 public:
-    int128_encoding(__int128 value): encoding(enc::get_major_type(value), sizeof(value), enc::to_id_string(value)), _value(value) {}
+    int128_encoding(int128_ct value): encoding(enc::get_major_type(value), sizeof(value), enc::to_id_string(value)), _value(value) {}
     cbe_encode_status encode(encoder& encoder);
     bool is_equal(const encoding& rhs) const       { return rhs.has_value(_value); }
     bool has_value(int8_t value) const             { return (int8_t)_value == value; }
     bool has_value(int16_t value) const            { return (int16_t)_value == value; }
     bool has_value(int32_t value) const            { return (int32_t)_value == value; }
     bool has_value(int64_t value) const            { return (int64_t)_value == value; }
-    bool has_value(__int128 value) const           { return (__int128)_value == value; }
+    bool has_value(int128_ct value) const           { return (int128_ct)_value == value; }
     bool has_value(float value) const              { return (float)_value == value; }
     bool has_value(double value) const             { return (double)_value == value; }
-    bool has_value(__float128 value) const         { return (__float128)_value == value; }
+    bool has_value(float128_ct value) const         { return (float128_ct)_value == value; }
     // FIXME: Casting to float instead of decimal to avoid linker error due to
     //        missing libdfp: undefined reference to `__bid_floattisd'
-    bool has_value(_Decimal32 value) const         { return (float)_value == value; }
-    bool has_value(_Decimal64 value) const         { return (double)_value == value; }
-    bool has_value(_Decimal128 value) const        { return (__float128)_value == value; }
-    __int128 value() {return _value;}
+    bool has_value(dec32_ct value) const         { return (float)_value == value; }
+    bool has_value(dec64_ct value) const         { return (double)_value == value; }
+    bool has_value(dec128_ct value) const        { return (float128_ct)_value == value; }
+    int128_ct value() {return _value;}
 };
 
 template<typename T> class dfp_encoding: public encoding
@@ -322,15 +322,15 @@ public:
     bool has_value(int16_t value) const            { return (int16_t)_value == value; }
     bool has_value(int32_t value) const            { return (int32_t)_value == value; }
     bool has_value(int64_t value) const            { return (int64_t)_value == value; }
-    // FIXME: Casting to __float128 instead of __int128 to avoid linker error due to
+    // FIXME: Casting to float128_ct instead of int128_ct to avoid linker error due to
     //        missing libdfp: undefined reference to `__bid_fixddti'
-    bool has_value(__int128 value) const           { return (__float128)_value == value; }
+    bool has_value(int128_ct value) const           { return (float128_ct)_value == value; }
     bool has_value(float value) const              { return (float)_value == value; }
     bool has_value(double value) const             { return (double)_value == value; }
-    bool has_value(__float128 value) const         { return (__float128)_value == value; }
-    bool has_value(_Decimal32 value) const         { return (_Decimal32)_value == value; }
-    bool has_value(_Decimal64 value) const         { return (_Decimal64)_value == value; }
-    bool has_value(_Decimal128 value) const        { return (_Decimal128)_value == value; }
+    bool has_value(float128_ct value) const         { return (float128_ct)_value == value; }
+    bool has_value(dec32_ct value) const         { return (dec32_ct)_value == value; }
+    bool has_value(dec64_ct value) const         { return (dec64_ct)_value == value; }
+    bool has_value(dec128_ct value) const        { return (dec128_ct)_value == value; }
     T value() {return _value;}
 };
 
@@ -445,10 +445,10 @@ public:
     virtual cbe_encode_status encode(int128_encoding& encoding) = 0;
     virtual cbe_encode_status encode(number_encoding<float>& encoding) = 0;
     virtual cbe_encode_status encode(number_encoding<double>& encoding) = 0;
-    virtual cbe_encode_status encode(number_encoding<__float128>& encoding) = 0;
-    virtual cbe_encode_status encode(dfp_encoding<_Decimal32>& encoding) = 0;
-    virtual cbe_encode_status encode(dfp_encoding<_Decimal64>& encoding) = 0;
-    virtual cbe_encode_status encode(dfp_encoding<_Decimal128>& encoding) = 0;
+    virtual cbe_encode_status encode(number_encoding<float128_ct>& encoding) = 0;
+    virtual cbe_encode_status encode(dfp_encoding<dec32_ct>& encoding) = 0;
+    virtual cbe_encode_status encode(dfp_encoding<dec64_ct>& encoding) = 0;
+    virtual cbe_encode_status encode(dfp_encoding<dec128_ct>& encoding) = 0;
 };
 
 
@@ -470,14 +470,14 @@ std::shared_ptr<number_encoding<int8_t>>     i8(int8_t value);
 std::shared_ptr<number_encoding<int16_t>>    i16(int16_t value);
 std::shared_ptr<number_encoding<int32_t>>    i32(int32_t value);
 std::shared_ptr<number_encoding<int64_t>>    i64(int64_t value);
-std::shared_ptr<int128_encoding>             i128(__int128 value);
+std::shared_ptr<int128_encoding>             i128(int128_ct value);
 std::shared_ptr<int128_encoding>             i128(int64_t high, uint64_t low);
 std::shared_ptr<number_encoding<float>>      f32(float value);
 std::shared_ptr<number_encoding<double>>     f64(double value);
-std::shared_ptr<number_encoding<__float128>> f128(__float128 value);
-std::shared_ptr<dfp_encoding<_Decimal32>>    d32(_Decimal32 value);
-std::shared_ptr<dfp_encoding<_Decimal64>>    d64(_Decimal64 value);
-std::shared_ptr<dfp_encoding<_Decimal128>>   d128(_Decimal128 value);
+std::shared_ptr<number_encoding<float128_ct>> f128(float128_ct value);
+std::shared_ptr<dfp_encoding<dec32_ct>>    d32(dec32_ct value);
+std::shared_ptr<dfp_encoding<dec64_ct>>    d64(dec64_ct value);
+std::shared_ptr<dfp_encoding<dec128_ct>>   d128(dec128_ct value);
 std::shared_ptr<padding_encoding>            pad(int byte_count);
 
 } // namespace enc

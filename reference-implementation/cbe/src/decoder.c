@@ -173,13 +173,13 @@ DEFINE_READ_FUNCTION(uint64_t,    uint_64)
 DEFINE_READ_FUNCTION(int16_t,     int_16)
 DEFINE_READ_FUNCTION(int32_t,     int_32)
 DEFINE_READ_FUNCTION(int64_t,     int_64)
-DEFINE_READ_FUNCTION(__int128,    int_128)
+DEFINE_READ_FUNCTION(int128_ct,    int_128)
 DEFINE_READ_FUNCTION(float,       float_32)
 DEFINE_READ_FUNCTION(double,      float_64)
-DEFINE_READ_FUNCTION(__float128,  float_128)
-DEFINE_READ_FUNCTION(_Decimal32,  decimal_32)
-DEFINE_READ_FUNCTION(_Decimal64,  decimal_64)
-DEFINE_READ_FUNCTION(_Decimal128, decimal_128)
+DEFINE_READ_FUNCTION(float128_ct,  float_128)
+DEFINE_READ_FUNCTION(dec32_ct,  decimal_32)
+DEFINE_READ_FUNCTION(dec64_ct,  decimal_64)
+DEFINE_READ_FUNCTION(dec128_ct, decimal_128)
 DEFINE_READ_FUNCTION(smalltime,   time)
 
 static inline int peek_array_length_field_width(const cbe_decode_process* const process)
@@ -456,7 +456,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 HANDLE_CASE_SCALAR(int64_t, int_64);
                 break;
             case TYPE_INT_128:
-                HANDLE_CASE_SCALAR(__int128, int_128);
+                HANDLE_CASE_SCALAR(int128_ct, int_128);
                 break;
             case TYPE_FLOAT_32:
                 HANDLE_CASE_SCALAR(float, float_32);
@@ -465,16 +465,16 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 HANDLE_CASE_SCALAR(double, float_64);
                 break;
             case TYPE_FLOAT_128:
-                HANDLE_CASE_SCALAR(__float128, float_128);
+                HANDLE_CASE_SCALAR(float128_ct, float_128);
                 break;
             case TYPE_DECIMAL_32:
-                HANDLE_CASE_SCALAR(_Decimal32, decimal_32);
+                HANDLE_CASE_SCALAR(dec32_ct, decimal_32);
                 break;
             case TYPE_DECIMAL_64:
-                HANDLE_CASE_SCALAR(_Decimal64, decimal_64);
+                HANDLE_CASE_SCALAR(dec64_ct, decimal_64);
                 break;
             case TYPE_DECIMAL_128:
-                HANDLE_CASE_SCALAR(_Decimal128, decimal_128);
+                HANDLE_CASE_SCALAR(dec128_ct, decimal_128);
                 break;
             case TYPE_TIME:
                 HANDLE_CASE_SCALAR(smalltime, time);

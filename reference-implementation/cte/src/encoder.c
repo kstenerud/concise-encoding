@@ -418,7 +418,7 @@ cte_encode_status cte_encode_add_int_64(cte_encode_process* const process, int64
     return add_int_64(process, value);
 }
 
-cte_encode_status cte_encode_add_int_128(cte_encode_process* const process, const __int128 value)
+cte_encode_status cte_encode_add_int_128(cte_encode_process* const process, const int128_ct value)
 {
     KSLOG_DEBUG("(process %p, value 0x%016x%016x)",
         process, (int64_t)(value>>64), (uint64_t)value);
@@ -459,7 +459,7 @@ cte_encode_status cte_encode_add_float_64(cte_encode_process* const process,
 
 cte_encode_status cte_encode_add_float_128(cte_encode_process* const process,
                                            const int precision,
-                                           const __float128 value)
+                                           const float128_ct value)
 {
     KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
     unlikely_if(process == NULL)
@@ -471,7 +471,7 @@ cte_encode_status cte_encode_add_float_128(cte_encode_process* const process,
     return add_float_64(process, precision, (double)value);
 }
 
-cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const process, const _Decimal32 value)
+cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const process, const dec32_ct value)
 {
     KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
     unlikely_if(process == NULL)
@@ -483,7 +483,7 @@ cte_encode_status cte_encode_add_decimal_32(cte_encode_process* const process, c
     return add_float_64(process, 10, (double)value);
 }
 
-cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, const _Decimal64 value)
+cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, const dec64_ct value)
 {
     KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
     unlikely_if(process == NULL)
@@ -495,7 +495,7 @@ cte_encode_status cte_encode_add_decimal_64(cte_encode_process* const process, c
     return add_float_64(process, 10, (double)value);
 }
 
-cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, const _Decimal128 value)
+cte_encode_status cte_encode_add_decimal_128(cte_encode_process* const process, const dec128_ct value)
 {
     KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
     unlikely_if(process == NULL)

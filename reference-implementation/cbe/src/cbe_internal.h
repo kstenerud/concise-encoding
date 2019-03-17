@@ -63,13 +63,13 @@ DEFINE_SAFE_STRUCT(safe_uint_64,     uint64_t);
 DEFINE_SAFE_STRUCT(safe_int_16,      int16_t);
 DEFINE_SAFE_STRUCT(safe_int_32,      int32_t);
 DEFINE_SAFE_STRUCT(safe_int_64,      int64_t);
-DEFINE_SAFE_STRUCT(safe_int_128,     __int128);
+DEFINE_SAFE_STRUCT(safe_int_128,     int128_ct);
 DEFINE_SAFE_STRUCT(safe_float_32,    float);
 DEFINE_SAFE_STRUCT(safe_float_64,    double);
-DEFINE_SAFE_STRUCT(safe_float_128,   __float128);
-DEFINE_SAFE_STRUCT(safe_decimal_32,  _Decimal32);
-DEFINE_SAFE_STRUCT(safe_decimal_64,  _Decimal64);
-DEFINE_SAFE_STRUCT(safe_decimal_128, _Decimal128);
+DEFINE_SAFE_STRUCT(safe_float_128,   float128_ct);
+DEFINE_SAFE_STRUCT(safe_decimal_32,  dec32_ct);
+DEFINE_SAFE_STRUCT(safe_decimal_64,  dec64_ct);
+DEFINE_SAFE_STRUCT(safe_decimal_128, dec128_ct);
 DEFINE_SAFE_STRUCT(safe_time,        smalltime);
 
 

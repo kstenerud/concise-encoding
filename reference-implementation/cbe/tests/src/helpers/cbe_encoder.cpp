@@ -83,28 +83,28 @@ cbe_encode_status cbe_encoder::encode(enc::number_encoding<double>& e)
         return cbe_encode_add_float_64(_process, e.value());
     });
 }
-cbe_encode_status cbe_encoder::encode(enc::number_encoding<__float128>& e)
+cbe_encode_status cbe_encoder::encode(enc::number_encoding<float128_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cbe_encode_add_float_128(_process, e.value());
     });
 }
-cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<_Decimal32>& e)
+cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<dec32_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cbe_encode_add_decimal_32(_process, e.value());
     });
 }
-cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<_Decimal64>& e)
+cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<dec64_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cbe_encode_add_decimal_64(_process, e.value());
     });
 }
-cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<_Decimal128>& e)
+cbe_encode_status cbe_encoder::encode(enc::dfp_encoding<dec128_ct>& e)
 {
     return flush_and_retry([&]
     {

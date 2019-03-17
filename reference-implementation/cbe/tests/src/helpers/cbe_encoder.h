@@ -27,10 +27,10 @@ public:
     cbe_encode_status encode(enc::int128_encoding& e);
     cbe_encode_status encode(enc::number_encoding<float>& e);
     cbe_encode_status encode(enc::number_encoding<double>& e);
-    cbe_encode_status encode(enc::number_encoding<__float128>& e);
-    cbe_encode_status encode(enc::dfp_encoding<_Decimal32>& e);
-    cbe_encode_status encode(enc::dfp_encoding<_Decimal64>& e);
-    cbe_encode_status encode(enc::dfp_encoding<_Decimal128>& e);
+    cbe_encode_status encode(enc::number_encoding<float128_ct>& e);
+    cbe_encode_status encode(enc::dfp_encoding<dec32_ct>& e);
+    cbe_encode_status encode(enc::dfp_encoding<dec64_ct>& e);
+    cbe_encode_status encode(enc::dfp_encoding<dec128_ct>& e);
     cbe_encode_status encode(enc::boolean_encoding& e);
     cbe_encode_status encode(enc::time_encoding& e);
     cbe_encode_status encode(enc::nil_encoding& e);

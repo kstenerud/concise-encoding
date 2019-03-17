@@ -41,7 +41,7 @@ static bool my_on_int_64(struct cbe_decode_process* process, int64_t value)
     return true;
 }
 
-static bool my_on_int_128(struct cbe_decode_process* process, __int128 value)
+static bool my_on_int_128(struct cbe_decode_process* process, int128_ct value)
 {
     (void)process;
     (void)value;
@@ -62,28 +62,28 @@ static bool my_on_float_64(struct cbe_decode_process* process, double value)
     return true;
 }
 
-static bool my_on_float_128(struct cbe_decode_process* process, __float128 value)
+static bool my_on_float_128(struct cbe_decode_process* process, float128_ct value)
 {
     (void)process;
     (void)value;
     return true;
 }
 
-static bool my_on_decimal_32(struct cbe_decode_process* process, _Decimal32 value)
+static bool my_on_decimal_32(struct cbe_decode_process* process, dec32_ct value)
 {
     (void)process;
     (void)value;
     return true;
 }
 
-static bool my_on_decimal_64(struct cbe_decode_process* process, _Decimal64 value)
+static bool my_on_decimal_64(struct cbe_decode_process* process, dec64_ct value)
 {
     (void)process;
     (void)value;
     return true;
 }
 
-static bool my_on_decimal_128(struct cbe_decode_process* process, _Decimal128 value)
+static bool my_on_decimal_128(struct cbe_decode_process* process, dec128_ct value)
 {
     (void)process;
     (void)value;

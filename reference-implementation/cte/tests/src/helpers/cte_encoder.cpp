@@ -83,28 +83,28 @@ cte_encode_status cte_encoder::encode(enc::float_encoding<double>& e)
         return cte_encode_add_float_64(_process, e.get_precision(), e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::float_encoding<__float128>& e)
+cte_encode_status cte_encoder::encode(enc::float_encoding<float128_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cte_encode_add_float_128(_process, e.get_precision(), e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::dfp_encoding<_Decimal32>& e)
+cte_encode_status cte_encoder::encode(enc::dfp_encoding<dec32_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cte_encode_add_decimal_32(_process, e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::dfp_encoding<_Decimal64>& e)
+cte_encode_status cte_encoder::encode(enc::dfp_encoding<dec64_ct>& e)
 {
     return flush_and_retry([&]
     {
         return cte_encode_add_decimal_64(_process, e.value());
     });
 }
-cte_encode_status cte_encoder::encode(enc::dfp_encoding<_Decimal128>& e)
+cte_encode_status cte_encoder::encode(enc::dfp_encoding<dec128_ct>& e)
 {
     return flush_and_retry([&]
     {

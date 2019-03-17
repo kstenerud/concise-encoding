@@ -6,9 +6,6 @@ project(
 )
 project_description = 'Concise Binary Encoding'
 
-add_global_arguments('-Wno-pedantic', language : 'c')
-add_global_arguments('-Wno-pedantic', language : 'cpp')
-
 project_headers = [
   'include/cbe/cbe.h',
 ]
@@ -27,13 +24,16 @@ project_test_files = [
   'tests/src/helpers/test_utils.cpp',
   'tests/src/binary.cpp',
   'tests/src/comment.cpp',
-  'tests/src/general.cpp',
   'tests/src/library.cpp',
   'tests/src/list.cpp',
-  'tests/src/map.cpp',
   'tests/src/readme_examples.c',
-  'tests/src/spec_examples.cpp',
   'tests/src/string.cpp',
+]
+
+project_test_decfloat_files = [
+  'tests/src/general.cpp',
+  'tests/src/map.cpp',
+  'tests/src/spec_examples.cpp',
 ]
 
 cc = meson.get_compiler('c')
@@ -113,6 +113,13 @@ if not meson.is_subproject()
   add_languages('cpp')
   subdir('tests')
 
+  decfloat_lib = static_library('decfloat_lib',
+    project_test_decfloat_files,
+    dependencies : [project_dep, test_dep],
+    include_directories : private_headers,
+    cpp_args : ['-Wno-pedantic'],
+  )
+
   test('all_tests',
     executable(
       'run_tests',
@@ -120,6 +127,7 @@ if not meson.is_subproject()
       dependencies : [project_dep, test_dep],
       install : false,
       include_directories : private_headers,
+      link_with : decfloat_lib,
     )
   )
 endif

@@ -52,7 +52,7 @@ major_type get_major_type(const int64_t value)
     (void) value; return ENCODE_TYPE_INTEGER;
 }
 
-major_type get_major_type(const __int128 value)
+major_type get_major_type(const int128_ct value)
 {
     (void) value; return ENCODE_TYPE_INTEGER;
 }
@@ -67,22 +67,22 @@ major_type get_major_type(const double value)
     (void) value; return ENCODE_TYPE_FLOAT;
 }
 
-major_type get_major_type(const __float128 value)
+major_type get_major_type(const float128_ct value)
 {
     (void) value; return ENCODE_TYPE_FLOAT;
 }
 
-major_type get_major_type(const _Decimal32 value)
+major_type get_major_type(const dec32_ct value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
 }
 
-major_type get_major_type(const _Decimal64 value)
+major_type get_major_type(const dec64_ct value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
 }
 
-major_type get_major_type(const _Decimal128 value)
+major_type get_major_type(const dec128_ct value)
 {
     (void) value; return ENCODE_TYPE_DECIMAL;
 }
@@ -141,7 +141,7 @@ unsigned int ymd_to_doy(int year, unsigned int month, unsigned int day)
     return days;
 }
 
-static std::string to_string(const __int128 value)
+static std::string to_string(const int128_ct value)
 {
     char buffer[50];
     char* ptr = buffer + sizeof(buffer) - 1;
@@ -167,7 +167,7 @@ static std::string to_string(const __int128 value)
     return ptr;
 }
 
-static std::string to_string(const __float128 value)
+static std::string to_string(const float128_ct value)
 {
     char buffer[50];
     int precision = 20;
@@ -254,17 +254,17 @@ static std::string to_string(const smalltime_wrapper& value)
 }
 
 // TODO: These are only approximations
-static std::string to_string(const _Decimal32 value)
+static std::string to_string(const dec32_ct value)
 {
     return "~" + std::to_string((const double)value);
 }
-static std::string to_string(const _Decimal64 value)
+static std::string to_string(const dec64_ct value)
 {
     return "~" + std::to_string((const double)value);
 }
-static std::string to_string(const _Decimal128 value)
+static std::string to_string(const dec128_ct value)
 {
-    return "~" + to_string((const __float128)value);
+    return "~" + to_string((const float128_ct)value);
 }
 
 std::string to_id_string(const bool value)        {return std::string("bl(")   + std::to_string(value) + ")";}
@@ -272,13 +272,13 @@ std::string to_id_string(const int8_t value)      {return std::string("i8(")   +
 std::string to_id_string(const int16_t value)     {return std::string("i16(")  + std::to_string(value) + ")";}
 std::string to_id_string(const int32_t value)     {return std::string("i32(")  + std::to_string(value) + ")";}
 std::string to_id_string(const int64_t value)     {return std::string("i64(")  + std::to_string(value) + ")";}
-std::string to_id_string(const __int128 value)    {return std::string("i128(") + to_string(value)      + ")";}
+std::string to_id_string(const int128_ct value)    {return std::string("i128(") + to_string(value)      + ")";}
 std::string to_id_string(const float value)       {return std::string("f32(")  + std::to_string(value) + ")";}
 std::string to_id_string(const double value)      {return std::string("f64(")  + std::to_string(value) + ")";}
-std::string to_id_string(const __float128 value)  {return std::string("f128(") + to_string(value)      + ")";}
-std::string to_id_string(const _Decimal32 value)  {return std::string("d32(")  + to_string(value)      + ")";}
-std::string to_id_string(const _Decimal64 value)  {return std::string("d64(")  + to_string(value)      + ")";}
-std::string to_id_string(const _Decimal128 value) {return std::string("d128(") + to_string(value)      + ")";}
+std::string to_id_string(const float128_ct value)  {return std::string("f128(") + to_string(value)      + ")";}
+std::string to_id_string(const dec32_ct value)  {return std::string("d32(")  + to_string(value)      + ")";}
+std::string to_id_string(const dec64_ct value)  {return std::string("d64(")  + to_string(value)      + ")";}
+std::string to_id_string(const dec128_ct value) {return std::string("d128(") + to_string(value)      + ")";}
 std::string to_id_string(const std::string& value) {return std::string("s(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
 std::string to_id_string(const std::vector<uint8_t>& value) {return std::string("b(") + to_string(value, IDENTIFIER_MAX_LENGTH) + ")";}
 std::string to_id_string(const smalltime_wrapper& value) {return std::string("t(") + to_string(value)  + ")";}
@@ -385,7 +385,7 @@ bool encoding::has_value(int64_t value) const
     (void) value; return false;
 }
 
-bool encoding::has_value(__int128 value) const
+bool encoding::has_value(int128_ct value) const
 {
     (void) value; return false;
 }
@@ -400,22 +400,22 @@ bool encoding::has_value(double value) const
     (void) value; return false;
 }
 
-bool encoding::has_value(__float128 value) const
+bool encoding::has_value(float128_ct value) const
 {
     (void) value; return false;
 }
 
-bool encoding::has_value(_Decimal32 value) const
+bool encoding::has_value(dec32_ct value) const
 {
     (void) value; return false;
 }
 
-bool encoding::has_value(_Decimal64 value) const
+bool encoding::has_value(dec64_ct value) const
 {
     (void) value; return false;
 }
 
-bool encoding::has_value(_Decimal128 value) const
+bool encoding::has_value(dec128_ct value) const
 {
     (void) value; return false;
 }
@@ -554,22 +554,22 @@ template <> cbe_encode_status number_encoding<double>::encode(encoder& encoder)
     return encoder.encode(*this);
 }
 
-template <> cbe_encode_status number_encoding<__float128>::encode(encoder& encoder)
+template <> cbe_encode_status number_encoding<float128_ct>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-template <> cbe_encode_status dfp_encoding<_Decimal32>::encode(encoder& encoder)
+template <> cbe_encode_status dfp_encoding<dec32_ct>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-template <> cbe_encode_status dfp_encoding<_Decimal64>::encode(encoder& encoder)
+template <> cbe_encode_status dfp_encoding<dec64_ct>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
 
-template <> cbe_encode_status dfp_encoding<_Decimal128>::encode(encoder& encoder)
+template <> cbe_encode_status dfp_encoding<dec128_ct>::encode(encoder& encoder)
 {
     return encoder.encode(*this);
 }
@@ -594,14 +594,14 @@ std::shared_ptr<encoding> encoding::i8(int8_t value)                 {return thi
 std::shared_ptr<encoding> encoding::i16(int16_t value)               {return this->set_next(enc::i16(value));}
 std::shared_ptr<encoding> encoding::i32(int32_t value)               {return this->set_next(enc::i32(value));}
 std::shared_ptr<encoding> encoding::i64(int64_t value)               {return this->set_next(enc::i64(value));}
-std::shared_ptr<encoding> encoding::i128(__int128 value)             {return this->set_next(enc::i128(value));}
+std::shared_ptr<encoding> encoding::i128(int128_ct value)             {return this->set_next(enc::i128(value));}
 std::shared_ptr<encoding> encoding::i128(int64_t high, uint64_t low) {return this->set_next(enc::i128(high, low));}
 std::shared_ptr<encoding> encoding::f32(float value)                 {return this->set_next(enc::f32(value));}
 std::shared_ptr<encoding> encoding::f64(double value)                {return this->set_next(enc::f64(value));}
-std::shared_ptr<encoding> encoding::f128(__float128 value)           {return this->set_next(enc::f128(value));}
-std::shared_ptr<encoding> encoding::d32(_Decimal32 value)            {return this->set_next(enc::d32(value));}
-std::shared_ptr<encoding> encoding::d64(_Decimal64 value)            {return this->set_next(enc::d64(value));}
-std::shared_ptr<encoding> encoding::d128(_Decimal128 value)          {return this->set_next(enc::d128(value));}
+std::shared_ptr<encoding> encoding::f128(float128_ct value)           {return this->set_next(enc::f128(value));}
+std::shared_ptr<encoding> encoding::d32(dec32_ct value)            {return this->set_next(enc::d32(value));}
+std::shared_ptr<encoding> encoding::d64(dec64_ct value)            {return this->set_next(enc::d64(value));}
+std::shared_ptr<encoding> encoding::d128(dec128_ct value)          {return this->set_next(enc::d128(value));}
 
 std::shared_ptr<list_encoding>                 list()                           {return std::make_shared<list_encoding>();}
 std::shared_ptr<map_encoding>                  map()                            {return std::make_shared<map_encoding>();}
@@ -621,14 +621,14 @@ std::shared_ptr<number_encoding<int8_t>>       i8(int8_t value)                 
 std::shared_ptr<number_encoding<int16_t>>      i16(int16_t value)               {return std::make_shared<number_encoding<int16_t>>(value);}
 std::shared_ptr<number_encoding<int32_t>>      i32(int32_t value)               {return std::make_shared<number_encoding<int32_t>>(value);}
 std::shared_ptr<number_encoding<int64_t>>      i64(int64_t value)               {return std::make_shared<number_encoding<int64_t>>(value);}
-std::shared_ptr<int128_encoding>               i128(__int128 value)             {return std::make_shared<int128_encoding>(value);}
-std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low) {return i128((((__int128)high) << 64) + low);}
+std::shared_ptr<int128_encoding>               i128(int128_ct value)             {return std::make_shared<int128_encoding>(value);}
+std::shared_ptr<int128_encoding>               i128(int64_t high, uint64_t low) {return i128((((int128_ct)high) << 64) + low);}
 std::shared_ptr<number_encoding<float>>        f32(float value)                 {return std::make_shared<number_encoding<float>>(value);}
 std::shared_ptr<number_encoding<double>>       f64(double value)                {return std::make_shared<number_encoding<double>>(value);}
-std::shared_ptr<number_encoding<__float128>>   f128(__float128 value)           {return std::make_shared<number_encoding<__float128>>(value);}
-std::shared_ptr<dfp_encoding<_Decimal32>>      d32(_Decimal32 value)            {return std::make_shared<dfp_encoding<_Decimal32>>(value);}
-std::shared_ptr<dfp_encoding<_Decimal64>>      d64(_Decimal64 value)            {return std::make_shared<dfp_encoding<_Decimal64>>(value);}
-std::shared_ptr<dfp_encoding<_Decimal128>>     d128(_Decimal128 value)          {return std::make_shared<dfp_encoding<_Decimal128>>(value);}
+std::shared_ptr<number_encoding<float128_ct>>   f128(float128_ct value)           {return std::make_shared<number_encoding<float128_ct>>(value);}
+std::shared_ptr<dfp_encoding<dec32_ct>>      d32(dec32_ct value)            {return std::make_shared<dfp_encoding<dec32_ct>>(value);}
+std::shared_ptr<dfp_encoding<dec64_ct>>      d64(dec64_ct value)            {return std::make_shared<dfp_encoding<dec64_ct>>(value);}
+std::shared_ptr<dfp_encoding<dec128_ct>>     d128(dec128_ct value)          {return std::make_shared<dfp_encoding<dec128_ct>>(value);}
 std::shared_ptr<padding_encoding>              pad(int byte_count)              {return std::make_shared<padding_encoding>(byte_count);}
 
 } // namespace enc

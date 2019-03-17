@@ -8,13 +8,27 @@
     #endif
 #endif
 
+#ifndef ANSI_EXTENSION
+    #ifdef __GNUC__
+        #define ANSI_EXTENSION __extension__
+    #else
+        #define ANSI_EXTENSION
+    #endif
+#endif
+
 #ifdef __cplusplus
 // Use the same type names as C
 #include <decimal/decimal>
-typedef std::decimal::decimal32::__decfloat32   _Decimal32;
-typedef std::decimal::decimal64::__decfloat64   _Decimal64;
-typedef std::decimal::decimal128::__decfloat128 _Decimal128;
+ANSI_EXTENSION typedef std::decimal::decimal32::__decfloat32   dec32_ct;
+ANSI_EXTENSION typedef std::decimal::decimal64::__decfloat64   dec64_ct;
+ANSI_EXTENSION typedef std::decimal::decimal128::__decfloat128 dec128_ct;
+#else
+    ANSI_EXTENSION typedef _Decimal32 dec32_ct;
+    ANSI_EXTENSION typedef _Decimal64 dec64_ct;
+    ANSI_EXTENSION typedef _Decimal128 dec128_ct;
 #endif
+ANSI_EXTENSION typedef __int128 int128_ct;
+ANSI_EXTENSION typedef __float128 float128_ct;
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,7 +168,7 @@ typedef struct
     bool (*on_int_64) (struct cte_decode_process* decode_process, int64_t value);
 
     // A 128-bit integer field was decoded.
-    bool (*on_int_128) (struct cte_decode_process* decode_process, __int128 value);
+    bool (*on_int_128) (struct cte_decode_process* decode_process, int128_ct value);
 
     // A 32-bit binary floating point field was decoded.
     bool (*on_float_32) (struct cte_decode_process* decode_process, float value);
@@ -163,16 +177,16 @@ typedef struct
     bool (*on_float_64) (struct cte_decode_process* decode_process, double value);
 
     // A 128-bit binary floating point field was decoded.
-    bool (*on_float_128) (struct cte_decode_process* decode_process, __float128 value);
+    bool (*on_float_128) (struct cte_decode_process* decode_process, float128_ct value);
 
     // A 32-bit decimal floating point field was decoded.
-    bool (*on_decimal_32) (struct cte_decode_process* decode_process, _Decimal32 value);
+    bool (*on_decimal_32) (struct cte_decode_process* decode_process, dec32_ct value);
 
     // A 64-bit decimal floating point field was decoded.
-    bool (*on_decimal_64) (struct cte_decode_process* decode_process, _Decimal64 value);
+    bool (*on_decimal_64) (struct cte_decode_process* decode_process, dec64_ct value);
 
     // A 128-bit decimal floating point field was decoded.
-    bool (*on_decimal_128) (struct cte_decode_process* decode_process, _Decimal128 value);
+    bool (*on_decimal_128) (struct cte_decode_process* decode_process, dec128_ct value);
 
     // A time field was decoded.
     bool (*on_time) (struct cte_decode_process* decode_process, smalltime value);
@@ -759,7 +773,7 @@ CTE_PUBLIC cte_encode_status cte_encode_add_int_64(struct cte_encode_process* en
  * @param value The value to add.
  * @return The current encoder status.
  */
-CTE_PUBLIC cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_process, __int128 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_process, int128_ct value);
 
 /**
  * Add a 32 bit floating point value to the document.
@@ -828,7 +842,7 @@ CTE_PUBLIC cte_encode_status cte_encode_add_float_64(struct cte_encode_process* 
  */
 CTE_PUBLIC cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process,
                                                       int precision,
-                                                      __float128 value);
+                                                      float128_ct value);
 
 /**
  * Add a 32 bit decimal value to the document.
@@ -848,7 +862,7 @@ CTE_PUBLIC cte_encode_status cte_encode_add_float_128(struct cte_encode_process*
  * @param value The value to add.
  * @return The current encoder status.
  */
-CTE_PUBLIC cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_process, _Decimal32 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_process, dec32_ct value);
 
 /**
  * Add a 64 bit decimal value to the document.
@@ -868,7 +882,7 @@ CTE_PUBLIC cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-CTE_PUBLIC cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_process, _Decimal64 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_process, dec64_ct value);
 
 /**
  * Add a 128 bit decimal value to the document.
@@ -888,7 +902,7 @@ CTE_PUBLIC cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-CTE_PUBLIC cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_process, _Decimal128 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_process, dec128_ct value);
 
 /**
  * Add a time value to the document.
