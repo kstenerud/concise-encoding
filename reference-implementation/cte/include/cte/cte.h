@@ -1,5 +1,13 @@
 #pragma once
 
+#ifndef CTE_PUBLIC
+    #if defined _WIN32 || defined __CYGWIN__
+        #define CTE_PUBLIC __declspec(dllimport)
+    #else
+        #define CTE_PUBLIC
+    #endif
+#endif
+
 #ifdef __cplusplus
 // Use the same type names as C
 #include <decimal/decimal>
@@ -40,7 +48,7 @@ extern "C" {
  *
  * @return The library version.
  */
-const char* cte_version();
+CTE_PUBLIC const char* cte_version();
 
 
 
@@ -278,7 +286,7 @@ typedef struct
  * @param decode_process The decode process.
  * @return The user context.
  */
-void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
+CTE_PUBLIC void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
 
 /**
  * Decode an entire CTE document.
@@ -302,11 +310,11 @@ void* cte_decode_get_user_context(struct cte_decode_process* decode_process);
  * @param byte_count The number of bytes in the document.
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  */
-cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
-                             void* user_context,
-                             const char* document_start,
-                             int64_t byte_count,
-                             int max_container_depth);
+CTE_PUBLIC cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
+                                        void* user_context,
+                                        const char* document_start,
+                                        int64_t byte_count,
+                                        int max_container_depth);
 
 
 
@@ -328,7 +336,7 @@ cte_decode_status cte_decode(const cte_decode_callbacks* callbacks,
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cte_decode_process_size(int max_container_depth);
+CTE_PUBLIC int cte_decode_process_size(int max_container_depth);
 
 /**
  * Begin a new decoding process.
@@ -345,10 +353,10 @@ int cte_decode_process_size(int max_container_depth);
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current decoder status.
  */
-cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
-                                   const cte_decode_callbacks* callbacks,
-                                   void* user_context,
-                                   int max_container_depth);
+CTE_PUBLIC cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
+                                              const cte_decode_callbacks* callbacks,
+                                              void* user_context,
+                                              int max_container_depth);
 
 /**
  * Decode part of a CTE document.
@@ -385,9 +393,9 @@ cte_decode_status cte_decode_begin(struct cte_decode_process* decode_process,
  * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current decoder status.
  */
-cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
-                                  const char* data_start,
-                                  int64_t* byte_count);
+CTE_PUBLIC cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
+                                             const char* data_start,
+                                             int64_t* byte_count);
 
 /**
  * Get the current line offset into the overall stream of data.
@@ -395,7 +403,7 @@ cte_decode_status cte_decode_feed(struct cte_decode_process* decode_process,
  * @param decode_process The decode process.
  * @return The current line offset.
  */
-int64_t cte_decode_get_stream_line_offset(struct cte_decode_process* decode_process);
+CTE_PUBLIC int64_t cte_decode_get_stream_line_offset(struct cte_decode_process* decode_process);
 
 /**
  * Get the character offset into the current line in the overall stream of data.
@@ -403,7 +411,7 @@ int64_t cte_decode_get_stream_line_offset(struct cte_decode_process* decode_proc
  * @param decode_process The decode process.
  * @return The current character offset.
  */
-int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode_process);
+CTE_PUBLIC int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode_process);
 
 /**
  * End a decoding process, checking for document validity.
@@ -419,7 +427,7 @@ int64_t cte_decode_get_stream_character_offset(struct cte_decode_process* decode
  * @param decode_process The decode process.
  * @return The final decoder status.
  */
-cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
+CTE_PUBLIC cte_decode_status cte_decode_end(struct cte_decode_process* decode_process);
 
 
 // ------------
@@ -512,7 +520,7 @@ typedef enum
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cte_encode_process_size(int max_container_depth);
+CTE_PUBLIC int cte_encode_process_size(int max_container_depth);
 
 /**
  * Begin a new encoding process.
@@ -530,11 +538,11 @@ int cte_encode_process_size(int max_container_depth);
  * @param indent_spaces The number of spaces to indent for pretty printing (0 = don't pretty print, < 0 use default).
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
-                                   uint8_t* const document_buffer,
-                                   int64_t byte_count,
-                                   int max_container_depth,
-                                   int indent_spaces);
+CTE_PUBLIC cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
+                                              uint8_t* const document_buffer,
+                                              int64_t byte_count,
+                                              int max_container_depth,
+                                              int indent_spaces);
 
 /**
  * Replace the document buffer in an encode process.
@@ -551,9 +559,9 @@ cte_encode_status cte_encode_begin(struct cte_encode_process* encode_process,
  * @param byte_count Size of the buffer in bytes.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_process,
-                                        uint8_t* document_buffer,
-                                        int64_t byte_count);
+CTE_PUBLIC cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_process,
+                                                   uint8_t* document_buffer,
+                                                   int64_t byte_count);
 
 /**
  * Get the current write offset into the encode buffer.
@@ -565,7 +573,7 @@ cte_encode_status cte_encode_set_buffer(struct cte_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current offset.
  */
-int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
+CTE_PUBLIC int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
 
 /**
  * Get the document depth. This is the total depth of lists or maps that
@@ -579,7 +587,7 @@ int64_t cte_encode_get_buffer_offset(struct cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return the document depth.
  */
-int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
+CTE_PUBLIC int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
 
 /**
  * End an encoding process, checking the document for validity.
@@ -595,7 +603,7 @@ int cte_encode_get_document_depth(struct cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The final encoder status.
  */
-cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
 
 /**
  * Add a nil object to the document.
@@ -614,7 +622,7 @@ cte_encode_status cte_encode_end(struct cte_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
 
 /**
  * Add a boolean value to the document.
@@ -633,7 +641,7 @@ cte_encode_status cte_encode_add_nil(struct cte_encode_process* encode_process);
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_process, bool value);
+CTE_PUBLIC cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_process, bool value);
 
 /**
  * Add an integer value to the document.
@@ -652,7 +660,7 @@ cte_encode_status cte_encode_add_boolean(struct cte_encode_process* encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, int value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, int value);
 
 /**
  * Add an integer value to the document.
@@ -671,7 +679,7 @@ cte_encode_status cte_encode_add_int(struct cte_encode_process* encode_process, 
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process, int8_t value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process, int8_t value);
 
 /**
  * Add a 16 bit integer value to the document.
@@ -691,7 +699,7 @@ cte_encode_status cte_encode_add_int_8(struct cte_encode_process* encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_process, int16_t value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_process, int16_t value);
 
 /**
  * Add a 32 bit integer value to the document.
@@ -711,7 +719,7 @@ cte_encode_status cte_encode_add_int_16(struct cte_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_process, int32_t value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_process, int32_t value);
 
 /**
  * Add a 64 bit integer value to the document.
@@ -731,7 +739,7 @@ cte_encode_status cte_encode_add_int_32(struct cte_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_process, int64_t value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_process, int64_t value);
 
 /**
  * Add a 128 bit integer value to the document.
@@ -751,7 +759,7 @@ cte_encode_status cte_encode_add_int_64(struct cte_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_process, __int128 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_process, __int128 value);
 
 /**
  * Add a 32 bit floating point value to the document.
@@ -772,9 +780,9 @@ cte_encode_status cte_encode_add_int_128(struct cte_encode_process* encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_process,
-                                          int precision,
-                                          float value);
+CTE_PUBLIC cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_process,
+                                                     int precision,
+                                                     float value);
 
 /**
  * Add a 64 bit floating point value to the document.
@@ -795,9 +803,9 @@ cte_encode_status cte_encode_add_float_32(struct cte_encode_process* encode_proc
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_process,
-                                          int precision,
-                                          double value);
+CTE_PUBLIC cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_process,
+                                                     int precision,
+                                                     double value);
 
 /**
  * Add a 128 bit floating point value to the document.
@@ -818,9 +826,9 @@ cte_encode_status cte_encode_add_float_64(struct cte_encode_process* encode_proc
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process,
-                                          int precision,
-                                          __float128 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_process,
+                                                      int precision,
+                                                      __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.
@@ -840,7 +848,7 @@ cte_encode_status cte_encode_add_float_128(struct cte_encode_process* encode_pro
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_process, _Decimal32 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_process, _Decimal32 value);
 
 /**
  * Add a 64 bit decimal value to the document.
@@ -860,7 +868,7 @@ cte_encode_status cte_encode_add_decimal_32(struct cte_encode_process* encode_pr
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_process, _Decimal64 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_process, _Decimal64 value);
 
 /**
  * Add a 128 bit decimal value to the document.
@@ -880,7 +888,7 @@ cte_encode_status cte_encode_add_decimal_64(struct cte_encode_process* encode_pr
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_process, _Decimal128 value);
+CTE_PUBLIC cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_process, _Decimal128 value);
 
 /**
  * Add a time value to the document.
@@ -900,7 +908,7 @@ cte_encode_status cte_encode_add_decimal_128(struct cte_encode_process* encode_p
  * @param value The value to add.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process, smalltime value);
+CTE_PUBLIC cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process, smalltime value);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
@@ -920,7 +928,7 @@ cte_encode_status cte_encode_add_time(struct cte_encode_process* encode_process,
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_list_begin(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_list_begin(struct cte_encode_process* encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -943,7 +951,7 @@ cte_encode_status cte_encode_list_begin(struct cte_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_map_begin(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_map_begin(struct cte_encode_process* encode_process);
 
 /**
  * End the current container (list or map) in the document.
@@ -964,7 +972,7 @@ cte_encode_status cte_encode_map_begin(struct cte_encode_process* encode_process
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_process);
 
 /**
  * Convenience function: add a UTF-8 encoded string and its data to a document.
@@ -989,9 +997,9 @@ cte_encode_status cte_encode_container_end(struct cte_encode_process* encode_pro
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_process,
-                                        const char* string_start,
-                                        int64_t byte_count);
+CTE_PUBLIC cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_process,
+                                                   const char* string_start,
+                                                   int64_t byte_count);
 
 /**
  * Convenience function: add a binary data blob to a document.
@@ -1014,10 +1022,10 @@ cte_encode_status cte_encode_add_string(struct cte_encode_process* encode_proces
  * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_process,
-                                        cte_binary_encoding_radix radix,
-                                        const uint8_t* data,
-                                        int64_t byte_count);
+CTE_PUBLIC cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_process,
+                                                   cte_binary_encoding_radix radix,
+                                                   const uint8_t* data,
+                                                   int64_t byte_count);
 
 /**
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
@@ -1042,9 +1050,9 @@ cte_encode_status cte_encode_add_binary(struct cte_encode_process* encode_proces
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_comment(struct cte_encode_process* encode_process,
-                                         const char* comment_start,
-                                         int64_t byte_count);
+CTE_PUBLIC cte_encode_status cte_encode_add_comment(struct cte_encode_process* encode_process,
+                                                    const char* comment_start,
+                                                    int64_t byte_count);
 
 /**
  * Begin a string in the document. The string data will be UTF-8 without a BOM.
@@ -1066,7 +1074,7 @@ cte_encode_status cte_encode_add_comment(struct cte_encode_process* encode_proce
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_process);
 
 /**
  * Begin an array of binary data in the document.
@@ -1089,8 +1097,8 @@ cte_encode_status cte_encode_string_begin(struct cte_encode_process* encode_proc
  * @param radix Which radix to encode at.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_process,
-                                          cte_binary_encoding_radix radix);
+CTE_PUBLIC cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_process,
+                                                     cte_binary_encoding_radix radix);
 
 /**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
@@ -1112,7 +1120,7 @@ cte_encode_status cte_encode_binary_begin(struct cte_encode_process* encode_proc
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_process);
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
@@ -1141,9 +1149,9 @@ cte_encode_status cte_encode_comment_begin(struct cte_encode_process* encode_pro
  * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
-                                      const uint8_t* start,
-                                      int64_t* byte_count);
+CTE_PUBLIC cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
+                                                 const uint8_t* start,
+                                                 int64_t* byte_count);
 
 /**
  * End a string field.
@@ -1161,7 +1169,7 @@ cte_encode_status cte_encode_add_data(struct cte_encode_process* encode_process,
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_process);
 
 /**
  * End a binary array field.
@@ -1179,7 +1187,7 @@ cte_encode_status cte_encode_string_end(struct cte_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_process);
 
 /**
  * End a comment field.
@@ -1197,7 +1205,7 @@ cte_encode_status cte_encode_binary_end(struct cte_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cte_encode_status cte_encode_comment_end(struct cte_encode_process* encode_process);
+CTE_PUBLIC cte_encode_status cte_encode_comment_end(struct cte_encode_process* encode_process);
 
 
 #ifdef __cplusplus

@@ -1,5 +1,13 @@
 #pragma once
 
+#ifndef CBE_PUBLIC
+    #if defined _WIN32 || defined __CYGWIN__
+        #define CBE_PUBLIC __declspec(dllimport)
+    #else
+        #define CBE_PUBLIC
+    #endif
+#endif
+
 #ifdef __cplusplus
 // Use the same type names as C
 #include <decimal/decimal>
@@ -36,7 +44,7 @@ extern "C" {
  *
  * @return The library version.
  */
-const char* cbe_version();
+CBE_PUBLIC const char* cbe_version();
 
 
 
@@ -258,7 +266,7 @@ typedef struct
  * @param decode_process The decode process.
  * @return The user context.
  */
-void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
+CBE_PUBLIC void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
 
 /**
  * Decode an entire CBE document.
@@ -282,11 +290,11 @@ void* cbe_decode_get_user_context(struct cbe_decode_process* decode_process);
  * @param byte_count The number of bytes in the document.
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  */
-cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
-                             void* user_context,
-                             const uint8_t* document_start,
-                             int64_t byte_count,
-                             int max_container_depth);
+CBE_PUBLIC cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
+                                        void* user_context,
+                                        const uint8_t* document_start,
+                                        int64_t byte_count,
+                                        int max_container_depth);
 
 
 
@@ -308,7 +316,7 @@ cbe_decode_status cbe_decode(const cbe_decode_callbacks* callbacks,
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cbe_decode_process_size(int max_container_depth);
+CBE_PUBLIC int cbe_decode_process_size(int max_container_depth);
 
 /**
  * Begin a new decoding process.
@@ -325,10 +333,10 @@ int cbe_decode_process_size(int max_container_depth);
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current decoder status.
  */
-cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
-                                   const cbe_decode_callbacks* callbacks,
-                                   void* user_context,
-                                   int max_container_depth);
+CBE_PUBLIC cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
+                                              const cbe_decode_callbacks* callbacks,
+                                              void* user_context,
+                                              int max_container_depth);
 
 /**
  * Decode part of a CBE document.
@@ -365,9 +373,9 @@ cbe_decode_status cbe_decode_begin(struct cbe_decode_process* decode_process,
  * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current decoder status.
  */
-cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
-                                  const uint8_t* data_start,
-                                  int64_t* byte_count);
+CBE_PUBLIC cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
+                                             const uint8_t* data_start,
+                                             int64_t* byte_count);
 
 /**
  * Get the current offset into the overall stream of data.
@@ -376,7 +384,7 @@ cbe_decode_status cbe_decode_feed(struct cbe_decode_process* decode_process,
  * @param decode_process The decode process.
  * @return The current offset.
  */
-int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
+CBE_PUBLIC int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
 
 /**
  * End a decoding process, checking for document validity.
@@ -392,7 +400,7 @@ int64_t cbe_decode_get_stream_offset(struct cbe_decode_process* decode_process);
  * @param decode_process The decode process.
  * @return The final decoder status.
  */
-cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
+CBE_PUBLIC cbe_decode_status cbe_decode_end(struct cbe_decode_process* decode_process);
 
 
 // ------------
@@ -480,7 +488,7 @@ typedef enum
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The process data size.
  */
-int cbe_encode_process_size(int max_container_depth);
+CBE_PUBLIC int cbe_encode_process_size(int max_container_depth);
 
 /**
  * Begin a new encoding process.
@@ -497,10 +505,10 @@ int cbe_encode_process_size(int max_container_depth);
  * @param max_container_depth The maximum container depth to suppport (<=0 means use default).
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
-                                   uint8_t* document_buffer,
-                                   int64_t byte_count,
-                                   int max_container_depth);
+CBE_PUBLIC cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
+                                              uint8_t* document_buffer,
+                                              int64_t byte_count,
+                                              int max_container_depth);
 
 /**
  * Replace the document buffer in an encode process.
@@ -517,9 +525,9 @@ cbe_encode_status cbe_encode_begin(struct cbe_encode_process* encode_process,
  * @param byte_count Size of the buffer in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_process,
-                                        uint8_t* document_buffer,
-                                        int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_process,
+                                                   uint8_t* document_buffer,
+                                                   int64_t byte_count);
 
 /**
  * Get the current write offset into the encode buffer.
@@ -531,7 +539,7 @@ cbe_encode_status cbe_encode_set_buffer(struct cbe_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current offset.
  */
-int64_t cbe_encode_get_buffer_offset(struct cbe_encode_process* encode_process);
+CBE_PUBLIC int64_t cbe_encode_get_buffer_offset(struct cbe_encode_process* encode_process);
 
 /**
  * Get the document depth. This is the total depth of lists or maps that
@@ -545,7 +553,7 @@ int64_t cbe_encode_get_buffer_offset(struct cbe_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return the document depth.
  */
-int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
+CBE_PUBLIC int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
 
 /**
  * End an encoding process, checking the document for validity.
@@ -561,7 +569,7 @@ int cbe_encode_get_document_depth(struct cbe_encode_process* encode_process);
  * @param encode_process The encode process.
  * @return The final encoder status.
  */
-cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
+CBE_PUBLIC cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
 
 /**
  * Add padding to the document.
@@ -580,7 +588,8 @@ cbe_encode_status cbe_encode_end(struct cbe_encode_process* encode_process);
  * @param byte_count The number of bytes of padding to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_process, int byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_process,
+                                                    int byte_count);
 
 /**
  * Add a nil object to the document.
@@ -599,7 +608,7 @@ cbe_encode_status cbe_encode_add_padding(struct cbe_encode_process* encode_proce
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
 
 /**
  * Add a boolean value to the document.
@@ -618,7 +627,7 @@ cbe_encode_status cbe_encode_add_nil(struct cbe_encode_process* encode_process);
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_process, bool value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_process, bool value);
 
 /**
  * Add an integer value to the document.
@@ -637,7 +646,7 @@ cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, int value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, int value);
 
 /**
  * Add an integer value to the document.
@@ -656,7 +665,7 @@ cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, 
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process, int8_t value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process, int8_t value);
 
 /**
  * Add a 16 bit integer value to the document.
@@ -676,7 +685,7 @@ cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_process, int16_t value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_process, int16_t value);
 
 /**
  * Add a 32 bit integer value to the document.
@@ -696,7 +705,7 @@ cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_process, int32_t value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_process, int32_t value);
 
 /**
  * Add a 64 bit integer value to the document.
@@ -716,7 +725,7 @@ cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_process, int64_t value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_process, int64_t value);
 
 /**
  * Add a 128 bit integer value to the document.
@@ -736,7 +745,7 @@ cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_process, __int128 value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_process, __int128 value);
 
 /**
  * Add a 32 bit floating point value to the document.
@@ -756,7 +765,7 @@ cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_proce
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_process, float value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_process, float value);
 
 /**
  * Add a 64 bit floating point value to the document.
@@ -776,7 +785,7 @@ cbe_encode_status cbe_encode_add_float_32(struct cbe_encode_process* encode_proc
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_process, double value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_process, double value);
 
 /**
  * Add a 128 bit floating point value to the document.
@@ -796,7 +805,7 @@ cbe_encode_status cbe_encode_add_float_64(struct cbe_encode_process* encode_proc
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_process, __float128 value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_process, __float128 value);
 
 /**
  * Add a 32 bit decimal value to the document.
@@ -816,7 +825,7 @@ cbe_encode_status cbe_encode_add_float_128(struct cbe_encode_process* encode_pro
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_process, _Decimal32 value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_process, _Decimal32 value);
 
 /**
  * Add a 64 bit decimal value to the document.
@@ -836,7 +845,7 @@ cbe_encode_status cbe_encode_add_decimal_32(struct cbe_encode_process* encode_pr
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_process, _Decimal64 value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_process, _Decimal64 value);
 
 /**
  * Add a 128 bit decimal value to the document.
@@ -856,7 +865,7 @@ cbe_encode_status cbe_encode_add_decimal_64(struct cbe_encode_process* encode_pr
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_process, _Decimal128 value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_process, _Decimal128 value);
 
 /**
  * Add a time value to the document.
@@ -876,7 +885,7 @@ cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_process* encode_p
  * @param value The value to add.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process, smalltime value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process, smalltime value);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
@@ -896,7 +905,7 @@ cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process,
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_process);
+CBE_PUBLIC cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_process);
 
 /**
  * Begin a map in the document. Must be matched by an end container.
@@ -919,7 +928,7 @@ cbe_encode_status cbe_encode_list_begin(struct cbe_encode_process* encode_proces
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process);
+CBE_PUBLIC cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process);
 
 /**
  * End the current container (list or map) in the document.
@@ -940,7 +949,7 @@ cbe_encode_status cbe_encode_map_begin(struct cbe_encode_process* encode_process
  * @param encode_process The encode process.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_process);
+CBE_PUBLIC cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_process);
 
 /**
  * Convenience function: add a UTF-8 encoded string and its data to a document.
@@ -965,9 +974,9 @@ cbe_encode_status cbe_encode_container_end(struct cbe_encode_process* encode_pro
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process,
-                                        const char* string_start,
-                                        int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_process,
+                                                   const char* string_start,
+                                                   int64_t byte_count);
 
 /**
  * Convenience function: add a binary data blob to a document.
@@ -989,9 +998,9 @@ cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* encode_proces
  * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_process,
-                                        const uint8_t* data,
-                                        int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_process,
+                                                   const uint8_t* data,
+                                                   int64_t byte_count);
 
 /**
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
@@ -1016,9 +1025,9 @@ cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_proces
  * @param byte_count The number of bytes in the string.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_process,
-                                         const char* comment_start,
-                                         int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_process,
+                                                    const char* comment_start,
+                                                    int64_t byte_count);
 
 /**
  * Begin a string in the document. The string data will be UTF-8 without a BOM.
@@ -1044,7 +1053,7 @@ cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* encode_proce
  * @param byte_count The total length of the string to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Begin an array of binary data in the document.
@@ -1070,7 +1079,7 @@ cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_proc
  * @param byte_count The total length of the data to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
@@ -1096,7 +1105,7 @@ cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_proc
  * @param byte_count The total length of the comment to add in bytes.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Add data to the currently opened array field (string, binary, comment).
@@ -1129,9 +1138,9 @@ cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_pro
  * @param byte_count In: The length of the data in bytes. Out: Number of bytes consumed.
  * @return The current encoder status.
  */
-cbe_encode_status cbe_encode_add_data(struct cbe_encode_process* encode_process,
-                                      const uint8_t* start,
-                                      int64_t* byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_data(struct cbe_encode_process* encode_process,
+                                                 const uint8_t* start,
+                                                 int64_t* byte_count);
 
 
 

@@ -30,8 +30,8 @@ struct cte_encode_process
         int max_depth;
         int level;
         bool next_object_is_map_key;
-        bool is_inside_map[];
     } container;
+    bool is_inside_map[];
 };
 typedef struct cte_encode_process cte_encode_process;
 
@@ -101,7 +101,7 @@ typedef struct cte_encode_process cte_encode_process;
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[(PROCESS)->container.level] && \
         !(PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: No map value provided for previous key"); \
@@ -109,7 +109,7 @@ typedef struct cte_encode_process cte_encode_process;
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[process->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[process->container.level] && \
         (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
@@ -136,7 +136,7 @@ static inline void swap_map_key_value_status(cte_encode_process* const process)
     process->container.next_object_is_map_key = !process->container.next_object_is_map_key;
 }
 
-static inline void add_primitive_bytes(cte_encode_process* const process,
+static inline int64_t add_primitive_bytes(cte_encode_process* const process,
                                        const uint8_t* const bytes,
                                        const int64_t byte_count)
 {
@@ -151,9 +151,10 @@ static inline void add_primitive_bytes(cte_encode_process* const process,
 
     memcpy(process->buffer.position, bytes, byte_count);
     process->buffer.position += byte_count;
+    return byte_count;
 }
 
-static inline void add_primitive_chars(cte_encode_process* const process,
+static inline int64_t add_primitive_chars(cte_encode_process* const process,
                                        const char* const bytes,
                                        const int64_t byte_count)
 {
@@ -564,7 +565,7 @@ cte_encode_status cte_encode_list_begin(cte_encode_process* const process)
     STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "[", 1));
 
     process->container.level++;
-    process->container.is_inside_map[process->container.level] = false;
+    process->is_inside_map[process->container.level] = false;
     process->container.next_object_is_map_key = false;
 
     return CTE_ENCODE_STATUS_OK;
@@ -584,7 +585,7 @@ cte_encode_status cte_encode_map_begin(cte_encode_process* const process)
     STOP_AND_EXIT_IF_RESULT_STATUS_NOT_OK(process, add_encoded_object(process, "{", 1));
 
     process->container.level++;
-    process->container.is_inside_map[process->container.level] = true;
+    process->is_inside_map[process->container.level] = true;
     process->container.next_object_is_map_key = true;
 
     return CTE_ENCODE_STATUS_OK;
@@ -603,7 +604,7 @@ cte_encode_status cte_encode_container_end(cte_encode_process* const process)
     STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
 
-    if(process->container.is_inside_map[process->container.level])
+    if(process->is_inside_map[process->container.level])
     {
         add_primitive_chars(process, "}", 1);
     }
@@ -613,7 +614,7 @@ cte_encode_status cte_encode_container_end(cte_encode_process* const process)
     }
 
     process->container.level--;
-    process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
+    process->container.next_object_is_map_key = process->is_inside_map[process->container.level];
 
     return CTE_ENCODE_STATUS_OK;
 }

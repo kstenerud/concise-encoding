@@ -28,8 +28,8 @@ struct cbe_encode_process
         int max_depth;
         int level;
         bool next_object_is_map_key;
-        bool is_inside_map[];
     } container;
+    bool is_inside_map[];
 };
 typedef struct cbe_encode_process cbe_encode_process;
 
@@ -121,7 +121,7 @@ typedef enum
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[(PROCESS)->container.level] && \
         !(PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: No map value provided for previous key"); \
@@ -129,7 +129,7 @@ typedef enum
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[process->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[process->container.level] && \
         (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
@@ -702,7 +702,7 @@ cbe_encode_status cbe_encode_list_begin(cbe_encode_process* const process)
     swap_map_key_value_status(process);
 
     process->container.level++;
-    process->container.is_inside_map[process->container.level] = false;
+    process->is_inside_map[process->container.level] = false;
     process->container.next_object_is_map_key = false;
 
     return CBE_ENCODE_STATUS_OK;
@@ -725,7 +725,7 @@ cbe_encode_status cbe_encode_map_begin(cbe_encode_process* const process)
     swap_map_key_value_status(process);
 
     process->container.level++;
-    process->container.is_inside_map[process->container.level] = true;
+    process->is_inside_map[process->container.level] = true;
     process->container.next_object_is_map_key = true;
 
     return CBE_ENCODE_STATUS_OK;
@@ -746,7 +746,7 @@ cbe_encode_status cbe_encode_container_end(cbe_encode_process* const process)
 
     add_primitive_type(process, TYPE_END_CONTAINER);
     process->container.level--;
-    process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
+    process->container.next_object_is_map_key = process->is_inside_map[process->container.level];
 
     return CBE_ENCODE_STATUS_OK;
 }

@@ -1,13 +1,14 @@
 #include "cte/cte.h"
-#include "version.h"
 
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
+#define QUOTE(str) #str
+#define EXPAND_AND_QUOTE(str) QUOTE(str)
 
 const char* cte_version()
 {
-    return PROJECT_VERSION;
+    return EXPAND_AND_QUOTE(PROJECT_VERSION);
 }
 
 // bytes octets

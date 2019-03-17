@@ -118,6 +118,7 @@ private:
 
 public:
     encoding(const enc::major_type type, const size_t size, const std::string& string_value);
+    virtual ~encoding() {}
 
     std::shared_ptr<encoding> next();
 
@@ -411,6 +412,7 @@ private:
     const std::vector<uint8_t> _value;
 public:
     data_encoding(const std::vector<uint8_t>& value): encoding(enc::ENCODE_TYPE_ARRAY_DATA, 1, enc::to_id_string("data", value.size())), _value(value) {}
+    virtual ~data_encoding() {}
     cbe_encode_status encode(encoder& encoder);
     bool is_equal(const encoding& rhs) const    { return get_type() == rhs.get_type() && rhs.has_value(_value); }
     bool has_value(const std::vector<uint8_t>& value) const { return _value == value; }
@@ -421,6 +423,7 @@ public:
 class encoder
 {
 public:
+    virtual ~encoder() {}
     virtual cbe_encode_status encode(list_encoding& encoding) = 0;
     virtual cbe_encode_status encode(map_encoding& encoding) = 0;
     virtual cbe_encode_status encode(container_end_encoding& encoding) = 0;

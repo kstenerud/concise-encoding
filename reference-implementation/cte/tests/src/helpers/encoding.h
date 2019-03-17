@@ -121,6 +121,7 @@ private:
 
 public:
     encoding(const enc::major_type type, const size_t size, const std::string& string_value);
+    virtual ~encoding() {}
 
     std::shared_ptr<encoding> next();
 
@@ -456,6 +457,7 @@ public:
 class encoder
 {
 public:
+    virtual ~encoder() {}
     virtual cte_encode_status encode(list_encoding& encoding) = 0;
     virtual cte_encode_status encode(map_encoding& encoding) = 0;
     virtual cte_encode_status encode(container_end_encoding& encoding) = 0;

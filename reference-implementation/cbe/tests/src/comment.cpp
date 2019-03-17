@@ -23,8 +23,8 @@ static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
 TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 2, comment(make_string(0)),  concat({0x92}, array_length_field(0)))
 TEST_ENCODE_DECODE_SHRINKING(Comment, size_16, 2, comment(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
 
-TEST_ENCODE_STATUS(Comment, encode_bad_data, 99, 9, CBE_ENCODE_ERROR_INVALID_ARRAY_DATA, comment("Test\nblah"));
-TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74});
+TEST_ENCODE_STATUS(Comment, encode_bad_data, 99, 9, CBE_ENCODE_ERROR_INVALID_ARRAY_DATA, comment("Test\nblah"))
+TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74})
 
 TEST(Comment, encode_bad_chars)
 {

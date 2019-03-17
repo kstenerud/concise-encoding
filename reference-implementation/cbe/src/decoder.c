@@ -32,8 +32,8 @@ struct cbe_decode_process
         int max_depth;
         int level;
         bool next_object_is_map_key;
-        bool is_inside_map[];
     } container;
+    bool is_inside_map[];
 };
 typedef struct cbe_decode_process cbe_decode_process;
 
@@ -80,7 +80,7 @@ typedef struct cbe_decode_process cbe_decode_process;
     }
 
 #define STOP_AND_EXIT_IF_MAP_VALUE_MISSING(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[(PROCESS)->container.level] && \
                 !(PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Missing value for previous key"); \
@@ -89,13 +89,13 @@ typedef struct cbe_decode_process cbe_decode_process;
     }
 
 #define STOP_AND_EXIT_IF_IS_WRONG_MAP_KEY_TYPE(PROCESS) \
-    unlikely_if((PROCESS)->container.is_inside_map[(PROCESS)->container.level] && \
+    unlikely_if((PROCESS)->is_inside_map[(PROCESS)->container.level] && \
                 (PROCESS)->container.next_object_is_map_key) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Map key has an invalid type"); \
         KSLOG_TRACE("container_level: %d, is_inside_map: %d, next_object_is_map_key %d", \
             (PROCESS)->container.level, \
-            (PROCESS)->container.is_inside_map[(PROCESS)->container.level], \
+            (PROCESS)->is_inside_map[(PROCESS)->container.level], \
              (PROCESS)->container.next_object_is_map_key); \
         UPDATE_STREAM_OFFSET(PROCESS); \
         return CBE_DECODE_ERROR_INCORRECT_MAP_KEY_TYPE; \
@@ -400,7 +400,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_list_begin(process));
                 process->container.level++;
-                process->container.is_inside_map[process->container.level] = false;
+                process->is_inside_map[process->container.level] = false;
                 process->container.next_object_is_map_key = false;
                 break;
             case TYPE_MAP:
@@ -409,13 +409,13 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_map_begin(process));
                 process->container.level++;
-                process->container.is_inside_map[process->container.level] = true;
+                process->is_inside_map[process->container.level] = true;
                 process->container.next_object_is_map_key = true;
                 break;
             case TYPE_END_CONTAINER:
                 KSLOG_DEBUG("<End Container>");
                 STOP_AND_EXIT_IF_MAP_VALUE_MISSING(process);
-                if(process->container.is_inside_map[process->container.level])
+                if(process->is_inside_map[process->container.level])
                 {
                     STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_map_end(process));
                 }
@@ -425,7 +425,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 }
                 END_OBJECT();
                 process->container.level--;
-                process->container.next_object_is_map_key = process->container.is_inside_map[process->container.level];
+                process->container.next_object_is_map_key = process->is_inside_map[process->container.level];
                 break;
 
             case TYPE_STRING_0: case TYPE_STRING_1: case TYPE_STRING_2: case TYPE_STRING_3:
