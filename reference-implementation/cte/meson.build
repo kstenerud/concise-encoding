@@ -45,6 +45,8 @@ cc = meson.get_compiler('c')
 
 project_dependencies = [
   dependency('smalltime', fallback : ['smalltime', 'smalltime_dep']),
+  dependency('safe16', fallback : ['safe16', 'safe16_dep']),
+  dependency('safe85', fallback : ['safe85', 'safe85_dep']),
   cc.find_library('quadmath', required : false),
 ]
 
