@@ -1,9 +1,9 @@
 [submodule "reference-implementation/dependencies/smalltime"]
 	path = reference-implementation/dependencies/smalltime
-	url = git@github.com:kstenerud/smalltime.git
+	url = https://github.com/kstenerud/smalltime.git
 [submodule "reference-implementation/dependencies/safe-encoding"]
 	path = reference-implementation/dependencies/safe-encoding
-	url = git@github.com:kstenerud/safe-encoding.git
+	url = https://github.com/kstenerud/safe-encoding.git
 [submodule "reference-implementation/dependencies/googletest"]
 	path = reference-implementation/dependencies/googletest
 	url = https://github.com/google/googletest.git
