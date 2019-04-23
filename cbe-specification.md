@@ -213,13 +213,13 @@ The length field contains the byte length (length in octets), NOT the character 
 
 #### Character Restrictions
 
-The following characters are disallowed:
+The following characters are disallowed in comments:
 
  * Control characters (Unicode 0000-001f, 007f-009f) EXCEPT for TAB (u+0009), which is allowed
  * Line breaking characters (such as u+2028, u+2029)
  * Byte order mark
 
-The following characters are allowed if they don't also appear in the disallowed list:
+The following characters are allowed in comments only if they don't also appear in the above disallowed list:
 
  * UTF-8 printable characters
  * UTF-8 whitespace characters
@@ -242,6 +242,8 @@ A sequential list of objects. Lists can contain any mix of any type, including o
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
+Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution.
+
 Example:
 
     [7b 01 6e 88 13 7d] = A list containing integers (1, 5000)
@@ -261,6 +263,8 @@ Map contents are stored as key-value pairs of objects:
 
     [7c] [key 1] [value 1] [key 2] [value 2] ... [7d]
 
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
+
 Example:
 
     [7c 81 61 01 81 62 02 7d] = A map containg the key-value pairs ("a", 1) ("b", 2)
@@ -274,7 +278,7 @@ Other Types
 
 Denotes the absence of data. Some languages implement this as the `null` value.
 
-Use nil judiciously and sparingly, as some languages have restrictions on how it may be used in data structures.
+Note: Use nil judiciously and sparingly, as some languages may have restrictions on how and if it may be used.
 
 Example:
 
