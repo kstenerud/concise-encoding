@@ -327,6 +327,8 @@ A sequential list of objects. Lists can contain any mix of any type, including o
 
 A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
+Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution.
+
 Example:
 
     [1 "two" 3.1 {} nil]
@@ -343,6 +345,8 @@ A map associates objects (keys) with other objects (values). Keys may be any mix
 Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs are separated from each other using whitespace. A key without a paired value is not allowed in a map.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
+
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
 
 Example:
 
@@ -361,7 +365,7 @@ Other Types
 
 Denotes the absence of data. Some languages implement this as the `null` value.
 
-Use nil judiciously and sparingly, as some languages have restrictions on how it may be used in data structures.
+Note: Use nil judiciously and sparingly, as some languages may have restrictions on how and if it may be used.
 
 Example:
 
