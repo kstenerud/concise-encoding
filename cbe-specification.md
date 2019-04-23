@@ -48,7 +48,7 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  75  | Decimal (32 bit)   | [IEEE 754 decimal32, Densely Packed Decimal]  |
 |  76  | Decimal (64 bit)   | [IEEE 754 decimal64, Densely Packed Decimal]  |
 |  77  | Decimal (128 bit)  | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  78  | Time               | [64-bit y,d,h,m,s,us]                         |
+|  78  | Time               | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
 |  79  | Boolean True       |                                               |
 |  7a  | Boolean False      |                                               |
 |  7b  | List               |                                               |
@@ -134,7 +134,7 @@ Example:
 
 ### Time
 
-Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime) format, stored in little endian byte order.
+Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) format, stored in little endian byte order.
 
 #### Encoding
 
