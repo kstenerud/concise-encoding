@@ -343,7 +343,7 @@ Applications may require data to be aligned in some cases. For example, some pro
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
-| 7f | 7f | 7f | 6d | 00 | 00 | 00 | 8f |
+| 7f | 7f | 7f | 72 | 00 | 00 | 00 | 8f |
 
 As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
 
@@ -351,7 +351,7 @@ As an alternative to padding, if you have a known schema for your data, you coul
 
 | Bytes 0-3      | Bytes 4-7     |
 | -------------- | ------------- |
-| xx xx xx 6d    | 00 00 00 8f   |
+| xx xx xx 72    | 00 00 00 8f   |
 | positive int32 | 0x8f000000    |
 
 
@@ -387,7 +387,7 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    [43 42 45 01 7f 7f 7f 6d 00 00 00 8f] =
+    [43 42 45 01 7f 7f 7f 72 00 00 00 8f] =
     CBE file containing 0x8f000000, padded such that the 32-bit integer starts on a 4-byte boundary.
 
 
