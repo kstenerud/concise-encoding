@@ -18,6 +18,8 @@ TEST_ENCODE_DECODE_DATA(Spec_Integer, p96,            99, 9, ui(96),            
 TEST_ENCODE_DECODE_DATA(Spec_Integer, p0,             99, 9, ui(0),              {0x00})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, n54,            99, 9, si(-54),            {0xca})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, p127,           99, 9, ui(127),            {0x6b, 0x7f})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, pff,            99, 9, ui(0xff),           {0x6b, 0xff})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, nff,            99, 9, si(-0xff),          {0x70, 0xff})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, p1000000,       99, 9, ui(1000000),        {0x6d, 0x40, 0x42, 0x0f, 0x00})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, n1000000000000, 99, 9, si(-1000000000000), {0x73, 0x00, 0x10, 0xa5, 0xd4, 0xe8, 0x00, 0x00, 0x00})
 
