@@ -105,7 +105,7 @@ Examples:
 
 Integers are encoded as positive or negative, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
 
-Values from -110 to 109 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
+Values from -106 to 106 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
 
 Examples:
