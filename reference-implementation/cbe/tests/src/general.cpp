@@ -93,7 +93,7 @@ TEST_ENCODE_DECODE_SHRINKING_TIME(1955, 11,  5,  8, 21,  0,      0, {0x7d, 0x00,
 TEST_ENCODE_DECODE_SHRINKING_TIME(2015, 10, 21, 14, 28,  9, 714000, {0x7d, 0x10, 0xe5, 0x9a, 0x70, 0xae, 0xea, 0xf7, 0x01})
 TEST_ENCODE_DECODE_SHRINKING_TIME(1985, 10, 26,  8, 22, 16, 900142, {0x7d, 0x2e, 0xbc, 0x0d, 0x59, 0x48, 0x6b, 0xf0, 0x01})
 
-TEST_ENCODE_DECODE_SHRINKING(Empty, nil, 0, nil(), {0x7e})
+TEST_ENCODE_DECODE_SHRINKING(Nil, nil, 0, nil(), {0x7e})
 
 TEST_ENCODE_DATA(Padding, pad_1, 99, 9, pad(1), {0x7f})
 TEST_ENCODE_DATA(Padding, pad_2, 99, 9, pad(2), {0x7f, 0x7f})

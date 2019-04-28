@@ -378,7 +378,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 // Otherwise the document depth test would exit the decode loop.
                 continue;
             case TYPE_NIL:
-                KSLOG_DEBUG("<Empty>");
+                KSLOG_DEBUG("<Nil>");
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_nil(process));
                 END_OBJECT();
