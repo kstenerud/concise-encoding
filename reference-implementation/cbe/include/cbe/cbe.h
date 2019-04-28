@@ -28,6 +28,7 @@ ANSI_EXTENSION typedef std::decimal::decimal128::__decfloat128 dec128_ct;
     ANSI_EXTENSION typedef _Decimal128 dec128_ct;
 #endif
 ANSI_EXTENSION typedef __int128 int128_ct;
+ANSI_EXTENSION typedef unsigned __int128 uint128_ct;
 ANSI_EXTENSION typedef __float128 float128_ct;
 
 #ifdef __cplusplus
@@ -147,46 +148,49 @@ typedef enum
  */
 typedef struct
 {
-    // A nil field was decoded.
+    // A nil value was decoded.
     bool (*on_nil) (struct cbe_decode_process* decode_process);
 
-    // An boolean field was decoded.
+    // An boolean value was decoded.
     bool (*on_boolean) (struct cbe_decode_process* decode_process, bool value);
 
-    // An 8-bit integer field was decoded.
-    bool (*on_int_8) (struct cbe_decode_process* decode_process, int8_t value);
+    // A 32-bit or larger integer value was decoded.
+    bool (*on_int) (struct cbe_decode_process* decode_process, int32_t value);
 
-    // A 16-bit integer field was decoded.
-    bool (*on_int_16) (struct cbe_decode_process* decode_process, int16_t value);
-
-    // A 32-bit integer field was decoded.
-    bool (*on_int_32) (struct cbe_decode_process* decode_process, int32_t value);
-
-    // A 64-bit integer field was decoded.
+    // A 64-bit integer value was decoded.
     bool (*on_int_64) (struct cbe_decode_process* decode_process, int64_t value);
 
-    // A 128-bit integer field was decoded.
+    // A 128-bit integer value was decoded.
     bool (*on_int_128) (struct cbe_decode_process* decode_process, int128_ct value);
 
-    // A 32-bit binary floating point field was decoded.
+    // A 32-bit or larger unsigned integer value was decoded.
+    bool (*on_uint) (struct cbe_decode_process* decode_process, unsigned value);
+
+    // A 64-bit unsigned integer value was decoded.
+    bool (*on_uint_64) (struct cbe_decode_process* decode_process, uint64_t value);
+
+    // A 128-bit unsigned integer value was decoded.
+    bool (*on_uint_128) (struct cbe_decode_process* decode_process, uint128_ct value);
+
+    // A 32-bit binary floating point value was decoded.
     bool (*on_float_32) (struct cbe_decode_process* decode_process, float value);
 
-    // A 64-bit binary floating point field was decoded.
+    // A 64-bit binary floating point value was decoded.
     bool (*on_float_64) (struct cbe_decode_process* decode_process, double value);
 
-    // A 128-bit binary floating point field was decoded.
+    // A 128-bit binary floating point value was decoded.
     bool (*on_float_128) (struct cbe_decode_process* decode_process, float128_ct value);
 
-    // A 32-bit decimal floating point field was decoded.
+    // A 32-bit decimal floating point value was decoded.
     bool (*on_decimal_32) (struct cbe_decode_process* decode_process, dec32_ct value);
 
-    // A 64-bit decimal floating point field was decoded.
+    // A 64-bit decimal floating point value was decoded.
     bool (*on_decimal_64) (struct cbe_decode_process* decode_process, dec64_ct value);
 
-    // A 128-bit decimal floating point field was decoded.
+    // A 128-bit decimal floating point value was decoded.
     bool (*on_decimal_128) (struct cbe_decode_process* decode_process, dec128_ct value);
 
-    // A time field was decoded.
+    // A time value was decoded.
     bool (*on_time) (struct cbe_decode_process* decode_process, smalltime value);
 
     // A list has been opened.
@@ -663,65 +667,6 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* e
 CBE_PUBLIC cbe_encode_status cbe_encode_add_int(struct cbe_encode_process* encode_process, int value);
 
 /**
- * Add an integer value to the document.
- *
- * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The operation was successful.
- *
- * Recoverable codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * Unrecoverable codes:
- * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param value The value to add.
- * @return The current encoder status.
- */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_int_8(struct cbe_encode_process* encode_process, int8_t value);
-
-/**
- * Add a 16 bit integer value to the document.
- * Note that this will add a narrower type if it will fit.
- *
- * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The operation was successful.
- *
- * Recoverable codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * Unrecoverable codes:
- * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param value The value to add.
- * @return The current encoder status.
- */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_int_16(struct cbe_encode_process* encode_process, int16_t value);
-
-/**
- * Add a 32 bit integer value to the document.
- * Note that this will add a narrower type if it will fit.
- *
- * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The operation was successful.
- *
- * Recoverable codes:
- * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
- *
- * Unrecoverable codes:
- * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
- * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
- *
- * @param encode_process The encode process.
- * @param value The value to add.
- * @return The current encoder status.
- */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_int_32(struct cbe_encode_process* encode_process, int32_t value);
-
-/**
  * Add a 64 bit integer value to the document.
  * Note that this will add a narrower type if it will fit.
  *
@@ -760,6 +705,65 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_int_64(struct cbe_encode_process* en
  * @return The current encoder status.
  */
 CBE_PUBLIC cbe_encode_status cbe_encode_add_int_128(struct cbe_encode_process* encode_process, int128_ct value);
+
+/**
+ * Add an unsigned integer value to the document.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param value The value to add.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_uint(struct cbe_encode_process* encode_process, unsigned value);
+
+/**
+ * Add a 64 bit unsigned integer value to the document.
+ * Note that this will add a narrower type if it will fit.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param value The value to add.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_uint_64(struct cbe_encode_process* encode_process, uint64_t value);
+
+/**
+ * Add a 128 bit unsigned integer value to the document.
+ * Note that this will add a narrower type if it will fit.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param value The value to add.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_uint_128(struct cbe_encode_process* encode_process, uint128_ct value);
 
 /**
  * Add a 32 bit floating point value to the document.

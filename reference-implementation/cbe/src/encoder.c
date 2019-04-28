@@ -142,10 +142,11 @@ typedef enum
 // =======
 
 #define FITS_IN_INT_SMALL(VALUE)  ((VALUE) >= TYPE_SMALLINT_MIN && (VALUE) <= TYPE_SMALLINT_MAX)
-#define FITS_IN_INT_8(VALUE)      ((VALUE) == (int8_t)(VALUE))
-#define FITS_IN_INT_16(VALUE)     ((VALUE) == (int16_t)(VALUE))
-#define FITS_IN_INT_32(VALUE)     ((VALUE) == (int32_t)(VALUE))
-#define FITS_IN_INT_64(VALUE)     ((VALUE) == (int64_t)(VALUE))
+#define FITS_IN_UINT_SMALL(VALUE) ((VALUE) <= TYPE_SMALLINT_MAX)
+#define FITS_IN_UINT_8(VALUE)     ((VALUE) == (uint8_t)(VALUE))
+#define FITS_IN_UINT_16(VALUE)    ((VALUE) == (uint16_t)(VALUE))
+#define FITS_IN_UINT_32(VALUE)    ((VALUE) == (uint32_t)(VALUE))
+#define FITS_IN_UINT_64(VALUE)    ((VALUE) == (uint64_t)(VALUE))
 #define FITS_IN_FLOAT_32(VALUE)   ((VALUE) == (double)(float)(VALUE))
 #define FITS_IN_FLOAT_64(VALUE)   ((VALUE) == (double)(VALUE))
 #define FITS_IN_DECIMAL_32(VALUE) ((VALUE) == (dec32_ct)(VALUE))
@@ -203,16 +204,13 @@ static inline void add_primitive_int_8(cbe_encode_process* const process, const 
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint16_t,    uint_16)
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint32_t,    uint_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(uint64_t,    uint_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int16_t,     int_16)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int32_t,     int_32)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int64_t,     int_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(int128_ct,    int_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(uint128_ct,  uint_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(float,       float_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(double,      float_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(float128_ct,  float_128)
-DEFINE_PRIMITIVE_ADD_FUNCTION(dec32_ct,  decimal_32)
-DEFINE_PRIMITIVE_ADD_FUNCTION(dec64_ct,  decimal_64)
-DEFINE_PRIMITIVE_ADD_FUNCTION(dec128_ct, decimal_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(float128_ct, float_128)
+DEFINE_PRIMITIVE_ADD_FUNCTION(dec32_ct,    decimal_32)
+DEFINE_PRIMITIVE_ADD_FUNCTION(dec64_ct,    decimal_64)
+DEFINE_PRIMITIVE_ADD_FUNCTION(dec128_ct,   decimal_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(smalltime,   time)
 static inline void add_primitive_bytes(cbe_encode_process* const process,
                                        const uint8_t* const bytes,
@@ -283,8 +281,8 @@ static inline cbe_encode_status add_int_small(cbe_encode_process* const process,
     return CBE_ENCODE_STATUS_OK;
 }
 
-#define DEFINE_ADD_SCALAR_FUNCTION(DATA_TYPE, DEFINITION_TYPE, CBE_TYPE) \
-    static inline cbe_encode_status add_ ## DEFINITION_TYPE(cbe_encode_process* const process, const DATA_TYPE value) \
+#define DEFINE_ADD_SCALAR_FUNCTION(DATA_TYPE, NAME, DEFINITION_TYPE, CBE_TYPE) \
+    static inline cbe_encode_status add_ ## NAME(cbe_encode_process* const process, const DATA_TYPE value) \
     { \
         KSLOG_DEBUG("(process %p)", process); \
     \
@@ -298,17 +296,23 @@ static inline cbe_encode_status add_int_small(cbe_encode_process* const process,
     \
         return CBE_ENCODE_STATUS_OK; \
     }
-DEFINE_ADD_SCALAR_FUNCTION(int16_t,     int_16,      TYPE_INT_16)
-DEFINE_ADD_SCALAR_FUNCTION(int32_t,     int_32,      TYPE_INT_32)
-DEFINE_ADD_SCALAR_FUNCTION(int64_t,     int_64,      TYPE_INT_64)
-DEFINE_ADD_SCALAR_FUNCTION(int128_ct,    int_128,     TYPE_INT_128)
-DEFINE_ADD_SCALAR_FUNCTION(float,       float_32,    TYPE_FLOAT_32)
-DEFINE_ADD_SCALAR_FUNCTION(double,      float_64,    TYPE_FLOAT_64)
-DEFINE_ADD_SCALAR_FUNCTION(float128_ct,  float_128,   TYPE_FLOAT_128)
-DEFINE_ADD_SCALAR_FUNCTION(dec32_ct,  decimal_32,  TYPE_DECIMAL_32)
-DEFINE_ADD_SCALAR_FUNCTION(dec64_ct,  decimal_64,  TYPE_DECIMAL_64)
-DEFINE_ADD_SCALAR_FUNCTION(dec128_ct, decimal_128, TYPE_DECIMAL_128)
-DEFINE_ADD_SCALAR_FUNCTION(smalltime,   time,        TYPE_TIME)
+DEFINE_ADD_SCALAR_FUNCTION(uint8_t,     pos_int_8,   uint_8,      TYPE_POS_INT_8)
+DEFINE_ADD_SCALAR_FUNCTION(uint16_t,    pos_int_16,  uint_16,     TYPE_POS_INT_16)
+DEFINE_ADD_SCALAR_FUNCTION(uint32_t,    pos_int_32,  uint_32,     TYPE_POS_INT_32)
+DEFINE_ADD_SCALAR_FUNCTION(uint64_t,    pos_int_64,  uint_64,     TYPE_POS_INT_64)
+DEFINE_ADD_SCALAR_FUNCTION(uint128_ct,  pos_int_128, uint_128,    TYPE_POS_INT_128)
+DEFINE_ADD_SCALAR_FUNCTION(uint8_t,     neg_int_8,   uint_8,      TYPE_NEG_INT_8)
+DEFINE_ADD_SCALAR_FUNCTION(uint16_t,    neg_int_16,  uint_16,     TYPE_NEG_INT_16)
+DEFINE_ADD_SCALAR_FUNCTION(uint32_t,    neg_int_32,  uint_32,     TYPE_NEG_INT_32)
+DEFINE_ADD_SCALAR_FUNCTION(uint64_t,    neg_int_64,  uint_64,     TYPE_NEG_INT_64)
+DEFINE_ADD_SCALAR_FUNCTION(uint128_ct,  neg_int_128, uint_128,    TYPE_NEG_INT_128)
+DEFINE_ADD_SCALAR_FUNCTION(float,       float_32,    float_32,    TYPE_FLOAT_32)
+DEFINE_ADD_SCALAR_FUNCTION(double,      float_64,    float_64,    TYPE_FLOAT_64)
+DEFINE_ADD_SCALAR_FUNCTION(float128_ct, float_128,   float_128,   TYPE_FLOAT_128)
+DEFINE_ADD_SCALAR_FUNCTION(dec32_ct,    decimal_32,  decimal_32,  TYPE_DECIMAL_32)
+DEFINE_ADD_SCALAR_FUNCTION(dec64_ct,    decimal_64,  decimal_64,  TYPE_DECIMAL_64)
+DEFINE_ADD_SCALAR_FUNCTION(dec128_ct,   decimal_128, decimal_128, TYPE_DECIMAL_128)
+DEFINE_ADD_SCALAR_FUNCTION(smalltime,   time,        time,        TYPE_TIME)
 
 static inline cbe_encode_status encode_string_header(cbe_encode_process* const process,
                                                      const int64_t byte_count,
@@ -520,86 +524,80 @@ cbe_encode_status cbe_encode_add_boolean(cbe_encode_process* const process, cons
     return CBE_ENCODE_STATUS_OK;
 }
 
+#define ADD_INT_COMMON(TYPE, UNSIGNED_TYPE) \
+    unlikely_if(process == NULL) \
+    { \
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT; \
+    } \
+    \
+    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value); \
+    \
+    UNSIGNED_TYPE uvalue = (UNSIGNED_TYPE)value; \
+    if(value < 0) \
+    { \
+        uvalue = (UNSIGNED_TYPE)-value; \
+        if(FITS_IN_UINT_8(uvalue))  return add_neg_int_8(process, uvalue); \
+        if(FITS_IN_UINT_16(uvalue)) return add_neg_int_16(process, uvalue); \
+        if(FITS_IN_UINT_32(uvalue)) return add_neg_int_32(process, uvalue); \
+        if(FITS_IN_UINT_64(uvalue)) return add_neg_int_64(process, uvalue); \
+        return add_neg_int_128(process, uvalue); \
+    } \
+    \
+    if(FITS_IN_UINT_8(uvalue))  return add_pos_int_8(process, uvalue); \
+    if(FITS_IN_UINT_16(uvalue)) return add_pos_int_16(process, uvalue); \
+    if(FITS_IN_UINT_32(uvalue)) return add_pos_int_32(process, uvalue); \
+    if(FITS_IN_UINT_64(uvalue)) return add_pos_int_64(process, uvalue); \
+    return add_pos_int_128(process, value)
+
+#define ADD_UINT_COMMON() \
+    unlikely_if(process == NULL) \
+    { \
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT; \
+    } \
+    \
+    if(FITS_IN_UINT_SMALL(value)) return add_int_small(process, value); \
+    if(FITS_IN_UINT_8(value))  return add_pos_int_8(process, value); \
+    if(FITS_IN_UINT_16(value)) return add_pos_int_16(process, value); \
+    if(FITS_IN_UINT_32(value)) return add_pos_int_32(process, value); \
+    if(FITS_IN_UINT_64(value)) return add_pos_int_64(process, value); \
+    return add_pos_int_128(process, value)
+
 cbe_encode_status cbe_encode_add_int(cbe_encode_process* const process, const int value)
 {
     KSLOG_DEBUG("(process %p, value %d)", process, value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    if(FITS_IN_INT_16(value)) return add_int_16(process, value);
-    if(FITS_IN_INT_32(value)) return add_int_32(process, value);
-    if(FITS_IN_INT_64(value)) return add_int_64(process, value);
-    return add_int_128(process, value);
+    ADD_INT_COMMON(int, unsigned);
 }
 
-cbe_encode_status cbe_encode_add_int_8(cbe_encode_process* const process, int8_t const value)
-{
-    KSLOG_DEBUG("(process %p, value %d)", process, value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    return add_int_16(process, value);
-}
-
-cbe_encode_status cbe_encode_add_int_16(cbe_encode_process* const process, int16_t const value)
-{
-    KSLOG_DEBUG("(process %p, value %d)", process, value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    return add_int_16(process, value);
-}
-
-cbe_encode_status cbe_encode_add_int_32(cbe_encode_process* const process, int32_t const value)
-{
-    KSLOG_DEBUG("(process %p, value %d)", process, value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    if(FITS_IN_INT_16(value)) return add_int_16(process, value);
-    return add_int_32(process, value);
-}
-
-cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const process, int64_t const value)
+cbe_encode_status cbe_encode_add_int_64(cbe_encode_process* const process, const int64_t value)
 {
     KSLOG_DEBUG("(process %p, value %ld)", process, value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
-
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    if(FITS_IN_INT_16(value)) return add_int_16(process, value);
-    if(FITS_IN_INT_32(value)) return add_int_32(process, value);
-    return add_int_64(process, value);
+    ADD_INT_COMMON(int64_t, uint64_t);
 }
 
 cbe_encode_status cbe_encode_add_int_128(cbe_encode_process* const process, const int128_ct value)
 {
     KSLOG_DEBUG("(process %p, value 0x%016x%016x)",
-        process, (int64_t)(value>>64), (uint64_t)value);
-    unlikely_if(process == NULL)
-    {
-        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-    }
+        process, (uint64_t)(value>>64), (uint64_t)value);
+    ADD_INT_COMMON(int128_ct, uint128_ct);
+}
 
-    if(FITS_IN_INT_SMALL(value)) return add_int_small(process, value);
-    if(FITS_IN_INT_16(value)) return add_int_16(process, value);
-    if(FITS_IN_INT_32(value)) return add_int_32(process, value);
-    if(FITS_IN_INT_64(value)) return add_int_64(process, value);
-    return add_int_128(process, value);
+cbe_encode_status cbe_encode_add_uint(cbe_encode_process* const process, const unsigned int value)
+{
+    KSLOG_DEBUG("(process %p, value %u)", process, value);
+    ADD_UINT_COMMON();
+}
+
+cbe_encode_status cbe_encode_add_uint_64(cbe_encode_process* const process, const uint64_t value)
+{
+    KSLOG_DEBUG("(process %p, value %lu)", process, value);
+    ADD_UINT_COMMON();
+}
+
+cbe_encode_status cbe_encode_add_uint_128(cbe_encode_process* const process, const uint128_ct value)
+{
+    KSLOG_DEBUG("(process %p, value 0x%016x%016x)",
+        process, (uint64_t)(value>>64), (uint64_t)value);
+    ADD_UINT_COMMON();
 }
 
 cbe_encode_status cbe_encode_add_float_32(cbe_encode_process* const process, const float value)

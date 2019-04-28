@@ -20,32 +20,25 @@ protected:
 
 public:
     // Internal functions
-    cbe_encode_status encode(enc::number_encoding<int8_t>& e);
-    cbe_encode_status encode(enc::number_encoding<int16_t>& e);
-    cbe_encode_status encode(enc::number_encoding<int32_t>& e);
-    cbe_encode_status encode(enc::number_encoding<int64_t>& e);
-    cbe_encode_status encode(enc::int128_encoding& e);
-    cbe_encode_status encode(enc::number_encoding<float>& e);
-    cbe_encode_status encode(enc::number_encoding<double>& e);
-    cbe_encode_status encode(enc::number_encoding<float128_ct>& e);
-    cbe_encode_status encode(enc::dfp_encoding<dec32_ct>& e);
-    cbe_encode_status encode(enc::dfp_encoding<dec64_ct>& e);
-    cbe_encode_status encode(enc::dfp_encoding<dec128_ct>& e);
-    cbe_encode_status encode(enc::boolean_encoding& e);
-    cbe_encode_status encode(enc::time_encoding& e);
-    cbe_encode_status encode(enc::nil_encoding& e);
-    cbe_encode_status encode(enc::list_encoding& e);
-    cbe_encode_status encode(enc::map_encoding& e);
-    cbe_encode_status encode(enc::padding_encoding& e);
+    cbe_encode_status encode(const enc::list_encoding& encoding);
+    cbe_encode_status encode(const enc::map_encoding& encoding);
+    cbe_encode_status encode(const enc::container_end_encoding& encoding);
+    cbe_encode_status encode(const enc::nil_encoding& encoding);
+    cbe_encode_status encode(const enc::padding_encoding& encoding);
+    cbe_encode_status encode(const enc::time_encoding& encoding);
+    cbe_encode_status encode(const enc::string_encoding& encoding);
+    cbe_encode_status encode(const enc::binary_encoding& encoding);
+    cbe_encode_status encode(const enc::comment_encoding& encoding);
+    cbe_encode_status encode(const enc::string_header_encoding& encoding);
+    cbe_encode_status encode(const enc::binary_header_encoding& encoding);
+    cbe_encode_status encode(const enc::comment_header_encoding& encoding);
+    cbe_encode_status encode(const enc::data_encoding& encoding);
+    cbe_encode_status encode(const enc::boolean_encoding& encoding);
+    cbe_encode_status encode(const enc::int_encoding& encoding);
+    cbe_encode_status encode(const enc::uint_encoding& encoding);
+    cbe_encode_status encode(const enc::float_encoding& encoding);
+    cbe_encode_status encode(const enc::decimal_encoding& encoding);
     cbe_encode_status stream_array(const std::vector<uint8_t>& data);
-    cbe_encode_status encode(enc::string_encoding& e);
-    cbe_encode_status encode(enc::binary_encoding& e);
-    cbe_encode_status encode(enc::comment_encoding& e);
-    cbe_encode_status encode(enc::string_header_encoding& e);
-    cbe_encode_status encode(enc::binary_header_encoding& e);
-    cbe_encode_status encode(enc::comment_header_encoding& e);
-    cbe_encode_status encode(enc::data_encoding& e);
-    cbe_encode_status encode(enc::container_end_encoding& e);
 
 public:
     cbe_encoder(int64_t buffer_size,
@@ -65,7 +58,7 @@ public:
     cbe_encode_status encode_binary(std::vector<uint8_t> value);
     cbe_encode_status encode_comment(std::vector<uint8_t> value);
 
-    int64_t get_encode_buffer_offset();
+    int64_t get_encode_buffer_offset() const;
 
     // Get the complete raw encoded data.
     std::vector<uint8_t>& encoded_data() {return _encoded_data;}

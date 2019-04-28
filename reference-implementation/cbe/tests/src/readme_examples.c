@@ -13,21 +13,7 @@ static bool my_on_boolean(struct cbe_decode_process* process, bool value)
     return true;
 }
 
-static bool my_on_int_8(struct cbe_decode_process* process, int8_t value)
-{
-    (void)process;
-    (void)value;
-    return true;
-}
-
-static bool my_on_int_16(struct cbe_decode_process* process, int16_t value)
-{
-    (void)process;
-    (void)value;
-    return true;
-}
-
-static bool my_on_int_32(struct cbe_decode_process* process, int32_t value)
+static bool my_on_int(struct cbe_decode_process* process, int value)
 {
     (void)process;
     (void)value;
@@ -42,6 +28,27 @@ static bool my_on_int_64(struct cbe_decode_process* process, int64_t value)
 }
 
 static bool my_on_int_128(struct cbe_decode_process* process, int128_ct value)
+{
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool my_on_uint(struct cbe_decode_process* process, unsigned value)
+{
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool my_on_uint_64(struct cbe_decode_process* process, uint64_t value)
+{
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool my_on_uint_128(struct cbe_decode_process* process, uint128_ct value)
 {
     (void)process;
     (void)value;
@@ -201,11 +208,12 @@ bool decode(const uint8_t* my_document, int64_t my_document_size, void* my_conte
     {
         .on_nil           = my_on_nil,
         .on_boolean       = my_on_boolean,
-        .on_int_8         = my_on_int_8,
-        .on_int_16        = my_on_int_16,
-        .on_int_32        = my_on_int_32,
+        .on_int           = my_on_int,
         .on_int_64        = my_on_int_64,
         .on_int_128       = my_on_int_128,
+        .on_uint          = my_on_uint,
+        .on_uint_64       = my_on_uint_64,
+        .on_uint_128      = my_on_uint_128,
         .on_float_32      = my_on_float_32,
         .on_float_64      = my_on_float_64,
         .on_float_128     = my_on_float_128,
@@ -264,7 +272,7 @@ bool encode()
     }
 
     // TODO: Check for out of room on all cbe calls
-    status = cbe_encode_add_int_8(encode_process, 1);
+    status = cbe_encode_add_int(encode_process, 1);
     status = cbe_encode_add_string(encode_process, "Testing", 7);
     status = cbe_encode_container_end(encode_process);
     status = cbe_encode_end(encode_process);

@@ -170,16 +170,17 @@ static inline TYPE read_ ## TYPE_SUFFIX(cbe_decode_process* const process) \
 DEFINE_READ_FUNCTION(uint16_t,    uint_16)
 DEFINE_READ_FUNCTION(uint32_t,    uint_32)
 DEFINE_READ_FUNCTION(uint64_t,    uint_64)
+DEFINE_READ_FUNCTION(uint128_ct,  uint_128)
 DEFINE_READ_FUNCTION(int16_t,     int_16)
 DEFINE_READ_FUNCTION(int32_t,     int_32)
 DEFINE_READ_FUNCTION(int64_t,     int_64)
-DEFINE_READ_FUNCTION(int128_ct,    int_128)
+DEFINE_READ_FUNCTION(int128_ct,   int_128)
 DEFINE_READ_FUNCTION(float,       float_32)
 DEFINE_READ_FUNCTION(double,      float_64)
-DEFINE_READ_FUNCTION(float128_ct,  float_128)
-DEFINE_READ_FUNCTION(dec32_ct,  decimal_32)
-DEFINE_READ_FUNCTION(dec64_ct,  decimal_64)
-DEFINE_READ_FUNCTION(dec128_ct, decimal_128)
+DEFINE_READ_FUNCTION(float128_ct, float_128)
+DEFINE_READ_FUNCTION(dec32_ct,    decimal_32)
+DEFINE_READ_FUNCTION(dec64_ct,    decimal_64)
+DEFINE_READ_FUNCTION(dec128_ct,   decimal_128)
 DEFINE_READ_FUNCTION(smalltime,   time)
 
 static inline int peek_array_length_field_width(const cbe_decode_process* const process)
@@ -441,23 +442,82 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 break;
             }
 
+            #define HANDLE_CASE_NEG_INTEGER(TYPE, READ_FRAGMENT, NOTIFY_FRAGMENT) \
+                KSLOG_DEBUG("<" #TYPE ">"); \
+                BEGIN_OBJECT(sizeof(TYPE)); \
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_ ## NOTIFY_FRAGMENT(process, -read_ ## READ_FRAGMENT(process))); \
+                END_OBJECT();
+
+            #define HANDLE_CASE_POS_INTEGER(TYPE, READ_FRAGMENT, NOTIFY_FRAGMENT) \
+                KSLOG_DEBUG("<" #TYPE ">"); \
+                BEGIN_OBJECT(sizeof(TYPE)); \
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_ ## NOTIFY_FRAGMENT(process, read_ ## READ_FRAGMENT(process))); \
+                END_OBJECT();
+
+            case TYPE_NEG_INT_8:
+                HANDLE_CASE_NEG_INTEGER(int8_t, uint_8, int);
+                break;
+            case TYPE_NEG_INT_16:
+                HANDLE_CASE_NEG_INTEGER(int16_t, uint_16, int);
+                break;
+            case TYPE_NEG_INT_32:
+            {
+                KSLOG_DEBUG("<int32_t>");
+                BEGIN_OBJECT(sizeof(uint32_t));
+                uint32_t value = read_uint_32(process);
+                if(value > ((uint32_t)-1) >> 1)
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_64(process, -((int64_t)value)));
+                }
+                else
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int(process, -value));
+                }
+                END_OBJECT();
+                break;
+            }
+            case TYPE_NEG_INT_64:
+            {
+                KSLOG_DEBUG("<int64_t>");
+                BEGIN_OBJECT(sizeof(uint64_t));
+                uint64_t value = read_uint_64(process);
+                if(value > ((uint64_t)-1) >> 1)
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_128(process, -((int128_ct)value)));
+                }
+                else
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_64(process, -value));
+                }
+                END_OBJECT();
+                break;
+            }
+            case TYPE_NEG_INT_128:
+                // Just ignore if high bit is illegally set
+                HANDLE_CASE_NEG_INTEGER(int128_ct, uint_128, int_128);
+                break;
+            case TYPE_POS_INT_8:
+                HANDLE_CASE_POS_INTEGER(uint8_t, uint_8, uint);
+                break;
+            case TYPE_POS_INT_16:
+                HANDLE_CASE_POS_INTEGER(uint16_t, uint_16, uint);
+                break;
+            case TYPE_POS_INT_32:
+                HANDLE_CASE_POS_INTEGER(uint32_t, uint_32, uint);
+                break;
+            case TYPE_POS_INT_64:
+                HANDLE_CASE_POS_INTEGER(uint64_t, uint_64, uint_64);
+                break;
+            case TYPE_POS_INT_128:
+                HANDLE_CASE_POS_INTEGER(uint128_ct, uint_128, uint_128);
+                break;
+
             #define HANDLE_CASE_SCALAR(TYPE, NAME_FRAGMENT) \
                 KSLOG_DEBUG("<" #TYPE ">"); \
                 BEGIN_OBJECT(sizeof(TYPE)); \
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_ ## NAME_FRAGMENT(process, read_ ## NAME_FRAGMENT(process))); \
                 END_OBJECT();
-            case TYPE_INT_16:
-                HANDLE_CASE_SCALAR(int16_t, int_16);
-                break;
-            case TYPE_INT_32:
-                HANDLE_CASE_SCALAR(int32_t, int_32);
-                break;
-            case TYPE_INT_64:
-                HANDLE_CASE_SCALAR(int64_t, int_64);
-                break;
-            case TYPE_INT_128:
-                HANDLE_CASE_SCALAR(int128_ct, int_128);
-                break;
+
             case TYPE_FLOAT_32:
                 HANDLE_CASE_SCALAR(float, float_32);
                 break;
@@ -503,7 +563,14 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             default:
                 KSLOG_DEBUG("<Small %d>", (int8_t)type);
                 BEGIN_OBJECT(0);
-                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int_8(process, type));
+                if((int8_t)type < 0)
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_int(process, (int8_t)type));
+                }
+                else
+                {
+                    STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_uint(process, (uint8_t)type));
+                }
                 END_OBJECT();
                 break;
         }

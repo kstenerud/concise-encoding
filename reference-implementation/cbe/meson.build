@@ -28,9 +28,7 @@ project_test_files = [
   'tests/src/list.cpp',
   'tests/src/readme_examples.c',
   'tests/src/string.cpp',
-]
-
-project_test_decfloat_files = [
+  # These require '-Wno-pedantic because they use decfloat literals
   'tests/src/general.cpp',
   'tests/src/map.cpp',
   'tests/src/spec_examples.cpp',
@@ -113,13 +111,6 @@ if not meson.is_subproject()
   add_languages('cpp')
   subdir('tests')
 
-  decfloat_lib = static_library('decfloat_lib',
-    project_test_decfloat_files,
-    dependencies : [project_dep, test_dep],
-    include_directories : private_headers,
-    cpp_args : ['-Wno-pedantic'],
-  )
-
   test('all_tests',
     executable(
       'run_tests',
@@ -127,7 +118,8 @@ if not meson.is_subproject()
       dependencies : [project_dep, test_dep],
       install : false,
       include_directories : private_headers,
-      link_with : decfloat_lib,
+      # Need to disable pedantic for anything declaring decfloat literals
+      cpp_args : ['-Wno-pedantic'],
     )
   )
 endif

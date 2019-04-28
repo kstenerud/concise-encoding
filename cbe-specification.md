@@ -32,53 +32,59 @@ All objects are composed of an 8-bit type field and possibly a payload.
 
 #### Type Field
 
-| Code | Type               | Payload                                       |
-| ---- | ------------------ | --------------------------------------------- |
-|  00  | Integer value 0    |                                               |
-|  01  | Integer value 1    |                                               |
-| ...  | ...                |                                               |
-|  6d  | Integer value 109  |                                               |
-|  6e  | Integer (16 bit)   | [16-bit two's complement signed integer]      |
-|  6f  | Integer (32 bit)   | [32-bit two's complement signed integer]      |
-|  70  | Integer (64 bit)   | [64-bit two's complement signed integer]      |
-|  71  | Integer (128 bit)  | [128-bit two's complement signed integer]     |
-|  72  | Float (32 bit)     | [IEEE 754 binary32 floating point]            |
-|  73  | Float (64 bit)     | [IEEE 754 binary64 floating point]            |
-|  74  | Float (128 bit)    | [IEEE 754 binary128 floating point]           |
-|  75  | Decimal (32 bit)   | [IEEE 754 decimal32, Densely Packed Decimal]  |
-|  76  | Decimal (64 bit)   | [IEEE 754 decimal64, Densely Packed Decimal]  |
-|  77  | Decimal (128 bit)  | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  78  | Time               | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
-|  79  | Boolean True       |                                               |
-|  7a  | Boolean False      |                                               |
-|  7b  | List               |                                               |
-|  7c  | Map                |                                               |
-|  7d  | End of Container   |                                               |
-|  7e  | Nil (no data)      |                                               |
-|  7f  | Padding            |                                               |
-|  80  | String: 0 bytes    |                                               |
-|  81  | String: 1 byte     | [1 octet of data]                             |
-|  82  | String: 2 bytes    | [2 octets of data]                            |
-|  83  | String: 3 bytes    | [3 octets of data]                            |
-|  84  | String: 4 bytes    | [4 octets of data]                            |
-|  85  | String: 5 bytes    | [5 octets of data]                            |
-|  86  | String: 6 bytes    | [6 octets of data]                            |
-|  87  | String: 7 bytes    | [7 octets of data]                            |
-|  88  | String: 8 bytes    | [8 octets of data]                            |
-|  89  | String: 9 bytes    | [9 octets of data]                            |
-|  8a  | String: 10 bytes   | [10 octets of data]                           |
-|  8b  | String: 11 bytes   | [11 octets of data]                           |
-|  8c  | String: 12 bytes   | [12 octets of data]                           |
-|  8d  | String: 13 bytes   | [13 octets of data]                           |
-|  8e  | String: 14 bytes   | [14 octets of data]                           |
-|  8f  | String: 15 bytes   | [15 octets of data]                           |
-|  90  | String             | [byte length] [UTF-8 encoded string]          |
-|  91  | Binary Data        | [byte length] [data]                          |
-|  92  | Comment            | [byte length] [UTF-8 encoded string]          |
-|  93  | Integer value -109 |                                               |
-| ...  | ...                |                                               |
-|  fe  | Integer value -2   |                                               |
-|  ff  | Integer value -1   |                                               |
+| Code | Type                       | Payload                                       |
+| ---- | -------------------------- | --------------------------------------------- |
+|  00  | Integer value 0            |                                               |
+|  01  | Integer value 1            |                                               |
+| ...  | ...                        |                                               |
+|  6a  | Integer value 106          |                                               |
+|  6b  | Positive Integer (8 bit)   | [8-bit positive integer]                      |
+|  6c  | Positive Integer (16 bit)  | [16-bit positive integer]                     |
+|  6d  | Positive Integer (32 bit)  | [32-bit positive integer]                     |
+|  6e  | Positive Integer (64 bit)  | [64-bit positive integer]                     |
+|  6f  | Positive Integer (128 bit) | [128-bit positive integer]                    |
+|  70  | Negative Integer (8 bit)   | [8-bit negative integer]                      |
+|  71  | Negative Integer (16 bit)  | [16-bit negative integer]                     |
+|  72  | Negative Integer (32 bit)  | [32-bit negative integer]                     |
+|  73  | Negative Integer (64 bit)  | [64-bit negative integer]                     |
+|  74  | Negative Integer (128 bit) | [128-bit negative integer]                    |
+|  75  | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
+|  76  | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
+|  77  | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
+|  78  | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
+|  79  | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
+|  7a  | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
+|  7b  | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
+|  7c  | Boolean False              |                                               |
+|  7d  | Boolean True               |                                               |
+|  7e  | Nil (no data)              |                                               |
+|  7f  | Padding                    |                                               |
+|  80  | String: 0 bytes            |                                               |
+|  81  | String: 1 byte             | [1 octet of data]                             |
+|  82  | String: 2 bytes            | [2 octets of data]                            |
+|  83  | String: 3 bytes            | [3 octets of data]                            |
+|  84  | String: 4 bytes            | [4 octets of data]                            |
+|  85  | String: 5 bytes            | [5 octets of data]                            |
+|  86  | String: 6 bytes            | [6 octets of data]                            |
+|  87  | String: 7 bytes            | [7 octets of data]                            |
+|  88  | String: 8 bytes            | [8 octets of data]                            |
+|  89  | String: 9 bytes            | [9 octets of data]                            |
+|  8a  | String: 10 bytes           | [10 octets of data]                           |
+|  8b  | String: 11 bytes           | [11 octets of data]                           |
+|  8c  | String: 12 bytes           | [12 octets of data]                           |
+|  8d  | String: 13 bytes           | [13 octets of data]                           |
+|  8e  | String: 14 bytes           | [14 octets of data]                           |
+|  8f  | String: 15 bytes           | [15 octets of data]                           |
+|  90  | String                     | [byte length] [UTF-8 encoded string]          |
+|  91  | Binary Data                | [byte length] [data]                          |
+|  92  | Comment                    | [byte length] [UTF-8 encoded string]          |
+|  93  | List                       |                                               |
+|  94  | Map                        |                                               |
+|  95  | End of Container           |                                               |
+|  96  | Integer value -106         |                                               |
+| ...  | ...                        |                                               |
+|  fe  | Integer value -2           |                                               |
+|  ff  | Integer value -1           |                                               |
 
 
 
@@ -91,13 +97,13 @@ True or false.
 
 Examples:
 
-    [7a] = false
-    [79] = true
+    [7c] = false
+    [7d] = true
 
 
 ### Integer
 
-Integers are always signed, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
+Integers are encoded as positive or negative, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
 
 Values from -110 to 109 are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload.
 
@@ -107,9 +113,13 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [6e 7f 00] = 127
-    [6f 40 42 0f 00] = 1,000,000
-    [70 00 f0 5a 2b 17 ff ff ff] = -1000000000000
+    [6b 7f] = 127
+    [6d 40 42 0f 00] = 1,000,000
+    [73 00 10 a5 d4 e8 00 00 00] = -1000000000000
+
+#### Negative Integers
+
+Negative integers are encoded with the sign implicit in the type field. This means that negative fields can store smaller values than any language implementation can for the same width integer data type (we can store 1 extra bit). Because of this, negative 128 bit values that don't fit into a signed 128 bit integer are not allowed (the high bit of a negative 128 bit integer must always be 0).
 
 
 ### Binary Floating Point
@@ -118,8 +128,8 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
-    [72 00 00 48 41] = 12.5
-    [73 cd cc cc cc cc 04 94 40] = 1281.2
+    [75 00 00 48 41] = 12.5
+    [76 cd cc cc cc cc 04 94 40] = 1281.2
 
 
 ### Decimal Floating Point
@@ -128,13 +138,17 @@ IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bit
 
 Example:
 
-    [75 4b 00 00 b2] = -7.5
-    [75 0c 32 00 32] = 1281.2
+    [78 4b 00 00 b2] = -7.5
+    [78 0c 32 00 32] = 1281.2
 
 
 ### Time
 
 Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) format, stored in little endian byte order.
+
+Example:
+
+    [7b 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
 
 
 
@@ -246,7 +260,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [7b 01 6e 88 13 7d] = A list containing integers (1, 5000)
+    [93 01 6c 88 13 95] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -261,13 +275,13 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [7c] [key 1] [value 1] [key 2] [value 2] ... [7d]
+    [94] [key 1] [value 1] [key 2] [value 2] ... [95]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
 
 Example:
 
-    [7c 81 61 01 81 62 02 7d] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [94 81 61 01 81 62 02 95] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 
@@ -291,7 +305,7 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [7f 7f 7f 6f 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [7f 7f 7f 6d 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 
@@ -327,7 +341,7 @@ Applications may require data to be aligned in some cases. For example, some pro
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
-| 7f | 7f | 7f | 6f | 00 | 00 | 00 | 8f |
+| 7f | 7f | 7f | 6d | 00 | 00 | 00 | 8f |
 
 As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
 
@@ -335,8 +349,8 @@ As an alternative to padding, if you have a known schema for your data, you coul
 
 | Bytes 0-3      | Bytes 4-7     |
 | -------------- | ------------- |
-| xx xx xx 6f    | 00 00 00 8f   |
-| int32          | 0x8f000000    |
+| xx xx xx 6d    | 00 00 00 8f   |
+| positive int32 | 0x8f000000    |
 
 
 
@@ -371,8 +385,8 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    [43 42 45 01 7f 7f 7f 6f 00 00 00 8f] =
-    CBE file containing 0x8f000000, padded such that the int32 starts on a 4-byte boundary.
+    [43 42 45 01 7f 7f 7f 6d 00 00 00 8f] =
+    CBE file containing 0x8f000000, padded such that the 32-bit integer starts on a 4-byte boundary.
 
 
 

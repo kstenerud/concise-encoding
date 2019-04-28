@@ -5,24 +5,27 @@
 
 typedef enum
 {
-    TYPE_SMALLINT_MIN      = -109,
-    TYPE_SMALLINT_MAX      = 109,
-    TYPE_INT_16            = 0x6e,
-    TYPE_INT_32            = 0x6f,
-    TYPE_INT_64            = 0x70,
-    TYPE_INT_128           = 0x71,
-    TYPE_FLOAT_32          = 0x72,
-    TYPE_FLOAT_64          = 0x73,
-    TYPE_FLOAT_128         = 0x74,
-    TYPE_DECIMAL_32        = 0x75,
-    TYPE_DECIMAL_64        = 0x76,
-    TYPE_DECIMAL_128       = 0x77,
-    TYPE_TIME              = 0x78,
-    TYPE_TRUE              = 0x79,
-    TYPE_FALSE             = 0x7a,
-    TYPE_LIST              = 0x7b,
-    TYPE_MAP               = 0x7c,
-    TYPE_END_CONTAINER     = 0x7d,
+    TYPE_SMALLINT_MIN      = -106,
+    TYPE_SMALLINT_MAX      = 106,
+    TYPE_POS_INT_8         = 0x6b,
+    TYPE_POS_INT_16        = 0x6c,
+    TYPE_POS_INT_32        = 0x6d,
+    TYPE_POS_INT_64        = 0x6e,
+    TYPE_POS_INT_128       = 0x6f,
+    TYPE_NEG_INT_8         = 0x70,
+    TYPE_NEG_INT_16        = 0x71,
+    TYPE_NEG_INT_32        = 0x72,
+    TYPE_NEG_INT_64        = 0x73,
+    TYPE_NEG_INT_128       = 0x74,
+    TYPE_FLOAT_32          = 0x75,
+    TYPE_FLOAT_64          = 0x76,
+    TYPE_FLOAT_128         = 0x77,
+    TYPE_DECIMAL_32        = 0x78,
+    TYPE_DECIMAL_64        = 0x79,
+    TYPE_DECIMAL_128       = 0x7a,
+    TYPE_TIME              = 0x7b,
+    TYPE_FALSE             = 0x7c,
+    TYPE_TRUE              = 0x7d,
     TYPE_EMPTY             = 0x7e,
     TYPE_PADDING           = 0x7f,
     TYPE_STRING_0          = 0x80,
@@ -44,6 +47,9 @@ typedef enum
     TYPE_STRING            = 0x90,
     TYPE_BINARY_DATA       = 0x91,
     TYPE_COMMENT           = 0x92,
+    TYPE_LIST              = 0x93,
+    TYPE_MAP               = 0x94,
+    TYPE_END_CONTAINER     = 0x95,
 } cbe_type_field;
 
 typedef enum
@@ -60,6 +66,7 @@ typedef enum
 DEFINE_SAFE_STRUCT(safe_uint_16,     uint16_t);
 DEFINE_SAFE_STRUCT(safe_uint_32,     uint32_t);
 DEFINE_SAFE_STRUCT(safe_uint_64,     uint64_t);
+DEFINE_SAFE_STRUCT(safe_uint_128,    uint128_ct);
 DEFINE_SAFE_STRUCT(safe_int_16,      int16_t);
 DEFINE_SAFE_STRUCT(safe_int_32,      int32_t);
 DEFINE_SAFE_STRUCT(safe_int_64,      int64_t);
