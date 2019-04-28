@@ -501,7 +501,7 @@ cbe_encode_status cbe_encode_add_nil(cbe_encode_process* const process)
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 0);
 
-    add_primitive_type(process, TYPE_EMPTY);
+    add_primitive_type(process, TYPE_NIL);
     swap_map_key_value_status(process);
 
     return CBE_ENCODE_STATUS_OK;

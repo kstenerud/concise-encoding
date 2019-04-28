@@ -377,7 +377,7 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 // Ignore and restart loop because padding doesn't count as document content.
                 // Otherwise the document depth test would exit the decode loop.
                 continue;
-            case TYPE_EMPTY:
+            case TYPE_NIL:
                 KSLOG_DEBUG("<Empty>");
                 BEGIN_NONKEYABLE_OBJECT(0);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_nil(process));

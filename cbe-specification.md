@@ -38,25 +38,25 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  01  | Integer value 1            |                                               |
 | ...  | ...                        |                                               |
 |  6a  | Integer value 106          |                                               |
-|  6b  | Positive Integer (8 bit)   | [8-bit positive integer]                      |
-|  6c  | Positive Integer (16 bit)  | [16-bit positive integer]                     |
-|  6d  | Positive Integer (32 bit)  | [32-bit positive integer]                     |
-|  6e  | Positive Integer (64 bit)  | [64-bit positive integer]                     |
-|  6f  | Positive Integer (128 bit) | [128-bit positive integer]                    |
-|  70  | Negative Integer (8 bit)   | [8-bit negative integer]                      |
-|  71  | Negative Integer (16 bit)  | [16-bit negative integer]                     |
-|  72  | Negative Integer (32 bit)  | [32-bit negative integer]                     |
-|  73  | Negative Integer (64 bit)  | [64-bit negative integer]                     |
-|  74  | Negative Integer (128 bit) | [128-bit negative integer]                    |
-|  75  | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
-|  76  | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
-|  77  | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
-|  78  | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
-|  79  | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
-|  7a  | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  7b  | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
-|  7c  | Boolean False              |                                               |
-|  7d  | Boolean True               |                                               |
+|  6b  | Boolean True               |                                               |
+|  6c  | Boolean False              |                                               |
+|  6d  | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
+|  6e  | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
+|  6f  | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
+|  70  | Positive Integer (8 bit)   | [8-bit positive integer]                      |
+|  71  | Positive Integer (16 bit)  | [16-bit positive integer]                     |
+|  72  | Positive Integer (32 bit)  | [32-bit positive integer]                     |
+|  73  | Positive Integer (64 bit)  | [64-bit positive integer]                     |
+|  74  | Positive Integer (128 bit) | [128-bit positive integer]                    |
+|  75  | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
+|  76  | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
+|  77  | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
+|  78  | Negative Integer (8 bit)   | [8-bit negative integer]                      |
+|  79  | Negative Integer (16 bit)  | [16-bit negative integer]                     |
+|  7a  | Negative Integer (32 bit)  | [32-bit negative integer]                     |
+|  7b  | Negative Integer (64 bit)  | [64-bit negative integer]                     |
+|  7c  | Negative Integer (128 bit) | [128-bit negative integer]                    |
+|  7d  | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
 |  7e  | Nil (no data)              |                                               |
 |  7f  | Padding                    |                                               |
 |  80  | String: 0 bytes            |                                               |
@@ -97,8 +97,8 @@ True or false.
 
 Examples:
 
-    [7c] = false
-    [7d] = true
+    [6c] = false
+    [6b] = true
 
 
 ### Integer
@@ -113,11 +113,11 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [6b 7f] = 127
-    [6b ff] = 255
-    [70 ff] = -255
-    [6d 40 42 0f 00] = 1,000,000
-    [73 00 10 a5 d4 e8 00 00 00] = -1000000000000
+    [70 7f] = 127
+    [70 ff] = 255
+    [78 ff] = -255
+    [72 40 42 0f 00] = 1,000,000
+    [7b 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 #### Negative Integers
 
@@ -130,8 +130,8 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
-    [75 00 00 48 41] = 12.5
-    [76 cd cc cc cc cc 04 94 40] = 1281.2
+    [6d 00 00 48 41] = 12.5
+    [6e cd cc cc cc cc 04 94 40] = 1281.2
 
 
 ### Decimal Floating Point
@@ -140,8 +140,8 @@ IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bit
 
 Example:
 
-    [78 4b 00 00 b2] = -7.5
-    [78 0c 32 00 32] = 1281.2
+    [75 4b 00 00 b2] = -7.5
+    [75 0c 32 00 32] = 1281.2
 
 
 ### Time
@@ -150,7 +150,7 @@ Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime
 
 Example:
 
-    [7b 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
+    [7d 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
 
 
 
@@ -262,7 +262,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [93 01 6c 88 13 95] = A list containing integers (1, 5000)
+    [93 01 71 88 13 95] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -307,7 +307,7 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [7f 7f 7f 6d 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [7f 7f 7f 72 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 
