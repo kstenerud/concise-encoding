@@ -29,12 +29,12 @@ Example:
         "list"        = [1 2 "a string"]
         "sub-map"     = {1="one" 2="two" 3=3000}
         "boolean"     = true
-        "binary int"  = b:-10001011
-        "octal int"   = o:644
+        "binary int"  = -0b10001011
+        "octal int"   = 0o644
         "regular int" = -10000000
-        "hex int"     = h:fffe0001
+        "hex int"     = 0xfffe0001
         "float"       = 14.125
-        "decimal"     = d:-1.02e+40
+        "decimal"     = -d1.02e+40
         "time"        = 2018-07-01T10:53:22.001481Z
         "nil"         = nil
         "bytes"       = h/10 ff 38 9a dd 00 4f 4f 91/
@@ -70,23 +70,23 @@ Example:
 
 Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-` as a sign character.
 
-Integers can be specified in base 2, 8, 10, or 16. For bases other than 10, integers must be prefixed (after the sign character) with a special prefix character and a colon `:`.
+Integers can be specified in base 2, 8, 10, or 16. For bases other than 10, integers must be prefixed with a special prefix:
 
 | Base | Name        | Digits           | Prefix |
 | ---- | ----------- | ---------------- | ------ |
-|   2  | Binary      | 01               | b      |
-|   8  | Octal       | 01234567         | o      |
+|   2  | Binary      | 01               | 0b     |
+|   8  | Octal       | 01234567         | 0o     |
 |  10  | Decimal     | 0123456789       | (none) |
-|  16  | Hexadecimal | 0123456789abcdef | h      |
+|  16  | Hexadecimal | 0123456789abcdef | 0h     |
 
 Examples:
 
 | Notation   | Base | Base-10 Equivalent |
 | ---------- | ---- | ------------------ |
-| b:-1100    |   2  | -12                |
-| o:755      |   8  | 493                |
+| -0b1100    |   2  | -12                |
+| 0o755      |   8  | 493                |
 | 900000     |  10  | 900000             |
-| h:deadbeef |  16  | 3735928559         |
+| 0xdeadbeef |  16  | 3735928559         |
 
 Numbers must be written in lower case.
 
@@ -128,13 +128,13 @@ Even though binary floating point values lose accuracy in certain cases, it is i
 
 Represents ieee754 decimal floating point values in widths from 32 to 128 bits. These are primarily used in financial and other applications where binary rounding errors are unacceptable.
 
-Decimal floating point values are differentiated from binary floating point values by adding a `d:` prefix (after the sign character).
+Decimal floating point values are differentiated from binary floating point values by prefixing with `d`.
 
 Examples:
 
-    d:12.99
-    d:-100.04
-    d:2.58411e-50
+    d12.99
+    -d100.04
+    d2.58411e-50
 
 Decimal floating point values don't lose precision because they are internally represented as powers of 10, but they have slightly less range, and aren't supported in hardware on many platforms (yet).
 
