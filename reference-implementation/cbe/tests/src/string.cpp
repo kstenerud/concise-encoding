@@ -29,7 +29,7 @@ TEST_ENCODE_STATUS(String, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_
 TEST_ENCODE_STATUS(String, int,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->si(0x7ffffffffl, 0))
 TEST_ENCODE_STATUS(String, float,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->flt(0.1))
 TEST_ENCODE_STATUS(String, decimal,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->dec(0.1))
-TEST_ENCODE_STATUS(String, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->time(0))
+TEST_ENCODE_STATUS(String, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->time((smalltime)0))
 TEST_ENCODE_STATUS(String, boolean,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->bl(false))
 TEST_ENCODE_STATUS(String, list,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->list()->end())
 TEST_ENCODE_STATUS(String, map,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30})->map()->end())

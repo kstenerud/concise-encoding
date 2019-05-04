@@ -181,7 +181,8 @@ DEFINE_READ_FUNCTION(float128_ct, float_128)
 DEFINE_READ_FUNCTION(dec32_ct,    decimal_32)
 DEFINE_READ_FUNCTION(dec64_ct,    decimal_64)
 DEFINE_READ_FUNCTION(dec128_ct,   decimal_128)
-DEFINE_READ_FUNCTION(smalltime,   time)
+DEFINE_READ_FUNCTION(smalltime,   smalltime)
+DEFINE_READ_FUNCTION(nanotime,   nanotime)
 
 static inline int peek_array_length_field_width(const cbe_decode_process* const process)
 {
@@ -536,8 +537,11 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             case TYPE_DECIMAL_128:
                 HANDLE_CASE_SCALAR(dec128_ct, decimal_128);
                 break;
-            case TYPE_TIME:
-                HANDLE_CASE_SCALAR(smalltime, time);
+            case TYPE_SMALLTIME:
+                HANDLE_CASE_SCALAR(smalltime, smalltime);
+                break;
+            case TYPE_NANOTIME:
+                HANDLE_CASE_SCALAR(nanotime, nanotime);
                 break;
             case TYPE_STRING:
             {

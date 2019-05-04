@@ -211,7 +211,8 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(float128_ct, float_128)
 DEFINE_PRIMITIVE_ADD_FUNCTION(dec32_ct,    decimal_32)
 DEFINE_PRIMITIVE_ADD_FUNCTION(dec64_ct,    decimal_64)
 DEFINE_PRIMITIVE_ADD_FUNCTION(dec128_ct,   decimal_128)
-DEFINE_PRIMITIVE_ADD_FUNCTION(smalltime,   time)
+DEFINE_PRIMITIVE_ADD_FUNCTION(smalltime,   smalltime)
+DEFINE_PRIMITIVE_ADD_FUNCTION(nanotime,    nanotime)
 static inline void add_primitive_bytes(cbe_encode_process* const process,
                                        const uint8_t* const bytes,
                                        const int64_t byte_count)
@@ -312,7 +313,8 @@ DEFINE_ADD_SCALAR_FUNCTION(float128_ct, float_128,   float_128,   TYPE_FLOAT_128
 DEFINE_ADD_SCALAR_FUNCTION(dec32_ct,    decimal_32,  decimal_32,  TYPE_DECIMAL_32)
 DEFINE_ADD_SCALAR_FUNCTION(dec64_ct,    decimal_64,  decimal_64,  TYPE_DECIMAL_64)
 DEFINE_ADD_SCALAR_FUNCTION(dec128_ct,   decimal_128, decimal_128, TYPE_DECIMAL_128)
-DEFINE_ADD_SCALAR_FUNCTION(smalltime,   time,        time,        TYPE_TIME)
+DEFINE_ADD_SCALAR_FUNCTION(smalltime,   smalltime,   smalltime,   TYPE_SMALLTIME)
+DEFINE_ADD_SCALAR_FUNCTION(nanotime,    nanotime,    nanotime,    TYPE_NANOTIME)
 
 static inline cbe_encode_status encode_string_header(cbe_encode_process* const process,
                                                      const int64_t byte_count,
@@ -672,7 +674,7 @@ cbe_encode_status cbe_encode_add_decimal_128(cbe_encode_process* const process, 
     return add_decimal_128(process, value);
 }
 
-cbe_encode_status cbe_encode_add_time(cbe_encode_process* const process, const smalltime value)
+cbe_encode_status cbe_encode_add_smalltime(cbe_encode_process* const process, const smalltime value)
 {
     KSLOG_DEBUG("(process %p, value %016x)", process, value);
     unlikely_if(process == NULL)
@@ -680,7 +682,18 @@ cbe_encode_status cbe_encode_add_time(cbe_encode_process* const process, const s
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
 
-    return add_time(process, value);
+    return add_smalltime(process, value);
+}
+
+cbe_encode_status cbe_encode_add_nanotime(cbe_encode_process* const process, const nanotime value)
+{
+    KSLOG_DEBUG("(process %p, value %016x)", process, value);
+    unlikely_if(process == NULL)
+    {
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    return add_nanotime(process, value);
 }
 
 cbe_encode_status cbe_encode_list_begin(cbe_encode_process* const process)

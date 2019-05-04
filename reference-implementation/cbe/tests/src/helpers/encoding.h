@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include <smalltime/smalltime.h>
+#include <smalltime/nanotime.h>
 #include <cbe/cbe.h>
 
 namespace enc
@@ -18,6 +19,7 @@ std::string to_string(const float128_ct value);
 std::string to_string(const std::vector<uint8_t>& value);
 std::string to_string(const std::string& value);
 std::string to_string(const smalltime value);
+std::string to_string(const nanotime value);
 std::string to_string(const dec128_ct value);
 
 namespace adl_helper
@@ -80,6 +82,7 @@ public:
     std::shared_ptr<encoding> nil();
     std::shared_ptr<encoding> pad(int count);
     std::shared_ptr<encoding> time(smalltime value);
+    std::shared_ptr<encoding> time(nanotime value);
     std::shared_ptr<encoding> str(const std::string& value);
     std::shared_ptr<encoding> bin(const std::vector<uint8_t>& value);
     std::shared_ptr<encoding> cmt(const std::string& value);
@@ -146,12 +149,41 @@ public:
 class time_encoding: public encoding
 {
 private:
-    const smalltime _value;
+    const smalltime _smalltime_value;
+    const nanotime _nanotime_value;
 public:
-    time_encoding(smalltime value): _value(value) {}
+    time_encoding(smalltime value): _smalltime_value(value), _nanotime_value(0) {}
+    time_encoding(nanotime value): _smalltime_value(to_smalltime(value)), _nanotime_value(value) {}
     cbe_encode_status encode(encoder& encoder);
-    const std::string as_string() const {return std::string("stime(") + to_string(_value) + std::string(")");}
-    smalltime value() const {return _value;}
+    const std::string as_string() const
+    {
+        if(is_smalltime(_nanotime_value))
+        {
+            return std::string("time(") + to_string(_smalltime_value) + std::string(")");
+        }
+        else
+        {
+            return std::string("time(") + to_string(_nanotime_value) + std::string(")");
+        }
+    }
+    bool is_smalltime() const {return is_smalltime(_nanotime_value);}
+    smalltime smalltime_value() const {return _smalltime_value;}
+    nanotime nanotime_value() const {return _nanotime_value;}
+
+    static bool is_smalltime(nanotime value)
+    {
+        return (value % 1000) == 0;
+    }
+
+    static smalltime to_smalltime(nanotime value)
+    {
+        if(is_smalltime(value))
+        {
+            return (smalltime)(value >> 10);
+        }
+        return (smalltime)0;
+    }
+
 };
 
 class boolean_encoding: public encoding
@@ -317,7 +349,9 @@ static inline std::shared_ptr<map_encoding>            map()                    
 static inline std::shared_ptr<container_end_encoding>  end()                           {return std::make_shared<container_end_encoding>();}
 static inline std::shared_ptr<nil_encoding>            nil()                           {return std::make_shared<nil_encoding>();}
 static inline std::shared_ptr<time_encoding>           time(smalltime value)           {return std::make_shared<time_encoding>(value);}
-static inline std::shared_ptr<time_encoding>           time(int year, int month, int day, int hour, int minute, int second, int usec) {return time(smalltime_new(year, month, day, hour, minute, second, usec));}
+static inline std::shared_ptr<time_encoding>           time(nanotime value)            {return std::make_shared<time_encoding>(value);}
+static inline std::shared_ptr<time_encoding>           stime(int year, int month, int day, int hour, int minute, int second, int usec) {return time(smalltime_new(year, month, day, hour, minute, second, usec));}
+static inline std::shared_ptr<time_encoding>           ntime(int year, int month, int day, int hour, int minute, int second, int nsec) {return time(nanotime_new(year, month, day, hour, minute, second, nsec));}
 static inline std::shared_ptr<string_encoding>         str(const std::string& value)   {return std::make_shared<string_encoding>(value);}
 static inline std::shared_ptr<binary_encoding>         bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
 static inline std::shared_ptr<comment_encoding>        cmt(const std::string& value)   {return std::make_shared<comment_encoding>(value);}

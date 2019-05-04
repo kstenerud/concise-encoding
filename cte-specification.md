@@ -68,6 +68,8 @@ Example:
 
 ### Integer
 
+TODO: underscores
+
 Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-` as a sign character.
 
 Integers can be specified in base 2, 8, 10, or 16. For bases other than 10, integers must be prefixed with a special prefix:

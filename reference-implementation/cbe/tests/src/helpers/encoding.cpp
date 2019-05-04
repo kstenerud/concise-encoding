@@ -125,7 +125,7 @@ std::string to_string(const std::string& value)
 
 std::string to_string(const smalltime value)
 {
-    char buff[30];
+    char buff[40];
     snprintf(buff, sizeof(buff),
         "%04d--%02d-%02d:%02d-%02d-%02d",
         smalltime_get_year(value),
@@ -139,7 +139,30 @@ std::string to_string(const smalltime value)
     int length = strlen(buff);
     if(usec != 0)
     {
-        snprintf(buff + length, sizeof(buff) - length, ".%d", usec);
+        snprintf(buff + length, sizeof(buff) - length, ".%06d", usec);
+        length = strlen(buff);
+    }
+
+    return buff;
+}
+
+std::string to_string(const nanotime value)
+{
+    char buff[40];
+    snprintf(buff, sizeof(buff),
+        "%04d--%02d-%02d:%02d-%02d-%02d",
+        nanotime_get_year(value),
+        nanotime_get_day(value),
+        nanotime_get_month(value),
+        nanotime_get_hour(value),
+        nanotime_get_minute(value),
+        nanotime_get_second(value)
+        );
+    int nsec = nanotime_get_nanosecond(value);
+    int length = strlen(buff);
+    if(nsec != 0)
+    {
+        snprintf(buff + length, sizeof(buff) - length, ".%09d", nsec);
         length = strlen(buff);
     }
 
@@ -184,6 +207,7 @@ std::shared_ptr<encoding> encoding::end()                           {return this
 std::shared_ptr<encoding> encoding::nil()                           {return this->set_next(enc::nil());}
 std::shared_ptr<encoding> encoding::pad(int count)                  {return this->set_next(enc::pad(count));}
 std::shared_ptr<encoding> encoding::time(smalltime value)           {return this->set_next(enc::time(value));}
+std::shared_ptr<encoding> encoding::time(nanotime value)            {return this->set_next(enc::time(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)   {return this->set_next(enc::str(value));}
 std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
 std::shared_ptr<encoding> encoding::cmt(const std::string& value)   {return this->set_next(enc::cmt(value));}

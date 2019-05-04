@@ -79,7 +79,12 @@ static bool on_decimal_128(struct cbe_decode_process* process, dec128_ct value)
     return get_decoder(process)->set_next(enc::dec(value)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_time(struct cbe_decode_process* process, smalltime value)
+static bool on_smalltime(struct cbe_decode_process* process, smalltime value)
+{
+    return get_decoder(process)->set_next(enc::time(value)) && get_decoder(process)->get_callback_return_value();
+}
+
+static bool on_nanotime(struct cbe_decode_process* process, nanotime value)
 {
     return get_decoder(process)->set_next(enc::time(value)) && get_decoder(process)->get_callback_return_value();
 }
@@ -157,7 +162,8 @@ ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
     on_decimal_32: on_decimal_32,
     on_decimal_64: on_decimal_64,
     on_decimal_128: on_decimal_128,
-    on_time: on_time,
+    on_smalltime: on_smalltime,
+    on_nanotime: on_nanotime,
     on_list_begin: on_list_begin,
     on_list_end: on_list_end,
     on_map_begin: on_map_begin,

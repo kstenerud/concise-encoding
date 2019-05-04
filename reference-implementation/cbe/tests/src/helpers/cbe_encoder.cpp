@@ -73,7 +73,14 @@ cbe_encode_status cbe_encoder::encode(const enc::time_encoding& e)
 {
     return flush_and_retry([&]
     {
-        return cbe_encode_add_time(_process, e.value());
+        if(e.is_smalltime())
+        {
+            return cbe_encode_add_smalltime(_process, e.smalltime_value());
+        }
+        else
+        {
+            return cbe_encode_add_nanotime(_process, e.nanotime_value());
+        }
     });
 }
 cbe_encode_status cbe_encoder::encode(const enc::nil_encoding& e)

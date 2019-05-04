@@ -8,8 +8,8 @@ using namespace enc;
 
 // Boolean
 
-TEST_ENCODE_DECODE_DATA(Spec_Boolean, false, 99, 9, bl(false), {0x6c})
-TEST_ENCODE_DECODE_DATA(Spec_Boolean, true,  99, 9, bl(true),  {0x6b})
+TEST_ENCODE_DECODE_DATA(Spec_Boolean, false, 99, 9, bl(false), {0x70})
+TEST_ENCODE_DECODE_DATA(Spec_Boolean, true,  99, 9, bl(true),  {0x71})
 
 
 // Integer
@@ -17,17 +17,17 @@ TEST_ENCODE_DECODE_DATA(Spec_Boolean, true,  99, 9, bl(true),  {0x6b})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, p96,            99, 9, ui(96),             {0x60})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, p0,             99, 9, ui(0),              {0x00})
 TEST_ENCODE_DECODE_DATA(Spec_Integer, n54,            99, 9, si(-54),            {0xca})
-TEST_ENCODE_DECODE_DATA(Spec_Integer, p127,           99, 9, ui(127),            {0x70, 0x7f})
-TEST_ENCODE_DECODE_DATA(Spec_Integer, pff,            99, 9, ui(0xff),           {0x70, 0xff})
-TEST_ENCODE_DECODE_DATA(Spec_Integer, nff,            99, 9, si(-0xff),          {0x78, 0xff})
-TEST_ENCODE_DECODE_DATA(Spec_Integer, p1000000,       99, 9, ui(1000000),        {0x72, 0x40, 0x42, 0x0f, 0x00})
-TEST_ENCODE_DECODE_DATA(Spec_Integer, n1000000000000, 99, 9, si(-1000000000000), {0x7b, 0x00, 0x10, 0xa5, 0xd4, 0xe8, 0x00, 0x00, 0x00})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p127,           99, 9, ui(127),            {0x6a, 0x7f})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, pff,            99, 9, ui(0xff),           {0x6a, 0xff})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, nff,            99, 9, si(-0xff),          {0x7a, 0xff})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, p1000000,       99, 9, ui(1000000),        {0x6c, 0x40, 0x42, 0x0f, 0x00})
+TEST_ENCODE_DECODE_DATA(Spec_Integer, n1000000000000, 99, 9, si(-1000000000000), {0x7d, 0x00, 0x10, 0xa5, 0xd4, 0xe8, 0x00, 0x00, 0x00})
 
 
 // Binary Floating Point
 
-TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p12_5,   99, 9, flt(12.5),   {0x6d, 0x00, 0x00, 0x48, 0x41})
-TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p1281_2, 99, 9, flt(1281.2), {0x6e, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0x04, 0x94, 0x40})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p12_5,   99, 9, flt(12.5),   {0x72, 0x00, 0x00, 0x48, 0x41})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, p1281_2, 99, 9, flt(1281.2), {0x73, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0x04, 0x94, 0x40})
 
 
 // Decinal Floating Point
@@ -38,8 +38,11 @@ TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, p1281_2, 99, 9, dec(1281.2df), {0x75,
 
 // Time
 
-TEST_ENCODE_DECODE_DATA(Spec_Time, time, 99, 9, time(1985, 10, 26, 8, 22, 16, 900142),
-    {0x7d, 0x2e, 0xbc, 0x0d, 0x59, 0x48, 0x6b, 0xf0, 0x01})
+TEST_ENCODE_DECODE_DATA(Spec_Time, smalltime, 99, 9, stime(1985, 10, 26, 8, 22, 16, 900142),
+    {0x78, 0x2e, 0xbc, 0x0d, 0x59, 0x48, 0x6b, 0xf0, 0x01})
+
+TEST_ENCODE_DECODE_DATA(Spec_Time, nanotime, 99, 9, ntime(1999, 12, 31, 23, 59, 59, 999999999),
+    {0x79, 0xff, 0xc9, 0x9a, 0xfb, 0xbe, 0xdf, 0xcf, 0x1d})
 
 
 // Binary Array
@@ -73,7 +76,7 @@ TEST_ENCODE_DECODE_DATA(Spec_comment, comment, 99, 9,
 // List
 
 TEST_ENCODE_DECODE_DATA(Spec_List, values_1_and_5000, 99, 9, list()->ui(1)->ui(5000)->end(),
-    {0x93, 0x01, 0x71, 0x88, 0x13, 0x95})
+    {0x93, 0x01, 0x6b, 0x88, 0x13, 0x95})
 
 
 // Map
@@ -84,10 +87,10 @@ TEST_ENCODE_DECODE_DATA(Spec_Map, a_1_b_2, 99, 9, map()->str("a")->ui(1)->str("b
 
 // Nil
 
-TEST_ENCODE_DECODE_DATA(Spec_Nil, nil, 99, 9, nil(), {0x7e})
+TEST_ENCODE_DECODE_DATA(Spec_Nil, nil, 99, 9, nil(), {0x6f})
 
 
 // Padding
 
 TEST_ENCODE_DATA(Spec_Padding, padding1, 99, 9, pad(3)->ui(0x8f000000),
-    {0x7f, 0x7f, 0x7f, 0x72, 0x00, 0x00, 0x00, 0x8f})
+    {0x7f, 0x7f, 0x7f, 0x6c, 0x00, 0x00, 0x00, 0x8f})

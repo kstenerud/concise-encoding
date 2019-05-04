@@ -97,7 +97,14 @@ static bool my_on_decimal_128(struct cbe_decode_process* process, dec128_ct valu
     return true;
 }
 
-static bool my_on_time(struct cbe_decode_process* process, smalltime value)
+static bool my_on_smalltime(struct cbe_decode_process* process, smalltime value)
+{
+    (void)process;
+    (void)value;
+    return true;
+}
+
+static bool my_on_nanotime(struct cbe_decode_process* process, nanotime value)
 {
     (void)process;
     (void)value;
@@ -220,7 +227,8 @@ bool decode(const uint8_t* my_document, int64_t my_document_size, void* my_conte
         .on_decimal_32    = my_on_decimal_32,
         .on_decimal_64    = my_on_decimal_64,
         .on_decimal_128   = my_on_decimal_128,
-        .on_time          = my_on_time,
+        .on_smalltime     = my_on_smalltime,
+        .on_nanotime      = my_on_nanotime,
         .on_list_begin    = my_on_list_begin,
         .on_list_end      = my_on_list_end,
         .on_map_begin     = my_on_map_begin,

@@ -6,27 +6,28 @@
 typedef enum
 {
     TYPE_SMALLINT_MIN      = -106,
-    TYPE_SMALLINT_MAX      = 106,
-    TYPE_TRUE              = 0x6b,
-    TYPE_FALSE             = 0x6c,
-    TYPE_FLOAT_32          = 0x6d,
-    TYPE_FLOAT_64          = 0x6e,
-    TYPE_FLOAT_128         = 0x6f,
-    TYPE_POS_INT_8         = 0x70,
-    TYPE_POS_INT_16        = 0x71,
-    TYPE_POS_INT_32        = 0x72,
-    TYPE_POS_INT_64        = 0x73,
-    TYPE_POS_INT_128       = 0x74,
+    TYPE_SMALLINT_MAX      = 105,
+    TYPE_POS_INT_8         = 0x6a,
+    TYPE_POS_INT_16        = 0x6b,
+    TYPE_POS_INT_32        = 0x6c,
+    TYPE_POS_INT_64        = 0x6d,
+    TYPE_POS_INT_128       = 0x6e,
+    TYPE_NIL               = 0x6f,
+    TYPE_FALSE             = 0x70,
+    TYPE_TRUE              = 0x71,
+    TYPE_FLOAT_32          = 0x72,
+    TYPE_FLOAT_64          = 0x73,
+    TYPE_FLOAT_128         = 0x74,
     TYPE_DECIMAL_32        = 0x75,
     TYPE_DECIMAL_64        = 0x76,
     TYPE_DECIMAL_128       = 0x77,
-    TYPE_NEG_INT_8         = 0x78,
-    TYPE_NEG_INT_16        = 0x79,
-    TYPE_NEG_INT_32        = 0x7a,
-    TYPE_NEG_INT_64        = 0x7b,
-    TYPE_NEG_INT_128       = 0x7c,
-    TYPE_TIME              = 0x7d,
-    TYPE_NIL               = 0x7e,
+    TYPE_SMALLTIME         = 0x78,
+    TYPE_NANOTIME          = 0x79,
+    TYPE_NEG_INT_8         = 0x7a,
+    TYPE_NEG_INT_16        = 0x7b,
+    TYPE_NEG_INT_32        = 0x7c,
+    TYPE_NEG_INT_64        = 0x7d,
+    TYPE_NEG_INT_128       = 0x7e,
     TYPE_PADDING           = 0x7f,
     TYPE_STRING_0          = 0x80,
     TYPE_STRING_1          = 0x81,
@@ -77,7 +78,8 @@ DEFINE_SAFE_STRUCT(safe_float_128,   float128_ct);
 DEFINE_SAFE_STRUCT(safe_decimal_32,  dec32_ct);
 DEFINE_SAFE_STRUCT(safe_decimal_64,  dec64_ct);
 DEFINE_SAFE_STRUCT(safe_decimal_128, dec128_ct);
-DEFINE_SAFE_STRUCT(safe_time,        smalltime);
+DEFINE_SAFE_STRUCT(safe_smalltime,   smalltime);
+DEFINE_SAFE_STRUCT(safe_nanotime,    nanotime);
 
 
 

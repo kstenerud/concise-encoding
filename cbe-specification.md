@@ -37,27 +37,28 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  00  | Integer value 0            |                                               |
 |  01  | Integer value 1            |                                               |
 | ...  | ...                        |                                               |
-|  6a  | Integer value 106          |                                               |
-|  6b  | Boolean True               |                                               |
-|  6c  | Boolean False              |                                               |
-|  6d  | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
-|  6e  | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
-|  6f  | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
-|  70  | Positive Integer (8 bit)   | [8-bit positive integer]                      |
-|  71  | Positive Integer (16 bit)  | [16-bit positive integer]                     |
-|  72  | Positive Integer (32 bit)  | [32-bit positive integer]                     |
-|  73  | Positive Integer (64 bit)  | [64-bit positive integer]                     |
-|  74  | Positive Integer (128 bit) | [128-bit positive integer]                    |
+|  69  | Integer value 105          |                                               |
+|  6a  | Positive Integer (8 bit)   | [8-bit positive integer]                      |
+|  6b  | Positive Integer (16 bit)  | [16-bit positive integer]                     |
+|  6c  | Positive Integer (32 bit)  | [32-bit positive integer]                     |
+|  6d  | Positive Integer (64 bit)  | [64-bit positive integer]                     |
+|  6e  | Positive Integer (128 bit) | [128-bit positive integer]                    |
+|  6f  | Nil (no data)              |                                               |
+|  70  | Boolean False              |                                               |
+|  71  | Boolean True               |                                               |
+|  72  | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
+|  73  | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
+|  74  | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
 |  75  | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
 |  76  | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
 |  77  | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  78  | Negative Integer (8 bit)   | [8-bit negative integer]                      |
-|  79  | Negative Integer (16 bit)  | [16-bit negative integer]                     |
-|  7a  | Negative Integer (32 bit)  | [32-bit negative integer]                     |
-|  7b  | Negative Integer (64 bit)  | [64-bit negative integer]                     |
-|  7c  | Negative Integer (128 bit) | [128-bit negative integer]                    |
-|  7d  | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
-|  7e  | Nil (no data)              |                                               |
+|  78  | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
+|  79  | Time                       | 64-bit [nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md) |
+|  7a  | Negative Integer (8 bit)   | [8-bit negative integer]                      |
+|  7b  | Negative Integer (16 bit)  | [16-bit negative integer]                     |
+|  7c  | Negative Integer (32 bit)  | [32-bit negative integer]                     |
+|  7d  | Negative Integer (64 bit)  | [64-bit negative integer]                     |
+|  7e  | Negative Integer (128 bit) | [128-bit negative integer]                    |
 |  7f  | Padding                    |                                               |
 |  80  | String: 0 bytes            |                                               |
 |  81  | String: 1 byte             | [1 octet of data]                             |
@@ -97,8 +98,8 @@ True or false.
 
 Examples:
 
-    [6c] = false
-    [6b] = true
+    [70] = false
+    [71] = true
 
 
 ### Integer
@@ -112,11 +113,11 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [70 7f] = 127
-    [70 ff] = 255
-    [78 ff] = -255
-    [72 40 42 0f 00] = 1,000,000
-    [7b 00 10 a5 d4 e8 00 00 00] = -1000000000000
+    [6a 7f] = 127
+    [6a ff] = 255
+    [7a ff] = -255
+    [6c 40 42 0f 00] = 1,000,000
+    [7d 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 #### Negative Integers
 
@@ -129,8 +130,8 @@ IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read
 
 Examples:
 
-    [6d 00 00 48 41] = 12.5
-    [6e cd cc cc cc cc 04 94 40] = 1281.2
+    [72 00 00 48 41] = 12.5
+    [73 cd cc cc cc cc 04 94 40] = 1281.2
 
 
 ### Decimal Floating Point
@@ -145,11 +146,12 @@ Example:
 
 ### Time
 
-Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) format, stored in little endian byte order.
+Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) or [Nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md)  formats, stored in little endian byte order.
 
 Example:
 
-    [7d 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
+    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
+    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
 
 
 
@@ -261,7 +263,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [93 01 71 88 13 95] = A list containing integers (1, 5000)
+    [93 01 6b 88 13 95] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -297,7 +299,7 @@ Note: Use nil judiciously and sparingly, as some languages may have restrictions
 
 Example:
 
-    [7e] = No data
+    [6f] = No data
 
 
 ### Padding
@@ -306,7 +308,7 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [7f 7f 7f 72 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 
@@ -342,7 +344,7 @@ Applications may require data to be aligned in some cases. For example, some pro
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
-| 7f | 7f | 7f | 72 | 00 | 00 | 00 | 8f |
+| 7f | 7f | 7f | 6c | 00 | 00 | 00 | 8f |
 
 As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
 
@@ -350,7 +352,7 @@ As an alternative to padding, if you have a known schema for your data, you coul
 
 | Bytes 0-3      | Bytes 4-7     |
 | -------------- | ------------- |
-| xx xx xx 72    | 00 00 00 8f   |
+| xx xx xx 6c    | 00 00 00 8f   |
 | positive int32 | 0x8f000000    |
 
 
@@ -386,7 +388,7 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    [43 42 45 01 7f 7f 7f 72 00 00 00 8f] =
+    [43 42 45 01 7f 7f 7f 6c 00 00 00 8f] =
     CBE file containing 0x8f000000, padded such that the 32-bit integer starts on a 4-byte boundary.
 
 

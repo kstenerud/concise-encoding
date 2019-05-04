@@ -38,6 +38,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 #include <smalltime/smalltime.h>
+#include <smalltime/nanotime.h>
 
 
 
@@ -191,7 +192,10 @@ typedef struct
     bool (*on_decimal_128) (struct cbe_decode_process* decode_process, dec128_ct value);
 
     // A time value was decoded.
-    bool (*on_time) (struct cbe_decode_process* decode_process, smalltime value);
+    bool (*on_smalltime) (struct cbe_decode_process* decode_process, smalltime value);
+
+    // A time value was decoded.
+    bool (*on_nanotime) (struct cbe_decode_process* decode_process, nanotime value);
 
     // A list has been opened.
     bool (*on_list_begin) (struct cbe_decode_process* decode_process);
@@ -887,7 +891,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_proces
 
 /**
  * Add a time value to the document.
- * Use cbe_new_time() to generate a time value.
+ * Use smalltime_new() to generate a time value.
  *
  * Successful status codes:
  * - CBE_ENCODE_STATUS_OK: The operation was successful.
@@ -903,7 +907,27 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_128(struct cbe_encode_proces
  * @param value The value to add.
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_time(struct cbe_encode_process* encode_process, smalltime value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_smalltime(struct cbe_encode_process* encode_process, smalltime value);
+
+/**
+ * Add a time value to the document.
+ * Use nanotime_new() to generate a time value.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param value The value to add.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_nanotime(struct cbe_encode_process* encode_process, nanotime value);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
