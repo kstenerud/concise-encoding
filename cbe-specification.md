@@ -121,7 +121,7 @@ Examples:
 
 #### Negative Integers
 
-Negative integers are encoded with the sign implicit in the type field. This means that negative fields can store smaller values than any language implementation can for the same width integer data type (we can store 1 extra bit). Because of this, negative 128 bit values that don't fit into a signed 128 bit integer are not allowed (the high bit of a negative 128 bit integer must always be 0).
+Negative integers are encoded with the sign implicit in the type field. This means that negative fields can store smaller values than any language implementation can for the same width integer data type (we can store 1 extra bit). Because of this, negative 128 bit values that don't fit into a signed 128 bit two's complement integer are not allowed.
 
 
 ### Binary Floating Point
