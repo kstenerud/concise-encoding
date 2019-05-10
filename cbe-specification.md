@@ -119,9 +119,9 @@ Examples:
     [6c 40 42 0f 00] = 1,000,000
     [7d 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
-#### Integer Sign
+#### Negative Integers
 
-Only small ints (-106 to 105) are stored as two's complement signed integers. For all other integer types, the payload is always stored as an unsigned integer, with the data type field determining the sign to be applied after decoding. This means that CBE signed integers are capable of storing a greater range of values than can be stored in a two's complement integer of the same data width. Thus, encoded 128 bit signed integers must not have the high bit set in the payload because the resulting value would not fit into a 128 bit two's complement integer.
+Only small ints (-106 to 105) are stored as two's complement signed integers. For all other integer types, the payload is always stored as an unsigned integer, with the data type field determining the sign to be applied after decoding. This means that CBE negative integers are capable of storing a greater range of values than can be stored in a two's complement integer of the same data width. Thus, encoded 128 bit negative integers must not have the high bit set in the payload because the resulting value would not fit into a 128 bit two's complement integer.
 
 
 ### Binary Floating Point
