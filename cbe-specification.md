@@ -32,60 +32,60 @@ All objects are composed of an 8-bit type field and possibly a payload.
 
 #### Type Field
 
-| Code      | Type                       | Payload                                       |
-| --------- | -------------------------- | --------------------------------------------- |
-|  00   (0) | Integer value 0            |                                               |
-|  01   (1) | Integer value 1            |                                               |
-| ...       | ...                        |                                               |
-|  69 (105) | Integer value 105          |                                               |
-|  6a (106) | Positive Integer (8 bit)   | [8-bit positive integer]                      |
-|  6b (107) | Positive Integer (16 bit)  | [16-bit positive integer]                     |
-|  6c (108) | Positive Integer (32 bit)  | [32-bit positive integer]                     |
-|  6d (109) | Positive Integer (64 bit)  | [64-bit positive integer]                     |
-|  6e (110) | Positive Integer (128 bit) | [128-bit positive integer]                    |
-|  6f (111) | Nil (no data)              |                                               |
-|  70 (112) | Boolean False              |                                               |
-|  71 (113) | Boolean True               |                                               |
-|  72 (114) | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
-|  73 (115) | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
-|  74 (116) | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
-|  75 (117) | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
-|  76 (118) | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
-|  77 (119) | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  78 (120) | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
-|  79 (121) | Time                       | 64-bit [nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md) |
-|  7a (122) | Negative Integer (8 bit)   | [8-bit negative integer]                      |
-|  7b (123) | Negative Integer (16 bit)  | [16-bit negative integer]                     |
-|  7c (124) | Negative Integer (32 bit)  | [32-bit negative integer]                     |
-|  7d (125) | Negative Integer (64 bit)  | [64-bit negative integer]                     |
-|  7e (126) | Negative Integer (128 bit) | [128-bit negative integer]                    |
-|  7f (127) | Padding                    |                                               |
-|  80 (128) | String: 0 bytes            |                                               |
-|  81 (129) | String: 1 byte             | [1 octet of data]                             |
-|  82 (130) | String: 2 bytes            | [2 octets of data]                            |
-|  83 (131) | String: 3 bytes            | [3 octets of data]                            |
-|  84 (132) | String: 4 bytes            | [4 octets of data]                            |
-|  85 (133) | String: 5 bytes            | [5 octets of data]                            |
-|  86 (134) | String: 6 bytes            | [6 octets of data]                            |
-|  87 (135) | String: 7 bytes            | [7 octets of data]                            |
-|  88 (136) | String: 8 bytes            | [8 octets of data]                            |
-|  89 (137) | String: 9 bytes            | [9 octets of data]                            |
-|  8a (138) | String: 10 bytes           | [10 octets of data]                           |
-|  8b (139) | String: 11 bytes           | [11 octets of data]                           |
-|  8c (140) | String: 12 bytes           | [12 octets of data]                           |
-|  8d (141) | String: 13 bytes           | [13 octets of data]                           |
-|  8e (142) | String: 14 bytes           | [14 octets of data]                           |
-|  8f (143) | String: 15 bytes           | [15 octets of data]                           |
-|  90 (144) | String                     | [byte length] [UTF-8 encoded string]          |
-|  91 (145) | Binary Data                | [byte length] [data]                          |
-|  92 (146) | Comment                    | [byte length] [UTF-8 encoded string]          |
-|  93 (147) | List                       |                                               |
-|  94 (148) | Map                        |                                               |
-|  95 (149) | End of Container           |                                               |
-|  96 (150) | Integer value -106         |                                               |
-| ...       | ...                        |                                               |
-|  fe (254) | Integer value -2           |                                               |
-|  ff (255) | Integer value -1           |                                               |
+| Hex | Dec | Type                       | Payload                                       |
+| --- | --- | -------------------------- | --------------------------------------------- |
+|  00 |   0 | Integer value 0            |                                               |
+|  01 |   1 | Integer value 1            |                                               |
+| ... | ... | ...                        |                                               |
+|  69 | 105 | Integer value 105          |                                               |
+|  6a | 106 | Positive Integer (8 bit)   | [8-bit positive integer]                      |
+|  6b | 107 | Positive Integer (16 bit)  | [16-bit positive integer]                     |
+|  6c | 108 | Positive Integer (32 bit)  | [32-bit positive integer]                     |
+|  6d | 109 | Positive Integer (64 bit)  | [64-bit positive integer]                     |
+|  6e | 110 | Positive Integer (128 bit) | [128-bit positive integer]                    |
+|  6f | 111 | Nil (no data)              |                                               |
+|  70 | 112 | Boolean False              |                                               |
+|  71 | 113 | Boolean True               |                                               |
+|  72 | 114 | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
+|  73 | 115 | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
+|  74 | 116 | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
+|  75 | 117 | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
+|  76 | 118 | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
+|  77 | 119 | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
+|  78 | 120 | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
+|  79 | 121 | Time                       | 64-bit [nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md) |
+|  7a | 122 | Negative Integer (8 bit)   | [8-bit negative integer]                      |
+|  7b | 123 | Negative Integer (16 bit)  | [16-bit negative integer]                     |
+|  7c | 124 | Negative Integer (32 bit)  | [32-bit negative integer]                     |
+|  7d | 125 | Negative Integer (64 bit)  | [64-bit negative integer]                     |
+|  7e | 126 | Negative Integer (128 bit) | [128-bit negative integer]                    |
+|  7f | 127 | Padding                    |                                               |
+|  80 | 128 | String: 0 bytes            |                                               |
+|  81 | 129 | String: 1 byte             | [1 octet of data]                             |
+|  82 | 130 | String: 2 bytes            | [2 octets of data]                            |
+|  83 | 131 | String: 3 bytes            | [3 octets of data]                            |
+|  84 | 132 | String: 4 bytes            | [4 octets of data]                            |
+|  85 | 133 | String: 5 bytes            | [5 octets of data]                            |
+|  86 | 134 | String: 6 bytes            | [6 octets of data]                            |
+|  87 | 135 | String: 7 bytes            | [7 octets of data]                            |
+|  88 | 136 | String: 8 bytes            | [8 octets of data]                            |
+|  89 | 137 | String: 9 bytes            | [9 octets of data]                            |
+|  8a | 138 | String: 10 bytes           | [10 octets of data]                           |
+|  8b | 139 | String: 11 bytes           | [11 octets of data]                           |
+|  8c | 140 | String: 12 bytes           | [12 octets of data]                           |
+|  8d | 141 | String: 13 bytes           | [13 octets of data]                           |
+|  8e | 142 | String: 14 bytes           | [14 octets of data]                           |
+|  8f | 143 | String: 15 bytes           | [15 octets of data]                           |
+|  90 | 144 | String                     | [byte length] [UTF-8 encoded string]          |
+|  91 | 145 | Binary Data                | [byte length] [data]                          |
+|  92 | 146 | Comment                    | [byte length] [UTF-8 encoded string]          |
+|  93 | 147 | List                       |                                               |
+|  94 | 148 | Map                        |                                               |
+|  95 | 149 | End of Container           |                                               |
+|  96 | 150 | Integer value -106         |                                               |
+| ... | ... | ...                        |                                               |
+|  fe | 254 | Integer value -2           |                                               |
+|  ff | 255 | Integer value -1           |                                               |
 
 
 
