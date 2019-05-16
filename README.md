@@ -39,39 +39,40 @@ Supported Types
 
 ### Scalar Types
 
-| Type     | Description                                            |
-| -------- | ------------------------------------------------------ |
-| Boolean  | True or false                                          |
-| Integer  | Signed two's complement, from 8 to 128 bits            |
-| Float    | IEEE 754 floating point, from 32 to 128 bits           |
-| Decimal  | IEEE 754 densely packed decimal, from 32 to 128 bits   |
-| Time     | Date & time, to the microsecond                        |
+| Type    | Description                                            |
+| ------- | ------------------------------------------------------ |
+| Boolean | True or false                                          |
+| Integer | Signed two's complement, from 8 to 128 bits            |
+| Float   | IEEE 754 floating point, from 32 to 128 bits           |
+| Decimal | IEEE 754 densely packed decimal, from 32 to 128 bits   |
+| Time    | Date & time, to the microsecond or nanosecond          |
 
 
 ### Array Types
 
-| Type     | Description                                            |
-| -------- | ------------------------------------------------------ |
-| Binary   | Array of binary data                                   |
-| String   | Array of UTF-8 encoded bytes (no BOM)                  |
+| Type    | Description                                            |
+| ------- | ------------------------------------------------------ |
+| Bytes   | Array of binary data                                   |
+| String  | Array of UTF-8 encoded bytes                           |
+| Comment | A UTF-8 encoded comment string                         |
 
 
 ### Container Types
 
 Containers can hold any combination of types, including other containers.
 
-| Type     | Description                                            |
-| -------- | ------------------------------------------------------ |
-| List     | A list may containin any types, even mixed             |
-| Map      | Scalar or array types for keys, any types for values   |
+| Type    | Description                                            |
+| ------- | ------------------------------------------------------ |
+| List    | A list may containin any types, even mixed             |
+| Map     | Scalar or array types for keys, any types for values   |
 
 
 ### Other Types
 
-| Type     | Description                                            |
-| -------- | ------------------------------------------------------ |
-| Empty    | Denotes the absence of data                            |
-| Padding  | Used to align data in a CPU friendly manner (CBE Only) |
+| Type    | Description                                            |
+| ------- | ------------------------------------------------------ |
+| Nil     | Denotes the absence of data                            |
+| Padding | Used to align data in a CPU friendly manner (CBE Only) |
 
 
 
