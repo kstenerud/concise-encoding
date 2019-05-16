@@ -27,10 +27,10 @@ public:
     cbe_encode_status encode(const enc::padding_encoding& encoding);
     cbe_encode_status encode(const enc::time_encoding& encoding);
     cbe_encode_status encode(const enc::string_encoding& encoding);
-    cbe_encode_status encode(const enc::binary_encoding& encoding);
+    cbe_encode_status encode(const enc::bytes_encoding& encoding);
     cbe_encode_status encode(const enc::comment_encoding& encoding);
     cbe_encode_status encode(const enc::string_header_encoding& encoding);
-    cbe_encode_status encode(const enc::binary_header_encoding& encoding);
+    cbe_encode_status encode(const enc::bytes_header_encoding& encoding);
     cbe_encode_status encode(const enc::comment_header_encoding& encoding);
     cbe_encode_status encode(const enc::data_encoding& encoding);
     cbe_encode_status encode(const enc::boolean_encoding& encoding);
@@ -55,7 +55,7 @@ public:
     // Encode entire array objects. If the entire object won't fit,
     // returns with failure.
     cbe_encode_status encode_string(std::vector<uint8_t> value);
-    cbe_encode_status encode_binary(std::vector<uint8_t> value);
+    cbe_encode_status encode_bytes(std::vector<uint8_t> value);
     cbe_encode_status encode_comment(std::vector<uint8_t> value);
 
     int64_t get_encode_buffer_offset() const;

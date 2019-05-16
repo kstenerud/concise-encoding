@@ -46,7 +46,7 @@ typedef enum
     TYPE_STRING_14         = 0x8e,
     TYPE_STRING_15         = 0x8f,
     TYPE_STRING            = 0x90,
-    TYPE_BINARY_DATA       = 0x91,
+    TYPE_BYTES             = 0x91,
     TYPE_COMMENT           = 0x92,
     TYPE_LIST              = 0x93,
     TYPE_MAP               = 0x94,
@@ -56,7 +56,7 @@ typedef enum
 typedef enum
 {
     ARRAY_TYPE_STRING,
-    ARRAY_TYPE_BINARY,
+    ARRAY_TYPE_BYTES,
     ARRAY_TYPE_COMMENT,
 } array_type;
 

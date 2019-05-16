@@ -9,7 +9,7 @@ typedef enum
 {
     CBE_DECODING_OTHER,
     CBE_DECODING_STRING,
-    CBE_DECODING_BINARY,
+    CBE_DECODING_BYTES,
     CBE_DECODING_COMMENT,
 } cbe_decoding_type;
 
@@ -33,10 +33,10 @@ public:
     // Internal functions
     bool set_next(std::shared_ptr<enc::encoding> encoding);
     bool string_begin(int64_t byte_count);
-    bool binary_begin(int64_t byte_count);
+    bool bytes_begin(int64_t byte_count);
     bool comment_begin(int64_t byte_count);
     bool add_string_data(const std::string& data);
-    bool add_binary_data(const std::vector<uint8_t>& data);
+    bool add_bytes_data(const std::vector<uint8_t>& data);
     bool add_comment_data(const std::string& data);
 
 public:

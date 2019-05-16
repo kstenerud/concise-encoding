@@ -142,7 +142,7 @@ static bool my_on_string_begin(struct cbe_decode_process* process, int64_t byte_
     return true;
 }
 
-static bool my_on_binary_begin(struct cbe_decode_process* process, int64_t byte_count)
+static bool my_on_bytes_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
     (void)process;
     (void)byte_count;
@@ -166,7 +166,7 @@ static bool my_on_string_data(struct cbe_decode_process* process,
     return true;
 }
 
-static bool my_on_binary_data(struct cbe_decode_process* process,
+static bool my_on_bytes_data(struct cbe_decode_process* process,
                            const uint8_t* start,
                            int64_t byte_count)
 {
@@ -235,8 +235,8 @@ bool decode(const uint8_t* my_document, int64_t my_document_size, void* my_conte
         .on_map_end       = my_on_map_end,
         .on_string_begin  = my_on_string_begin,
         .on_string_data   = my_on_string_data,
-        .on_binary_begin  = my_on_binary_begin,
-        .on_binary_data   = my_on_binary_data,
+        .on_bytes_begin   = my_on_bytes_begin,
+        .on_bytes_data    = my_on_bytes_data,
         .on_comment_begin = my_on_comment_begin,
         .on_comment_data  = my_on_comment_data,
     };

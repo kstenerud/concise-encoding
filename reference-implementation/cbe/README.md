@@ -88,8 +88,8 @@ Usage
         .on_map_end       = my_on_map_end,
         .on_string_begin  = my_on_string_begin,
         .on_string_data   = my_on_string_data,
-        .on_binary_begin  = my_on_binary_begin,
-        .on_binary_data   = my_on_binary_data,
+        .on_bytes_begin   = my_on_bytes_begin,
+        .on_bytes_data    = my_on_bytes_data,
         .on_comment_begin = my_on_comment_begin,
         .on_comment_data  = my_on_comment_data,
     };

@@ -232,24 +232,24 @@ typedef struct
                             int64_t byte_count);
 
     /**
-     * A binary data array has been opened. Expect subsequent calls to
-     * on_binary_data() until the array has been filled. Once `byte_count`
-     * bytes have been added via on_binary_data(), the field is considered
+     * A byte array has been opened. Expect subsequent calls to
+     * on_bytes_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via on_bytes_data(), the field is considered
      * "complete" and is closed.
      *
      * @param decode_process The decode process.
      * @param byte_count The total length of the array.
      */
-    bool (*on_binary_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
+    bool (*on_bytes_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
 
     /**
-     * Binary data was decoded, and should be added to the current binary field.
+     * Byte array data was decoded, and should be added to the current byte array field.
      *
      * @param decode_process The decode process.
      * @param start The start of the data.
      * @param byte_count The number of bytes in this array fragment.
      */
-    bool (*on_binary_data) (struct cbe_decode_process* decode_process,
+    bool (*on_bytes_data) (struct cbe_decode_process* decode_process,
                             const uint8_t* start,
                             int64_t byte_count);
 
@@ -1021,7 +1021,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* en
                                                    int64_t byte_count);
 
 /**
- * Convenience function: add a binary data blob to a document.
+ * Convenience function: add a byte array to a document.
  * This function does not preserve partial data in the encoded buffer. Either the
  * entire operation succeeds, or it fails, restoring the buffer offset to where it
  * was before adding the array header.
@@ -1040,7 +1040,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_string(struct cbe_encode_process* en
  * @param data The data to add. May be NULL iff byte_count = 0.
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_binary(struct cbe_encode_process* encode_process,
+CBE_PUBLIC cbe_encode_status cbe_encode_add_bytes(struct cbe_encode_process* encode_process,
                                                    const uint8_t* data,
                                                    int64_t byte_count);
 
@@ -1098,17 +1098,17 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_comment(struct cbe_encode_process* e
 CBE_PUBLIC cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
- * Begin an array of binary data in the document.
+ * Begin an array of bytes in the document.
  *
- * This function "opens" a binary field, encoding the type and length portions.
- * The encode process will expect subsequent cbe_encode_add_binary_data() calls
+ * This function "opens" a byte array field, encoding the type and length portions.
+ * The encode process will expect subsequent cbe_encode_add_bytes_data() calls
  * to fill up the field.
  * Once the field has been filled, it is considered "closed", and other fields
  * may now be added to the document. A zero-length array is automatically closed
  * in this function.
  *
  * Successful status codes:
- * - CBE_ENCODE_STATUS_OK: The binary array has been opened.
+ * - CBE_ENCODE_STATUS_OK: The byte array has been opened.
  *
  * Recoverable codes:
  * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
@@ -1121,7 +1121,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* 
  * @param byte_count The total length of the data to add in bytes.
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+CBE_PUBLIC cbe_encode_status cbe_encode_bytes_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
@@ -1150,7 +1150,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_binary_begin(struct cbe_encode_process* 
 CBE_PUBLIC cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
- * Add data to the currently opened array field (string, binary, comment).
+ * Add data to the currently opened array field (string, bytes, comment).
  *
  * If there's not enough room in the buffer, this function will add as much
  * data as it can to the encoded buffer before setting the output value of

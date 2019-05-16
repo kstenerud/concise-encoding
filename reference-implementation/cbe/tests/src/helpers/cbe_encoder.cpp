@@ -158,12 +158,12 @@ cbe_encode_status cbe_encoder::encode(const enc::string_encoding& e)
     return stream_array(std::vector<uint8_t>(value.begin(), value.end()));
 }
 
-cbe_encode_status cbe_encoder::encode(const enc::binary_encoding& e)
+cbe_encode_status cbe_encoder::encode(const enc::bytes_encoding& e)
 {
     KSLOG_DEBUG("size %d", e.value().size());
     cbe_encode_status status = flush_and_retry([&]
     {
-        return cbe_encode_binary_begin(_process, e.value().size());
+        return cbe_encode_bytes_begin(_process, e.value().size());
     });
 
     if(status != CBE_ENCODE_STATUS_OK)
@@ -209,12 +209,12 @@ cbe_encode_status cbe_encoder::encode_comment(std::vector<uint8_t> value)
     });
 }
 
-cbe_encode_status cbe_encoder::encode_binary(std::vector<uint8_t> value)
+cbe_encode_status cbe_encoder::encode_bytes(std::vector<uint8_t> value)
 {
     KSLOG_DEBUG("size %d", value.size());
     return flush_and_retry([&]
     {
-        return cbe_encode_add_binary(_process, value.data(), value.size());
+        return cbe_encode_add_bytes(_process, value.data(), value.size());
     });
 }
 
@@ -227,11 +227,11 @@ cbe_encode_status cbe_encoder::encode(const enc::string_header_encoding& e)
     });
 }
 
-cbe_encode_status cbe_encoder::encode(const enc::binary_header_encoding& e)
+cbe_encode_status cbe_encoder::encode(const enc::bytes_header_encoding& e)
 {
     return flush_and_retry([&]
     {
-        return cbe_encode_binary_begin(_process, e.byte_count());
+        return cbe_encode_bytes_begin(_process, e.byte_count());
     });
 }
 

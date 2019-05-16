@@ -77,7 +77,7 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  8e | 142 | String: 14 bytes           | [14 octets of data]                           |
 |  8f | 143 | String: 15 bytes           | [15 octets of data]                           |
 |  90 | 144 | String                     | [byte length] [UTF-8 encoded string]          |
-|  91 | 145 | Binary Data                | [byte length] [data]                          |
+|  91 | 145 | Bytes                      | [byte length] [data]                          |
 |  92 | 146 | Comment                    | [byte length] [UTF-8 encoded string]          |
 |  93 | 147 | List                       |                                               |
 |  94 | 148 | Map                        |                                               |
@@ -187,7 +187,7 @@ Examples:
     [a0 0f] Length 1000.
 
 
-### Binary Data
+### Bytes
 
 An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
 
@@ -195,7 +195,7 @@ An array of octets. This data type should only be used as a last resort if the o
 
 Examples:
 
-    [91 14 01 02 03 04 05] = binary array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [91 14 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### String

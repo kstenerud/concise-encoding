@@ -762,7 +762,7 @@ cbe_encode_status cbe_encode_container_end(cbe_encode_process* const process)
     return CBE_ENCODE_STATUS_OK;
 }
 
-cbe_encode_status cbe_encode_binary_begin(cbe_encode_process* const process, const int64_t byte_count)
+cbe_encode_status cbe_encode_bytes_begin(cbe_encode_process* const process, const int64_t byte_count)
 {
     KSLOG_DEBUG("(process %p, byte_count %d)", process, byte_count);
     unlikely_if(process == NULL || byte_count < 0)
@@ -773,9 +773,9 @@ cbe_encode_status cbe_encode_binary_begin(cbe_encode_process* const process, con
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_array_length_field_width(byte_count));
 
-    add_primitive_type(process, TYPE_BINARY_DATA);
+    add_primitive_type(process, TYPE_BYTES);
     add_array_length_field(process, byte_count);
-    begin_array(process, ARRAY_TYPE_BINARY, byte_count);
+    begin_array(process, ARRAY_TYPE_BYTES, byte_count);
     swap_map_key_value_status(process);
     unlikely_if(byte_count == 0)
     {
@@ -867,12 +867,12 @@ cbe_encode_status cbe_encode_add_string(cbe_encode_process* const process,
     return status;
 }
 
-cbe_encode_status cbe_encode_add_binary(cbe_encode_process* const process,
+cbe_encode_status cbe_encode_add_bytes(cbe_encode_process* const process,
                                         const uint8_t* const data,
                                         const int64_t byte_count)
 {
     uint8_t* const last_position = process->buffer.position;
-    cbe_encode_status status = cbe_encode_binary_begin(process, byte_count);
+    cbe_encode_status status = cbe_encode_bytes_begin(process, byte_count);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         return status;

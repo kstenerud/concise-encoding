@@ -114,9 +114,9 @@ static bool on_string_begin(struct cbe_decode_process* process, int64_t byte_cou
     return get_decoder(process)->string_begin(byte_count) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_binary_begin(struct cbe_decode_process* process, int64_t byte_count)
+static bool on_bytes_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
-    return get_decoder(process)->binary_begin(byte_count) && get_decoder(process)->get_callback_return_value();
+    return get_decoder(process)->bytes_begin(byte_count) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_comment_begin(struct cbe_decode_process* process, int64_t byte_count)
@@ -131,11 +131,11 @@ static bool on_string_data(struct cbe_decode_process* process,
     return get_decoder(process)->add_string_data(std::string(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
-static bool on_binary_data(struct cbe_decode_process* process,
+static bool on_bytes_data(struct cbe_decode_process* process,
                            const uint8_t* start,
                            int64_t byte_count)
 {
-    return get_decoder(process)->add_binary_data(std::vector<uint8_t>(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
+    return get_decoder(process)->add_bytes_data(std::vector<uint8_t>(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_comment_data(struct cbe_decode_process* process,
@@ -170,8 +170,8 @@ ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
     on_map_end: on_map_end,
     on_string_begin: on_string_begin,
     on_string_data: on_string_data,
-    on_binary_begin: on_binary_begin,
-    on_binary_data: on_binary_data,
+    on_bytes_begin: on_bytes_begin,
+    on_bytes_data: on_bytes_data,
     on_comment_begin: on_comment_begin,
     on_comment_data: on_comment_data,
 };
@@ -263,14 +263,14 @@ bool cbe_decoder::string_begin(int64_t byte_count)
     return true;
 }
 
-bool cbe_decoder::binary_begin(int64_t byte_count)
+bool cbe_decoder::bytes_begin(int64_t byte_count)
 {
     if(_currently_decoding_type != CBE_DECODING_OTHER)
     {
         KSLOG_ERROR("Expected _currently_decoding_type OTHER, not %d", _currently_decoding_type);
         return false;
     }
-    _currently_decoding_type = CBE_DECODING_BINARY;
+    _currently_decoding_type = CBE_DECODING_BYTES;
     _currently_decoding_length = byte_count;
     _currently_decoding_offset = 0;
     _currently_decoding_data.clear();
@@ -319,12 +319,12 @@ bool cbe_decoder::add_string_data(const std::string& data)
     return true;
 }
 
-bool cbe_decoder::add_binary_data(const std::vector<uint8_t>& data)
+bool cbe_decoder::add_bytes_data(const std::vector<uint8_t>& data)
 {
-    KSLOG_DEBUG("Add binary data %d bytes", data.size());
-    if(_currently_decoding_type != CBE_DECODING_BINARY)
+    KSLOG_DEBUG("Add bytes data %d bytes", data.size());
+    if(_currently_decoding_type != CBE_DECODING_BYTES)
     {
-        KSLOG_ERROR("Expecting _currently_decoding_type BINARY, not %d", _currently_decoding_type);
+        KSLOG_ERROR("Expecting _currently_decoding_type BYTES, not %d", _currently_decoding_type);
         return false;
     }
 

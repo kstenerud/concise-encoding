@@ -252,12 +252,12 @@ public:
     const std::string& value() const {return _value;}
 };
 
-class binary_encoding: public encoding
+class bytes_encoding: public encoding
 {
 private:
     const std::vector<uint8_t> _value;
 public:
-    binary_encoding(const std::vector<uint8_t>& value): _value(value) {}
+    bytes_encoding(const std::vector<uint8_t>& value): _value(value) {}
     cbe_encode_status encode(encoder& encoder);
     const std::string as_string() const {return std::string("bin(") + to_string(_value) + std::string(")");}
     const std::vector<uint8_t> value() const {return _value;}
@@ -285,12 +285,12 @@ public:
     int64_t byte_count() const {return _byte_count;}
 };
 
-class binary_header_encoding: public encoding
+class bytes_header_encoding: public encoding
 {
 private:
     const int64_t _byte_count;
 public:
-    binary_header_encoding(int64_t byte_count): _byte_count(byte_count) {}
+    bytes_header_encoding(int64_t byte_count): _byte_count(byte_count) {}
     cbe_encode_status encode(encoder& encoder);
     const std::string as_string() const {return std::string("binh(") + to_string(_byte_count) + std::string(")");}
     int64_t byte_count() const {return _byte_count;}
@@ -330,10 +330,10 @@ public:
     virtual cbe_encode_status encode(const padding_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const time_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const string_encoding& encoding) = 0;
-    virtual cbe_encode_status encode(const binary_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(const bytes_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const comment_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const string_header_encoding& encoding) = 0;
-    virtual cbe_encode_status encode(const binary_header_encoding& encoding) = 0;
+    virtual cbe_encode_status encode(const bytes_header_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const comment_header_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const data_encoding& encoding) = 0;
     virtual cbe_encode_status encode(const boolean_encoding& encoding) = 0;
@@ -353,10 +353,10 @@ static inline std::shared_ptr<time_encoding>           time(nanotime value)     
 static inline std::shared_ptr<time_encoding>           stime(int year, int month, int day, int hour, int minute, int second, int usec) {return time(smalltime_new(year, month, day, hour, minute, second, usec));}
 static inline std::shared_ptr<time_encoding>           ntime(int year, int month, int day, int hour, int minute, int second, int nsec) {return time(nanotime_new(year, month, day, hour, minute, second, nsec));}
 static inline std::shared_ptr<string_encoding>         str(const std::string& value)   {return std::make_shared<string_encoding>(value);}
-static inline std::shared_ptr<binary_encoding>         bin(const std::vector<uint8_t>& value) {return std::make_shared<binary_encoding>(value);}
+static inline std::shared_ptr<bytes_encoding>         bin(const std::vector<uint8_t>& value) {return std::make_shared<bytes_encoding>(value);}
 static inline std::shared_ptr<comment_encoding>        cmt(const std::string& value)   {return std::make_shared<comment_encoding>(value);}
 static inline std::shared_ptr<string_header_encoding>  strh(int64_t byte_count)        {return std::make_shared<string_header_encoding>(byte_count);}
-static inline std::shared_ptr<binary_header_encoding>  binh(int64_t byte_count)        {return std::make_shared<binary_header_encoding>(byte_count);}
+static inline std::shared_ptr<bytes_header_encoding>  binh(int64_t byte_count)        {return std::make_shared<bytes_header_encoding>(byte_count);}
 static inline std::shared_ptr<comment_header_encoding> cmth(int64_t byte_count)        {return std::make_shared<comment_header_encoding>(byte_count);}
 static inline std::shared_ptr<data_encoding>           data(const std::vector<uint8_t>& value) {return std::make_shared<data_encoding>(value);}
 static inline std::shared_ptr<boolean_encoding>        bl(bool value)                  {return std::make_shared<boolean_encoding>(value);}

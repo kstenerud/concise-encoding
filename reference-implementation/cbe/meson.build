@@ -22,7 +22,7 @@ project_test_files = [
   'tests/src/helpers/encoding.cpp',
   'tests/src/helpers/test_helpers.cpp',
   'tests/src/helpers/test_utils.cpp',
-  'tests/src/binary.cpp',
+  'tests/src/bytes.cpp',
   'tests/src/comment.cpp',
   'tests/src/library.cpp',
   'tests/src/list.cpp',

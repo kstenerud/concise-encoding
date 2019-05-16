@@ -194,10 +194,10 @@ cbe_encode_status uint_encoding::encode(encoder& encoder) {return encoder.encode
 cbe_encode_status float_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status decimal_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status string_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
-cbe_encode_status binary_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
+cbe_encode_status bytes_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status comment_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status string_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
-cbe_encode_status binary_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
+cbe_encode_status bytes_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status comment_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status data_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 

@@ -241,8 +241,8 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
     KSLOG_DEBUG("Length: %d", array_byte_count);
     switch(type)
     {
-        case ARRAY_TYPE_BINARY:
-            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_begin(process, array_byte_count));
+        case ARRAY_TYPE_BYTES:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_bytes_begin(process, array_byte_count));
             break;
         case ARRAY_TYPE_STRING:
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
@@ -270,8 +270,8 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
     KSLOG_DATA_TRACE(process->buffer.position, bytes_to_stream, NULL);
     switch(process->array.type)
     {
-        case ARRAY_TYPE_BINARY:
-            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_binary_data(process, process->buffer.position, bytes_to_stream));
+        case ARRAY_TYPE_BYTES:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_bytes_data(process, process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_STRING:
             if(!cbe_validate_string(process->buffer.position, bytes_to_stream))
@@ -550,10 +550,10 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }
-            case TYPE_BINARY_DATA:
+            case TYPE_BYTES:
             {
-                KSLOG_DEBUG("<Binary>");
-                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_BINARY));
+                KSLOG_DEBUG("<Bytes>");
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_BYTES));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }

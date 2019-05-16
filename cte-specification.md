@@ -277,11 +277,11 @@ which is equivalent to:
 Array Types
 -----------
 
-### Binary Data
+### Bytes
 
 An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
 
-Binary data begins with an encoding type, followed by a slash `/`, encoded contents, and then a terminating slash `/`. The encoded contents may contain whitespace at any point.
+Byte array data begins with an encoding type, followed by a slash `/`, encoded contents, and then a terminating slash `/`. The encoded contents may contain whitespace at any point.
 
 Encoding Types:
 
@@ -442,7 +442,7 @@ While there are many characters classified as "whitespace" within the Unicode se
  * Before an object (including at the beginning of a document)
  * After an object (including at the end of a document)
  * Between array/container openings & closings: `[`, `]`, `{`, `}`, `/`
- * Between encoding characters in a binary data array.
+ * Between encoding characters in a byte array.
 
 Examples:
 
@@ -459,7 +459,7 @@ Examples:
 
 ### Whitespace **must not** occur:
 
- * Between a binary data encoding type and the opening slash: `s /` is invalid.
+ * Between a byte array encoding type and the opening slash: `s /` is invalid.
  * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid.
  * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3`, `- 1.0` are invalid.
  * Splitting special values: `t rue`, `ni l`, `i nf`, `n a n` are invalid.
