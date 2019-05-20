@@ -25,14 +25,6 @@ Goals
 
 
 
-Specifications
---------------
-
- * [Concise Binary Encoding](cbe-specification.md)
- * [Concise Text Encoding](cte-specification.md)
-
-
-
 Supported Types
 ---------------
 
@@ -73,6 +65,22 @@ Containers can hold any combination of types, including other containers.
 | ------- | ------------------------------------------------------ |
 | Nil     | Denotes the absence of data                            |
 | Padding | Used to align data in a CPU friendly manner (CBE Only) |
+
+
+
+Specifications
+--------------
+
+ * [Concise Binary Encoding](cbe-specification.md)
+ * [Concise Text Encoding](cte-specification.md)
+
+
+
+Implementations
+---------------
+
+* [C implementation](reference-implementation)
+* [Go implementation](https://github.com/kstenerud/go-cbe)
 
 
 
