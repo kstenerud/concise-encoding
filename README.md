@@ -3,6 +3,16 @@ Concise Binary Encoding and Concise Text Encoding
 
 General purpose, compact representations of semi-structured hierarchical data, in binary and text formats.
 
+Alternative To:
+
+* JSON
+* XML
+* BSON
+* CBOR
+* MessagePack
+* Protobuf
+
+
 
 Goals
 -----
