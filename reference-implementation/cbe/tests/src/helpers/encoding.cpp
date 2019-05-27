@@ -195,9 +195,11 @@ cbe_encode_status float_encoding::encode(encoder& encoder) {return encoder.encod
 cbe_encode_status decimal_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status string_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status bytes_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
+cbe_encode_status uri_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status comment_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status string_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status bytes_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
+cbe_encode_status uri_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status comment_header_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 cbe_encode_status data_encoding::encode(encoder& encoder) {return encoder.encode(*this);}
 
@@ -210,9 +212,11 @@ std::shared_ptr<encoding> encoding::time(smalltime value)           {return this
 std::shared_ptr<encoding> encoding::time(nanotime value)            {return this->set_next(enc::time(value));}
 std::shared_ptr<encoding> encoding::str(const std::string& value)   {return this->set_next(enc::str(value));}
 std::shared_ptr<encoding> encoding::bin(const std::vector<uint8_t>& value) {return this->set_next(enc::bin(value));}
+std::shared_ptr<encoding> encoding::uri(const std::string& value)   {return this->set_next(enc::uri(value));}
 std::shared_ptr<encoding> encoding::cmt(const std::string& value)   {return this->set_next(enc::cmt(value));}
 std::shared_ptr<encoding> encoding::strh(int64_t byte_count)        {return this->set_next(enc::strh(byte_count));}
 std::shared_ptr<encoding> encoding::binh(int64_t byte_count)        {return this->set_next(enc::binh(byte_count));}
+std::shared_ptr<encoding> encoding::urih(int64_t byte_count)        {return this->set_next(enc::urih(byte_count));}
 std::shared_ptr<encoding> encoding::cmth(int64_t byte_count)        {return this->set_next(enc::cmth(byte_count));}
 std::shared_ptr<encoding> encoding::data(const std::vector<uint8_t>& value) {return this->set_next(enc::data(value));}
 std::shared_ptr<encoding> encoding::bl(bool value)                  {return this->set_next(enc::bl(value));}

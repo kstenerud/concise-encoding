@@ -56,6 +56,7 @@ Supported Types
 | ------- | ------------------------------------------------------ |
 | Bytes   | Array of binary data                                   |
 | String  | Array of UTF-8 encoded bytes                           |
+| URI     | Universal Resource Identifier                          |
 | Comment | A UTF-8 encoded comment string                         |
 
 

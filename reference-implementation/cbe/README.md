@@ -63,6 +63,8 @@ Usage
 ### Decoding
 
 ```c
+bool decode(const uint8_t* my_document, int64_t my_document_size, void* my_context_data)
+{
     const int max_container_depth = 500;
     char backing_store[cbe_decode_process_size(max_container_depth)];
     struct cbe_decode_process* decode_process = (struct cbe_decode_process*)backing_store;
@@ -70,18 +72,20 @@ Usage
     {
         .on_nil           = my_on_nil,
         .on_boolean       = my_on_boolean,
-        .on_int_8         = my_on_int_8,
-        .on_int_16        = my_on_int_16,
-        .on_int_32        = my_on_int_32,
+        .on_int           = my_on_int,
         .on_int_64        = my_on_int_64,
         .on_int_128       = my_on_int_128,
+        .on_uint          = my_on_uint,
+        .on_uint_64       = my_on_uint_64,
+        .on_uint_128      = my_on_uint_128,
         .on_float_32      = my_on_float_32,
         .on_float_64      = my_on_float_64,
         .on_float_128     = my_on_float_128,
         .on_decimal_32    = my_on_decimal_32,
         .on_decimal_64    = my_on_decimal_64,
         .on_decimal_128   = my_on_decimal_128,
-        .on_time          = my_on_time,
+        .on_smalltime     = my_on_smalltime,
+        .on_nanotime      = my_on_nanotime,
         .on_list_begin    = my_on_list_begin,
         .on_list_end      = my_on_list_end,
         .on_map_begin     = my_on_map_begin,
@@ -90,6 +94,8 @@ Usage
         .on_string_data   = my_on_string_data,
         .on_bytes_begin   = my_on_bytes_begin,
         .on_bytes_data    = my_on_bytes_data,
+        .on_uri_begin     = my_on_uri_begin,
+        .on_uri_data      = my_on_uri_data,
         .on_comment_begin = my_on_comment_begin,
         .on_comment_data  = my_on_comment_data,
     };
@@ -105,12 +111,15 @@ Usage
         return false;
     }
     return true;
+}
 ```
 
 
 ### Encoding
 
 ```c
+bool encode()
+{
     uint8_t buffer[1000];
     const int max_container_depth = 500;
     char backing_store[cbe_encode_process_size(max_container_depth)];
@@ -135,7 +144,7 @@ Usage
     }
 
     // TODO: Check for out of room on all cbe calls
-    status = cbe_encode_add_int_8(encode_process, 1);
+    status = cbe_encode_add_int(encode_process, 1);
     status = cbe_encode_add_string(encode_process, "Testing", 7);
     status = cbe_encode_container_end(encode_process);
     status = cbe_encode_end(encode_process);
@@ -146,4 +155,5 @@ Usage
         return false;
     }
     return true;
+}
 ```

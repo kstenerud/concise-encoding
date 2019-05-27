@@ -254,6 +254,28 @@ typedef struct
                             int64_t byte_count);
 
     /**
+     * A URI has been opened. Expect subsequent calls to
+     * on_uri_data() until the array has been filled. Once `byte_count`
+     * bytes have been added via on_uri_data(), the field is considered
+     * "complete" and is closed.
+     *
+     * @param decode_process The decode process.
+     * @param byte_count The total length of the URI.
+     */
+    bool (*on_uri_begin) (struct cbe_decode_process* decode_process, int64_t byte_count);
+
+    /**
+     * String data was decoded, and should be added to the current URI field.
+     *
+     * @param decode_process The decode process.
+     * @param start The start of the data.
+     * @param byte_count The number of bytes in this array fragment.
+     */
+    bool (*on_uri_data) (struct cbe_decode_process* decode_process,
+                         const char* start,
+                         int64_t byte_count);
+
+    /**
      * A comment has been opened. Expect subsequent calls to
      * on_comment_data() until the array has been filled. Once `byte_count`
      * bytes have been added via on_comment_data(), the field is considered
@@ -1045,6 +1067,35 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_bytes(struct cbe_encode_process* enc
                                                    int64_t byte_count);
 
 /**
+ * Convenience function: add a URI to a document.
+ * This function does not preserve partial data in the encoded buffer. Either the
+ * entire operation succeeds, or it fails, restoring the buffer offset to where it
+ * was before adding the array header.
+ *
+ * Note: This library performs no validation of the contents of the URI. Use a proper
+ *       RFC 3986 validation library for any URIs.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The operation was successful.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INVALID_ARRAY_DATA: The uri contained invalid data.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param uri_start The uri to add. May be NULL iff byte_count = 0.
+ * @param byte_count The number of bytes in the string.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_uri(struct cbe_encode_process* encode_process,
+                                                const char* uri_start,
+                                                int64_t byte_count);
+
+/**
  * Convenience function: add a UTF-8 encoded comment and its data to a document.
  * This function does not preserve partial data in the encoded buffer. Either the
  * entire operation succeeds, or it fails, restoring the buffer offset to where it
@@ -1124,6 +1175,35 @@ CBE_PUBLIC cbe_encode_status cbe_encode_string_begin(struct cbe_encode_process* 
 CBE_PUBLIC cbe_encode_status cbe_encode_bytes_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
+ * Begin a URI in the document. The URI must conform to RFC 3986.
+ *
+ * This function "opens" a URI field, encoding the type and length portions.
+ * The encode process will expect subsequent cbe_encode_add_data() calls
+ * to fill up the field.
+ * Once the field has been filled, it is considered "closed", and other fields
+ * may now be added to the document. A zero-length array is automatically closed
+ * in this function.
+ *
+ * Note: This library performs no validation of the contents of the URI. Use a proper
+ *       RFC 3986 validation library for any URIs.
+ *
+ * Successful status codes:
+ * - CBE_ENCODE_STATUS_OK: The URI has been opened.
+ *
+ * Recoverable codes:
+ * - CBE_ENCODE_STATUS_NEED_MORE_ROOM: not enough room left in the buffer.
+ *
+ * Unrecoverable codes:
+ * - CBE_ENCODE_ERROR_INVALID_ARGUMENT: One of the arguments was null or invalid.
+ * - CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD: an open array field has not been completed yet.
+ *
+ * @param encode_process The encode process.
+ * @param byte_count The total length of the URI to add in bytes.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_uri_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
+
+/**
  * Begin a comment in the document. The comment data will be UTF-8 without a BOM.
  *
  * This function "opens" a comment field, encoding the type and length portions.
@@ -1150,7 +1230,7 @@ CBE_PUBLIC cbe_encode_status cbe_encode_bytes_begin(struct cbe_encode_process* e
 CBE_PUBLIC cbe_encode_status cbe_encode_comment_begin(struct cbe_encode_process* encode_process, int64_t byte_count);
 
 /**
- * Add data to the currently opened array field (string, bytes, comment).
+ * Add data to the currently opened array field (string, bytes, uri, comment).
  *
  * If there's not enough room in the buffer, this function will add as much
  * data as it can to the encoded buffer before setting the output value of

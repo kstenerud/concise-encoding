@@ -78,11 +78,12 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  8f | 143 | String: 15 bytes           | [15 octets of data]                           |
 |  90 | 144 | String                     | [byte length] [UTF-8 encoded string]          |
 |  91 | 145 | Bytes                      | [byte length] [data]                          |
-|  92 | 146 | Comment                    | [byte length] [UTF-8 encoded string]          |
-|  93 | 147 | List                       |                                               |
-|  94 | 148 | Map                        |                                               |
-|  95 | 149 | End of Container           |                                               |
-|  96 | 150 | Integer value -106         |                                               |
+|  92 | 146 | URI                        | [byte length] [URI]                           |
+|  93 | 147 | Comment                    | [byte length] [UTF-8 encoded string]          |
+|  94 | 148 | List                       |                                               |
+|  95 | 149 | Map                        |                                               |
+|  96 | 150 | End of Container           |                                               |
+|  97 | 151 | Integer value -105         |                                               |
 | ... | ... | ...                        |                                               |
 |  fe | 254 | Integer value -2           |                                               |
 |  ff | 255 | Integer value -1           |                                               |
@@ -218,6 +219,30 @@ Examples:
     [90 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
+### URI
+
+Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986).
+
+The length field contains the byte length (length in octets), NOT the character length.
+
+Example:
+
+    [92 55 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+     2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
+     71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
+     6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
+    = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
+
+    [92 6c 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+     6c 65 2e 63 6f 6d]
+    = mailto:John.Doe@example.com
+
+    [92 cc 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+     66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
+     6c 3a 34 2e 31 2e 32]
+    = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
+
+
 ### Comment
 
 Comments are string metadata that may be placed inside a document. While they may be placed anywhere an object may be placed, they are semantically ignored by the parser (they do not constitute values). For example, the sequence [(list) (int8 value 1) (comment "this is a comment") (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the comment's occurrence (at the decoder's discretion).
@@ -243,7 +268,7 @@ The following characters are allowed in comments only if they don't also appear 
 
 Example:
 
-    [92 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
+    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
      61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
      75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
     = Bug #95512: System fails to start on arm64 unless B latch is set
@@ -263,7 +288,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [93 01 6b 88 13 95] = A list containing integers (1, 5000)
+    [94 01 6b 88 13 96] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -278,13 +303,13 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [94] [key 1] [value 1] [key 2] [value 2] ... [95]
+    [95] [key 1] [value 1] [key 2] [value 2] ... [96]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
 
 Example:
 
-    [94 81 61 01 81 62 02 95] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [95 81 61 01 81 62 02 96] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 

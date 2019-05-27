@@ -373,22 +373,32 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
         const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
 
         KSLOG_DEBUG("Type: %d", process->array.type);
-        if(process->array.type == ARRAY_TYPE_COMMENT)
+        switch(process->array.type)
         {
-            unlikely_if(!cbe_validate_comment(start, bytes_to_copy))
-            {
-                KSLOG_DEBUG("invalid data");
-                return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
-            }
-        }
-
-        if(process->array.type == ARRAY_TYPE_STRING)
-        {
-            unlikely_if(!cbe_validate_string(start, bytes_to_copy))
-            {
-                KSLOG_DEBUG("invalid data");
-                return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
-            }
+            case ARRAY_TYPE_STRING:
+                unlikely_if(!cbe_validate_string(start, bytes_to_copy))
+                {
+                    KSLOG_DEBUG("invalid data");
+                    return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
+                }
+                break;
+            case ARRAY_TYPE_URI:
+                unlikely_if(!cbe_validate_uri(start, bytes_to_copy))
+                {
+                    KSLOG_DEBUG("invalid data");
+                    return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
+                }
+                break;
+            case ARRAY_TYPE_COMMENT:
+                unlikely_if(!cbe_validate_comment(start, bytes_to_copy))
+                {
+                    KSLOG_DEBUG("invalid data");
+                    return CBE_ENCODE_ERROR_INVALID_ARRAY_DATA;
+                }
+                break;
+            case ARRAY_TYPE_BYTES:
+                // Nothing to do
+                break;
         }
 
         add_primitive_bytes(process, start, bytes_to_copy);
@@ -799,6 +809,29 @@ cbe_encode_status cbe_encode_string_begin(cbe_encode_process* const process, con
     return encode_string_header(process, byte_count, should_reserve_payload);
 }
 
+cbe_encode_status cbe_encode_uri_begin(cbe_encode_process* const process, const int64_t byte_count)
+{
+    KSLOG_DEBUG("(process %p, byte_count %d)", process, byte_count);
+    unlikely_if(process == NULL || byte_count < 0)
+    {
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
+
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, get_array_length_field_width(byte_count));
+
+    add_primitive_type(process, TYPE_URI);
+    add_array_length_field(process, byte_count);
+    begin_array(process, ARRAY_TYPE_URI, byte_count);
+    swap_map_key_value_status(process);
+    unlikely_if(byte_count == 0)
+    {
+        end_array(process);
+    }
+
+    return CBE_ENCODE_STATUS_OK;
+}
+
 cbe_encode_status cbe_encode_comment_begin(cbe_encode_process* const process, const int64_t byte_count)
 {
     KSLOG_DEBUG("(process %p, byte_count %d)", process, byte_count);
@@ -879,6 +912,25 @@ cbe_encode_status cbe_encode_add_bytes(cbe_encode_process* const process,
     }
     int64_t byte_count_copy = byte_count;
     status = cbe_encode_add_data(process, data, &byte_count_copy);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
+    {
+        process->buffer.position = last_position;
+    }
+    return status;
+}
+
+cbe_encode_status cbe_encode_add_uri(cbe_encode_process* const process,
+                                        const char* const uri_start,
+                                        const int64_t byte_count)
+{
+    uint8_t* const last_position = process->buffer.position;
+    cbe_encode_status status = cbe_encode_uri_begin(process, byte_count);
+    unlikely_if(status != CBE_ENCODE_STATUS_OK)
+    {
+        return status;
+    }
+    int64_t byte_count_copy = byte_count;
+    status = cbe_encode_add_data(process, (const uint8_t*)uri_start, &byte_count_copy);
     unlikely_if(status != CBE_ENCODE_STATUS_OK)
     {
         process->buffer.position = last_position;

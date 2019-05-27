@@ -28,9 +28,11 @@ public:
     cbe_encode_status encode(const enc::time_encoding& encoding);
     cbe_encode_status encode(const enc::string_encoding& encoding);
     cbe_encode_status encode(const enc::bytes_encoding& encoding);
+    cbe_encode_status encode(const enc::uri_encoding& encoding);
     cbe_encode_status encode(const enc::comment_encoding& encoding);
     cbe_encode_status encode(const enc::string_header_encoding& encoding);
     cbe_encode_status encode(const enc::bytes_header_encoding& encoding);
+    cbe_encode_status encode(const enc::uri_header_encoding& encoding);
     cbe_encode_status encode(const enc::comment_header_encoding& encoding);
     cbe_encode_status encode(const enc::data_encoding& encoding);
     cbe_encode_status encode(const enc::boolean_encoding& encoding);
@@ -56,6 +58,7 @@ public:
     // returns with failure.
     cbe_encode_status encode_string(std::vector<uint8_t> value);
     cbe_encode_status encode_bytes(std::vector<uint8_t> value);
+    cbe_encode_status encode_uri(std::vector<uint8_t> value);
     cbe_encode_status encode_comment(std::vector<uint8_t> value);
 
     int64_t get_encode_buffer_offset() const;

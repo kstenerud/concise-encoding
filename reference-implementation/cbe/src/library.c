@@ -118,6 +118,58 @@ bool cbe_validate_string(const uint8_t* const start, const int64_t byte_count)
     return true;
 }
 
+bool cbe_validate_uri(const uint8_t* const start, const int64_t byte_count)
+{
+    // Minimal, non-exhaustive URI check:
+    // - No characters that obviously require percent-encoding
+    // - No obviously invalid percent-encoding sequences
+    // - At least one colon ':' (which may not even be in the right place)
+    //
+    // This validation check doesn't guarantee a valid URI! It only errors on
+    // the most obviously wrong ones.
+
+    KSLOG_DEBUG("start %p, byte_count %d", start, byte_count);
+    const uint8_t* ptr = start;
+    const uint8_t* const end = ptr + byte_count;
+
+    bool isEscaped = false;
+    bool encounteredColon = false;
+    while(ptr < end)
+    {
+        uint8_t ch = *ptr++;
+        if(ch <= ' ' || ch > '~')
+        {
+            KSLOG_DEBUG("Invalid URI character %02x", ch);
+            return false;
+        }
+        switch(ch)
+        {
+            case '0': case '1': case '2': case '3':
+            case '4': case '5': case '6': case '7':
+            case '8': case '9': case 'a': case 'b':
+            case 'c': case 'd': case 'e': case 'f':
+            case 'A': case 'B': case 'C': case 'D':
+            case 'E': case 'F':
+                isEscaped = false;
+                break;
+            case '%':
+                isEscaped = !isEscaped;
+                break;
+            case ':':
+                encounteredColon = true;
+                // fallthrough
+            default:
+                if(isEscaped)
+                {
+                    KSLOG_DEBUG("Invalid URI escape sequence. '%c' encountered after '%'", ch);
+                    return false;
+                }
+                break;
+        }
+    }
+    return encounteredColon;
+}
+
 bool cbe_validate_comment(const uint8_t* const start, const int64_t byte_count)
 {
     KSLOG_DEBUG("start %p, byte_count %d", start, byte_count);

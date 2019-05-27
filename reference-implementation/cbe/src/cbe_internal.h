@@ -5,7 +5,7 @@
 
 typedef enum
 {
-    TYPE_SMALLINT_MIN      = -106,
+    TYPE_SMALLINT_MIN      = -105,
     TYPE_SMALLINT_MAX      = 105,
     TYPE_POS_INT_8         = 0x6a,
     TYPE_POS_INT_16        = 0x6b,
@@ -47,16 +47,18 @@ typedef enum
     TYPE_STRING_15         = 0x8f,
     TYPE_STRING            = 0x90,
     TYPE_BYTES             = 0x91,
-    TYPE_COMMENT           = 0x92,
-    TYPE_LIST              = 0x93,
-    TYPE_MAP               = 0x94,
-    TYPE_END_CONTAINER     = 0x95,
+    TYPE_URI               = 0x92,
+    TYPE_COMMENT           = 0x93,
+    TYPE_LIST              = 0x94,
+    TYPE_MAP               = 0x95,
+    TYPE_END_CONTAINER     = 0x96,
 } cbe_type_field;
 
 typedef enum
 {
     ARRAY_TYPE_STRING,
     ARRAY_TYPE_BYTES,
+    ARRAY_TYPE_URI,
     ARRAY_TYPE_COMMENT,
 } array_type;
 
@@ -99,6 +101,8 @@ static inline void zero_memory(void* const memory, const int byte_count)
 }
 
 bool cbe_validate_string(const uint8_t* const start, const int64_t byte_count);
+
+bool cbe_validate_uri(const uint8_t* const start, const int64_t byte_count);
 
 bool cbe_validate_comment(const uint8_t* const start, const int64_t byte_count);
 

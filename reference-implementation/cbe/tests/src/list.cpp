@@ -5,9 +5,9 @@
 
 using namespace enc;
 
-TEST_ENCODE_DECODE_SHRINKING(List, size_0, 1, list()->end(), {0x93, 0x95})
-TEST_ENCODE_DECODE_SHRINKING(List, size_1, 1, list()->si(1)->end(), {0x93, 0x01, 0x95})
-TEST_ENCODE_DECODE_SHRINKING(List, size_2, 1, list()->str("1")->si(1)->end(), {0x93, 0x81, 0x31, 0x01, 0x95})
+TEST_ENCODE_DECODE_SHRINKING(List, size_0, 1, list()->end(), {0x94, 0x96})
+TEST_ENCODE_DECODE_SHRINKING(List, size_1, 1, list()->si(1)->end(), {0x94, 0x01, 0x96})
+TEST_ENCODE_DECODE_SHRINKING(List, size_2, 1, list()->str("1")->si(1)->end(), {0x94, 0x81, 0x31, 0x01, 0x96})
 
 TEST_ENCODE_DECODE_STATUS(List, unterminated,   99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, list())
 TEST_ENCODE_DECODE_STATUS(List, unterminated_2, 99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, list()->flt(0.1))

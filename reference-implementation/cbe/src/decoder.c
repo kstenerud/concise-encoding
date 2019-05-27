@@ -247,6 +247,9 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
         case ARRAY_TYPE_STRING:
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_begin(process, array_byte_count));
             break;
+        case ARRAY_TYPE_URI:
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_uri_begin(process, array_byte_count));
+            break;
         case ARRAY_TYPE_COMMENT:
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_comment_begin(process, array_byte_count));
             break;
@@ -279,6 +282,13 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
                 return CBE_DECODE_ERROR_INVALID_ARRAY_DATA;
             }
             STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_string_data(process, (const char*)process->buffer.position, bytes_to_stream));
+            break;
+        case ARRAY_TYPE_URI:
+            if(!cbe_validate_uri(process->buffer.position, bytes_to_stream))
+            {
+                return CBE_DECODE_ERROR_INVALID_ARRAY_DATA;
+            }
+            STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_uri_data(process, (const char*)process->buffer.position, bytes_to_stream));
             break;
         case ARRAY_TYPE_COMMENT:
             if(!cbe_validate_comment(process->buffer.position, bytes_to_stream))
@@ -554,6 +564,13 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             {
                 KSLOG_DEBUG("<Bytes>");
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_BYTES));
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
+                break;
+            }
+            case TYPE_URI:
+            {
+                KSLOG_DEBUG("<URI>");
+                STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, begin_array(process, ARRAY_TYPE_URI));
                 STOP_AND_EXIT_IF_DECODE_STATUS_NOT_OK(process, stream_array(process));
                 break;
             }

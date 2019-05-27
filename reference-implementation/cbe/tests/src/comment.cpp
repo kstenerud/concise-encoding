@@ -20,11 +20,11 @@ static std::string g_bad_chars[] =
 static int g_bad_chars_count = sizeof(g_bad_chars) / sizeof(*g_bad_chars);
 
 
-TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 2, cmt(make_string(0)),  concat({0x92}, array_length_field(0)))
-TEST_ENCODE_DECODE_SHRINKING(Comment, size_16, 2, cmt(make_string(16)), concat({0x92}, array_length_field(16), as_vector(make_string(16))))
+TEST_ENCODE_DECODE_SHRINKING(Comment,  size_0, 2, cmt(make_string(0)),  concat({0x93}, array_length_field(0)))
+TEST_ENCODE_DECODE_SHRINKING(Comment, size_16, 2, cmt(make_string(16)), concat({0x93}, array_length_field(16), as_vector(make_string(16))))
 
 TEST_ENCODE_STATUS(Comment, encode_bad_data, 99, 9, CBE_ENCODE_ERROR_INVALID_ARRAY_DATA, cmt("Test\nblah"))
-TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x92, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74})
+TEST_DECODE_STATUS(Comment, decode_bad_data, 99, 9, true, CBE_DECODE_ERROR_INVALID_ARRAY_DATA, {0x93, 0x18, 0x41, 0x0a, 0x74, 0x65, 0x73, 0x74})
 
 TEST(Comment, encode_bad_chars)
 {
@@ -49,14 +49,14 @@ TEST(Comment, decode_bad_character)
     const int max_container_depth = 100;
     const bool callback_return_value = true;
     const cbe_decode_status expected_status = CBE_DECODE_ERROR_INVALID_ARRAY_DATA;
-    uint8_t data[] = {0x92, 0x24, 0x61, 0x00, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
+    uint8_t data[] = {0x93, 0x24, 0x61, 0x00, 0x63, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74};
     cbe_test::expect_decode_produces_status(buffer_size,
                                             max_container_depth,
                                             callback_return_value,
                                             std::vector<uint8_t>(data, data + sizeof(data)),
                                             expected_status);
 
-    uint8_t header[] = {0x92, 0x00};
+    uint8_t header[] = {0x93, 0x00};
     for(int i = 0; i < g_bad_chars_count; i++)
     {
         std::string str = std::string("test") + g_bad_chars[i] + std::string("blah");

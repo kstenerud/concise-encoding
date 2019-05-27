@@ -119,6 +119,11 @@ static bool on_bytes_begin(struct cbe_decode_process* process, int64_t byte_coun
     return get_decoder(process)->bytes_begin(byte_count) && get_decoder(process)->get_callback_return_value();
 }
 
+static bool on_uri_begin(struct cbe_decode_process* process, int64_t byte_count)
+{
+    return get_decoder(process)->uri_begin(byte_count) && get_decoder(process)->get_callback_return_value();
+}
+
 static bool on_comment_begin(struct cbe_decode_process* process, int64_t byte_count)
 {
     return get_decoder(process)->comment_begin(byte_count) && get_decoder(process)->get_callback_return_value();
@@ -136,6 +141,13 @@ static bool on_bytes_data(struct cbe_decode_process* process,
                            int64_t byte_count)
 {
     return get_decoder(process)->add_bytes_data(std::vector<uint8_t>(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
+}
+
+static bool on_uri_data(struct cbe_decode_process* process,
+                           const char* start,
+                           int64_t byte_count)
+{
+    return get_decoder(process)->add_uri_data(std::string(start, start + byte_count)) && get_decoder(process)->get_callback_return_value();
 }
 
 static bool on_comment_data(struct cbe_decode_process* process,
@@ -172,6 +184,8 @@ ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
     on_string_data: on_string_data,
     on_bytes_begin: on_bytes_begin,
     on_bytes_data: on_bytes_data,
+    on_uri_begin: on_uri_begin,
+    on_uri_data: on_uri_data,
     on_comment_begin: on_comment_begin,
     on_comment_data: on_comment_data,
 };
@@ -277,6 +291,20 @@ bool cbe_decoder::bytes_begin(int64_t byte_count)
     return true;
 }
 
+bool cbe_decoder::uri_begin(int64_t byte_count)
+{
+    if(_currently_decoding_type != CBE_DECODING_OTHER)
+    {
+        KSLOG_ERROR("Expected _currently_decoding_type OTHER, not %d", _currently_decoding_type);
+        return false;
+    }
+    _currently_decoding_type = CBE_DECODING_URI;
+    _currently_decoding_length = byte_count;
+    _currently_decoding_offset = 0;
+    _currently_decoding_data.clear();
+    return true;
+}
+
 bool cbe_decoder::comment_begin(int64_t byte_count)
 {
     if(_currently_decoding_type != CBE_DECODING_OTHER)
@@ -347,12 +375,40 @@ bool cbe_decoder::add_bytes_data(const std::vector<uint8_t>& data)
     return true;
 }
 
+bool cbe_decoder::add_uri_data(const std::string& data)
+{
+    KSLOG_DEBUG("Add URI data %d bytes", data.size());
+    if(_currently_decoding_type != CBE_DECODING_URI)
+    {
+        KSLOG_ERROR("Expecting _currently_decoding_type URI, not %d", _currently_decoding_type);
+        return false;
+    }
+
+    if(_currently_decoding_offset + (int64_t)data.size() > _currently_decoding_length)
+    {
+        KSLOG_ERROR("_currently_decoding_offset + data.size() (%d) > _currently_decoding_length (%d)",
+            _currently_decoding_offset + (int64_t)data.size(), _currently_decoding_length);
+        return false;
+    }
+
+    _currently_decoding_data.insert(_currently_decoding_data.end(), data.begin(), data.end());
+    _currently_decoding_offset += data.size();
+
+    if(_currently_decoding_offset == _currently_decoding_length)
+    {
+        _currently_decoding_type = CBE_DECODING_OTHER;
+        return set_next(enc::uri(std::string(_currently_decoding_data.begin(), _currently_decoding_data.end())));
+    }
+
+    return true;
+}
+
 bool cbe_decoder::add_comment_data(const std::string& data)
 {
     KSLOG_DEBUG("Add comment data %d bytes", data.size());
     if(_currently_decoding_type != CBE_DECODING_COMMENT)
     {
-        KSLOG_ERROR("Expecting _currently_decoding_type STRING, not %d", _currently_decoding_type);
+        KSLOG_ERROR("Expecting _currently_decoding_type COMMENT, not %d", _currently_decoding_type);
         return false;
     }
 
