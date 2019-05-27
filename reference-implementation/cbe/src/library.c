@@ -153,7 +153,12 @@ bool cbe_validate_uri(const uint8_t* const start, const int64_t byte_count)
                 isEscaped = false;
                 break;
             case '%':
-                isEscaped = !isEscaped;
+                if(isEscaped)
+                {
+                    KSLOG_DEBUG("Invalid URI escape sequence. '%c' encountered after '%'", ch);
+                    return false;
+                }
+                isEscaped = true;
                 break;
             case ':':
                 encounteredColon = true;
