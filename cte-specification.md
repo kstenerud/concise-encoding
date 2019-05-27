@@ -183,7 +183,7 @@ A decoder is free to decode infinity and NaN as binary or decimal floating point
 
 ### Numbers With Underscores
 
-All numeric values of any type (with the exception of +- "nan" and "inf") may contain any number of underscores at any point after the first character and before the last character. Underscpres are treated as a kind of "numeric whitespace", and are ignored during parsing.
+All numeric values of any type (with the exception of +- "nan" and "inf") may contain any number of underscores at any point after the first character and before the last character. Underscores are treated as a kind of "numeric whitespace", and are ignored during parsing.
 
 Examples:
 
