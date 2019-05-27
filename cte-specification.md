@@ -415,9 +415,18 @@ Comments may be placed before or after any object. Any number of comments may oc
 
 Comments must only contain printable characters, and valid UTF-8 whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed).
 
-A comment with a payload begins with a `#` character followed by a space (U+0020), and terminates at the next carriage return (U+000D) or newline (U+000A). The comment payload begins after the `# ` sequence; everything including whitespace after this point, up to but not including the carriage return or newline, is preserved.
+A comment begins with a `#` character, followed by an optional space (U+0020), which is discarded if present. If multiple spaces follow the `#`, only the first is discarded. Everything else up to (but not including) the next carriage return (U+000D) or newline (U+000A), including whitespace, is preserved as-is.
 
-Special case: An empty comment contains only the initiator `#` (no space), followed immediately by a carriage return or newline.
+(using underscore `_` to represent space U+0020)
+
+| CTE Document    | Comment Value |
+| --------------- | ------------- |
+| `#`             | (empty)       |
+| `#_`            | (empty)       |
+| `#__`           | `_`           |
+| `#A_comment`    | `A_comment`   |
+| `#_A_comment`   | `A_comment`   |
+| `#__A_comment_` | `_A_comment_` |
 
 Example:
 
