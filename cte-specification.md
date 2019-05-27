@@ -415,7 +415,7 @@ Comments may be placed before or after any object. Any number of comments may oc
 
 Comments must only contain printable characters, and valid UTF-8 whitespace characters that do not induce a line change (u+000a, u+000b, u+000c, u+000d, etc are not allowed).
 
-A comment begins with a `#` character, followed by an optional space (U+0020), which is discarded if present. If multiple spaces follow the `#`, only the first is discarded. Everything else up to (but not including) the next carriage return (U+000D) or newline (U+000A), including whitespace, is preserved as-is.
+A comment begins with a `#` character, followed by an optional space (U+0020) which is discarded if present. If multiple spaces follow the `#`, only the first is discarded. Everything else up to (but not including) the next carriage return (U+000D) or newline (U+000A), including whitespace, is preserved as-is.
 
 (using underscore `_` to represent space U+0020)
 
