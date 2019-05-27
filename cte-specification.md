@@ -322,7 +322,7 @@ Example:
 
 ### URI
 
-Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). URIs are enclosed in quotes, preceded by a lowercase `u`.
+Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). URIs are enclosed in double-quotes, preceded by a lowercase `u`.
 
 Examples:
 
