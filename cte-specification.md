@@ -38,6 +38,7 @@ Example:
         "time"        = 2018-07-01T10:53:22.001481Z
         "nil"         = nil
         "bytes"       = h/10 ff 38 9a dd 00 4f 4f 91/
+        "url"         = u"https://example.com/"
         1             = "Keys don't have to be strings"
     }
 
@@ -317,6 +318,21 @@ The following escape sequences are allowed inside a string's contents, and must 
 Example:
 
     "A string\twith\ttabs\nand\nnewlines"
+
+
+### URI
+
+Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). URIs are enclosed in quotes, preceded by a lowercase `u`.
+
+Examples:
+
+    u"https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top"
+
+    u"mailto:John.Doe@example.com"
+
+    u"urn:oasis:names:specification:docbook:dtd:xml:4.1.2"
+
+    u"https://example.com/percent-encoding/?double-quote=%22"
 
 
 
