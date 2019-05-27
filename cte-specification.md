@@ -303,15 +303,23 @@ Byte array data is enclosed in double-quotes `"`, and is prefixed by the encodin
 
 Encoding Types:
 
-| Type   | Prefix | Notes                                                                          |
-| ------ | ------ | ------------------------------------------------------------------------------ |
-| Hex    |    h   | 1 byte represented by 2 lowercase hexadecimal characters, whitespace optional  |
+| Type   | Prefix | Notes                                                     |
+| ------ | ------ | --------------------------------------------------------- |
+| Hex    |    h   | 1 byte represented by 2 lowercase hexadecimal characters  |
 | Safe85 |    8   | [Safe85 encoding](https://github.com/kstenerud/safe-encoding/blob/master/safe85-specification.md) |
 
 Examples:
 
     h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
+
+    h"1 f 4 8 ae 4 56 3" (looks terrible, but is valid)
+
     8"8F2{*RVCLI8LDzZ!3e"
+
+    8"CmsAT9+UpvN!1v=H_SgpMm@mDHDFy(I[~!{I@2
+    yx1MU*1I[u!)NL20.1LOvFN-+cu1M_VMH_)d)HD=
+    T)I6F~3Ml=.;JP_@>Ln!H$N-xV.1MUpTNKoD71L(
+    nBIZop{LR-.0Nh}Y.1ML**I>@ziISc.1OfbXN"
 
 
 ### String
