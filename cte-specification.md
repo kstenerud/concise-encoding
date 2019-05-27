@@ -312,7 +312,7 @@ Examples:
 
     h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
 
-    h"1 f 4 8 ae 4 56 3" (looks terrible, but is valid)
+    h"1 f 4 8 ae 4 56 3" # looks terrible, but is valid
 
     8"8F2{*RVCLI8LDzZ!3e"
 
