@@ -308,12 +308,10 @@ Encoding Types:
 | Hex    |    h   | 1 byte represented by 2 lowercase hexadecimal characters, whitespace optional  |
 | Safe85 |    8   | [Safe85 encoding](https://github.com/kstenerud/safe-encoding/blob/master/safe85-specification.md) |
 
-Example:
+Examples:
 
-| Type   | Encoded Contents                               |
-| ------ | ---------------------------------------------- |
-| Hex    | `h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"` |
-| Safe85 | `8"8F2{*RVCLI8LDzZ!3e"`                        |
+    h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
+    8"8F2{*RVCLI8LDzZ!3e"
 
 
 ### String
