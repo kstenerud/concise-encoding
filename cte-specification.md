@@ -69,8 +69,6 @@ Example:
 
 ### Integer
 
-TODO: underscores
-
 Represents two's complement signed integers up to a width of 128 bits. Negative values are prefixed with a dash `-` as a sign character.
 
 Integers can be specified in base 2, 8, 10, or 16. For bases other than 10, integers must be prefixed with a special prefix:
@@ -181,6 +179,23 @@ The following are special floating point values:
 Although ieee754 allows many different NaN values (signaling or non-signaling + payload), all NaN values for the purpose of this spec are considered equal and non-signaling, and must be treated as equivalent when used as map keys (meaning you cannot have multiple NAN keys in a map).
 
 A decoder is free to decode infinity and NaN as binary or decimal floating point values.
+
+
+### Numbers With Underscores
+
+All numeric types may contain any number of underscores at any point after the first character and before the last character. Underscpres are treated as a kind of "numeric whitespace", and are ignored during parsing.
+
+Examples:
+
+    1_000_000 = 1000000
+    -_7_._4_e_+_100 = -7.4e+100
+    -d_4_10.___2_2 = -d410.22
+
+Invalid:
+
+    _100
+    _-d6.33
+    50_
 
 
 ### Time
