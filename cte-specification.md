@@ -37,7 +37,7 @@ Example:
         "decimal"     = -d1.02e+40
         "time"        = 2018-07-01T10:53:22.001481Z
         "nil"         = nil
-        "bytes"       = h/10 ff 38 9a dd 00 4f 4f 91/
+        "bytes"       = h"10 ff 38 9a dd 00 4f 4f 91"
         "url"         = u"https://example.com/"
         1             = "Keys don't have to be strings"
     }
@@ -282,21 +282,21 @@ Array Types
 
 An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian order whenever possible.
 
-Byte array data begins with an encoding type, followed by a slash `/`, encoded contents, and then a terminating slash `/`. The encoded contents may contain whitespace at any point.
+Byte array data is enclosed in double-quotes `"`, and is prefixed by the encoding type. The encoded contents may contain whitespace at any point.
 
 Encoding Types:
 
 | Type   | Prefix | Notes                                                                          |
 | ------ | ------ | ------------------------------------------------------------------------------ |
 | Hex    |    h   | 1 byte represented by 2 lowercase hexadecimal characters, whitespace optional  |
-| Safe85 |    s   | https://github.com/kstenerud/safe-encoding/blob/master/safe85-specification.md |
+| Safe85 |    8   | [Safe85 encoding](https://github.com/kstenerud/safe-encoding/blob/master/safe85-specification.md) |
 
 Example:
 
 | Type   | Encoded Contents                               |
 | ------ | ---------------------------------------------- |
-| Hex    | `h/39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c/` |
-| Safe85 | `s/8F2{*RVCLI8LDzZ!3e/`                        |
+| Hex    | `h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"` |
+| Safe85 | `8"8F2{*RVCLI8LDzZ!3e"`                        |
 
 
 ### String
@@ -322,7 +322,7 @@ Example:
 
 ### URI
 
-Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). URIs are enclosed in double-quotes, preceded by a lowercase `u`.
+Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). URIs are enclosed in double-quotes, prefixed with a lowercase `u`.
 
 Examples:
 
@@ -415,7 +415,7 @@ Example:
         =
         #
         # Comment before some binary data (but not inside it)
-        h/01 02 03 04 05 06 07 08 09 0a/
+        h"01 02 03 04 05 06 07 08 09 0a"
     }
     # Comments at the
     # end of the document.
@@ -463,7 +463,7 @@ While there are many characters classified as "whitespace" within the Unicode se
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `h/ 01 02 03   0 4 /` is equivalent to `h/01020304/`
+ * `h" 01 02 03   0 4 "` is equivalent to `h"01020304"`
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 
@@ -475,7 +475,7 @@ Examples:
 
 ### Whitespace **must not** occur:
 
- * Between a byte array encoding type and the opening slash: `s /` is invalid.
+ * Between a byte array encoding type and the opening double-quote: `h "` is invalid.
  * Splitting a time value: `2018-07-01 T 10:53:22.001481 Z` is invalid.
  * Splitting a numeric value: `3f h`, `9.41 d`, `3 000`, `9.3 e+3`, `- 1.0` are invalid.
  * Splitting special values: `t rue`, `ni l`, `i nf`, `n a n` are invalid.
