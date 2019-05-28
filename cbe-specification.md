@@ -1,7 +1,10 @@
 Concise Binary Encoding
 =======================
 
-A general purpose, machine-readable, compact representation of semi-structured hierarchical data.
+Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact representation of semi-structured hierarchical data.
+
+CBE is non-cycic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
+
 
 Goals
 -----
@@ -9,7 +12,8 @@ Goals
   * General purpose encoding for a large number of applications
   * Supports the most common data types
   * Supports hierarchical data structuring
-  * Binary format to minimize parsing costs
+  * Easy to parse (no sub-byte fields except for array length)
+  * Binary format to minimize transmission costs
   * Little endian byte ordering to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
@@ -185,7 +189,7 @@ Examples:
 
     [00] Length 0.
     [0c] Length 3.
-    [a0 0f] Length 1000.
+    [a1 0f] Length 1000.
 
 
 ### Bytes
