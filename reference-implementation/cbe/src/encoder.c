@@ -1,6 +1,6 @@
 #include "cbe_internal.h"
 
-// #define KSLogger_LocalLevel DEBUG
+// #define KSLogger_LocalLevel TRACE
 #include "kslogger.h"
 
 
@@ -43,12 +43,15 @@ typedef enum
     ARRAY_LENGTH_FIELD_WIDTH_62_BIT = 3,
 } cbe_array_length_field_width;
 
-typedef enum
-{
-    MAX_VALUE_6_BIT  = 0x3f,
-    MAX_VALUE_14_BIT = 0x3fff,
-    MAX_VALUE_30_BIT = 0x3fffffff,
-} cbe_max_value;
+#define MAX_VALUE_7_BIT  0x7f
+#define MAX_VALUE_14_BIT 0x3fff
+#define MAX_VALUE_21_BIT 0x1fffff
+#define MAX_VALUE_28_BIT 0xfffffff
+#define MAX_VALUE_35_BIT 0x7ffffffffLL
+#define MAX_VALUE_42_BIT 0x3ffffffffffLL
+#define MAX_VALUE_49_BIT 0x1ffffffffffffLL
+#define MAX_VALUE_56_BIT 0xffffffffffffffLL
+#define MAX_VALUE_63_BIT 0x7fffffffffffffffLL
 
 
 // ==============
@@ -169,10 +172,15 @@ static inline void swap_map_key_value_status(cbe_encode_process* const process)
 
 static inline int get_array_length_field_width(const int64_t length)
 {
-    if(length <= MAX_VALUE_6_BIT)  return sizeof(int8_t);
-    if(length <= MAX_VALUE_14_BIT) return sizeof(int16_t);
-    if(length <= MAX_VALUE_30_BIT) return sizeof(int32_t);
-    return sizeof(int64_t);
+    if(length <= MAX_VALUE_7_BIT)  return 1;
+    if(length <= MAX_VALUE_14_BIT) return 2;
+    if(length <= MAX_VALUE_21_BIT) return 3;
+    if(length <= MAX_VALUE_28_BIT)  return 4;
+    if(length <= MAX_VALUE_35_BIT)  return 5;
+    if(length <= MAX_VALUE_42_BIT)  return 6;
+    if(length <= MAX_VALUE_49_BIT)  return 7;
+    if(length <= MAX_VALUE_56_BIT)  return 8;
+    return 9;
 }
 
 static inline void add_primitive_type(cbe_encode_process* const process, const cbe_type_field type)
@@ -250,23 +258,22 @@ static inline void end_array(cbe_encode_process* const process)
 static inline void add_array_length_field(cbe_encode_process* const process, const int64_t length)
 {
     KSLOG_DEBUG("(process %p, length %d)", process, length);
+    uint64_t ulength = ((uint64_t)length) & 0x7fffffffffffffffULL;
 
-    if(length <= MAX_VALUE_6_BIT)
+    for(int i = 0; i <= 9; i++)
     {
-        add_primitive_uint_8(process, (uint8_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_6_BIT));
-        return;
+        uint8_t byte = ulength & 0x7f;
+        ulength >>= 7;
+        if(ulength > 0)
+        {
+            byte |= 0x80;
+        }
+        add_primitive_uint_8(process, byte);
+        if((byte & 0x80) == 0)
+        {
+            break;
+        }
     }
-    if(length <= MAX_VALUE_14_BIT)
-    {
-        add_primitive_uint_16(process, (uint16_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_14_BIT));
-        return;
-    }
-    if(length <= MAX_VALUE_30_BIT)
-    {
-        add_primitive_uint_32(process, (uint32_t)((length << 2) | ARRAY_LENGTH_FIELD_WIDTH_30_BIT));
-        return;
-    }
-    add_primitive_uint_64(process, (length << 2) | ARRAY_LENGTH_FIELD_WIDTH_62_BIT);
 }
 
 static inline cbe_encode_status add_int_small(cbe_encode_process* const process, const int8_t value)
@@ -424,7 +431,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
 
 int cbe_encode_process_size(const int max_container_depth)
 {
-    KSLOG_TRACE("(max_container_depth %d)", max_container_depth)
+    KSLOG_TRACE("(max_container_depth %d)", max_container_depth);
     return sizeof(cbe_encode_process) + get_max_container_depth_or_default(max_container_depth);
 }
 

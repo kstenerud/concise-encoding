@@ -25,24 +25,18 @@ std::vector<uint8_t> as_vector(const std::string& value)
 
 std::vector<uint8_t> array_length_field(int64_t length)
 {
-    int64_t length_bytes = length << 2;
-    uint8_t* bytes = (uint8_t*)&length_bytes;
-    if(length > 0x3fffffff)
+    std::vector<uint8_t> bytes;
+    do
     {
-        length_bytes += 3;
-        return std::vector<uint8_t>(bytes, bytes + 8);
-    }
-    if(length > 0x3fff)
-    {
-        length_bytes += 2;
-        return std::vector<uint8_t>(bytes, bytes + 4);
-    }
-    if(length > 0x3f)
-    {
-        length_bytes += 1;
-        return std::vector<uint8_t>(bytes, bytes + 2);
-    }
-    return std::vector<uint8_t>(bytes, bytes + 1);
+        uint8_t byte = (uint8_t)(length & 0x7f);
+        length >>= 7;
+        if(length > 0)
+        {
+            byte |= 0x80;
+        }
+        bytes.push_back(byte);
+    } while(length > 0);
+    return bytes;
 }
 
 std::string make_string(int length)
