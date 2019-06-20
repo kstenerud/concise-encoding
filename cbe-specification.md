@@ -257,7 +257,7 @@ A decoder is free to discard or preserve comments.
 
 The length field contains the byte length (length in octets), NOT the character length.
 
-    [92] [Length] [Octet 0] ... [Octet (Length-1)]
+    [93] [Length] [Octet 0] ... [Octet (Length-1)]
 
 #### Character Restrictions
 
