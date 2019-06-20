@@ -318,6 +318,15 @@ Example:
     [95 81 61 01 81 62 02 96] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
+### Inline Containers
+
+CBE documents in data communication messages are often implemented as lists or maps at the top level. To help save bytes, CBE allows "inline" top-level containers as a special case.
+
+The use of and type of inline container as the top level object must be agreed to by all parties involved (usually via a protocol specification), and an alternate method to delimit the beginning and end of the container (such as a length field) must be provided. In such a case, the "container begin" (0x94 for list, 0x95 for map) and "container end" (0x96) markers may be omitted in the top level container.
+
+Inline containers are not supported in the [CBE file format](#file-format).
+
+
 
 Other Types
 -----------
