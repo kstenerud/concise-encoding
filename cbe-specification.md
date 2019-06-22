@@ -168,30 +168,9 @@ An "array" for the purposes of this spec is a contiguous sequence of octets, pre
 
 ### Array Length Field
 
-The array length is an unsigned integer that represents the number of octets in the array, encoded as a `varint`.
+All array types are preceded by an array length field, representing the number of octets in the array.
 
-A `varint` encodes a value into a sequence of bytes where the lower 7 bits contain data and the high bit is used as a "continuation" bit. A decoder reads encoded bytes, filling a decoded unsigned integer 7 bits at a time in little endian order, until it encounters a byte with the high "continuation" bit cleared.
-
-Example: Decoding a varint from the sequence `[b4 d2 5a 91 ff]`
-
-Separate the continuation bits from the data bits:
-
-| Byte 0        | Byte 1        | Byte 2        |
-| ------------- | ------------- | ------------- |
-| `0xb4`        | `0xd2`        | `0x5a`        |
-| `10110100`    | `11010010`    | `01011010`    |
-| `1` `0110100` | `1` `1010010` | `0` `1011010` |
-
-Byte 2 (`0x5a`) has its high bit cleared, so the bytes following it (`[91 ff]`) are not part of the varint.
-
-The 7-bit groups are concatenated in little endian order:
-
-    Byte 2     Byte 1     Byte 0
-    1011010 ++ 1010010 ++ 0110100
-    = 101101010100100110100
-    = 10110 10101001 00110100
-    =  0x16     0xa9     0x34
-    = 0x16a934
+The array length field is encoded as a [VLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md).
 
 
 ### Bytes

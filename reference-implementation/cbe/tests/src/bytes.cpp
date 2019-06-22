@@ -5,10 +5,10 @@
 
 using namespace enc;
 
-TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_0,   2, bin(make_bytes(0)), concat({0x91}, array_length_field(0)))
-TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_1,   2, bin(make_bytes(1)), concat({0x91}, array_length_field(1), make_bytes(1)))
-TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_2,   2, bin(make_bytes(2)), concat({0x91}, array_length_field(2), make_bytes(2)))
-TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_500, 3, bin(make_bytes(500)), concat({0x91}, array_length_field(500), make_bytes(500)))
+TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_0,   2, bin(make_bytes(0)), concat({0x91}, {0x00}))
+TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_1,   2, bin(make_bytes(1)), concat({0x91}, {0x01}, make_bytes(1)))
+TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_2,   2, bin(make_bytes(2)), concat({0x91}, {0x02}, make_bytes(2)))
+TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_500, 3, bin(make_bytes(500)), concat({0x91}, {0x83, 0x74}, make_bytes(500)))
 
 TEST_ENCODE_STATUS(Bytes, too_long,   99, 9, CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED, binh(1)->data({0x30, 0x30}))
 TEST_ENCODE_STATUS(Bytes, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5)->data({0x30, 0x30}))

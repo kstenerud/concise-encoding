@@ -23,7 +23,7 @@ struct cbe_decode_process
     struct
     {
         bool is_inside_array;
-        int is_reading_byte_count_offset;
+        bool is_reading_byte_count;
         bool has_reported_byte_count;
         array_type type;
         int64_t current_offset;
@@ -214,7 +214,7 @@ static cbe_decode_status begin_array(cbe_decode_process* const process, array_ty
     process->array.has_reported_byte_count = false;
     process->array.type = type;
     process->array.current_offset = 0;
-    process->array.is_reading_byte_count_offset = byte_count < 0 ? 0 : -1;
+    process->array.is_reading_byte_count = byte_count < 0;
     process->array.byte_count = byte_count >= 0 ? byte_count : 0;
 
     return CBE_DECODE_STATUS_OK;
@@ -224,19 +224,15 @@ static cbe_decode_status stream_array(cbe_decode_process* const process)
 {
     KSLOG_DEBUG("(process %p)", process);
 
-    while(process->array.is_reading_byte_count_offset >= 0)
+    while(process->array.is_reading_byte_count)
     {
         STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(process, 1);
         uint8_t byte = read_uint_8(process);
         KSLOG_DEBUG("Read byte %02x", byte);
-        process->array.byte_count |= (byte & 0x7f) << (7*process->array.is_reading_byte_count_offset);
-        if((byte & 0x80) != 0)
+        process->array.byte_count = process->array.byte_count << 7 | (byte & 0x7f);
+        if((byte & 0x80) == 0)
         {
-            process->array.is_reading_byte_count_offset++;
-        }
-        else
-        {
-            process->array.is_reading_byte_count_offset = -1;
+            process->array.is_reading_byte_count = false;
         }
         KSLOG_DEBUG("Byte count = %d, is_reading = %d", process->array.byte_count, process->array.is_reading_byte_count_offset);
     }

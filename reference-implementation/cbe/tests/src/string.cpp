@@ -21,8 +21,8 @@ TEST_ENCODE_DECODE_SHRINKING(String,  size_12, 1, str(make_string(12)), concat({
 TEST_ENCODE_DECODE_SHRINKING(String,  size_13, 1, str(make_string(13)), concat({0x8d}, as_vector(make_string(13))))
 TEST_ENCODE_DECODE_SHRINKING(String,  size_14, 1, str(make_string(14)), concat({0x8e}, as_vector(make_string(14))))
 TEST_ENCODE_DECODE_SHRINKING(String,  size_15, 1, str(make_string(15)), concat({0x8f}, as_vector(make_string(15))))
-TEST_ENCODE_DECODE_SHRINKING(String,  size_16, 2, str(make_string(16)), concat({0x90}, array_length_field(16), as_vector(make_string(16))))
-TEST_ENCODE_DECODE_SHRINKING(String, size_500, 3, str(make_string(500)), concat({0x90}, array_length_field(500), as_vector(make_string(500))))
+TEST_ENCODE_DECODE_SHRINKING(String,  size_16, 2, str(make_string(16)), concat({0x90}, {0x10}, as_vector(make_string(16))))
+TEST_ENCODE_DECODE_SHRINKING(String, size_500, 3, str(make_string(500)), concat({0x90}, {0x83, 0x74}, as_vector(make_string(500))))
 
 TEST_ENCODE_STATUS(String, too_long,   99, 9, CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED, strh(1)->data({0x30, 0x30}))
 TEST_ENCODE_STATUS(String, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5)->data({0x30, 0x30}))
