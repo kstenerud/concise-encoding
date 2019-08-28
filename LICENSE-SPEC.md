@@ -1,5 +1,5 @@
-License for CBE and CTE Specifications
-======================================
+License for CBE Specification
+=============================
 
 License Type: Creative Commons Attribution 4.0 International Public License
 

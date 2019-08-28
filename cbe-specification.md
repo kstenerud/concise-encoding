@@ -3,28 +3,74 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact representation of semi-structured hierarchical data.
 
-CBE is non-cycic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
+CBE is non-cycic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
 
 
-Goals
------
+
+Features
+--------
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
   * Supports hierarchical data structuring
-  * Easy to parse (no sub-byte fields except for array length)
+  * Easy to parse (very few sub-byte fields)
   * Binary format to minimize transmission costs
   * Little endian byte ordering to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
-  * Type compatible with [Concise Text Encoding (CTE)](cte-specification.md)
+  * Type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md)
+
+
+
+Contents
+--------
+
+* [Structure](#structure)
+  - [Maximum Depth](#maximum-depth)
+* [Encoding](#encoding)
+  - [Type Field](#type-field)
+* [Scalar Types](#scalar-types)
+  - [Boolean](#boolean)
+  - [Integer](#integer)
+  - [Binary Floating Point](#binary-floating-point)
+  - [Decimal Floating Point](#decimal-floating-point)
+* [Temporal Types](#temporal-types)
+  - [Date](#date)
+  - [Time](#time)
+  - [Timestamp](#timestamp)
+* [Array Types](#array-types)
+  - [Array Length Field](#array-length-field)
+  - [Bytes](#bytes)
+  - [String](#string)
+  - [URI](#uri)
+  - [Comment](#comment)
+    - [Comment Character Restrictions](#comment-character-restrictions)
+* [Container Types](#container-types)
+  - [List](#list)
+  - [Unordered Map](#unordered-map)
+  - [Ordered Map](#ordered-map)
+  - [Inline Containers](#inline-containers)
+* [Other Types](#other-types)
+  - [Nil](#nil)
+  - [Padding](#padding)
+  - [RESERVED](#reserved)
+* [Invalid Encodings](#invalid-encodings)
+* [Smallest Possible Size](#smallest-possible-size)
+* [Alignment](#alignment)
+* [File Format](#file-format)
+* [Version History](#version-history)
+* [License](#license)
 
 
 
 Structure
 ---------
 
-A CBE document is a binary encoded document consisting of a single, top-level object. You can store multiple objects in a document by making the top level object a container.
+A CBE document is a binary encoded document consisting of a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+
+### Maximum Depth
+
+Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different max depth.
 
 
 
@@ -36,61 +82,71 @@ All objects are composed of an 8-bit type field and possibly a payload.
 
 #### Type Field
 
-| Hex | Dec | Type                       | Payload                                       |
-| --- | --- | -------------------------- | --------------------------------------------- |
-|  00 |   0 | Integer value 0            |                                               |
-|  01 |   1 | Integer value 1            |                                               |
-| ... | ... | ...                        |                                               |
-|  69 | 105 | Integer value 105          |                                               |
-|  6a | 106 | Positive Integer (8 bit)   | [8-bit positive integer]                      |
-|  6b | 107 | Positive Integer (16 bit)  | [16-bit positive integer]                     |
-|  6c | 108 | Positive Integer (32 bit)  | [32-bit positive integer]                     |
-|  6d | 109 | Positive Integer (64 bit)  | [64-bit positive integer]                     |
-|  6e | 110 | Positive Integer (128 bit) | [128-bit positive integer]                    |
-|  6f | 111 | Nil (no data)              |                                               |
-|  70 | 112 | Boolean False              |                                               |
-|  71 | 113 | Boolean True               |                                               |
-|  72 | 114 | Binary Float (32 bit)      | [IEEE 754 binary32 floating point]            |
-|  73 | 115 | Binary Float (64 bit)      | [IEEE 754 binary64 floating point]            |
-|  74 | 116 | Binary Float (128 bit)     | [IEEE 754 binary128 floating point]           |
-|  75 | 117 | Decimal Float (32 bit)     | [IEEE 754 decimal32, Densely Packed Decimal]  |
-|  76 | 118 | Decimal Float (64 bit)     | [IEEE 754 decimal64, Densely Packed Decimal]  |
-|  77 | 119 | Decimal Float (128 bit)    | [IEEE 754 decimal128, Densely Packed Decimal] |
-|  78 | 120 | Time                       | 64-bit [smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) |
-|  79 | 121 | Time                       | 64-bit [nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md) |
-|  7a | 122 | Negative Integer (8 bit)   | [8-bit negative integer]                      |
-|  7b | 123 | Negative Integer (16 bit)  | [16-bit negative integer]                     |
-|  7c | 124 | Negative Integer (32 bit)  | [32-bit negative integer]                     |
-|  7d | 125 | Negative Integer (64 bit)  | [64-bit negative integer]                     |
-|  7e | 126 | Negative Integer (128 bit) | [128-bit negative integer]                    |
-|  7f | 127 | Padding                    |                                               |
-|  80 | 128 | String: 0 bytes            |                                               |
-|  81 | 129 | String: 1 byte             | [1 octet of data]                             |
-|  82 | 130 | String: 2 bytes            | [2 octets of data]                            |
-|  83 | 131 | String: 3 bytes            | [3 octets of data]                            |
-|  84 | 132 | String: 4 bytes            | [4 octets of data]                            |
-|  85 | 133 | String: 5 bytes            | [5 octets of data]                            |
-|  86 | 134 | String: 6 bytes            | [6 octets of data]                            |
-|  87 | 135 | String: 7 bytes            | [7 octets of data]                            |
-|  88 | 136 | String: 8 bytes            | [8 octets of data]                            |
-|  89 | 137 | String: 9 bytes            | [9 octets of data]                            |
-|  8a | 138 | String: 10 bytes           | [10 octets of data]                           |
-|  8b | 139 | String: 11 bytes           | [11 octets of data]                           |
-|  8c | 140 | String: 12 bytes           | [12 octets of data]                           |
-|  8d | 141 | String: 13 bytes           | [13 octets of data]                           |
-|  8e | 142 | String: 14 bytes           | [14 octets of data]                           |
-|  8f | 143 | String: 15 bytes           | [15 octets of data]                           |
-|  90 | 144 | String                     | [byte length] [UTF-8 encoded string]          |
-|  91 | 145 | Bytes                      | [byte length] [data]                          |
-|  92 | 146 | URI                        | [byte length] [URI]                           |
-|  93 | 147 | Comment                    | [byte length] [UTF-8 encoded string]          |
-|  94 | 148 | List                       |                                               |
-|  95 | 149 | Map                        |                                               |
-|  96 | 150 | End of Container           |                                               |
-|  97 | 151 | Integer value -105         |                                               |
-| ... | ... | ...                        |                                               |
-|  fe | 254 | Integer value -2           |                                               |
-|  ff | 255 | Integer value -1           |                                               |
+| Hex | Dec | Type                      | Payload                                       |
+| --- | --- | ------------------------- | --------------------------------------------- |
+|  00 |   0 | Integer value 0           |                                               |
+|  01 |   1 | Integer value 1           |                                               |
+| ... | ... | ...                       |                                               |
+|  64 | 100 | Integer value 100         |                                               |
+|  65 | 101 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
+|  66 | 102 | Positive Integer (16 bit) | [16-bit positive integer]                     |
+|  67 | 103 | Positive Integer (32 bit) | [32-bit positive integer]                     |
+|  68 | 104 | Positive Integer (64 bit) | [64-bit positive integer]                     |
+|  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  6a | 106 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  6b | 107 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  6c | 108 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
+|  6d | 109 | RESERVED                  |                                               |
+|  6e | 110 | RESERVED                  |                                               |
+|  6f | 111 | RESERVED                  |                                               |
+|  70 | 112 | RESERVED                  |                                               |
+|  71 | 113 | RESERVED                  |                                               |
+|  72 | 114 | List                      |                                               |
+|  73 | 115 | Unordered Map             |                                               |
+|  74 | 116 | Ordered Map               |                                               |
+|  75 | 117 | End of Container          |                                               |
+|  76 | 118 | Binary Float (32 bit)     | [IEEE 754 binary32 floating point]            |
+|  77 | 119 | Binary Float (64 bit)     | [IEEE 754 binary64 floating point]            |
+|  78 | 120 | Binary Float (128 bit)    | [IEEE 754 binary128 floating point]           |
+|  79 | 121 | Decimal Float (32 bit)    | [IEEE 754 decimal32, Binary Integer Decimal]  |
+|  7a | 122 | Decimal Float (64 bit)    | [IEEE 754 decimal64, Binary Integer Decimal]  |
+|  7b | 123 | Decimal Float (128 bit)   | [IEEE 754 decimal128, Binary Integer Decimal] |
+|  7c | 124 | Boolean False             |                                               |
+|  7d | 125 | Boolean True              |                                               |
+|  7e | 126 | Nil (no data)             |                                               |
+|  7f | 127 | Padding                   |                                               |
+|  80 | 128 | String: 0 bytes           |                                               |
+|  81 | 129 | String: 1 byte            | [1 octet of data]                             |
+|  82 | 130 | String: 2 bytes           | [2 octets of data]                            |
+|  83 | 131 | String: 3 bytes           | [3 octets of data]                            |
+|  84 | 132 | String: 4 bytes           | [4 octets of data]                            |
+|  85 | 133 | String: 5 bytes           | [5 octets of data]                            |
+|  86 | 134 | String: 6 bytes           | [6 octets of data]                            |
+|  87 | 135 | String: 7 bytes           | [7 octets of data]                            |
+|  88 | 136 | String: 8 bytes           | [8 octets of data]                            |
+|  89 | 137 | String: 9 bytes           | [9 octets of data]                            |
+|  8a | 138 | String: 10 bytes          | [10 octets of data]                           |
+|  8b | 139 | String: 11 bytes          | [11 octets of data]                           |
+|  8c | 140 | String: 12 bytes          | [12 octets of data]                           |
+|  8d | 141 | String: 13 bytes          | [13 octets of data]                           |
+|  8e | 142 | String: 14 bytes          | [14 octets of data]                           |
+|  8f | 143 | String: 15 bytes          | [15 octets of data]                           |
+|  90 | 144 | String                    | [byte length] [UTF-8 encoded string]          |
+|  91 | 145 | Bytes                     | [byte length] [data]                          |
+|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)]                           |
+|  93 | 147 | Comment                   | [byte length] [UTF-8 encoded string]          |
+|  94 | 148 | RESERVED                  |                                               |
+|  95 | 149 | RESERVED                  |                                               |
+|  96 | 150 | RESERVED                  |                                               |
+|  9a | 151 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  98 | 152 | Negative Integer (64 bit) | [64-bit negative integer]                     |
+|  99 | 153 | Negative Integer (32 bit) | [32-bit negative integer]                     |
+|  9a | 154 | Negative Integer (16 bit) | [16-bit negative integer]                     |
+|  9b | 155 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
+|  9c | 156 | Integer value -100        |                                               |
+| ... | ... | ...                       |                                               |
+|  fe | 254 | Integer value -2          |                                               |
+|  ff | 255 | Integer value -1          |                                               |
 
 
 
@@ -103,55 +159,74 @@ True or false.
 
 Examples:
 
-    [70] = false
-    [71] = true
+    [7c] = false
+    [7d] = true
 
 
 ### Integer
 
-Integers are encoded as positive or negative, and can be 8, 16, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
+Integers are encoded as positive or negative values, and can be of any width. The fixed width types (16 to 64 bit) are stored in little endian byte order.
 
-Values from -106 to 105 ("small int") are encoded in the type field, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored in the payload as UNSIGNED integers (not two's complement), and the field type determines the sign to be applied.
+Values from -100 to +100 ("small int") are encoded into the type field itself, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value and the field type determining the sign to be applied.
 
 Examples:
 
     [60] = 96
     [00] = 0
     [ca] = -54
-    [6a 7f] = 127
-    [6a ff] = 255
-    [7a ff] = -255
-    [6c 40 42 0f 00] = 1,000,000
-    [7d 00 10 a5 d4 e8 00 00 00] = -1000000000000
-
-#### Negative Integers
-
-Only small ints (-106 to 105) are stored as two's complement signed integers. For all other integer types, the payload is always stored as an unsigned integer, with the data type field determining the sign to be applied after decoding. This means that CBE negative integers are capable of storing a greater range of values than can be stored in a two's complement integer of the same data width. Thus, encoded 128 bit negative integers must not have the high bit set in the payload because the resulting value would not fit into a 128 bit two's complement integer.
+    [65 7f] = 127
+    [65 ff] = 255
+    [9b ff] = -255
+    [67 40 42 0f 00] = 1,000,000
+    [98 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 
 ### Binary Floating Point
 
-IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They can be read directly from the buffer in little endian byte order.
+IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They are stored in little endian byte order.
 
 Examples:
 
-    [72 00 00 48 41] = 12.5
-    [73 cd cc cc cc cc 04 94 40] = 1281.2
+    [76 00 00 48 41] = 12.5
+    [77 cd cc cc cc cc 04 94 40] = 1281.2
 
 
 ### Decimal Floating Point
 
-IEEE 754 decimal floating point densely packed decimal types, 32, 64, or 128 bits wide. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. They can be read directly from the buffer in little endian byte order.
+IEEE 754 decimal floating point binary integer decimal types, 32, 64, or 128 bits wide. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. They are stored in little endian byte order.
 
 Example:
 
-    [75 4b 00 00 b2] = -7.5
-    [75 0c 32 00 32] = 1281.2
+    [79 4b 00 00 b2] = -7.5
+    [79 0c 32 00 32] = 1281.2
+
+
+Temporal Types
+--------------
+
+### Date
+
+Dates are represented using the [compact date](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-date) format.
+
+Example:
+
+    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
+    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
 
 
 ### Time
 
-Time is represented using the [Smalltime](https://github.com/kstenerud/smalltime/blob/master/smalltime-specification.md) or [Nanotime](https://github.com/kstenerud/smalltime/blob/master/nanotime-specification.md)  formats, stored in little endian byte order.
+Time is represented using the [compact time](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-time) format.
+
+Example:
+
+    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
+    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
+
+
+### Timestamp
+
+Timestamps are represented using the [compact timestamp](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-timestamp) format.
 
 Example:
 
@@ -170,7 +245,7 @@ An "array" for the purposes of this spec is a contiguous sequence of octets, pre
 
 All array types are preceded by an array length field, representing the number of octets in the array.
 
-The array length field is encoded as a [VLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md).
+The array length field is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md).
 
 
 ### Bytes
@@ -186,7 +261,9 @@ Examples:
 
 ### String
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string WITHOUT a byte order mark (BOM). The length field contains the byte length (length in octets), NOT the character length.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (BOM) or the NUL (u+0000) character, but may contain any other valid character.
+
+The length field holds the byte length (length in octets), NOT the character length.
 
     [90] [Length] [Octet 0] ... [Octet (Length-1)]
 
@@ -206,7 +283,7 @@ Examples:
 
 ### URI
 
-Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986).
+Uniform Resource Identifier, which must be valid according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
 
 The length field contains the byte length (length in octets), NOT the character length.
 
@@ -230,7 +307,7 @@ Example:
 
 ### Comment
 
-Comments are string metadata that may be placed inside a document. While they may be placed anywhere an object may be placed, they are semantically ignored by the parser (they do not constitute values). For example, the sequence [(list) (int8 value 1) (comment "this is a comment") (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the comment's occurrence (at the decoder's discretion).
+Comments are string metadata that may be placed inside a document. They may be placed anywhere an object may be placed, and are semantically ignored by the parser (they do not constitute values). For example, the sequence [(list) (int8 value 1) (comment "this is a comment") (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the comment's occurrence (at the decoder's discretion).
 
 A decoder is free to discard or preserve comments. 
 
@@ -238,18 +315,24 @@ The length field contains the byte length (length in octets), NOT the character 
 
     [93] [Length] [Octet 0] ... [Octet (Length-1)]
 
-#### Character Restrictions
+#### Comment Character Restrictions
 
-The following characters are disallowed in comments:
+Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences are not interpreted (they are passed on verbatim).
 
- * Control characters (Unicode 0000-001f, 007f-009f) EXCEPT for TAB (u+0009), which is allowed
- * Line breaking characters (such as u+2028, u+2029)
- * Byte order mark
+The following characters are disallowed:
 
-The following characters are allowed in comments only if they don't also appear in the above disallowed list:
+ * Control characters (Unicode u+0000 to u+001f, u+007f to u+009f) with the exception of:
+   - Horizontal Tab (u+0009)
+   - Linefeed (u+000a)
+ * Line breaking characters (such as u+2028, u+2029).
+ * Byte order mark.
+
+The following characters are allowed in comments if they aren't in the above disallowed list:
 
  * UTF-8 printable characters
  * UTF-8 whitespace characters
+
+As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
 
 Example:
 
@@ -273,14 +356,14 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [94 01 6b 88 13 96] = A list containing integers (1, 5000)
+    [72 01 6b 88 13 75] = A list containing integers (1, 5000)
 
 
-### Map
+### Unordered Map
 
 A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `nil` type. Values may be any mix of any type, including other containers.
 
-All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)
@@ -288,13 +371,24 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [95] [key 1] [value 1] [key 2] [value 2] ... [96]
+    [73] [key 1] [value 1] [key 2] [value 2] ... [75]
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
+
+An implementation must not rely upon any particular ordering of key-value pairs when reading an unordered map.
 
 Example:
 
-    [95 81 61 01 81 62 02 96] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [73 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
+
+
+### Ordered Map
+
+An ordered map works the same as an unordered map, except that the order of the key-value pairs in the map is significant, and must be preserved.
+
+Example:
+
+    [74 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Inline Containers
@@ -318,7 +412,7 @@ Note: Use nil judiciously and sparingly, as some languages may have restrictions
 
 Example:
 
-    [6f] = No data
+    [7e] = No data
 
 
 ### Padding
@@ -327,21 +421,28 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [7f 7f 7f 67 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+
+
+### RESERVED
+
+This type is reserved for future expansion of the format, and must not be used.
 
 
 
-Illegal Encodings
+Invalid Encodings
 -----------------
 
-Illegal encodings must not be used, as they may cause problems or even API violations in certain languages. A decoder may discard illegal encodings, or may even abort processing.
+The structure and format of CBE leaves room for certain encodings that contain problematic data. These are called invalid encodings. A decoder must halt processing when an invalid encoding is encountered.
 
-  * Times must be valid. For example: hour 30, while technically encodable, is not allowed.
+  * Times must be valid. For example: hour 30, while technically encodable, is invalid.
   * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
-  * All map keys must have corresponding values.
-  * Map keys must not be container types or the `nil` type.
-  * Maps must not contain duplicate keys. This includes numeric keys of different widths that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
-  * An array's length field must match the byte-length of its data.
+  * All map keys must have corresponding values. A key with a missing value is invalid.
+  * Map keys must not be container types or the `nil` type. Keys of these types are invalid.
+  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0). Duplicate map keys are invalid.
+  * An array's length field must match the byte-length of its data. An invalid array length may not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
+  * UTF-8 strings must contain only valid UTF-8 sequences that evaluate to complete, valid characters.
+  * *RESERVED* types are invalid.
 
 
 
@@ -357,22 +458,13 @@ For specialized applications, an encoder implementation may choose to preserve l
 Alignment
 ---------
 
-Applications may require data to be aligned in some cases. For example, some processors cannot read unaligned multibyte data types without compiler intervention. Others can read the data unaligned, but may take more processing time to do so. An encoder could be tuned to insert `padding` bytes when encoding certain types.
-
-    read_data(buffer, buffer_length);
+Applications may require data to be aligned in some cases for optimal decoding performance. For example, some processors may not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert `padding` bytes when encoding certain data:
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
-| 7f | 7f | 7f | 6c | 00 | 00 | 00 | 8f |
+| 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
 
-As an alternative to padding, if you have a known schema for your data, you could structure your read offset in the decoder such that the data just happens to align correctly:
-
-    read_data(buffer+3, buffer_length-3);
-
-| Bytes 0-3      | Bytes 4-7     |
-| -------------- | ------------- |
-| xx xx xx 6c    | 00 00 00 8f   |
-| positive int32 | 0x8f000000    |
+Alignment is usually only useful when the target decoder is known prior to encoding. It is mostly an optimization for closed systems.
 
 
 
@@ -407,7 +499,7 @@ The encoded data following the header contains optional padding bytes, followed 
 
 Example:
 
-    [43 42 45 01 7f 7f 7f 6c 00 00 00 8f] =
+    [43 42 45 01 7f 7f 7f 67 00 00 00 8f] =
     CBE file containing 0x8f000000, padded such that the 32-bit integer starts on a 4-byte boundary.
 
 

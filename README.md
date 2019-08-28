@@ -1,7 +1,7 @@
-Concise Binary Encoding and Concise Text Encoding
-=================================================
+Concise Binary Encoding
+=======================
 
-General purpose, compact representations of semi-structured hierarchical data, in binary and text formats.
+General purpose, compact representations of semi-structured hierarchical data.
 
 Alternative To:
 
@@ -14,24 +14,18 @@ Alternative To:
 
 
 
-Goals
------
+Features
+--------
 
   * General purpose encoding for a large number of applications
   * Supports the most common data types
   * Supports hierarchical data structuring
-  * Minimal complexity
-  * Type compatibility between [CBE](cbe-specification.md) and [CTE](cte-specification.md)
-
-#### Goals: Concise Binary Encoding (CBE):
-
-  * Binary format to minimize parsing costs
+  * Easy to parse (very few sub-byte fields)
+  * Binary format to minimize transmission costs
   * Little endian byte ordering to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
-
-#### Goals: Concise Text Encoding (CTE):
-
-  * Human readable format
+  * Minimal complexity
+  * Type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md)
 
 
 
@@ -41,41 +35,50 @@ Supported Types
 
 ### Scalar Types
 
-| Type    | Description                                            |
-| ------- | ------------------------------------------------------ |
-| Boolean | True or false                                          |
-| Integer | Signed two's complement, from 8 to 128 bits            |
-| Float   | IEEE 754 floating point, from 32 to 128 bits           |
-| Decimal | IEEE 754 densely packed decimal, from 32 to 128 bits   |
-| Time    | Date & time, to the microsecond or nanosecond          |
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Boolean       | True or false                                         |
+| Integer       | Signed two's complement integer                       |
+| Float         | IEEE 754 binary floating point                        |
+| Decimal       | IEEE 754 decimal floating point                       |
+
+
+### Temporal Types
+
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Date          | Date, with unlimited year range                       |
+| Time          | Time, with precision to the nanosecond, and time zone |
+| Timestamp     | Combined date and time                                |
 
 
 ### Array Types
 
-| Type    | Description                                            |
-| ------- | ------------------------------------------------------ |
-| Bytes   | Array of binary data                                   |
-| String  | Array of UTF-8 encoded bytes                           |
-| URI     | Universal Resource Identifier                          |
-| Comment | A UTF-8 encoded comment string                         |
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Bytes         | Array of binary data                                  |
+| String        | Array of UTF-8 encoded bytes                          |
+| URI           | Universal Resource Identifier                         |
+| Comment       | A UTF-8 encoded comment string                        |
 
 
 ### Container Types
 
 Containers can hold any combination of types, including other containers.
 
-| Type    | Description                                            |
-| ------- | ------------------------------------------------------ |
-| List    | A list may containin any types, even mixed             |
-| Map     | Scalar or array types for keys, any types for values   |
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| List          | A list may containin any types, even mixed            |
+| Unordered Map | Scalar or array types for keys, any types for values  |
+| Ordered Map   | key-value pairs are explicitly ordered                |
 
 
 ### Other Types
 
-| Type    | Description                                            |
-| ------- | ------------------------------------------------------ |
-| Nil     | Denotes the absence of data                            |
-| Padding | Used to align data in a CPU friendly manner (CBE Only) |
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Nil           | Denotes the absence of data                           |
+| Padding       | Used to align data in a CPU friendly manner           |
 
 
 
@@ -83,12 +86,13 @@ Specifications
 --------------
 
  * [Concise Binary Encoding](cbe-specification.md)
- * [Concise Text Encoding](cte-specification.md)
 
 
 
 Implementations
 ---------------
+
+TODO: Update these to the latest.
 
 * [C implementation](reference-implementation)
 * [Go implementation](https://github.com/kstenerud/go-cbe)
