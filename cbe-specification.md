@@ -3,7 +3,7 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact representation of semi-structured hierarchical data.
 
-CBE is non-cycic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
+CBE is non-cyclic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
 
 
 
