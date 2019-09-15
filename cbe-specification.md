@@ -104,11 +104,11 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  67 | 103 | Positive Integer (32 bit) | [32-bit positive integer]                     |
 |  68 | 104 | Positive Integer (64 bit) | [64-bit positive integer]                     |
 |  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  6a | 106 | Float                     | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  6b | 107 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
-|  6c | 108 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
-|  6d | 109 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  6e | 110 | RESERVED                  |                                               |
+|  6a | 106 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  6b | 107 | Binary Float              | [64-bit ieee754 binary float]                 |
+|  6c | 108 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  6d | 109 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  6e | 110 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
 |  6f | 111 | RESERVED                  |                                               |
 |  70 | 112 | RESERVED                  |                                               |
 |  71 | 113 | RESERVED                  |                                               |
@@ -192,14 +192,24 @@ Examples:
     [98 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 
-### Float
+### Decimal Float
 
-Floating point values are represented using the [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
+Decimal floating point values are represented using the [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
 Example:
 
+TODO: Fix these
+
     [79 4b 00 00 b2] = -7.5
     [79 0c 32 00 32] = 1281.2
+
+
+### Binary Float
+
+IEEE754 Binary Float
+
+TODO
+
 
 
 Temporal Types
