@@ -7,6 +7,17 @@ CBE is non-cycic and hierarchical like XML and JSON, and supports the most commo
 
 
 
+TODO
+----
+
+TODO: Version specifier:
+
+- metadata block before main object containing `_v`
+- For CTE, use () for metadata map
+
+
+
+
 Features
 --------
 
@@ -93,24 +104,24 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  67 | 103 | Positive Integer (32 bit) | [32-bit positive integer]                     |
 |  68 | 104 | Positive Integer (64 bit) | [64-bit positive integer]                     |
 |  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  6a | 106 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
-|  6b | 107 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
-|  6c | 108 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  6d | 109 | RESERVED                  |                                               |
+|  6a | 106 | Float                     | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  6b | 107 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  6c | 108 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  6d | 109 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
 |  6e | 110 | RESERVED                  |                                               |
 |  6f | 111 | RESERVED                  |                                               |
 |  70 | 112 | RESERVED                  |                                               |
 |  71 | 113 | RESERVED                  |                                               |
-|  72 | 114 | List                      |                                               |
-|  73 | 115 | Unordered Map             |                                               |
-|  74 | 116 | Ordered Map               |                                               |
-|  75 | 117 | End of Container          |                                               |
-|  76 | 118 | Binary Float (32 bit)     | [IEEE 754 binary32 floating point]            |
-|  77 | 119 | Binary Float (64 bit)     | [IEEE 754 binary64 floating point]            |
-|  78 | 120 | Binary Float (128 bit)    | [IEEE 754 binary128 floating point]           |
-|  79 | 121 | Decimal Float (32 bit)    | [IEEE 754 decimal32, Binary Integer Decimal]  |
-|  7a | 122 | Decimal Float (64 bit)    | [IEEE 754 decimal64, Binary Integer Decimal]  |
-|  7b | 123 | Decimal Float (128 bit)   | [IEEE 754 decimal128, Binary Integer Decimal] |
+|  72 | 114 | RESERVED                  |                                               |
+|  73 | 115 | RESERVED                  |                                               |
+|  74 | 116 | RESERVED                  |                                               |
+|  75 | 117 | RESERVED                  |                                               |
+|  76 | 118 | Set                       |                                               |
+|  77 | 119 | List                      |                                               |
+|  78 | 120 | Unordered Map             |                                               |
+|  79 | 121 | Ordered Map               |                                               |
+|  7a | 122 | Metadata Map              |                                               |
+|  7b | 123 | End of Container          |                                               |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
 |  7e | 126 | Nil (no data)             |                                               |
@@ -181,19 +192,9 @@ Examples:
     [98 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 
-### Binary Floating Point
+### Float
 
-IEEE 754 binary floating point types, 32, 64, or 128 bits wide. They are stored in little endian byte order.
-
-Examples:
-
-    [76 00 00 48 41] = 12.5
-    [77 cd cc cc cc cc 04 94 40] = 1281.2
-
-
-### Decimal Floating Point
-
-IEEE 754 decimal floating point binary integer decimal types, 32, 64, or 128 bits wide. Decimal floating point values are typically used in financial applications where emulation of decimal rounding is necessary. They are stored in little endian byte order.
+Floating point values are represented using the [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
 Example:
 
@@ -305,43 +306,6 @@ Example:
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
 
 
-### Comment
-
-Comments are string metadata that may be placed inside a document. They may be placed anywhere an object may be placed, and are semantically ignored by the parser (they do not constitute values). For example, the sequence [(list) (int8 value 1) (comment "this is a comment") (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the comment's occurrence (at the decoder's discretion).
-
-A decoder is free to discard or preserve comments. 
-
-The length field contains the byte length (length in octets), NOT the character length.
-
-    [93] [Length] [Octet 0] ... [Octet (Length-1)]
-
-#### Comment Character Restrictions
-
-Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences are not interpreted (they are passed on verbatim).
-
-The following characters are disallowed:
-
- * Control characters (Unicode u+0000 to u+001f, u+007f to u+009f) with the exception of:
-   - Horizontal Tab (u+0009)
-   - Linefeed (u+000a)
- * Line breaking characters (such as u+2028, u+2029).
- * Byte order mark.
-
-The following characters are allowed in comments if they aren't in the above disallowed list:
-
- * UTF-8 printable characters
- * UTF-8 whitespace characters
-
-As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
-
-Example:
-
-    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
-     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
-     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
-    = Bug #95512: System fails to start on arm64 unless B latch is set
-
-
 
 Container Types
 ---------------
@@ -381,6 +345,8 @@ Example:
 
     [73 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
+TODO: NaN cannot be used as a map key.
+
 
 ### Ordered Map
 
@@ -389,6 +355,17 @@ An ordered map works the same as an unordered map, except that the order of the 
 Example:
 
     [74 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
+
+
+### Metadata Map
+
+TODO: Clarify this and fix wording
+
+A metadata map operates similarly to an ordered map, except that it its contents are considered to be out-of-bad data, and have no semantic meaning as far as the document itself is concerned. Any number of metadata maps may be placed anywhere it would be valid to place an object (including at the top level, parallel to a real object). They are not counted as real objects (they count neither as keys, nor values, nor list/set elements, nor top-level objects). A decoder is free to report on a metadata map's contents, or even to ignore metadata maps completely (decoding and discarding their contents).
+
+For example, the sequence [(list) (int8 value 1) (metadata map: contents omitted for brevity) (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the metadata's occurrence and contents (at the decoder's discretion).
+
+See [Metadata](#metadata)
 
 
 ### Inline Containers
@@ -427,6 +404,77 @@ Example:
 ### RESERVED
 
 This type is reserved for future expansion of the format, and must not be used.
+
+
+
+Metadata
+--------
+
+Metadata is stored in a [metadata map](#metadata-map). A metadata map may contain anything that an ordered map can, but string keys that begin with an underscore (`_`) are reserved and must not be used except in the ways defined by this specification.
+
+The following metadata keys have special purposes in CBE:
+
+| Key  | Type      | Contents             |
+| ---- | --------- | -------------------- |
+| `_c` | String    | User-defined comment |
+| `_v` | Float     | CBE spec version     |
+| `_d` | Timestamp | Creation date        |
+| `_t` | Set       | Set of tags          |
+
+TODO: _a = attribute map?
+
+TODO: Metadata map at top level is special, containing creation date & spec version, etc.
+TODO: Comment as a separate type?
+
+
+### Comment
+
+Comments are user-defined string metadata equivalent to comments in a text document. Comments have additional restricions on their content beyond those of normal strings:
+
+#### Contents
+
+The following characters are disallowed:
+
+ * Control characters (such as u+0000 to u+001f, u+007f to u+009f) with the exception of:
+   - Horizontal Tab (u+0009)
+   - Linefeed (u+000a)
+ * Line breaking characters (such as u+2028, u+2029).
+ * Byte order mark.
+
+The following characters are allowed in comments if they aren't in the above disallowed list:
+
+ * UTF-8 printable characters
+ * UTF-8 whitespace characters
+
+#### Line Endings
+
+As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
+
+#### Example
+
+    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
+     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
+     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
+    = Bug #95512: System fails to start on arm64 unless B latch is set
+
+
+### CBE Spec Version
+
+The CBE spec version is a "first metadata" key. It is stored as either a major number, or a major.minor version number, representing the version of the CBE spec this document adheres to.
+
+A change in the major version portion indicates a specification change that is incompatible with previous major versions (meaning that a decoder based on an earlier version of this spec will not be able to decode the document). A change in the minor version indicates a specification change that is compatible with other minor versions of the same major version of the spec.
+
+If the CBE spec version is not present in the document, it is assumed to be 1.0.
+
+
+### Creation Date
+
+The creation date is a "first metadata" key that records the date and time that the document was created.
+
+
+### First Metadata
+
+The "first metadata" is the first metadata map that is placed before the top-level object in the document. If present, this metadata map may contain certain special metadata keys, such as the CBE spec version or creation date. "first metadata" keys are ignored if they are encountered outside of this special map.
 
 
 
