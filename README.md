@@ -33,14 +33,14 @@ Supported Types
 ---------------
 
 
-### Scalar Types
+### Numeric Types
 
 | Type          | Description                                           |
 | ------------- | ----------------------------------------------------- |
 | Boolean       | True or false                                         |
 | Integer       | Signed two's complement integer                       |
-| Float         | IEEE 754 binary floating point                        |
-| Decimal       | IEEE 754 decimal floating point                       |
+| Decimal Float | Compressed decimal floating point                     |
+| Binary Float  | IEEE 754 binary floating point                        |
 
 
 ### Temporal Types

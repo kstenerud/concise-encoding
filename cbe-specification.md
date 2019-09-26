@@ -39,7 +39,7 @@ Contents
   - [Maximum Length](#maximum-length)
 * [Encoding](#encoding)
   - [Type Field](#type-field)
-* [Scalar Types](#scalar-types)
+* [Numeric Types](#numeric-types)
   - [Boolean](#boolean)
   - [Integer](#integer)
   - [Decimal Floating Point](#decimal-floating-point)
@@ -174,8 +174,8 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 
 
 
-Scalar Types
-------------
+Numeric Types
+-------------
 
 ### Boolean
 
