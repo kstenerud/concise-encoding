@@ -22,7 +22,7 @@ Features
   * Supports hierarchical data structuring
   * Easy to parse (very few sub-byte fields)
   * Binary format to minimize transmission costs
-  * Little endian byte ordering to allow the most common systems to read directly off the wire
+  * Little endian byte ordering where possible to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
   * Type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md)
@@ -59,7 +59,6 @@ Supported Types
 | Bytes         | Array of binary data                                  |
 | String        | Array of UTF-8 encoded bytes                          |
 | URI           | Universal Resource Identifier                         |
-| Comment       | A UTF-8 encoded comment string                        |
 
 
 ### Container Types
@@ -73,6 +72,14 @@ Containers can hold any combination of types, including other containers.
 | Ordered Map   | key-value pairs are explicitly ordered                |
 
 
+### Metadata Types
+
+| Type          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Metadata Map  | Metadata about an object                              |
+| Comment       | A UTF-8 encoded comment string                        |
+
+
 ### Other Types
 
 | Type          | Description                                           |
@@ -82,8 +89,8 @@ Containers can hold any combination of types, including other containers.
 
 
 
-Specifications
---------------
+Specification
+-------------
 
  * [Concise Binary Encoding](cbe-specification.md)
 

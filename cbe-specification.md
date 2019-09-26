@@ -3,18 +3,15 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact representation of semi-structured hierarchical data.
 
-CBE is non-cyclic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space efficiency. The more common types and values tend to use less space. Its encoding is primarily byte oriented to simplify codec implementation and off-the-wire inspection.
+CBE is non-cyclic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space and codec efficiency. The more common types and values tend to use less space. Its encoding is byte oriented to simplify codec implementation and off-the-wire inspection.
 
 
 
 TODO
 ----
 
-TODO: Version specifier:
-
-- metadata block before main object containing `_v`
-- For CTE, use () for metadata map
-
+- Examples don't match the updated spec.
+- Reference implementation doesn't match the updated spec.
 
 
 
@@ -26,7 +23,7 @@ Features
   * Supports hierarchical data structuring
   * Easy to parse (very few sub-byte fields)
   * Binary format to minimize transmission costs
-  * Little endian byte ordering to allow the most common systems to read directly off the wire
+  * Little endian byte ordering where possible to allow the most common systems to read directly off the wire
   * Balanced space and computation efficiency
   * Minimal complexity
   * Type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md)
@@ -37,14 +34,16 @@ Contents
 --------
 
 * [Structure](#structure)
+  - [Version Number](#version-number)
   - [Maximum Depth](#maximum-depth)
+  - [Maximum Length](#maximum-length)
 * [Encoding](#encoding)
   - [Type Field](#type-field)
 * [Scalar Types](#scalar-types)
   - [Boolean](#boolean)
   - [Integer](#integer)
-  - [Binary Floating Point](#binary-floating-point)
   - [Decimal Floating Point](#decimal-floating-point)
+  - [Binary Floating Point](#binary-floating-point)
 * [Temporal Types](#temporal-types)
   - [Date](#date)
   - [Time](#time)
@@ -54,13 +53,14 @@ Contents
   - [Bytes](#bytes)
   - [String](#string)
   - [URI](#uri)
-  - [Comment](#comment)
-    - [Comment Character Restrictions](#comment-character-restrictions)
 * [Container Types](#container-types)
   - [List](#list)
   - [Unordered Map](#unordered-map)
   - [Ordered Map](#ordered-map)
   - [Inline Containers](#inline-containers)
+* [Metadata Types](#metadata-types)
+  - [Metadata Map](#metadata-map)
+  - [Comment](#comment)
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [Padding](#padding)
@@ -77,18 +77,31 @@ Contents
 Structure
 ---------
 
-A CBE document is a binary encoded document consisting of a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+A CBE document is a binary encoded document consisting of a version number, followed by a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+
+
+### Version Number
+
+The version number is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
+
+The version number is mandatory.
+
 
 ### Maximum Depth
 
 Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different max depth.
 
 
+### Maximum Length
+
+Maximum lengths (max list length, max map length, max array length, max total objects in document, max byte length, etc) are implementation defined, and should be negotiated beforehand. A decoder is free to discard documents that threaten to exceed its resources.
+
+
 
 Encoding
 --------
 
-All objects are composed of an 8-bit type field and possibly a payload.
+A CBE document is byte-oriented. All objects are composed of an 8-bit type field and a possible payload that will always end on an 8-bit boundary.
 
 
 #### Type Field
@@ -105,18 +118,18 @@ All objects are composed of an 8-bit type field and possibly a payload.
 |  68 | 104 | Positive Integer (64 bit) | [64-bit positive integer]                     |
 |  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
 |  6a | 106 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  6b | 107 | Binary Float              | [64-bit ieee754 binary float]                 |
-|  6c | 108 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
-|  6d | 109 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
-|  6e | 110 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  6f | 111 | RESERVED                  |                                               |
+|  6b | 107 | Binary Float              | [32-bit ieee754 binary float]                 |
+|  6c | 108 | Binary Float              | [64-bit ieee754 binary float]                 |
+|  6d | 109 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  6e | 110 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  6f | 111 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
 |  70 | 112 | RESERVED                  |                                               |
 |  71 | 113 | RESERVED                  |                                               |
 |  72 | 114 | RESERVED                  |                                               |
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
-|  76 | 118 | Set                       |                                               |
+|  76 | 118 | RESERVED                  |                                               |
 |  77 | 119 | List                      |                                               |
 |  78 | 120 | Unordered Map             |                                               |
 |  79 | 121 | Ordered Map               |                                               |
@@ -192,23 +205,19 @@ Examples:
     [98 00 10 a5 d4 e8 00 00 00] = -1000000000000
 
 
-### Decimal Float
+### Decimal Floating Point
 
 Decimal floating point values are represented using the [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
 Example:
 
-TODO: Fix these
-
     [79 4b 00 00 b2] = -7.5
     [79 0c 32 00 32] = 1281.2
 
 
-### Binary Float
+### Binary Floating Point
 
-IEEE754 Binary Float
-
-TODO
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that can't handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 
 
@@ -217,7 +226,7 @@ Temporal Types
 
 ### Date
 
-Dates are represented using the [compact date](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-date) format.
+Dates are represented using the [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
 
 Example:
 
@@ -227,7 +236,7 @@ Example:
 
 ### Time
 
-Time is represented using the [compact time](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-time) format.
+Time is represented using the [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
 
 Example:
 
@@ -237,7 +246,7 @@ Example:
 
 ### Timestamp
 
-Timestamps are represented using the [compact timestamp](https://github.com/kstenerud/compact-date/blob/master/compact-date-specification.md#compact-timestamp) format.
+Timestamps are represented using the [compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp) format.
 
 Example:
 
@@ -285,6 +294,10 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
     [82] [octet 0] [octet 1]
     ...
 
+Note: Escape sequences within strings are NOT interpteted; they are passed through as-is.
+
+Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems.
+
 Examples:
 
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
@@ -297,6 +310,8 @@ Examples:
 Uniform Resource Identifier, which must be valid according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
 
 The length field contains the byte length (length in octets), NOT the character length.
+
+Note: Percent-encoding sequences within URIs are NOT interpreted; they are passed through as-is.
 
 Example:
 
@@ -335,13 +350,13 @@ Example:
 
 ### Unordered Map
 
-A map associates objects (keys) with other objects (values). Keys may be any mix of scalar or array types. A key must not be a container type or the `nil` type. Values may be any mix of any type, including other containers.
+An unordered map associates objects (keys) with other objects (values), in no particular order. Implementations must not rely on any incidental ordering. Keys may be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values may be any mix of any type, including other containers.
 
 All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)
- * 2000.0 (32-bit float)
+ * 2000.0 (decimal float)
 
 Map contents are stored as key-value pairs of objects:
 
@@ -349,13 +364,9 @@ Map contents are stored as key-value pairs of objects:
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
-An implementation must not rely upon any particular ordering of key-value pairs when reading an unordered map.
-
 Example:
 
     [73 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
-
-TODO: NaN cannot be used as a map key.
 
 
 ### Ordered Map
@@ -367,24 +378,96 @@ Example:
     [74 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
-### Metadata Map
-
-TODO: Clarify this and fix wording
-
-A metadata map operates similarly to an ordered map, except that it its contents are considered to be out-of-bad data, and have no semantic meaning as far as the document itself is concerned. Any number of metadata maps may be placed anywhere it would be valid to place an object (including at the top level, parallel to a real object). They are not counted as real objects (they count neither as keys, nor values, nor list/set elements, nor top-level objects). A decoder is free to report on a metadata map's contents, or even to ignore metadata maps completely (decoding and discarding their contents).
-
-For example, the sequence [(list) (int8 value 1) (metadata map: contents omitted for brevity) (int8 value 2) (end)] semantically resolves to a list containing the values 1 and 2, with the user possibly being informed of the metadata's occurrence and contents (at the decoder's discretion).
-
-See [Metadata](#metadata)
-
-
 ### Inline Containers
 
 CBE documents in data communication messages are often implemented as lists or maps at the top level. To help save bytes, CBE allows "inline" top-level containers as a special case.
 
-The use of and type of inline container as the top level object must be agreed to by all parties involved (usually via a protocol specification), and an alternate method to delimit the beginning and end of the container (such as a length field) must be provided. In such a case, the "container begin" (0x94 for list, 0x95 for map) and "container end" (0x96) markers may be omitted in the top level container.
+An "inline container" document contains no version specifier, no container initiator, and no container end. It is up to the implementation to specify the CBE version in use, and how the container is delimited.
 
 Inline containers are not supported in the [CBE file format](#file-format).
+
+
+
+Metadata Types
+--------------
+
+Metadata is data about the data. It describes things about whatever data follows it in a document, which may or may not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+
+
+### Metadata Association
+
+Metadata objects are pseudo-objects that can be placed anywhere a real object can be placed, but do not count as objects themselves. Instead, metadata is associated with the object that follows it. For example:
+
+    (map) ("a key") (metadata) ("a value") (end)
+
+In this case, the metadata refers to the value `"a value"`, but the actual data for purposes of decoding the map is `(map) ("a key") ("a value") (end)`.
+
+    (map) ("a key") (metadata) (end)
+
+This map is invalid, because it resolves to `(map) ("a key") (end)`, with no value associated with the key (the metadata doesn't count).
+
+Metadata can also refer to other metadata, for example:
+
+    (map) (metadata-1) (metadata) ("a key") ("a value") (end)
+
+In this case, `(metadata)` refers to the string `"a key"`, and `(metadata-1)` refers to `(metadata)`. The actual map is `(map) ("a key") ("a value") (end)`.
+
+#### Exception: Comments
+
+The metadata association rules do not apply to [comments](#comment). Comments stand entirely on their own, and do not officially refer to anything, nor can any other metadata refer to a comment (i.e. comments are invisible to other metadata).
+
+
+### Metadata Map
+
+A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map may contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
+
+The following are predefined metadata keys that must be used for that type of information:
+
+| Key   | Type          | Contents          |
+| ----- | ------------- | ----------------- |
+| `_ct` | Timestamp     | Creation time     |
+| `_mt` | Timestamp     | Modification time |
+| `_at` | Timestamp     | Last access time  |
+| `_t`  | List          | Set of tags       |
+| `_a`  | Unordered Map | Attributes        |
+
+All other metadata keys beginning with `_` are reserved for future expansion, and must not be used.
+
+
+### Comment
+
+Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+
+Comments have additional restricions on their content beyond those of normal strings:
+
+#### Comment Character Restrictions
+
+The following characters are explicitly allowed:
+
+ * Horizontal Tab (u+0009)
+ * Linefeed (u+000a)
+
+The following characters are disallowed if they aren't in the above allowed section:
+
+ * Control characters (such as u+0000 to u+001f, u+007f to u+009f).
+ * Line breaking characters (such as u+2028, u+2029).
+ * Byte order mark.
+
+The following characters are allowed if they aren't in the above disallowed section:
+
+ * UTF-8 printable characters
+ * UTF-8 whitespace characters
+
+#### Comment Line Endings
+
+As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
+
+#### Example
+
+    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
+     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
+     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
+    = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
 
@@ -417,90 +500,20 @@ This type is reserved for future expansion of the format, and must not be used.
 
 
 
-Metadata
---------
-
-Metadata is stored in a [metadata map](#metadata-map). A metadata map may contain anything that an ordered map can, but string keys that begin with an underscore (`_`) are reserved and must not be used except in the ways defined by this specification.
-
-The following metadata keys have special purposes in CBE:
-
-| Key  | Type      | Contents             |
-| ---- | --------- | -------------------- |
-| `_c` | String    | User-defined comment |
-| `_v` | Float     | CBE spec version     |
-| `_d` | Timestamp | Creation date        |
-| `_t` | Set       | Set of tags          |
-
-TODO: _a = attribute map?
-
-TODO: Metadata map at top level is special, containing creation date & spec version, etc.
-TODO: Comment as a separate type?
-
-
-### Comment
-
-Comments are user-defined string metadata equivalent to comments in a text document. Comments have additional restricions on their content beyond those of normal strings:
-
-#### Contents
-
-The following characters are disallowed:
-
- * Control characters (such as u+0000 to u+001f, u+007f to u+009f) with the exception of:
-   - Horizontal Tab (u+0009)
-   - Linefeed (u+000a)
- * Line breaking characters (such as u+2028, u+2029).
- * Byte order mark.
-
-The following characters are allowed in comments if they aren't in the above disallowed list:
-
- * UTF-8 printable characters
- * UTF-8 whitespace characters
-
-#### Line Endings
-
-As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
-
-#### Example
-
-    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
-     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
-     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
-    = Bug #95512: System fails to start on arm64 unless B latch is set
-
-
-### CBE Spec Version
-
-The CBE spec version is a "first metadata" key. It is stored as either a major number, or a major.minor version number, representing the version of the CBE spec this document adheres to.
-
-A change in the major version portion indicates a specification change that is incompatible with previous major versions (meaning that a decoder based on an earlier version of this spec will not be able to decode the document). A change in the minor version indicates a specification change that is compatible with other minor versions of the same major version of the spec.
-
-If the CBE spec version is not present in the document, it is assumed to be 1.0.
-
-
-### Creation Date
-
-The creation date is a "first metadata" key that records the date and time that the document was created.
-
-
-### First Metadata
-
-The "first metadata" is the first metadata map that is placed before the top-level object in the document. If present, this metadata map may contain certain special metadata keys, such as the CBE spec version or creation date. "first metadata" keys are ignored if they are encountered outside of this special map.
-
-
-
 Invalid Encodings
 -----------------
 
 The structure and format of CBE leaves room for certain encodings that contain problematic data. These are called invalid encodings. A decoder must halt processing when an invalid encoding is encountered.
 
-  * Times must be valid. For example: hour 30, while technically encodable, is invalid.
-  * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
-  * All map keys must have corresponding values. A key with a missing value is invalid.
-  * Map keys must not be container types or the `nil` type. Keys of these types are invalid.
-  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0). Duplicate map keys are invalid.
-  * An array's length field must match the byte-length of its data. An invalid array length may not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
-  * UTF-8 strings must contain only valid UTF-8 sequences that evaluate to complete, valid characters.
-  * *RESERVED* types are invalid.
+ * Times must be valid. For example: hour 30, while technically encodable, is invalid.
+ * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
+ * All map keys must have corresponding values. A key with a missing value is invalid.
+ * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
+ * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
+ * An array's length field must match the byte-length of its data. An invalid array length may not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
+ * All UTF-8 sequences must evaluate to complete, valid characters.
+ * RESERVED types are invalid, and must not be used.
+ * Metadata keys beginning with `_` must not be used, except for those listed in this specifiction.
 
 
 
@@ -546,9 +559,9 @@ A CBE file is composed of a CBE header, followed by a CBE encoded object.
 
 ### CBE Header
 
-The 4-byte header is composed of the characters `C`, `B`, `E`, and then a version number.
+The 3-byte header is composed of the characters `C`, `B`, `E`, which is then followed by the version number and top-level object.
 
-For example, a file encoded in CBE format version 1 would begin with the header `[43 42 45 01]`
+For example, a file encoded in CBE format version 1 would begin with the header `[43 42 45 01]`, followed by the top-level object.
 
 
 ### Encoded Object
