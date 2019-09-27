@@ -112,13 +112,13 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 | ... | ... | ...                       |                                               |
 |  64 | 100 | Integer value 100         |                                               |
 |  65 | 101 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
-|  66 | 102 | Positive Integer (16 bit) | [16-bit positive integer]                     |
-|  67 | 103 | Positive Integer (32 bit) | [32-bit positive integer]                     |
-|  68 | 104 | Positive Integer (64 bit) | [64-bit positive integer]                     |
+|  66 | 102 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
+|  67 | 103 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]      |
+|  68 | 104 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]      |
 |  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
 |  6a | 106 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  6b | 107 | Binary Float              | [32-bit ieee754 binary float]                 |
-|  6c | 108 | Binary Float              | [64-bit ieee754 binary float]                 |
+|  6b | 107 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
+|  6c | 108 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
 |  6d | 109 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  6e | 110 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  6f | 111 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -162,9 +162,9 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
 |  9a | 151 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  98 | 152 | Negative Integer (64 bit) | [64-bit negative integer]                     |
-|  99 | 153 | Negative Integer (32 bit) | [32-bit negative integer]                     |
-|  9a | 154 | Negative Integer (16 bit) | [16-bit negative integer]                     |
+|  98 | 152 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
+|  99 | 153 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
+|  9a | 154 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]      |
 |  9b | 155 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
 |  9c | 156 | Integer value -100        |                                               |
 | ... | ... | ...                       |                                               |
