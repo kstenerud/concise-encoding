@@ -68,7 +68,6 @@ Contents
 * [Invalid Encodings](#invalid-encodings)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
-* [File Format](#file-format)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -536,42 +535,6 @@ Applications may require data to be aligned in some cases for optimal decoding p
 | 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
 
 Alignment is usually only useful when the target decoder is known prior to encoding. It is mostly an optimization for closed systems.
-
-
-
-File Format
------------
-
-The CBE file format allows storing of CBE encoded data in a standard way.
-
-
-### Naming
-
-CBE files should use the extension `cbe`. For example: `mydata.cbe`
-
-
-### Contents
-
-A CBE file is composed of a CBE header, followed by a CBE encoded object.
-
-    [CBE header] [CBE encoded object]
-
-
-### CBE Header
-
-The 3-byte header is composed of the characters `C`, `B`, `E`, which is then followed by the version number and top-level object.
-
-For example, a file encoded in CBE format version 1 would begin with the header `[43 42 45 01]`, followed by the top-level object.
-
-
-### Encoded Object
-
-The encoded data following the header contains optional padding bytes, followed by a single top-level object. You can store multiple objects by using a collection as the "single" object.
-
-Example:
-
-    [43 42 45 01 7f 7f 7f 67 00 00 00 8f] =
-    CBE file containing 0x8f000000, padded such that the 32-bit integer starts on a 4-byte boundary.
 
 
 
