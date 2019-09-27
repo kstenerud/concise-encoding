@@ -421,15 +421,15 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map may contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
 
-The following are predefined metadata keys that must be used for that type of information:
+The following are predefined metadata keys that must be used for that type of information (decoders must accept both regular and short key versions):
 
-| Key   | Type          | Contents          |
-| ----- | ------------- | ----------------- |
-| `_ct` | Timestamp     | Creation time     |
-| `_mt` | Timestamp     | Modification time |
-| `_at` | Timestamp     | Last access time  |
-| `_t`  | List          | Set of tags       |
-| `_a`  | Unordered Map | Attributes        |
+| Key                  | Short Key | Type          | Contents          |
+| -------------------- | --------- | ------------- | ----------------- |
+| `_creation_time`     | `_ct`     | Timestamp     | Creation time     |
+| `_modification_time` | `_mt`     | Timestamp     | Modification time |
+| `_access_time`       | `_at`     | Timestamp     | Last access time  |
+| `_tags`              | `_t`      | List          | Set of tags       |
+| `_attributes`        | `_a`      | Unordered Map | Attributes        |
 
 All other metadata keys beginning with `_` are reserved for future expansion, and must not be used.
 
