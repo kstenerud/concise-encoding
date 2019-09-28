@@ -161,7 +161,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
-|  9a | 151 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  97 | 151 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
 |  98 | 152 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
 |  99 | 153 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
 |  9a | 154 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]      |
