@@ -10,8 +10,7 @@ CBE is non-cyclic and hierarchical like XML and JSON, and supports the most comm
 TODO
 ----
 
-- Examples don't match the updated spec.
-- Reference implementation doesn't match the updated spec.
+- Fix decimal float and temporal examples
 
 
 
@@ -111,19 +110,19 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  01 |   1 | Integer value 1           |                                               |
 | ... | ... | ...                       |                                               |
 |  64 | 100 | Integer value 100         |                                               |
-|  65 | 101 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
-|  66 | 102 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
-|  67 | 103 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]      |
-|  68 | 104 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]      |
-|  69 | 105 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  6a | 106 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  6b | 107 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
-|  6c | 108 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
-|  6d | 109 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
-|  6e | 110 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
-|  6f | 111 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  70 | 112 | RESERVED                  |                                               |
-|  71 | 113 | RESERVED                  |                                               |
+|  65 | 101 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  66 | 102 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  67 | 103 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
+|  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
+|  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
+|  6b | 107 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]      |
+|  6c | 108 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]      |
+|  6d | 109 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
+|  6e | 110 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]      |
+|  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
+|  70 | 112 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
+|  71 | 113 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
 |  72 | 114 | RESERVED                  |                                               |
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
@@ -161,11 +160,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
-|  97 | 151 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  98 | 152 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
-|  99 | 153 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
-|  9a | 154 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]      |
-|  9b | 155 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
+|  97 | 151 | RESERVED                  |                                               |
+|  98 | 152 | RESERVED                  |                                               |
+|  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
 |  9c | 156 | Integer value -100        |                                               |
 | ... | ... | ...                       |                                               |
 |  fe | 254 | Integer value -2          |                                               |
@@ -197,11 +196,12 @@ Examples:
     [60] = 96
     [00] = 0
     [ca] = -54
-    [65 7f] = 127
-    [65 ff] = 255
-    [9b ff] = -255
-    [67 40 42 0f 00] = 1,000,000
-    [98 00 10 a5 d4 e8 00 00 00] = -1000000000000
+    [68 7f] = 127
+    [68 ff] = 255
+    [69 ff] = -255
+    [66 bd 84 40] = 1000000
+    [6c 80 96 98 00] = 10000000
+    [67 9d 8d a5 94 a0 00] = -1000000000000
 
 
 ### Decimal Floating Point
@@ -210,6 +210,7 @@ Decimal floating point values are represented using the [Compact Float](https://
 
 Example:
 
+TODO
     [79 4b 00 00 b2] = -7.5
     [79 0c 32 00 32] = 1281.2
 
@@ -217,6 +218,9 @@ Example:
 ### Binary Floating Point
 
 Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that can't handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+
+    [70 00 e2 af 44] = 0x1.5fc4p10
+    [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
 
 
 
@@ -229,6 +233,7 @@ Dates are represented using the [compact date](https://github.com/kstenerud/comp
 
 Example:
 
+TODO
     [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
     [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
 
@@ -239,6 +244,7 @@ Time is represented using the [compact time](https://github.com/kstenerud/compac
 
 Example:
 
+TODO
     [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
     [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
 
@@ -249,6 +255,7 @@ Timestamps are represented using the [compact timestamp](https://github.com/kste
 
 Example:
 
+TODO
     [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
     [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
 
@@ -275,7 +282,7 @@ An array of octets. This data type should only be used as a last resort if the o
 
 Examples:
 
-    [91 14 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [91 05 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### String
@@ -301,7 +308,7 @@ Examples:
 
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
-    [90 54 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [90 15 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### URI
@@ -320,11 +327,11 @@ Example:
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [92 6c 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [92 1b 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [92 cc 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [92 33 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
@@ -344,7 +351,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [72 01 6b 88 13 75] = A list containing integers (1, 5000)
+    [77 01 6a 88 13 7b] = A list containing integers (1, 5000)
 
 
 ### Unordered Map
@@ -359,13 +366,13 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [73] [key 1] [value 1] [key 2] [value 2] ... [75]
+    [78] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
 Example:
 
-    [73 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [78 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Ordered Map
@@ -374,7 +381,7 @@ An ordered map works the same as an unordered map, except that the order of the 
 
 Example:
 
-    [74 81 61 01 81 62 02 75] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Inline Containers
@@ -432,6 +439,10 @@ The following are predefined metadata keys that must be used for that type of in
 
 All other metadata keys beginning with `_` are reserved for future expansion, and must not be used.
 
+#### Example
+
+    [7a 82 5f 74 77 85 61 5f 74 61 67 7b 7b] = metadata map: (_t = ["a_tag"])
+
 
 ### Comment
 
@@ -463,9 +474,9 @@ As only the linefeed character is allowed for line endings, an encoder must conv
 
 #### Example
 
-    [93 01 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
-     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
-     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
+    [93 40 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66 61
+     69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20 75
+     6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
     = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
@@ -490,7 +501,7 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 
 Example:
 
-    [7f 7f 7f 67 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 ### RESERVED
