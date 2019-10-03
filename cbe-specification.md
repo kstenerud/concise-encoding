@@ -10,7 +10,7 @@ CBE is non-cyclic and hierarchical like XML and JSON, and supports the most comm
 TODO
 ----
 
-- Fix decimal float and temporal examples
+- Fix temporal examples
 
 
 
@@ -210,9 +210,8 @@ Decimal floating point values are represented using the [Compact Float](https://
 
 Example:
 
-TODO
-    [79 4b 00 00 b2] = -7.5
-    [79 0c 32 00 32] = 1281.2
+    [65 07 4b] = -7.5
+    [65 82 2c b8 9e 50] = 9.21424e80
 
 
 ### Binary Floating Point
