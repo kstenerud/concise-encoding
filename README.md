@@ -107,4 +107,6 @@ Implementations
 License
 -------
 
+Copyright Karl Stenerud. All rights reserved.
+
 Specifications released under [Creative Commons Attribution 4.0 International Public License](LICENSE.md).
