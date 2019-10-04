@@ -426,6 +426,14 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map may contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
 
+#### Name Clashes
+
+There are various metadata standards in use today (https://en.wikipedia.org/wiki/Metadata_standard). Care should be taken to ensure that your chosen metadata system doesn't clash with other established naming schemes. In general, international standards tend to use URI style identifiers, so the risk is usually minimal when applying string and numeric keys. However, a little foresight and research goes a long way towards avoiding pain down the line!
+
+#### Predefines Keys
+
+This standard specifies predefined keys for the most common metadata in ad-hoc data structures. Specifying these keys maximizes the chances of disparate systems understanding one other, and avoids a lot of duplication.
+
 The following are predefined metadata keys that must be used for that type of information (decoders must accept both regular and short key versions, and encoders should use short keys to save space):
 
 | Key                  | Short Key | Type          | Contents          |
