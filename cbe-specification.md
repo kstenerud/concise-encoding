@@ -7,13 +7,6 @@ CBE is non-cyclic and hierarchical like XML and JSON, and supports the most comm
 
 
 
-TODO
-----
-
-- Fix temporal examples
-
-
-
 Features
 --------
 
@@ -221,6 +214,8 @@ Example:
 
 Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that can't handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
+Examples:
+
     [70 00 e2 af 44] = 0x1.5fc4p10
     [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
 
@@ -235,9 +230,7 @@ Dates are represented using the [compact date](https://github.com/kstenerud/comp
 
 Example:
 
-TODO
-    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
-    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
+    [99 56 01 66] = Oct 22, 2051
 
 
 ### Time
@@ -246,9 +239,7 @@ Time is represented using the [compact time](https://github.com/kstenerud/compac
 
 Example:
 
-TODO
-    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
-    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
+    [9a 6e cf ee b1 e8 f8 01 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
 
 
 ### Timestamp
@@ -257,9 +248,7 @@ Timestamps are represented using the [compact timestamp](https://github.com/kste
 
 Example:
 
-TODO
-    [78 2e bc 0d 59 48 6b f0 01] = Oct 26, 1985, 8:22:16.900142 +00:00
-    [79 ff c9 9a fb be df cf 1d] = Dec 31, 1999, 23:59:59.999999999 +00:00
+    [9b 40 56 d0 0a 3a 8f 9a f7 28] Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
 
