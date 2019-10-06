@@ -29,6 +29,13 @@ Features
 
 
 
+Request for Comments
+--------------------
+
+This prototype specification is now [open to comments from the public](request-for-comments.md). Please join the discussion!
+
+
+
 Supported Types
 ---------------
 
