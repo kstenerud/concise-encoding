@@ -1,30 +1,33 @@
 Concise Binary Encoding
 =======================
 
-Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact representation of semi-structured hierarchical data.
+Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data.
 
-CBE is non-cyclic and hierarchical like XML and JSON, and supports the most common data types natively. CBE is type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md), but is a binary format for space and codec efficiency. The more common types and values tend to use less space. Its encoding is byte oriented to simplify codec implementation and off-the-wire inspection.
+CBE is non-cyclic and hierarchical like XML, JSON, BSON, etc, and supports the most common data types natively. The more common types and values tend to use less space. Its encoding is byte oriented to simplify codec implementation and off-the-wire inspection.
 
 
 
 Features
 --------
 
-  * General purpose encoding for a large number of applications
-  * Supports the most common data types
-  * Supports hierarchical data structuring
-  * Easy to parse (very few sub-byte fields)
-  * Binary format to minimize transmission costs
-  * Little endian byte ordering where possible to allow the most common systems to read directly off the wire
-  * Balanced space and computation efficiency
-  * Minimal complexity
-  * Type compatible with [Concise Text Encoding (CTE)](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md)
+ * 1:1 type compatiblility between the binary and text formats. Converting between CBE and [CTE](https://github.com/kstenerud/concise-text-encoding) is transparent, allowing you to use the much smaller and energy efficient binary format for data interchange and storage, converting to/from text only when and where a human needs to be involved.
+ * Native support for the most commonly used data types. Concise Encoding aims to support 80% of data use cases natively.
+ * Support for metadata and comments.
+ * Completely redesigned from the ground up to balance user readability, encoded size, and codec complexity.
+ * The formats are fully specified, eliminating ambiguities and covering edge cases, thus facilitating compatibility between implementations and reducing complexity.
+ * Documents and specifications are versioned to support future expansion.
+ * Easy to parse (very few sub-byte fields).
+ * Binary format to minimize transmission costs.
+ * Little endian byte ordering where possible to allow the most common systems to read directly off the wire.
 
 
 
 Contents
 --------
 
+* [Introduction](#introduction)
+  - [Supported Types](#supported-types)
+* [Terms](#terms)
 * [Structure](#structure)
   - [Version Number](#version-number)
   - [Maximum Depth](#maximum-depth)
@@ -65,6 +68,54 @@ Contents
 * [Alignment](#alignment)
 * [Version History](#version-history)
 * [License](#license)
+
+
+
+Introduction
+------------
+
+Many ad-hoc hierarchical data encoding schemes exist today, but the genre has yet to reach its full potential.
+
+JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and data structures used in real-world programs. Many JSON-inspired binary formats later emerged, with varying levels of compatibility.
+
+Unfortunately, since JSON was originally designed to be transparently interpreted by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to incompatibility, ambiguity, and tricky edge cases with no clear solution. The binary formats suffered similar problems, and also added many uncommon types that bloated them unnecessarily.
+
+Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to address the shortfalls of the current generation.
+
+
+### Supported Types
+
+The following types are natively supported, and have full type compatibility with [CTE](https://github.com/kstenerud/concise-text-encoding):
+
+ * Nil
+ * Boolean
+ * Integer
+ * Float
+ * Time
+ * String
+ * URI
+ * Bytes
+ * List
+ * Unordered Map
+ * Ordered Map
+ * Metadata Map
+ * Comment
+
+
+
+Terms
+-----
+
+The following terms have specific meanings in this specification:
+
+| Term         | Meaning                                                                                                               |
+| ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Must (not)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| Should (not) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| May (not)    | It is up to the implementation to decide whether to do something or not.                                              |
+| Can (not)    | Refers to a possibility or constraint which must be accommodated by the implementation.                               |
+| Optional     | The implementation must support both the existence and the absence of the specified item.                             |
+| Recommended  | Refers to a "best practice", which should be followed if possible.                                                    |
 
 
 
@@ -185,7 +236,7 @@ Examples:
 
 Integers are encoded as positive or negative values, and can be of any width. The fixed width types (16 to 64 bit) are stored in little endian byte order.
 
-Values from -100 to +100 ("small int") are encoded into the type field itself, and may be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value and the field type determining the sign to be applied.
+Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value and the field type determining the sign to be applied.
 
 Examples:
 
@@ -212,7 +263,7 @@ Example:
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that can't handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Examples:
 
@@ -267,7 +318,7 @@ The array length field is encoded as an [RVLQ](https://github.com/kstenerud/vlq/
 
 ### Bytes
 
-An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
+An array of octets. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
 
     [91] [Length] [Octet 0] ... [Octet (Length-1)]
 
@@ -278,7 +329,7 @@ Examples:
 
 ### String
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (BOM) or the NUL (u+0000) character, but may contain any other valid character.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (BOM) or the NUL (u+0000) character, but can contain any other valid character.
 
 The length field holds the byte length (length in octets), NOT the character length.
 
@@ -347,7 +398,7 @@ Example:
 
 ### Unordered Map
 
-An unordered map associates objects (keys) with other objects (values), in no particular order. Implementations must not rely on any incidental ordering. Keys may be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values may be any mix of any type, including other containers.
+An unordered map associates objects (keys) with other objects (values), in no particular order. Implementations must not rely on any incidental ordering. Keys can be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values can be any mix of any type, including other containers.
 
 All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
 
@@ -388,7 +439,7 @@ Inline containers are not supported in the [CBE file format](#file-format).
 Metadata Types
 --------------
 
-Metadata is data about the data. It describes things about whatever data follows it in a document, which may or may not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+Metadata is data about the data. It describes things about whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
 
 
 ### Metadata Association
@@ -416,7 +467,7 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 ### Metadata Map
 
-A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map may contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
+A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map can contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
 
 #### Name Clashes
 
@@ -487,7 +538,7 @@ Other Types
 
 Denotes the absence of data. Some languages implement this as the `null` value.
 
-Note: Use nil judiciously and sparingly, as some languages may have restrictions on how and if it may be used.
+Note: Use nil judiciously and sparingly, as some languages might have restrictions on how and if it can be used.
 
 Example:
 
@@ -496,7 +547,7 @@ Example:
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type may occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
@@ -519,7 +570,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * All map keys must have corresponding values. A key with a missing value is invalid.
  * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
- * An array's length field must match the byte-length of its data. An invalid array length may not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
+ * An array's length field must match the byte-length of its data. An invalid array length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
  * All UTF-8 sequences must evaluate to complete, valid characters.
  * RESERVED types are invalid, and must not be used.
  * Metadata keys beginning with `_` must not be used, except for those listed in this specifiction.
@@ -538,7 +589,7 @@ For specialized applications, an encoder implementation may choose to preserve l
 Alignment
 ---------
 
-Applications may require data to be aligned in some cases for optimal decoding performance. For example, some processors may not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert `padding` bytes when encoding certain data:
+Applications might require data to be aligned in some cases for optimal decoding performance. For example, some processors might not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert `padding` bytes when encoding certain data:
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
