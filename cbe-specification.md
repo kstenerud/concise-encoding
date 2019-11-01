@@ -29,7 +29,7 @@ Contents
   - [Supported Types](#supported-types)
 * [Terms](#terms)
 * [Structure](#structure)
-  - [Version Number](#version-number)
+  - [Version Specifier](#version-specifier)
   - [Maximum Depth](#maximum-depth)
   - [Maximum Length](#maximum-length)
 * [Encoding](#encoding)
@@ -122,19 +122,21 @@ The following terms have specific meanings in this specification:
 Structure
 ---------
 
-A CBE document is a binary encoded document consisting of a version number, followed by a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+A CBE document is a binary encoded document consisting of a version specifier, followed by a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+
+    [version specifier] [object]
 
 
-### Version Number
+### Version Specifier
 
-The version number is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
+The version specifier is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
 
-The version number is mandatory.
+The version specifier is mandatory.
 
 
 ### Maximum Depth
 
-Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different max depth.
+Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different maximum depth.
 
 
 ### Maximum Length
@@ -263,7 +265,7 @@ Example:
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Binary floating point values are stored using 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Examples:
 
