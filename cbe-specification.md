@@ -7,6 +7,13 @@ CBE is non-cyclic and hierarchical like XML, JSON, BSON, etc, and supports the m
 
 
 
+Version
+-------
+
+Version 1 (prerelease)
+
+
+
 Features
 --------
 
@@ -331,7 +338,7 @@ Examples:
 
 ### String
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (BOM) or the NUL (u+0000) character, but can contain any other valid character.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (u+feff) or the NUL (u+0000) character, but can contain any other valid character.
 
 The length field holds the byte length (length in octets), NOT the character length.
 
@@ -573,9 +580,9 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
  * An array's length field must match the byte-length of its data. An invalid array length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
- * All UTF-8 sequences must evaluate to complete, valid characters.
+ * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * RESERVED types are invalid, and must not be used.
- * Metadata keys beginning with `_` must not be used, except for those listed in this specifiction.
+ * Metadata map keys beginning with `_` must not be used, except for those listed in this specifiction.
 
 
 
@@ -604,7 +611,7 @@ Alignment is usually only useful when the target decoder is known prior to encod
 Version History
 ---------------
 
-June 5, 2018: Preview Version 1
+June 5, 2018: First draft
 
 
 
