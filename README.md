@@ -1,7 +1,13 @@
 Concise Binary Encoding
 =======================
 
-Concise Binary Encoding (CBE) is the next evolutionary step in general purpose, semi-structured hierarchical data formats. It aims to improve upon and surpass existing technologies such as JSON, XML, BSON, CBOR etc in the following ways:
+Many ad-hoc hierarchical data encoding schemes exist today, but the genre has yet to reach its full potential.
+
+JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and data structures used in real-world programs. Many JSON-inspired binary formats later emerged, with varying levels of compatibility.
+
+Unfortunately, since JSON was originally designed to be transparently interpreted by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to incompatibility, ambiguity, and tricky edge cases with no clear solution. The binary formats suffered similar problems, and also tended to add many uncommon types that bloated them unnecessarily.
+
+Concise Binary Encoding (CBE) is the next step in the evolution of ad-hoc hierarchical data formats, aiming to address the shortfalls of the current generation:
 
  * 1:1 type compatiblility between the binary and text formats. Converting between CBE and [CTE](https://github.com/kstenerud/concise-text-encoding) is transparent, allowing you to use the much smaller and energy efficient binary format for data interchange and storage, converting to/from text only when and where a human needs to be involved.
  * Native support for the most commonly used data types. Concise Encoding aims to support 80% of data use cases natively.
