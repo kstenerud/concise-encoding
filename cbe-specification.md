@@ -57,15 +57,15 @@ Contents
   - [URI](#uri)
 * [Container Types](#container-types)
   - [List](#list)
-  - [Unordered Map](#unordered-map)
-  - [Ordered Map](#ordered-map)
+  - [Map](#map)
   - [Inline Containers](#inline-containers)
-* [Metadata Types](#metadata-types)
+* [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
-  - [Metadata Map](#metadata-map)
+  - [Metadata Types](#metadata-types)
     - [Name Clashes](#name-clashes)
-    - [Predefines Keys](#predefined-keys)
+    - [Predefined Keys](#predefined-keys)
   - [Comment](#comment)
+    - [Comment Character Restrictions](#comment-character-restrictions)
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [Padding](#padding)
@@ -103,9 +103,8 @@ The following types are natively supported, and have full type compatibility wit
  * URI
  * Bytes
  * List
- * Unordered Map
- * Ordered Map
- * Metadata Map
+ * Map
+ * Metadata
  * Comment
 
 
@@ -184,11 +183,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
 |  76 | 118 | RESERVED                  |                                               |
-|  77 | 119 | List                      |                                               |
-|  78 | 120 | Unordered Map             |                                               |
-|  79 | 121 | Ordered Map               |                                               |
-|  7a | 122 | Metadata Map              |                                               |
-|  7b | 123 | End of Container          |                                               |
+|  77 | 119 | RESERVED                  |                                               |
+|  78 | 120 | List                      |                                               |
+|  79 | 121 | Map                       |                                               |
+|  7a | 122 | End of Container          |                                               |
+|  7b | 123 | Metadata                  |                                               |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
 |  7e | 126 | Nil (no data)             |                                               |
@@ -396,18 +395,22 @@ Container Types
 
 A sequential list of objects. Lists can contain any mix of any type, including other containers.
 
+A list is ordered by default unless otherwise understood between parties (for example via a schema), or the user has specified that order doesn't matter. Other characteristics (such as non-duplicate data in the case of sets) must be a-priori understood between parties.
+
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
 Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution.
 
 Example:
 
-    [77 01 6a 88 13 7b] = A list containing integers (1, 5000)
+    [78 01 6a 88 13 7a] = A list containing integers (1, 5000)
 
 
-### Unordered Map
+### Map
 
-An unordered map associates objects (keys) with other objects (values), in no particular order. Implementations must not rely on any incidental ordering. Keys can be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values can be any mix of any type, including other containers.
+A map associates objects (keys) with other objects (values). Keys can be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values can be any mix of any type, including other containers.
+
+A map is ordered by default unless otherwise understood between parties (for example via a schema), or the user has specified that order doesn't matter.
 
 All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
 
@@ -417,22 +420,13 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [78] [key 1] [value 1] [key 2] [value 2] ... [7b]
+    [79] [key 1] [value 1] [key 2] [value 2] ... [7a]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
 Example:
 
-    [78 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
-
-
-### Ordered Map
-
-An ordered map works the same as an unordered map, except that the order of the key-value pairs in the map is significant, and must be preserved.
-
-Example:
-
-    [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [79 81 61 01 81 62 02 7a] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Inline Containers
@@ -445,10 +439,12 @@ Inline containers are not supported in the [CBE file format](#file-format).
 
 
 
-Metadata Types
---------------
+Metadata
+--------
 
-Metadata is data about the data. It describes things about whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+
+Metadata must only be placed in front of another object. It cannot be placed at the end of a document (because there would be no object to refer to). A CBE document containing only metadata and no real objects is invalid.
 
 
 ### Metadata Association
@@ -474,33 +470,45 @@ In this case, `(metadata)` refers to the string `"a key"`, and `(metadata-1)` re
 The metadata association rules do not apply to [comments](#comment). Comments stand entirely on their own, and do not officially refer to anything, nor can any other metadata refer to a comment (i.e. comments are invisible to other metadata).
 
 
-### Metadata Map
+### Metadata Types
 
-A metadata map is an ordered map containing metadata about the object that follows the map. A metadata map can contain anything that an ordered map can, but all string keys that begin with an underscore (`_`) are reserved, and must not be used except in the ways defined by this specification.
+Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. Any object type can be used to represent metadata, but the most useful type is a map.
 
 #### Name Clashes
 
-There are various metadata standards in use today (https://en.wikipedia.org/wiki/Metadata_standard). Care should be taken to ensure that your chosen metadata system doesn't clash with other established naming schemes. In general, international standards tend to use URI style identifiers, so the risk is usually minimal when applying string and numeric keys. However, a little foresight and research goes a long way towards avoiding pain down the line!
+There are various metadata standards in use today (https://en.wikipedia.org/wiki/Metadata_standard). Care should be taken to ensure that your chosen metadata system doesn't clash with other established naming schemes.
 
-#### Predefines Keys
+#### Predefined Keys
+
+All metadata map keys beginning with `_` are reserved, and must not be used except according to this section.
 
 This standard specifies predefined keys for the most common metadata in ad-hoc data structures. Specifying these keys maximizes the chances of disparate systems understanding one other, and avoids a lot of duplication.
 
-The following are predefined metadata keys that must be used for that type of information (decoders must accept both regular and short key versions, and encoders should use short keys to save space):
+The following predefined metadata keys must be used for the specified type of information (decoders must accept both regular and short key versions):
 
-| Key                  | Short Key | Type          | Contents          |
-| -------------------- | --------- | ------------- | ----------------- |
-| `_creation_time`     | `_ct`     | Timestamp     | Creation time     |
-| `_modification_time` | `_mt`     | Timestamp     | Modification time |
-| `_access_time`       | `_at`     | Timestamp     | Last access time  |
-| `_tags`              | `_t`      | List          | Set of tags       |
-| `_attributes`        | `_a`      | Unordered Map | Attributes        |
+| Regular Key          | Short Key | Type            | Contents                                                       |
+| -------------------- | --------- | --------------- | -------------------------------------------------------------- |
+| `_access_time`       | `_at`     | Timestamp       | Last access time                                               |
+| `_attributes`        | `_a`      | Map<String:Any> | Attributes                                                     |
+| `_copyright`         | `_co`     | String or URI   | Holder of copyright over data (Name or URI)                    |
+| `_creation_time`     | `_ct`     | Timestamp       | Creation time                                                  |
+| `_creator`           | `_c`      | List<String>    | Creator(s) of the data                                         |
+| `_data_type`         | `_dt`     | String          | https://www.iana.org/assignments/media-types/media-types.xhtml |
+| `_description`       | `_d`      | String          | Free-form description                                          |
+| `_id`                | `_id`     | Any             | Identifier                                                     |
+| `_language`          | `_l`      | String          | ISO 639 alpha-2 or alpha-3 code                                |
+| `_license`           | `_li`     | URI             | Pointer to the license granted on this data                    |
+| `_modification_time` | `_mt`     | Timestamp       | Modification time                                              |
+| `_origin`            | `_o`      | List<URI>       | Origin(s) of this data                                         |
+| `_schema`            | `_s`      | URI             | Schema describing how to interpret the data                    |
+| `_specification`     | `_sp`     | URI             | Human-readable specification about the data                    |
+| `_tags`              | `_t`      | List<String>    | Set of tags describing this data                               |
 
 All other metadata keys beginning with `_` are reserved for future expansion, and must not be used.
 
 #### Example
 
-    [7a 82 5f 74 77 85 61 5f 74 61 67 7b 7b] = metadata map: (_t = ["a_tag"])
+    [7b 79 82 5f 74 85 61 5f 74 61 67 7a] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
