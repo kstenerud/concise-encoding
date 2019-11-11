@@ -187,7 +187,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  78 | 120 | List                      |                                               |
 |  79 | 121 | Map                       |                                               |
 |  7a | 122 | End of Container          |                                               |
-|  7b | 123 | Metadata                  |                                               |
+|  7b | 123 | Metadata                  | Any object except padding, metadata, comment  |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
 |  7e | 126 | Nil (no data)             |                                               |
@@ -314,25 +314,14 @@ Example:
 Array Types
 -----------
 
-An "array" for the purposes of this spec is a contiguous sequence of octets, preceded by a length field.
+An "array" for the purposes of this spec is a contiguous sequence of octets, preceded by a length field. The array type determines how those octets are to be interpreted.
 
 
 ### Array Length Field
 
-All array types are preceded by an array length field, representing the number of octets in the array.
+All arrays are preceded by an array length field, representing the number of octets in the array.
 
 The array length field is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md).
-
-
-### Bytes
-
-An array of octets. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
-
-    [91] [Length] [Octet 0] ... [Octet (Length-1)]
-
-Examples:
-
-    [91 05 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### String
@@ -367,8 +356,6 @@ Uniform Resource Identifier, which must be valid according to [RFC 3986](https:/
 
 The length field contains the byte length (length in octets), NOT the character length.
 
-Note: Percent-encoding sequences within URIs are NOT interpreted; they are passed through as-is.
-
 Example:
 
     [92 55 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
@@ -385,6 +372,17 @@ Example:
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
+
+
+### Bytes
+
+An array of octets. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
+
+    [91] [Length] [Octet 0] ... [Octet (Length-1)]
+
+Examples:
+
+    [91 05 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 
@@ -472,7 +470,11 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 ### Metadata Types
 
-Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. Any object type can be used to represent metadata, but the most useful type is a map.
+Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. Any object type can be used to represent metadata (except for padding, metadata, and comments), but the most useful type is a map.
+
+Example:
+
+    [7b 79 81 61 01 7a] = metadata map: {a = 1}
 
 #### Name Clashes
 
@@ -480,35 +482,13 @@ There are various metadata standards in use today (https://en.wikipedia.org/wiki
 
 #### Predefined Keys
 
-All metadata map keys beginning with `_` are reserved, and must not be used except according to this section.
+The [Concise Encoding Metadata specification](https://https://github.com/kstenerud/concise-encoding-metadata/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the metadata specification.
 
-This standard specifies predefined keys for the most common metadata in ad-hoc data structures. Specifying these keys maximizes the chances of disparate systems understanding one other, and avoids a lot of duplication.
-
-The following predefined metadata keys must be used for the specified type of information (decoders must accept both regular and short key versions):
-
-| Regular Key          | Short Key | Type            | Contents                                                       |
-| -------------------- | --------- | --------------- | -------------------------------------------------------------- |
-| `_access_time`       | `_at`     | Timestamp       | Last access time                                               |
-| `_attributes`        | `_a`      | Map<String:Any> | Attributes                                                     |
-| `_copyright`         | `_co`     | String or URI   | Holder of copyright over data (Name or URI)                    |
-| `_creation_time`     | `_ct`     | Timestamp       | Creation time                                                  |
-| `_creator`           | `_c`      | List<String>    | Creator(s) of the data                                         |
-| `_data_type`         | `_dt`     | String          | https://www.iana.org/assignments/media-types/media-types.xhtml |
-| `_description`       | `_d`      | String          | Free-form description                                          |
-| `_id`                | `_id`     | Any             | Identifier                                                     |
-| `_language`          | `_l`      | String          | ISO 639 alpha-2 or alpha-3 code                                |
-| `_license`           | `_li`     | URI             | Pointer to the license granted on this data                    |
-| `_modification_time` | `_mt`     | Timestamp       | Modification time                                              |
-| `_origin`            | `_o`      | List<URI>       | Origin(s) of this data                                         |
-| `_schema`            | `_s`      | URI             | Schema describing how to interpret the data                    |
-| `_specification`     | `_sp`     | URI             | Human-readable specification about the data                    |
-| `_tags`              | `_t`      | List<String>    | Set of tags describing this data                               |
-
-All other metadata keys beginning with `_` are reserved for future expansion, and must not be used.
+Implementations should make use of the predefined keys whenever possible to maximize interoperability between systems.
 
 #### Example
 
-    [7b 79 82 5f 74 85 61 5f 74 61 67 7a] = metadata map: (_t = ["a_tag"])
+    [7b 79 82 5f 74 85 61 5f 74 61 67 7a] = metadata map: {_t = ["a_tag"]}
 
 
 ### Comment
