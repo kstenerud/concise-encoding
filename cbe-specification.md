@@ -484,7 +484,7 @@ There are various metadata standards in use today (https://en.wikipedia.org/wiki
 
 #### Predefined Keys
 
-The [Concise Encoding Metadata specification](https://https://github.com/kstenerud/concise-encoding-metadata/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the prefedined metadata keys specification.
+The [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the prefedined metadata keys specification.
 
 Implementations should make use of the predefined keys whenever possible to maximize interoperability between systems.
 
