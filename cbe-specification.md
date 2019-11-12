@@ -433,8 +433,6 @@ CBE documents in data communication messages are often implemented as lists or m
 
 An "inline container" document contains no version specifier, no container initiator, and no container end. It is up to the implementation to specify the CBE version in use, and how the container is delimited.
 
-Inline containers are not supported in the [CBE file format](#file-format).
-
 
 
 Metadata
