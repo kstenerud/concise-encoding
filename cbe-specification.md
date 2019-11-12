@@ -570,7 +570,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * An array's length field must match the byte-length of its data. An invalid array length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
  * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * RESERVED types are invalid, and must not be used.
- * Metadata map keys beginning with `_` must not be used, except for those listed in this specifiction.
+ * Metadata map keys beginning with `_` must not be used, except in accordance with the [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md).
 
 
 
