@@ -577,9 +577,9 @@ The structure and format of CBE leaves room for certain encodings that contain p
 Smallest Possible Size
 ----------------------
 
-Preservation of the original numeric data type information is not considered important by default. Encoders are encouraged to find the smallest type and width that stores a numeric value without data loss.
+Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest type that stores a value without data loss.
 
-For specialized applications, an encoder implementation may choose to preserve larger types and widths as a tradeoff in processing cost vs data size.
+For specialized applications, an encoder implementation may choose to preserve larger types and widths as a tradeoff in processing cost vs data size, or to preserve type information.
 
 
 
