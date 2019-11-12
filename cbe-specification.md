@@ -470,7 +470,9 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 ### Metadata Types
 
-Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. Any object type can be used to represent metadata (except for padding, metadata, and comments), but the most useful type is a map.
+Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. The type immediately following a metadata type can be any type except for the padding (0x7f), metadata (0x7b), and comment (0x93) types.
+
+Generally, the most useful metadata type will be a map.
 
 Example:
 
@@ -482,7 +484,7 @@ There are various metadata standards in use today (https://en.wikipedia.org/wiki
 
 #### Predefined Keys
 
-The [Concise Encoding Metadata specification](https://https://github.com/kstenerud/concise-encoding-metadata/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the metadata specification.
+The [Concise Encoding Metadata specification](https://https://github.com/kstenerud/concise-encoding-metadata/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the prefedined metadata keys specification.
 
 Implementations should make use of the predefined keys whenever possible to maximize interoperability between systems.
 
