@@ -3,7 +3,36 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data.
 
-CBE is non-cyclic and hierarchical like XML, JSON, BSON, etc, and supports the most common data types natively. The more common types and values tend to use less space. Its encoding is byte oriented to simplify codec implementation and off-the-wire inspection.
+Data communications have become needlessly bloated, wasting bandwidth and power (de)serializing and transmitting data in text formats. The age of plentiful bandwidth and processing power is coming to an end, and energy efficiency in software is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We need to meet these challenges with new data formats that are not only versatile, but also compact, computationally simple to process, and human readable.
+
+SGML and friends marked a paradigm shift in the 90s, displacing many of the obscure and complex proprietary data formats of the time. The simplicity, human readability, and machine-parseability of HTML and XML helped the worldwide web and many other technologies flourish. These text formats were bigger and more CPU intensive than the binary formats, but the availability of fast internet and cheap computing kicked those issues far down the road.
+
+JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and structures used in real-world programs. Unfortunately, since JSON was originally designed to be directly ingested by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to ambiguity, incompatibility, and tricky edge cases.
+
+Various JSON-inspired binary formats emerged as the costs of text formats added up, but they suffered from many of the same limitations as JSON, and added needless complexity with proprietary and obscure data types, or difficult (i.e. expensive) to decode fields. It was also difficult or impossible for humans to view and edit these binary documents, limiting their utility.
+
+Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
+
+ * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
+ * Split into two formats: [binary-based CBE](https://github.com/kstenerud/concise-binary-encoding) and [text-based CTE](https://github.com/kstenerud/concise-text-encoding).
+ * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
+ * Nowadays, little endian is ubiquitous, and so fixed-length multi-byte data fields in CBE are stored in little endian byte order to avoid extra byte swaps in the most popular hardware.
+ * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
+ * Documents and specifications are versioned to support future expansion.
+ * Support for metadata and comments.
+ * Support for the most commonly used data types:
+   - Nil
+   - Boolean
+   - Integer
+   - Float
+   - Time
+   - String
+   - URI
+   - Bytes
+   - List
+   - Map
+   - Metadata
+   - Comment
 
 
 
@@ -14,26 +43,9 @@ Version 1 (prerelease)
 
 
 
-Features
---------
-
- * 1:1 type compatiblility between the binary and text formats. Converting between CBE and [CTE](https://github.com/kstenerud/concise-text-encoding) is transparent, allowing you to use the much smaller and energy efficient binary format for data interchange and storage, converting to/from text only when and where a human needs to be involved.
- * Native support for the most commonly used data types. Concise Encoding aims to support 80% of data use cases natively.
- * Support for metadata and comments.
- * Completely redesigned from the ground up to balance user readability, encoded size, and codec complexity.
- * The formats are fully specified, eliminating ambiguities and covering edge cases, thus facilitating compatibility between implementations and reducing complexity.
- * Documents and specifications are versioned to support future expansion.
- * Easy to parse (very few sub-byte fields).
- * Binary format to minimize transmission costs.
- * Little endian byte ordering where possible to allow the most common systems to read directly off the wire.
-
-
-
 Contents
 --------
 
-* [Introduction](#introduction)
-  - [Supported Types](#supported-types)
 * [Terms](#terms)
 * [Structure](#structure)
   - [Version Specifier](#version-specifier)
@@ -75,37 +87,6 @@ Contents
 * [Alignment](#alignment)
 * [Version History](#version-history)
 * [License](#license)
-
-
-
-Introduction
-------------
-
-Many ad-hoc hierarchical data encoding schemes exist today, but the genre has yet to reach its full potential.
-
-JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and data structures used in real-world programs. Many JSON-inspired binary formats later emerged, with varying levels of compatibility.
-
-Unfortunately, since JSON was originally designed to be transparently interpreted by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to incompatibility, ambiguity, and tricky edge cases with no clear solution. The binary formats suffered similar problems, and also tended to add many uncommon types that bloated them unnecessarily.
-
-Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to address the shortfalls of the current generation.
-
-
-### Supported Types
-
-The following types are natively supported, and have full type compatibility with [CTE](https://github.com/kstenerud/concise-text-encoding):
-
- * Nil
- * Boolean
- * Integer
- * Float
- * Time
- * String
- * URI
- * Bytes
- * List
- * Map
- * Metadata
- * Comment
 
 
 
@@ -326,7 +307,7 @@ The array length field is encoded as an [RVLQ](https://github.com/kstenerud/vlq/
 
 ### String
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (u+feff) or the NUL (u+0000) character, but can contain any other valid character.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (u+feff) or the NUL (u+0000) character.
 
 The length field holds the byte length (length in octets), NOT the character length.
 
@@ -408,7 +389,7 @@ Example:
 
 A map associates objects (keys) with other objects (values). Keys can be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values can be any mix of any type, including other containers.
 
-A map is ordered by default unless otherwise understood between parties (for example via a schema), or the user has specified that order doesn't matter.
+A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
 
 All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
 

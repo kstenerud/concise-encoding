@@ -1,23 +1,24 @@
 Concise Binary Encoding
 =======================
 
-Many ad-hoc hierarchical data encoding schemes exist today, but the genre has yet to reach its full potential.
+Data communications have become needlessly bloated, wasting bandwidth and power (de)serializing and transmitting data in text formats. The age of plentiful bandwidth and processing power is coming to an end, and energy efficiency in software is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We need to meet these challenges with new data formats that are not only versatile, but also compact, computationally simple to process, and human readable.
 
-JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and data structures used in real-world programs. Many JSON-inspired binary formats later emerged, with varying levels of compatibility.
+SGML and friends marked a paradigm shift in the 90s, displacing many of the obscure and complex proprietary data formats of the time. The simplicity, human readability, and machine-parseability of HTML and XML helped the worldwide web and many other technologies flourish. These text formats were bigger and more CPU intensive than the binary formats, but the availability of fast internet and cheap computing kicked those issues far down the road.
 
-Unfortunately, since JSON was originally designed to be transparently interpreted by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to incompatibility, ambiguity, and tricky edge cases with no clear solution. The binary formats suffered similar problems, and also tended to add many uncommon types that bloated them unnecessarily.
+JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and structures used in real-world programs. Unfortunately, since JSON was originally designed to be directly ingested by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to ambiguity, incompatibility, and tricky edge cases.
 
-Concise Binary Encoding (CBE) is the next step in the evolution of ad-hoc hierarchical data formats, aiming to address the shortfalls of the current generation:
+Various JSON-inspired binary formats emerged as the costs of text formats added up, but they suffered from many of the same limitations as JSON, and added needless complexity with proprietary and obscure data types, or difficult (i.e. expensive) to decode fields. It was also difficult or impossible for humans to view and edit these binary documents, limiting their utility.
 
- * 1:1 type compatiblility between the binary and text formats. Converting between CBE and [CTE](https://github.com/kstenerud/concise-text-encoding) is transparent, allowing you to use the much smaller and energy efficient binary format for data interchange and storage, converting to/from text only when and where a human needs to be involved.
- * Native support for the most commonly used data types. Concise Encoding aims to support 80% of data use cases natively.
- * Support for metadata and comments.
- * Completely redesigned from the ground up to balance user readability, encoded size, and codec complexity.
- * The formats are fully specified, eliminating ambiguities and covering edge cases, thus facilitating compatibility between implementations and reducing complexity.
+Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
+
+ * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
+ * Split into two formats: [binary-based CBE](https://github.com/kstenerud/concise-binary-encoding) and [text-based CTE](https://github.com/kstenerud/concise-text-encoding).
+ * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
+ * Nowadays, little endian is ubiquitous, and so fixed-length multi-byte data fields in CBE are stored in little endian byte order to avoid extra byte swaps in the most popular hardware.
+ * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
  * Documents and specifications are versioned to support future expansion.
- * Easy to parse (very few sub-byte fields).
- * Binary format to minimize transmission costs.
- * Little endian byte ordering where possible to allow the most common systems to read directly off the wire.
+ * Support for metadata and comments.
+ * Support for the most commonly used data types.
 
 
 
