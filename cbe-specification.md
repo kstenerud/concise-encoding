@@ -3,20 +3,16 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data.
 
-Data communications have become needlessly bloated, wasting bandwidth and power (de)serializing and transmitting data in text formats. The age of plentiful bandwidth and processing power is coming to an end, and energy efficiency in software is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We need to meet these challenges with new data formats that are not only versatile, but also compact, computationally simple to process, and human readable.
+Data communications have become needlessly bloated, wasting bandwidth and power serializing, deserializing, and transmitting data in text formats. The open, text based encodings like SGML, HTML, XML, and JSON, got us past the obscure, proprietary formats of the 90s. But now their size, codec complexity, and limited type support are becoming liabilities. The available binary formats also suffer from lack of types, unnecessary complexity, and can't be read or edited by humans (a major benefit of text formats).
 
-SGML and friends marked a paradigm shift in the 90s, displacing many of the obscure and complex proprietary data formats of the time. The simplicity, human readability, and machine-parseability of HTML and XML helped the worldwide web and many other technologies flourish. These text formats were bigger and more CPU intensive than the binary formats, but the availability of fast internet and cheap computing kicked those issues far down the road.
-
-JSON was a major improvement over XML, reducing bloat and boilerplate, and more closely modeling the actual data types and structures used in real-world programs. Unfortunately, since JSON was originally designed to be directly ingested by a Javascript engine (now considered a security risk), it lacked many fundamental data types & value ranges and was poorly defined, leading to ambiguity, incompatibility, and tricky edge cases.
-
-Various JSON-inspired binary formats emerged as the costs of text formats added up, but they suffered from many of the same limitations as JSON, and added needless complexity with proprietary and obscure data types, or difficult (i.e. expensive) to decode fields. It was also difficult or impossible for humans to view and edit these binary documents, limiting their utility.
+The age of plentiful bandwidth and processing power is almost over. Energy efficiency in software and data transmission is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We must meet these challenges with data formats that are versatile, compact, and computationally simple to process when on the critical path, while also retaining human readability and editability.
 
 Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
 
  * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
  * Split into two formats: [binary-based CBE](https://github.com/kstenerud/concise-binary-encoding) and [text-based CTE](https://github.com/kstenerud/concise-text-encoding).
  * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
- * Nowadays, little endian is ubiquitous, and so fixed-length multi-byte data fields in CBE are stored in little endian byte order to avoid extra byte swaps in the most popular hardware.
+ * Little endian is ubiquitous nowadays, and so fixed-length multi-byte data fields in CBE are stored in little endian byte order to avoid extra processing in the most popular hardware.
  * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
  * Documents and specifications are versioned to support future expansion.
  * Support for metadata and comments.
@@ -31,6 +27,7 @@ Concise Encoding is the next step in the evolution of ad-hoc hierarchical data f
    - Bytes
    - List
    - Map
+   - Reference
    - Metadata
    - Comment
 
@@ -80,6 +77,8 @@ Contents
     - [Comment Character Restrictions](#comment-character-restrictions)
 * [Other Types](#other-types)
   - [Nil](#nil)
+  - [Marker](#marker)
+  - [Reference](#reference)
   - [Padding](#padding)
   - [RESERVED](#reserved)
 * [Invalid Encodings](#invalid-encodings)
@@ -163,11 +162,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
-|  76 | 118 | RESERVED                  |                                               |
-|  77 | 119 | RESERVED                  |                                               |
-|  78 | 120 | List                      |                                               |
-|  79 | 121 | Map                       |                                               |
-|  7a | 122 | End of Container          |                                               |
+|  76 | 118 | List                      |                                               |
+|  77 | 119 | Map                       |                                               |
+|  78 | 120 | End of Container          |                                               |
+|  79 | 121 | Marker                    | Positive integer or dequotable string         |
+|  7a | 122 | Reference                 | Positive integer or dequotable string         |
 |  7b | 123 | Metadata                  | Any object except padding, metadata, comment  |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
@@ -521,6 +520,39 @@ Note: Use nil judiciously and sparingly, as some languages might have restrictio
 Example:
 
     [7e] = No data
+
+
+### Marker
+
+A marker tags an object in the document with a tag value such that it can be referenced by another part of the document. Markers begin with the marker type (0x79), followed by a [tag value](#tag-value). The object immediately following the marker is associated with the marker's tag. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects.
+
+A marker cannot reference a comment; instead it would reference the object following any comments.
+
+A marker must not be followed by another marker (even with comments in between); it must reference a real object.
+
+Marker tags are globally unique to the document, and so duplicate tags are invalid.
+
+#### Tag Value
+
+A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer, or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
+
+* The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
+* The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
+* The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
+* The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
+
+Integer tags will be smaller than string tags and thus take up less space, but string tags can be made more memorable to humans.
+
+
+### Reference
+
+A reference is a shorthand used in place of an actual object to indicate that it is the same object with the given marker tag. References begin with the reference type (0x7a), followed by a [tag value](#tag-value).
+
+Forward references are invalid. A reference to a tag that hasn't yet been assigned via a marker in the document stream is invalid.
+
+Recursive references are invalid. TODO: Really?
+
+TODO: Allow URI for reference tag? Technically this would be a kind of include...
 
 
 ### Padding
