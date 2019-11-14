@@ -3,19 +3,20 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data.
 
-Data communications have become needlessly bloated, wasting bandwidth and power serializing, deserializing, and transmitting data in text formats. The open, text based encodings like SGML, HTML, XML, and JSON, got us past the obscure, proprietary formats of the 90s. But now their size, codec complexity, and limited type support are becoming liabilities. The available binary formats also suffer from lack of types, unnecessary complexity, and can't be read or edited by humans (a major benefit of text formats).
+Data communications have become needlessly bloated, wasting bandwidth and power serializing, deserializing, and transmitting data in text formats. The open, text based encodings like SGML, HTML, XML, and JSON got us past the obscure, proprietary formats of the 90s. But now their size, codec complexity, and limited type support are becoming liabilities. The available binary formats also suffer from lack of types or are unnecessarily complex, and can't be read or edited by humans (a major benefit of text formats).
 
-The age of plentiful bandwidth and processing power is almost over. Energy efficiency in software and data transmission is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We must meet these challenges with data formats that are versatile, compact, and computationally simple to process when on the critical path, while also retaining human readability and editability.
+The age of plentiful bandwidth and processing power is coming to an end. Energy efficiency in software and data transmission is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We must meet these challenges with data formats that are versatile, compact, and computationally simple to process when on the critical path, while also retaining human readability and editability.
 
 Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
 
  * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
  * Split into two formats: [binary-based CBE](https://github.com/kstenerud/concise-binary-encoding) and [text-based CTE](https://github.com/kstenerud/concise-text-encoding).
  * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
- * Little endian is ubiquitous nowadays, and so fixed-length multi-byte data fields in CBE are stored in little endian byte order to avoid extra processing in the most popular hardware.
+ * Fixed-length multi-byte data fields are encoded in little endian byte order to avoid extra processing in the most popular hardware.
  * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
  * Documents and specifications are versioned to support future expansion.
  * Support for metadata and comments.
+ * Support for references to other parts of the document or to other documents.
  * Support for the most commonly used data types:
    - Nil
    - Boolean
@@ -70,14 +71,13 @@ Contents
   - [Inline Containers](#inline-containers)
 * [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
-  - [Metadata Types](#metadata-types)
-    - [Name Clashes](#name-clashes)
-    - [Predefined Keys](#predefined-keys)
+  - [Metadata Map](#metadata-map)
   - [Comment](#comment)
     - [Comment Character Restrictions](#comment-character-restrictions)
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [Marker](#marker)
+    - [Tag Value](#tag-value)
   - [Reference](#reference)
   - [Padding](#padding)
   - [RESERVED](#reserved)
@@ -118,6 +118,8 @@ A CBE document is a binary encoded document consisting of a version specifier, f
 The version specifier is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
 
 The version specifier is mandatory.
+
+Note: Because CBE places the version as the first byte in a document, the version value 0x76 is invalid. If 0x76 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `v` (0x76) as its first byte.
 
 
 ### Maximum Depth
@@ -162,12 +164,12 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
-|  76 | 118 | List                      |                                               |
-|  77 | 119 | Map                       |                                               |
-|  78 | 120 | End of Container          |                                               |
-|  79 | 121 | Marker                    | Positive integer or dequotable string         |
-|  7a | 122 | Reference                 | Positive integer or dequotable string         |
-|  7b | 123 | Metadata                  | Any object except padding, metadata, comment  |
+|  76 | 118 | List                      | Object ... End of Container                   |
+|  77 | 119 | Map                       | Key Value ... End of Container                |
+|  78 | 120 | Metadata Map              | Key Value ... End of Container                |
+|  79 | 121 | End of Container          |                                               |
+|  7a | 122 | Marker                    | Positive Integer / dequotable string          |
+|  7b | 123 | Reference                 | Positive Integer / dequotable string / URI    |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
 |  7e | 126 | Nil (no data)             |                                               |
@@ -381,7 +383,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [78 01 6a 88 13 7a] = A list containing integers (1, 5000)
+    [76 01 6a 88 13 79] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -398,13 +400,13 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [79] [key 1] [value 1] [key 2] [value 2] ... [7a]
+    [77] [key 1] [value 1] [key 2] [value 2] ... [79]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
 Example:
 
-    [79 81 61 01 81 62 02 7a] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [77 81 61 01 81 62 02 79] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Inline Containers
@@ -446,29 +448,17 @@ In this case, `(metadata)` refers to the string `"a key"`, and `(metadata-1)` re
 The metadata association rules do not apply to [comments](#comment). Comments stand entirely on their own, and do not officially refer to anything, nor can any other metadata refer to a comment (i.e. comments are invisible to other metadata).
 
 
-### Metadata Types
+### Metadata Map
 
-Metadata begins with the metadata type (0x7b), followed by the object (type + possible payload) that will represent the metadata. The type immediately following a metadata type can be any type except for the padding (0x7f), metadata (0x7b), and comment (0x93) types.
+A metadata map contains keyed values which are associated with the object that follows the metadata map.
 
-Generally, the most useful metadata type will be a map.
+Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md).
+
+Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
 
 Example:
 
-    [7b 79 81 61 01 7a] = metadata map: {a = 1}
-
-#### Name Clashes
-
-There are various metadata standards in use today (https://en.wikipedia.org/wiki/Metadata_standard). Care should be taken to ensure that your chosen metadata system doesn't clash with other established naming schemes.
-
-#### Predefined Keys
-
-The [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md) contains a list of prefedined metadata keys for use in CTE and CBE. All metadata map keys beginning with `_` are reserved, and must not be used except according to the prefedined metadata keys specification.
-
-Implementations should make use of the predefined keys whenever possible to maximize interoperability between systems.
-
-#### Example
-
-    [7b 79 82 5f 74 85 61 5f 74 61 67 7a] = metadata map: {_t = ["a_tag"]}
+    [78 82 5f 74 85 61 5f 74 61 67 79] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
@@ -524,35 +514,66 @@ Example:
 
 ### Marker
 
-A marker tags an object in the document with a tag value such that it can be referenced by another part of the document. Markers begin with the marker type (0x79), followed by a [tag value](#tag-value). The object immediately following the marker is associated with the marker's tag. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects.
+A marker tags an object in the document with a [tag value](#tag-value) such that it can be referenced in another part of the document. The next object following the marker is associated with the marker's tag value. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects (they don't count as values in collections, for example).
 
-A marker cannot reference a comment; instead it would reference the object following any comments.
+A marker begins with the marker type (0x79), followed by a [tag value](#tag-value).
 
-A marker must not be followed by another marker (even with comments in between); it must reference a real object.
+Rules:
 
-Marker tags are globally unique to the document, and so duplicate tags are invalid.
+ * A marker cannot mark a comment; instead it would mark the next non-comment object.
+ * A marker must not be followed by another marker (even with comments in between); markers must reference objects, not other markers.
+ * Marker tags are globally unique to the document; duplicate tags are invalid.
+
+Example:
+
+    [7a 01 77 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
+     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 79]
+    = the map {some_value = "repeat this value"}, tagged with integer 1
 
 #### Tag Value
 
-A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer, or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
+A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
 
-* The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
-* The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
-* The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
-* The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
-
-Integer tags will be smaller than string tags and thus take up less space, but string tags can be made more memorable to humans.
+ * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
+ * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
+ * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
+ * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
+ * The string is not empty (`""`).
 
 
 ### Reference
 
-A reference is a shorthand used in place of an actual object to indicate that it is the same object with the given marker tag. References begin with the reference type (0x7a), followed by a [tag value](#tag-value).
+A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations.
 
-Forward references are invalid. A reference to a tag that hasn't yet been assigned via a marker in the document stream is invalid.
+A reference begins with the reference type (0x7a), followed by either a [tag value](#tag-value) or a [URI](#uri).
 
-Recursive references are invalid. TODO: Really?
+Rules:
 
-TODO: Allow URI for reference tag? Technically this would be a kind of include...
+ * A reference with a [tag value](#tag-value) must reference another object in the same document (local reference).
+ * Forward references within a document are allowed. An implementation must keep track of unresolved local references, and resolve them as the markers are decoded.
+ * A fully decoded document with unresolved local references is invalid.
+ * Recursive references are allowed.
+ * A reference with a URI must point to:
+   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
+   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+ * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
+ * An implementation may also choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
+ * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
+
+Examples:
+
+    [7b 01] = reference to the object tagged with the integer value 1
+
+    [7b 81 61] = reference to the object tagged with the string value "a"
+
+    [7b 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    = reference to relative file "common.ce", tag "legalese"
+
+    [7b 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+     68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
+     6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
+     6c 6f 6e 67]
+    = reference to entire document at https://some-external-place/my_document.cbe?format=long
 
 
 ### Padding
@@ -562,6 +583,8 @@ The padding type has no semantic meaning; its only purpose is for memory alignme
 Example:
 
     [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+
+Technically, padding could also be used as a sequence point in a CBE-style stream to help synchronize data on a noisy channel (for example, data chunk, 4x padding, data chunk, etc), but streaming is outside of the scope of this document.
 
 
 ### RESERVED
