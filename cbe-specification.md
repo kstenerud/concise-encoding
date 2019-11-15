@@ -1,19 +1,10 @@
 Concise Binary Encoding
 =======================
 
-Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data.
-
-Data communications have become needlessly bloated, wasting bandwidth and power serializing, deserializing, and transmitting data in text formats. The open, text based encodings like SGML, HTML, XML, and JSON got us past the obscure, proprietary formats of the 90s. But now their size, codec complexity, and limited type support are becoming liabilities. The available binary formats also suffer from lack of types or are unnecessarily complex, and can't be read or edited by humans (a major benefit of text formats).
-
-The age of plentiful bandwidth and processing power is coming to an end. Energy efficiency in software and data transmission is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We must meet these challenges with data formats that are versatile, compact, and computationally simple to process when on the critical path, while also retaining human readability and editability.
-
-Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
+Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data. CBE is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
 
  * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
- * Split into two formats: [binary-based CBE](https://github.com/kstenerud/concise-binary-encoding) and [text-based CTE](https://github.com/kstenerud/concise-text-encoding).
- * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
- * Fixed-length multi-byte data fields are encoded in little endian byte order to avoid extra processing in the most popular hardware.
- * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
+ * 1:1 type compatibility between binary-based CBE and [text-based CTE](cte-specification.md), allowing transparent conversion between the two.
  * Documents and specifications are versioned to support future expansion.
  * Support for metadata and comments.
  * Support for references to other parts of the document or to other documents.
@@ -452,7 +443,7 @@ The metadata association rules do not apply to [comments](#comment). Comments st
 
 A metadata map contains keyed values which are associated with the object that follows the metadata map.
 
-Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md).
+Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
 Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
 
@@ -606,7 +597,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * An array's length field must match the byte-length of its data. An invalid array length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
  * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * RESERVED types are invalid, and must not be used.
- * Metadata map keys beginning with `_` must not be used, except in accordance with the [Concise Encoding Metadata specification](https://github.com/kstenerud/concise-encoding-metadata/blob/master/concise-encoding-metadata.md).
+ * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
 
 

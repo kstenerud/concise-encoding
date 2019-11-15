@@ -1,5 +1,5 @@
-License for CBE Specification
-=============================
+License for Concise Encoding Specifications
+===========================================
 
 License Type: Creative Commons Attribution 4.0 International Public License
 
