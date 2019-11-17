@@ -1,21 +1,19 @@
 Concise Encoding
 ================
 
-Data communications have become needlessly bloated, wasting bandwidth and power serializing, deserializing, and transmitting data in text formats. The open, text based encodings like SGML, HTML, XML, and JSON got us past the obscure, proprietary formats of the 90s. But now their size, codec complexity, and limited type support are becoming liabilities. The available binary formats also suffer from lack of types or are unnecessarily complex, and can't be read or edited by humans (a major benefit of text formats).
+Data communications have become too bloated and inefficient. The open, text based formats that supplanted the proprietary ones in the 90s are becoming a liability due to their size, codec complexity, and limited type support. And while there now are open binary formats, they lack what made text formats so successful: *human readability and editability*. The choice: a text format (which wastes power and bandwidth), or a binary format (which can't be edited).
 
-The age of plentiful bandwidth and processing power is coming to an end. Energy efficiency in software and data transmission is fast becoming a serious cost, battery, heat dissipation, and environmental issue. We must meet these challenges with data formats that are versatile, compact, and computationally simple to process when on the critical path, while also retaining human readability and editability.
+Data format efficiency is becoming a serious cost, battery, heat, and environmental issue, so binary formats are an inevitability. The challenge is to come up with something versatile, compact, computationally simple to process, and also human editable.
 
-Concise Encoding is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
+**Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power, bandwidth, and human friendly way:
 
- * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
  * Split into two formats: [binary-based CBE](cbe-specification.md) and [text-based CTE](cte-specification.md).
- * 1:1 type compatibility between formats, allowing transparent conversion between CBE and CTE. You can use the more efficient binary format for data interchange and storage, and convert to/from text only when a human needs to be involved.
- * Fixed-length multi-byte data fields are encoded in little endian byte order to avoid extra processing in the most popular hardware.
- * CBE and CTE are fully specified, eliminating ambiguities and covering edge cases.
+ * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
+ * Fully specified, eliminating ambiguities and covering edge cases.
  * Documents and specifications are versioned to support future expansion.
- * Support for metadata and comments.
- * Support for references to other parts of the document or to other documents.
- * Support for the most commonly used data types.
+ * Supports metadata and comments.
+ * Supports references to other parts of the document or to other documents.
+ * Supports the most commonly used data types.
 
 
 
@@ -40,9 +38,6 @@ This prototype specification is now [open to comments from the public](request-f
 
 Supported Types
 ---------------
-
-Concise Encoding aims to natively support 80% of data use cases. To this end, it provides the following fundamental data types:
-
 
 ### Numeric Types
 
