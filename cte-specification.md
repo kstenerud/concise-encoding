@@ -1,14 +1,14 @@
 Concise Text Encoding
 =====================
 
-Concise Text Encoding (CTE) is a general purpose, human friendly, compact representation of semi-structured hierarchical data. CTE is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
+Concise Text Encoding (CTE) is a general purpose, human friendly, compact representation of semi-structured hierarchical data. CTE is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a human friendly way:
 
- * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
- * 1:1 type compatibility between [binary-based CBE](cbe-specification.md) and text-based CTE, allowing transparent conversion between the two.
+ * There are two formats: [binary-based CBE](cbe-specification.md) and text-based CTE.
+ * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
  * Documents and specifications are versioned to support future expansion.
- * Support for metadata and comments.
- * Support for references to other parts of the document or to other documents.
- * Support for the most commonly used data types:
+ * Supports metadata and comments.
+ * Supports references to other parts of the document or to other documents.
+ * Supports the most commonly used data types:
 
 | Type              | Example                        |
 | ----------------- | ------------------------------ |
@@ -41,6 +41,7 @@ Contents
 
 * [Terms](#terms)
 * [Structure](#structure)
+  - [Human Editability](#human-editability)
   - [Version Specifier](#version-specifier)
   - [Maximum Depth](#maximum-depth)
   - [Maximum Length](#maximum-length)
@@ -64,6 +65,9 @@ Contents
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
   - [String](#string)
+    - [Quoted Sequence](#quoted-sequence)
+    - [Verbatim Sequence](#verbatim-sequence)
+    - [Unquoted String](#unquoted-string)
   - [URI](#uri)
   - [Bytes](#bytes)
 * [Container Types](#container-types)
@@ -109,7 +113,7 @@ Structure
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-The document begins with a version specifier, followed by an object. Multiple objects can be stored in the document by using a container as the top-level object.
+The document begins with a [version specifier](#version-specifier), followed by an object. Multiple objects can be stored in the document by using a container as the top-level object.
 
     [version specifier] [object]
 
@@ -152,6 +156,21 @@ The top-level object can also be a non-container type, for example:
     v1 "A single string object"
 
 
+### Human Editability
+
+A CTE document must be editable by a human. This means that it must contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are permanently marked as non-characters, must not be present in the document. Unpaired surrogates are not allowed.
+
+In the spirit of human editability:
+
+ * Implementations and document creators should avoid easily confused or otherwise difficult to use characters, especially in identifiers.
+ * Implementations should avoid outputting characters that editors tend to convert automatically, in places where those characters have significance. The tab character and line ending characters come to mind.
+ * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
+ * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
+ * If a certain character is likely to be confusing or problematic, it's encouraged to use an escape sequence instead.
+
+**Note:** Problematic characters can be escaped in certain contexts.
+
+
 ### Version Specifier
 
 All CTE documents must begin with a version specifier, which must not be preceded by whitespace. In other words, the very first byte of a CTE document must be `v` (0x76).
@@ -184,7 +203,7 @@ Maximum lengths (max list length, max map length, max array length, max total ob
 
 ### Line Endings
 
-Line endings can be encoded as LF only (u+0009) or as CR/LF (u+000d u+0009) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept both LF and CR/LF as input, but encoders should only output LF when the destination is not a file.
+Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should only output LF when the destination is a foreign or unknown system.
 
 
 
@@ -461,58 +480,118 @@ Array Types
 
 An "array" for the purposes of this spec represents a contiguous sequence of octets. The array type determines how those octets are to be interpreted.
 
-All arrays begin with an encoding type (with the exception of string), followed by the data enclosed within double-quotes (`"`). There must be no whitespace between the encoding type and the opening double-quote.
+Arrays begin with an encoding type, followed by the data enclosed within double-quotes (`"`) (no whitespace between the encoding type and the opening double-quote). [Strings](#string), are an exceptional case, and are handled differently.
 
 
 ### String
 
 An array of UTF-8 encoded bytes. Strings must not contain BOM (u+feff), NUL (u+0000), or escape sequences that evaluate to those.
 
-Strings are not prefixed with an encoding type; they are simply enclosed within double-quotes. Literal double quotes (`"`) and backslashes (`\`) within the string must be escaped.
+Strings must always resolve to complete, valid unicode sequences (for example, no unpaired surrogates) when fully decoded (i.e. after evaluating all escape sequences).
 
-The following escape sequences are allowed inside a string's contents, and must be in lower case. All other backslash sequences are invalid:
+Unlike other array types, strings are not prefixed with an encoding type.
+
+Strings are delimited using:
+
+ * [A quoted sequence](#quoted-sequence)
+ * [A verbatim sequence](#verbatim-sequence)
+ * [Nothing at all](#unquoted-string)
+
+#### Quoted Sequence
+
+A quoted sequence encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, except where special processing occurs as a result of an escape sequence.
+
+The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are allowed, and must be in lower case:
 
 | Sequence            | Interpretation                  |
 | ------------------- | ------------------------------- |
-| `\\`                | literal backslash               |
-| `\"`                | double quote                    |
-| `\r`                | carriage return                 |
-| `\n`                | linefeed                        |
-| `\t`                | horizontal tab                  |
+| `\`, u+000a         | continuation                    |
+| `\`, u+000d, u+000a | continuation                    |
+| `\\`                | backslash (u+005c)              |
+| `\"`                | double quote (u+0022)           |
+| `\r`                | carriage return (u+000d)        |
+| `\n`                | linefeed (u+000a)               |
+| `\t`                | horizontal tab (u+0009)         |
 | `\x01` - `\xff`     | one octet, hexadecimal notation |
 | `\u0001` - `\uffff` | unicode character               |
 
-Strings must always resolve to complete, valid unicode characters and sequences when fully decoded (after evaluating escape sequences).
+Escape sequences aid [human editability](#human-editability).
 
-Characters that cannot be edited in a UTF-8 capable text editor (for example, if they have no width or visibility or direct input method) must be represented using escape sequences.
+Example:
 
-#### Line Breaks and Whitespace
+```
+    "This string has a bare newline right here:
+Everything except for escape sequences are read as-is, until the closing double-quote."
+```
 
-Care should be taken to ensure that CTE documents can be easily edited in a text editor without losing information. For this reason, it is generally preferable to encode line breaking characters and certain whitespace characters (such as TAB) using escape sequences rather than the bare character encoding.
+##### Continuation
 
-Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed only (u+0009) whenever possible to maximize compatibiity between systems.
+A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character. For example:
+
+```
+    "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
+    mad to be saved, desirous of everything at the same time, the ones who never yawn or \
+    say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
+    exploding like spiders across the stars."
+```
+
+The above string must be interpreted as:
+
+```
+The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
+```
+
+Note that a continuation doesn't have to be preceded by whitespace; it's just generally preferred to do it that way.
+
+#### Verbatim Sequence
+
+A verbatim sequence is composed of the following:
+
+ * Backtick (`` ` ``).
+ * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](#human-editability)).
+ * The space character (u+0020).
+ * The string contents.
+ * Another instance of the end-of-string identifier to mark the end of the string.
+
+The string's contents must be read verbatim (no special interpretation of whitespace, character sequences, or escape sequences), until the specified end-of-string identifier is found. The resulting string must be valid, complete UTF-8. Everything within a verbatim sequence must be [human editable](#human-editability).
+
+Example:
+
+```
+`::: A verbatim string is not constrained like normal strings are.
+It can contain problematic characters like ", `, \ and such without problems.
+
+The `\` at the end of this line is not a continuation: \
+
+Three colons (`:`) are being used to mark the end-of-string in this case,
+so we can't use that exact character sequence in the string contents.
+
+Whitespace, including newlines and "leading" whitespace, is also read verbatim.
+        For example, this line really is indented 8 spaces.:::
+```
 
 #### Unquoted String
 
-Normally, strings must be enclosed within double-quotes (`"`), but this rule can be relaxed if:
+Strings must normally be delimited, but this rule can be relaxed if:
 
  * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), and dash (`-`).
+ * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
+ * The string does not end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
  * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
  * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string is not empty (`""`).
 
-#### Example
-
-Requires quotes:
+For example, these cannot be unquoted strings:
 
     "String with spaces"
     "String\twith\ttabs\nand\nnewlines"
     "[special-chars]"
+    "ends-with-a-dash-"
 
-Does not require quotes:
+These can be unquoted strings:
 
-    string25
+    string.two-25
+    std:value
     _contains_underscores
     _150
     飲み物
@@ -520,7 +599,7 @@ Does not require quotes:
 
 ### URI
 
-Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any characters not editable in a utf-8 capable editor must be percent-encoded.
+Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any [problematic characters](#human-editability) must be percent-encoded.
 
 URIs have the encoding type `u`.
 
@@ -570,9 +649,9 @@ Example:
 
 #### Base64url Encoding
 
-Base64url encoding uses the [RFC 4648](https://tools.ietf.org/html/rfc4648) url-safe alphabet (using `-` and `_`), with the following special rules:
+In CTE documents, base64url encoding uses the [RFC 4648](https://tools.ietf.org/html/rfc4648) url-safe alphabet (using `-` and `_`), with the following special rules:
 
- * Padding must not be used (the end delimiter `"` is enough to mark the end of the stream).
+ * Padding must not be used (the end delimiter `"` is enough to mark the end of the data stream).
  * Whitespace characters (CR, LF, TAB, SPACE) can occur anywhere in the stream to help align the contents in the document and keep line lengths down (the idea is to make it easy to open and modify a CTE document in your average text editor).
 
 Example:

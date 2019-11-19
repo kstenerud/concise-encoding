@@ -58,6 +58,7 @@ The following predefined metadata keys should be used for the specified type of 
 
 All other string-based metadata keys beginning with `_` are reserved for future expansion, and must not be used as metadata keys for any purpose.
 
+TODO: `_schema_format` to specify the format of the schema?
 
 
 Definitions

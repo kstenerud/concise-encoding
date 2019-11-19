@@ -3,12 +3,12 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact binary representation of semi-structured hierarchical data. CBE is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power and bandwidth friendly way:
 
- * Completely redesigned from the ground up to balance human readability, encoded size, and codec complexity.
- * 1:1 type compatibility between binary-based CBE and [text-based CTE](cte-specification.md), allowing transparent conversion between the two.
+ * There are two formats: [binary-based CBE](cbe-specification.md) and [text-based CTE](cte-specification.md).
+ * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
  * Documents and specifications are versioned to support future expansion.
- * Support for metadata and comments.
- * Support for references to other parts of the document or to other documents.
- * Support for the most commonly used data types:
+ * Supports metadata and comments.
+ * Supports references to other parts of the document or to other documents.
+ * Supports the most commonly used data types:
    - Nil
    - Boolean
    - Integer
