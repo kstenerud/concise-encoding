@@ -549,7 +549,7 @@ A verbatim sequence is composed of the following:
 
  * Backtick (`` ` ``).
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](#human-editability)).
- * The space character (u+0020).
+ * A single whitespace sequence (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR/LF `u+000d u+000a`).
  * The string contents.
  * Another instance of the end-of-string identifier to mark the end of the string.
 
