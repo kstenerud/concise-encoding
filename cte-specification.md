@@ -73,6 +73,16 @@ Contents
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
+  - [Markup](#markup-container)
+    - [Structure](#structure)
+    - [Container Name](#container-name)
+    - [Attributes](#attributes)
+    - [Contents](#contents)
+    - [Container End](#container-end)
+    - [Content String](#content-string)
+    - [Entity References](#entity-references)
+    - [Doctype](#doctype)
+    - [Style Sheets](#style-sheets)
 * [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
   - [Metadata Map](#metadata-map)
@@ -707,6 +717,160 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
         2 = beta
         "a map" = {one=1 two=2}
     }
+
+
+### Markup Container
+
+A markup container stores XML-style data, essentially a map of attributes followed by a list of content strings and other markup containers. The markup container's structure is more useful for presentation than for data (which is much more conveniently stored in lists and maps).
+
+The CTE encoding of a markup container is similar to XML, except:
+
+ * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
+ * Comments use `<*` and `*>` instead of `<!--` and `-->`. Comments can also be nested.
+ * CTE uses less commonly occurring characters for escape initiators (for example, `\` instead of `&`).
+ * Quotes are not actually required anywhere in a CTE markup container.
+ * Non-string types can be stored in a markup container.
+
+#### Structure
+
+A markup container structure in CTE consists of the following:
+
+ * Markup container begin character (`<`).
+ * Optional whitespace.
+ * Container name.
+ * Optional attributes section:
+   - Mandatory whitespace.
+   - A map of attributes (e.g. `x=1 y=5 z=true`).
+ * Optional contents section:
+   - Optional whitespace.
+   - Contents-begin character (`|`).
+   - A list of contents.
+ * Optional whitespace.
+ * Markup container end character (`>`).
+
+Examples:
+
+ * No attributes,  no children: `<br>`
+ * Has attributes, no children: `<div id=fillme>`
+ * No attributes, has children: `<span|Some text here>`
+ * Has attributes and children: `<ul id=mylist style=boring | <li|first> <li|second> >`
+
+Although it may look a little different, the internal structure is the same, and can easily be converted to/from XML & HTML.
+
+#### Container name
+
+The container name follows the same rules as a [map key](#map). It's recommended to use values that are compatible with XML names, or can be automatically string-converted to such. See: [human editability](#human-editability).
+
+#### Attributes
+
+The attributes section behaves like a [map](#map). It's recommended to use values that are compatible with XML attribute names and values, or can be automatically string-converted to such. See: [human editability](#human-editability).
+
+#### Contents
+
+The contents section behaves similarly to a [list](#list), except that it can only contain [content strings](#content-string) and markup containers. The contents section is in string processing mode whenever it's not processing a sub-container (initiated by an unescaped `<` character).
+
+#### Container End
+
+The markup container ends when an unescaped `>` character is encountered while processing a [content string](#content-string). There are no separate "end tags" or slash characters like in XML.
+
+#### Content String
+
+A content string works similarly to the text content inside of an XML tag (for example, `<a>text content</a>`).
+
+Within a content string, a [verbatim sequence](#verbatim-sequence) can be started at any time using the backtick (`` ` ``) character. The verbatim contents of the sequence are appended to the growing content string. Literal backtick values outside of a verbatim sequence must be escaped.
+
+The following escape sequences are recognised inside of a content string (except during [verbatim sequence](#verbatim-sequence) processing):
+
+| Sequence            | Interpretation              |
+| ------------------- | --------------------------- |
+| `` \` ``            | backtick (u+0060)           |
+| `\<`                | less-than (u+003c)          |
+| `\>`                | greater-than (u+003e)       |
+| `\\`                | backslash (u+005c)          |
+| `\_`                | non-breaking space (u+00a0) |
+| `\u0001` - `\uffff` | unicode character           |
+
+#### Entity References
+
+Entity references in CTE work the same as they do in XML and HTML, except that the standard escape character (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+
+#### Doctype
+
+Use a [metadata map](#metadata-map) entry to specify a doctype:
+
+```
+( xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"] )
+```
+
+#### Style Sheets
+
+Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
+
+```
+( xml-stylesheet={type=text/xsl href=my-stylesheet.xsl} )
+```
+
+
+#### Example
+
+```
+v1
+(xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+    <body|
+    <div id=parent style=normal ref-id=1 |
+      <script| `##
+        document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+      ##>
+        Here is some text <span style=highlighted| with highlighted text> and more text.
+        <br>
+        <ul|
+            <li id=item_a | Item A>
+            <li id=item_b | Item B>
+            <li id=item_c | Item C>
+        >
+
+        <* MathML: ax^2 + bx + c *>
+        <mrow |
+          <mi|a> <mo|\InvisibleTimes;> <msup| <mi|x> <mn|2> >
+          <mo|+> <mi|b> <mo|\InvisibleTimes;> <mi|x>
+          <mo|+> <mi|c>
+        >
+    >
+  >
+>
+```
+
+This can easily be auto-converted to XML or HTML:
+
+```
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <body>
+    <div id="parent" style="normal" ref-id="1">
+      <script>
+      //<![CDATA[
+        document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+      //]]>
+      </script>
+        Here is some text <span style="highlighted">with highlighted text</span> and more text.
+        <br/>
+        <ul>
+            <li id="item_a">Item A</li>
+            <li id="item_b">Item B</li>
+            <li id="item_c">Item C</li>
+        </ul>
+
+        <!-- MathML: ax^2 + bx + c -->
+        <mrow>
+          <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
+          <mo>+</mo> <mi>b</mi> <mo>&InvisibleTimes;</mo> <mi>x</mi>
+          <mo>+</mo> <mi>c</mi>
+        </mrow>
+    </div>
+  </body>
+</html>
+```
 
 
 
