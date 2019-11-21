@@ -160,6 +160,17 @@ Whitespace is used to separate elements in a container. In maps, the key and val
         1                = "Keys don't have to be strings"
         ref1             = #tagged
         ref2             = #tagged
+        markup           = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+                           <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+                             <body|
+                               Widgets:
+                               <div id=parent style=normal ref-id=1 |
+                                 <script| `##
+                                   document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+                                 ##>
+                               >
+                             >
+                           >
     }
 
 The top-level object can also be a non-container type, for example:
@@ -722,7 +733,7 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. The markup container's structure is more useful for presentation than for data (data is much more conveniently stored in lists and maps).
+A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are more suitable.
 
 The CTE encoding of a markup container is similar to XML, except:
 
