@@ -22,6 +22,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Bytes             | `h"f1 e2 d3 c4 b5 a6 97 88"`   |
 | List              | `[1 2 3 4]`                    |
 | Map               | `{one=1 two=2}`                |
+| Markup            | `<span style=bold| Blah blah>` |
 | Metadata Map      | `(_id=12345)`                  |
 | Marker/Reference  | `*a_ref "something"`, `#a_ref` |
 | Comment           | `// A comment`                 |
@@ -73,11 +74,11 @@ Contents
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
-  - [Markup](#markup-container)
-    - [Structure](#structure)
+  - [Markup](#markup)
+    - [Markup Structure](#markup-structure)
     - [Container Name](#container-name)
-    - [Attributes](#attributes)
-    - [Contents](#contents)
+    - [Attributes Section](#attributes-section)
+    - [Contents Section](#contents-section)
     - [Container End](#container-end)
     - [Content String](#content-string)
     - [Entity References](#entity-references)
@@ -719,19 +720,19 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
     }
 
 
-### Markup Container
+### Markup
 
-A markup container stores XML-style data, essentially a map of attributes followed by a list of content strings and other markup containers. The markup container's structure is more useful for presentation than for data (which is much more conveniently stored in lists and maps).
+A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. The markup container's structure is more useful for presentation than for data (data is much more conveniently stored in lists and maps).
 
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
  * Comments use `<*` and `*>` instead of `<!--` and `-->`. Comments can also be nested.
  * CTE uses less commonly occurring characters for escape initiators (for example, `\` instead of `&`).
- * Quotes are not actually required anywhere in a CTE markup container.
+ * Quotes are not actually required anywhere in a CTE markup container, depending on how you name things.
  * Non-string types can be stored in a markup container.
 
-#### Structure
+#### Markup Structure
 
 A markup container structure in CTE consists of the following:
 
@@ -757,15 +758,15 @@ Examples:
 
 Although it may look a little different, the internal structure is the same, and can easily be converted to/from XML & HTML.
 
-#### Container name
+#### Container Name
 
 The container name follows the same rules as a [map key](#map). It's recommended to use values that are compatible with XML names, or can be automatically string-converted to such. See: [human editability](#human-editability).
 
-#### Attributes
+#### Attributes Section
 
 The attributes section behaves like a [map](#map). It's recommended to use values that are compatible with XML attribute names and values, or can be automatically string-converted to such. See: [human editability](#human-editability).
 
-#### Contents
+#### Contents Section
 
 The contents section behaves similarly to a [list](#list), except that it can only contain [content strings](#content-string) and markup containers. The contents section is in string processing mode whenever it's not processing a sub-container (initiated by an unescaped `<` character).
 
@@ -775,7 +776,7 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 #### Content String
 
-A content string works similarly to the text content inside of an XML tag (for example, `<a>text content</a>`).
+A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
 
 Within a content string, a [verbatim sequence](#verbatim-sequence) can be started at any time using the backtick (`` ` ``) character. The verbatim contents of the sequence are appended to the growing content string. Literal backtick values outside of a verbatim sequence must be escaped.
 
