@@ -22,7 +22,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Bytes             | `h"f1 e2 d3 c4 b5 a6 97 88"`   |
 | List              | `[1 2 3 4]`                    |
 | Map               | `{one=1 two=2}`                |
-| Markup            | `<span style=bold| Blah blah>` |
+| Markup            | `<span style=bold\| Blah blah>` |
 | Metadata Map      | `(_id=12345)`                  |
 | Marker/Reference  | `*a_ref "something"`, `#a_ref` |
 | Comment           | `// A comment`                 |
