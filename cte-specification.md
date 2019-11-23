@@ -563,9 +563,11 @@ The above string must be interpreted as:
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 ```
 
-Note that a continuation doesn't have to be preceded by whitespace; it's just generally preferred to do it that way.
+Note that a continuation doesn't have to be preceded by whitespace; it just generally looks nicer to do it that way.
 
 #### Verbatim Sequence
+
+A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The result must be a valid [string](#string).
 
 A verbatim sequence is composed of the following:
 
@@ -574,8 +576,6 @@ A verbatim sequence is composed of the following:
  * A single whitespace sequence (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR/LF `u+000d u+000a`).
  * The string contents.
  * Another instance of the end-of-string identifier to mark the end of the string.
-
-The string's contents must be read verbatim (no special interpretation of whitespace, character sequences, or escape sequences), until the specified end-of-string identifier is found. The resulting string must be valid, complete UTF-8. Everything within a verbatim sequence must be [human editable](#human-editability).
 
 Example:
 
@@ -733,7 +733,7 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are more suitable.
+A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are better.
 
 The CTE encoding of a markup container is similar to XML, except:
 

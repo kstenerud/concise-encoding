@@ -59,6 +59,7 @@ Contents
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
+  - [Markup](#markup)
   - [Inline Containers](#inline-containers)
 * [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
@@ -154,10 +155,10 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  72 | 114 | RESERVED                  |                                               |
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
-|  75 | 117 | RESERVED                  |                                               |
-|  76 | 118 | List                      | Object ... End of Container                   |
-|  77 | 119 | Map                       | Key Value ... End of Container                |
-|  78 | 120 | Metadata Map              | Key Value ... End of Container                |
+|  75 | 117 | List                      | Object ... End of Container                   |
+|  76 | 118 | Map                       | Key Value ... End of Container                |
+|  77 | 119 | Metadata Map              | Key Value ... End of Container                |
+|  78 | 120 | Markup                    | Name, kv-pairs, contents                      |
 |  79 | 121 | End of Container          |                                               |
 |  7a | 122 | Marker                    | Positive Integer / dequotable string          |
 |  7b | 123 | Reference                 | Positive Integer / dequotable string / URI    |
@@ -374,7 +375,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [76 01 6a 88 13 79] = A list containing integers (1, 5000)
+    [75 01 6a 88 13 79] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -391,7 +392,7 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [77] [key 1] [value 1] [key 2] [value 2] ... [79]
+    [76] [key 1] [value 1] [key 2] [value 2] ... [79]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
@@ -400,9 +401,91 @@ Example:
     [77 81 61 01 81 62 02 79] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
+### Markup
+
+A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are better.
+
+Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and one to mark the end of the content section:
+
+    [78] [name] [attr1] [v1] [attr2] [v2] ... [79] [contents] [contents] ... [79]
+
+#### Markup Container Name
+
+Although technically any type is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+
+#### Attributes Section
+
+The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in these fields.
+
+#### Contents Section
+
+The contents section behaves similarly to a [list](#list), except that it can only contain [content strings](#content-string) and markup containers.
+
+#### Content String
+
+A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`). It can contain [escape sequences](#escape-sequences), [entity references](#entity-reference), and [verbatim sequences](#verbatim-sequence). Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret any special sequences. Rather, it must pass them on unchanged so that the application can deal with them according to whichver spec it adheres to.
+
+##### Escape Sequences
+
+The following escape sequences are valid within a content string:
+
+| Sequence            | Interpretation              |
+| ------------------- | --------------------------- |
+| `` \` ``            | backtick (u+0060)           |
+| `\<`                | less-than (u+003c)          |
+| `\>`                | greater-than (u+003e)       |
+| `\\`                | backslash (u+005c)          |
+| `\_`                | non-breaking space (u+00a0) |
+| `\` + entity name   | entity reference            |
+| `\u0001` - `\uffff` | unicode character           |
+
+##### Entity References
+
+Entity references are the same as in XML and HTML, except that the standard escape character (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+
+##### Verbatim Sequence
+
+A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The result must be a valid [string](#string).
+
+A verbatim sequence is composed of the following:
+
+ * Backtick (`` ` ``).
+ * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](#human-editability)).
+ * A single whitespace sequence (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR/LF `u+000d u+000a`).
+ * The string contents.
+ * Another instance of the end-of-string identifier to mark the end of the string.
+
+Example:
+
+```
+`::: A verbatim string is not constrained like normal strings are.
+It can contain problematic characters like ", `, \ and such without problems.
+
+The `\` at the end of this line is not a continuation: \
+
+Three colons (`:`) are being used to mark the end-of-string in this case,
+so we can't use that exact character sequence in the string contents.
+
+Whitespace, including newlines and "leading" whitespace, is also read verbatim.
+        For example, this line really is indented 8 spaces.:::
+```
+
+#### Doctype
+
+Use a [metadata map](#metadata-map) entry to specify a doctype:
+
+    [77 8c] "xml-doctype" [75 84] "html" [86] "PUBLIC" [90 20] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 31] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [79 79]
+
+#### Style Sheets
+
+Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
+
+    [77 8f] "xml-stylesheet" [76 84] "type" [88] "text/xsl" [84] "href" [90 10] "stylesheet.xsl" [79 79]
+
+
 ### Inline Containers
 
-CBE documents in data communication messages are often implemented as lists or maps at the top level. To help save bytes, CBE allows "inline" top-level containers as a special case.
+CBE documents in data communication messages are often implemented as lists or maps at the top level. To help save bytes, CBE allows "inline" top-level list and map containers as a special case.
 
 An "inline container" document contains no version specifier, no container initiator, and no container end. It is up to the implementation to specify the CBE version in use, and how the container is delimited.
 
@@ -449,7 +532,7 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 Example:
 
-    [78 82 5f 74 85 61 5f 74 61 67 79] = metadata map: (_t = ["a_tag"])
+    [77 82 5f 74 85 61 5f 74 61 67 79] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
