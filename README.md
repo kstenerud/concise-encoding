@@ -74,8 +74,8 @@ Comparison to Other Formats
 
 | Type                   | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ---------------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Int Max Size (bits)    |     infinite     |     |  52  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Float Max Size (bits)  |     infinite     |     |  64  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Int Max Size (bits)    |     infinite     |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Float Max Size (bits)  |     infinite     |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
 | Time Zones             |        Y         |     |      |      |      |             |           |             |        |       |
 | Subsecond Precision    |       ns         |     |      |  ns  |   -  |     ns      |    ns     |             |        |  ns   |
 | Gregorian Time Fields  |        Y         |     |      |      |      |             |           |             |        |       |
