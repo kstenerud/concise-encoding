@@ -22,6 +22,7 @@ Contents
 
  * [Request for Comments](#request-for-comments)
  * [Specifications](#specifications)
+ * [Comparison to Other Formats](#comparison-to-other-formats)
  * [Supported Types](#supported-types)
  * [Design](#design)
  * [Implementations](#implementations)
@@ -42,6 +43,52 @@ Specifications
  * [Binary (CBE)](cbe-specification.md)
  * [Text (CTE)](cte-specification.md)
  * [Common Generic Metadata](common-generic-metadata.md)
+
+
+
+Comparison to Other Formats
+---------------------------
+
+#### Type Comparison
+
+| Type          | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
+| Null          |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
+| Integer       |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Boolean       |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Binary Float  |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Decimal Float |        Y         |     |  Y   |  Y   |  Y   |             |           |             |        |       |
+| Timestamp     |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
+| Bytes         |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| String        |        Y         |  Y  |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| URL           |        Y         |     |      |      |      |             |           |             |        |       |
+| List          |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Map           |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |       |
+| Markup        |        Y         |  Y  |      |      |      |             |           |             |        |       |
+| Metadata      |        Y         |     |      |      |      |             |           |             |        |       |
+| Comment       |        Y         |     |      |      |      |             |           |             |        |       |
+| Reference     |        Y         |     |      |      |  Y   |             |           |             |        |       |
+
+
+#### Feature Comparison
+
+| Type                   | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ---------------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
+| Int Max Size (bits)    |     infinite     |     |  52  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Float Max Size (bits)  |     infinite     |     |  64  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Time Zones             |        Y         |     |      |      |      |             |           |             |        |       |
+| Subsecond Precision    |       ns         |     |      |  ns  |   -  |     ns      |    ns     |             |        |  ns   |
+| Gregorian Time Fields  |        Y         |     |      |      |      |             |           |             |        |       |
+| Endianness             |        L         |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
+| Versioning             |        Y         |     |      |      |      |             |           |             |        |       |
+| Non-string map keys    |        Y         |     |      |      |      |             |           |             |        |       |
+| 1:1 Bin/Txt Compatible |        Y         |     |      |      |      |             |           |             |        |       |
+
+* **Time Zones**: Timestamps support time zones.
+* **Gregorian Time Fields**: Time values use Gregorian fields rather than monotonic types like seconds.
+* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, so formats using this byte order can be more efficiently encoded/decoded.
+* **Versioning**: Documents are versioned to match a specification version.
+* **1:1 Bin/Txt Compatible**: All types in the binary format match 1:1 to the same type in the text format.
 
 
 
