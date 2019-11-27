@@ -49,6 +49,7 @@ The biggest challenge of a text format is figuring out how to concisely and uniq
  * Bytes
  * List
  * Map
+ * Markup
  * Reference
  * Metadata
  * Comment
@@ -60,6 +61,8 @@ URIs and references are important because linking amplifies the power and expres
 Comments are necessary because people will build complicated data structures that need explanations.
 
 Metadata is important because we can't be sure that negotiations made prior to sending a document will provide enough context to make sense of the data.
+
+Markup is important because XML-style parent-child data structures have become the de-facto standard for storing presentation data.
 
 
 

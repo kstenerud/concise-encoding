@@ -21,9 +21,9 @@ Contents
 --------
 
  * [Request for Comments](#request-for-comments)
+ * [Specifications](#specifications)
  * [Supported Types](#supported-types)
  * [Design](#design)
- * [Specifications](#specifications)
  * [Implementations](#implementations)
  * [License](#license)
 
@@ -33,6 +33,15 @@ Request for Comments
 --------------------
 
 This prototype specification is now [open to comments from the public](request-for-comments.md). Please join the discussion!
+
+
+
+Specifications
+--------------
+
+ * [Binary (CBE)](cbe-specification.md)
+ * [Text (CTE)](cte-specification.md)
+ * [Common Generic Metadata](common-generic-metadata.md)
 
 
 
@@ -77,6 +86,7 @@ Containers can hold other objects, including other containers. Contents can be o
 | ------------- | ---------------------------------------------------------- |
 | List          | Ordered collection of objects                              |
 | Map           | Ordered mapping of key objects to value objects            |
+| Markup        | Name, attributes, contents (similar to XML structures)     |
 
 
 ### Metadata Types
@@ -85,7 +95,7 @@ Metadata types describe other data.
 
 | Type          | Description                                                |
 | ------------- | ---------------------------------------------------------- |
-| Metadata Map  | A map containing metadata about the object that follows it |
+| Metadata      | A map containing metadata about the object that follows it |
 | Comment       | A UTF-8 encoded comment string                             |
 
 
@@ -103,15 +113,6 @@ Design
 ------
 
  * [Design document](design.md)
-
-
-
-Specifications
---------------
-
- * [Binary (CBE)](cbe-specification.md)
- * [Text (CTE)](cte-specification.md)
- * [Common Generic Metadata](common-generic-metadata.md)
 
 
 
