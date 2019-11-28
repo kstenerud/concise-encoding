@@ -23,6 +23,7 @@ Contents
  * [Request for Comments](#request-for-comments)
  * [Specifications](#specifications)
  * [Comparison to Other Formats](#comparison-to-other-formats)
+ * [Example](#example)
  * [Supported Types](#supported-types)
  * [Design](#design)
  * [Implementations](#implementations)
@@ -66,29 +67,91 @@ Comparison to Other Formats
 | Map           |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |       |
 | Markup        |        Y         |  Y  |      |      |      |             |           |             |        |       |
 | Metadata      |        Y         |     |      |      |      |             |           |             |        |       |
-| Comment       |        Y         |     |      |      |      |             |           |             |        |       |
+| Comment       |        Y         |  Y  |      |      |      |             |           |             |        |       |
 | Reference     |        Y         |     |      |      |  Y   |             |           |             |        |       |
 
 
 #### Feature Comparison
 
-| Type                   | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
-| ---------------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Int Max Size (bits)    |     infinite     |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Float Max Size (bits)  |     infinite     |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Time Zones             |        Y         |     |      |      |      |             |           |             |        |       |
-| Subsecond Precision    |       ns         |     |      |  ns  |   -  |     ns      |    ns     |             |        |  ns   |
-| Gregorian Time Fields  |        Y         |     |      |      |      |             |           |             |        |       |
-| Endianness             |        L         |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
-| Versioning             |        Y         |     |      |      |      |             |           |             |        |       |
-| Non-string map keys    |        Y         |     |      |      |      |             |           |             |        |       |
-| 1:1 Bin/Txt Compatible |        Y         |     |      |      |      |             |           |             |        |       |
+| Type                    | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ----------------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
+| Int Max Size (bits)     |     infinite     |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Float Max Size (bits)   |     infinite     |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Time Zones              |        Y         |     |      |      |      |             |           |             |        |       |
+| Subsecond Precision     |       ns         |     |      |  ns  |   -  |     ns      |    ns     |             |        |  ns   |
+| Gregorian Time Fields   |        Y         |     |      |      |      |             |           |             |        |       |
+| Endianness              |        L         |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
+| Versioning              |        Y         |     |      |      |      |             |           |             |        |       |
+| Non-string map keys     |        Y         |     |      |   Y  |   Y  |      Y      |     Y     |             |        |       |
+| 1:1 Bin/Txt Compatible  |        Y         |     |      |      |      |             |           |             |        |       |
+| Size Optimization       |        Y         |     |      |      |   Y  |      Y      |           |             |        |       |
 
 * **Time Zones**: Timestamps support time zones.
 * **Gregorian Time Fields**: Time values use Gregorian fields rather than monotonic types like seconds.
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, so formats using this byte order can be more efficiently encoded/decoded.
 * **Versioning**: Documents are versioned to match a specification version.
 * **1:1 Bin/Txt Compatible**: All types in the binary format match 1:1 to the same type in the text format.
+* **Size Optimization**: Encoding is designed such that the more common types & values use less space.
+
+
+Example
+-------
+
+Here's an example of the text format in action. Everything here is 1:1 compatible with the binary format.
+
+    v1
+    // _ct is the creation time, in this case referring to the entire document
+    (_ct = 2019-9-1/22:14:01)
+    {
+        /* Comments look very C-like, except:
+           /* Nested comments are allowed! */
+           Note: Markup comments use <* and *> (shown later).
+        */
+        // Notice that there are no commas in maps and lists
+        (metadata_about_a_list = "something interesting about a_list")
+        a_list           = [1 2 "a string"]
+        map              = {2=two 3=3000 1=one}
+        string           = "A string value"
+        boolean          = @true
+        "binary int"     = -0b10001011
+        "octal int"      = 0o644
+        "regular int"    = -10000000
+        "hex int"        = 0xfffe0001
+        "decimal float"  = -14.125
+        "hex float"      = 0x5.1ec4p20
+        date             = 2019-7-1
+        // Note: Time zones can also be location based.
+        //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
+        time             = 18:04:00.940231541/E/Prague
+        timestamp        = 2010-7-15/13:28:15.415942344/Z
+        nil              = @nil
+        bytes            = h"10ff389add004f4f91"
+        url              = u"https://example.com/"
+        email            = u"mailto:me@somewhere.com"
+        1.5              = "Keys don't have to be strings"
+        marked_object    = *tag1 {
+        	                         description = "This map will be referenced later using #tag1"
+        	                         value = -@inf
+        	                         child_elements = @nil
+        	                     }
+        ref1             = #tag1
+        ref2             = #tag1
+        outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+        // The markup type is good for presentation data
+        html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+                           <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+                             <body|
+                               Please choose from the following widgets:
+                               <div id=parent style=normal ref-id=1 |
+                                 <* Here we use a backtick to induce verbatim processing.
+                                    In this case, "##" is chosen as the ending sequence *>
+                                 <script| `##
+                                   document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+                                 ##>
+                               >
+                             >
+                           >
+    }
 
 
 
