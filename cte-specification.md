@@ -1107,8 +1107,6 @@ Example:
 
 A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](#unquoted-string).
 
-TODO: Relax tag string restriction to allow start with [0-9]?
-
 
 ### Reference
 
