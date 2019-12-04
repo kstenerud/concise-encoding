@@ -824,7 +824,6 @@ A content string is encoded as a [string](#string), with additional processing r
 
  * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
  * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
- * The sequences `<*` and `*>` must not be present unescaped (they must be escaped to `\<*` and `*\>`).
 
 A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
 
