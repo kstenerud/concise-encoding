@@ -871,9 +871,7 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
 #### Markup Comment
 
-Strings within a comment in a markup contents section have the same restrictions and requirements as a [content string](#content-string). Comments may be nested.
-
-TODO: Harmonize with regular comments
+Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
 
 #### Example
 
