@@ -620,7 +620,7 @@ Example:
 
 A marker tags an object in the document with a [tag value](#tag-value) such that it can be referenced in another part of the document. The next object following the marker is associated with the marker's tag value. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects (they don't count as values in collections, for example).
 
-A marker begins with the marker type (0x79), followed by a [tag value](#tag-value).
+A marker begins with the marker type (0x97), followed by a [tag value](#tag-value).
 
 Rules:
 
@@ -649,7 +649,7 @@ A tag value is a globally unique (to the document) identifier for marked objects
 
 A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations.
 
-A reference begins with the reference type (0x7a), followed by either a [tag value](#tag-value) or a [URI](#uri).
+A reference begins with the reference type (0x98), followed by either a [tag value](#tag-value) or a [URI](#uri).
 
 Rules:
 
