@@ -871,6 +871,10 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
 #### Markup Comment
 
+Comments in a markup contents section must use `<*` and `*>` as sentinels rather than `/* */` and `//` (these would be interpreted literally inside of markup contents).
+
+Comments can be nested.
+
 Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
 
 #### Example

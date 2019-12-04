@@ -515,6 +515,8 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
 Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
 
+Comment containers can be nested.
+
 
 ### Inline Containers
 
