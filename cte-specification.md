@@ -76,14 +76,16 @@ Contents
   - [Map](#map)
   - [Markup](#markup)
     - [Markup Structure](#markup-structure)
-    - [Container Name](#container-name)
+    - [Container Name](#markup-container-name)
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
     - [Container End](#container-end)
     - [Content String](#content-string)
-    - [Entity References](#entity-references)
+    - [Escape Sequence](#escape-sequence)
+    - [Entity Reference](#entity-reference)
     - [Doctype](#doctype)
-    - [Style Sheets](#style-sheets)
+    - [Style Sheet](#style-sheet)
+    - [Markup Comment](#markup-comment)
 * [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
   - [Metadata Map](#metadata-map)
@@ -132,46 +134,68 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 
 #### Example
 
-    v1
-    // _ct is the creation time, in this case referring to the document
-    (_ct = 2019.9.1-22:14:01)
-    {
-        // A comment
-        /* A multiline
-           comment */
-        (metadata_about_a_list = "something interesting about a_list")
-        a_list           = [1 2 "a string"]
-        map              = {2=two 3=3000 1=one}
-        *tagged original = "Something we'd like to reference later"
-        boolean          = @true
-        "binary int"     = -0b10001011
-        "octal int"      = 0o644
-        "regular int"    = -10000000
-        "hex int"        = 0xfffe0001
-        "decimal float"  = -14.125
-        "hex float"      = 0x5.1ec4p20
-        date             = 2019-7-1
-        time             = 18:04:00.940231541/E/Prague
-        timestamp        = 2010-7-15/13:28:15.415942344/Z
-        nil              = @nil
-        bytes            = h"10ff389add004f4f91"
-        url              = u"https://example.com/"
-        email            = u"mailto:me@somewhere.com"
-        1                = "Keys don't have to be strings"
-        ref1             = #tagged
-        ref2             = #tagged
-        markup           = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                           <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
-                             <body|
-                               Widgets:
-                               <div id=parent style=normal ref-id=1 |
-                                 <script| `##
-                                   document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
-                                 ##>
-                               >
-                             >
+```
+v1
+// _ct is the creation time, in this case referring to the entire document
+(_ct = 2019-9-1/22:14:01)
+{
+    /* Comments look very C-like, except:
+       /* Nested comments are allowed! */
+       Note: Markup comments use <* and *> (shown later).
+    */
+    // Notice that there are no commas in maps and lists
+    (metadata_about_a_list = "something interesting about a_list")
+    a_list           = [1 2 "a string"]
+    map              = {2=two 3=3000 1=one}
+    string           = "A string value"
+    boolean          = @true
+    "binary int"     = -0b10001011
+    "octal int"      = 0o644
+    "regular int"    = -10000000
+    "hex int"        = 0xfffe0001
+    "decimal float"  = -14.125
+    "hex float"      = 0x5.1ec4p20
+    date             = 2019-7-1
+    // Note: Time zones can also be latitude/longitude based. For example,
+    //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
+    time             = 18:04:00.940231541/E/Prague
+    timestamp        = 2010-7-15/13:28:15.415942344/Z
+    nil              = @nil
+    bytes            = h"10ff389add004f4f91"
+    url              = u"https://example.com/"
+    email            = u"mailto:me@somewhere.com"
+    1.5              = "Keys don't have to be strings"
+    long-string      = `@@@
+A backtick induces verbatim processing, which in this case will continue
+until three @ characters are encountered, similar to how here documents in
+bash work.
+You can put anything in here, including double-quote ("), or even more
+backticks (`). Verbatim processing stops at the end sequence, which in this
+case is three @ characters, specified earlier as a sentinel.@@@
+    marked_object    = *tag1 {
+                               description = "This map will be referenced later using #tag1"
+                               value = -@inf
+                               child_elements = @nil
+                           }
+    ref1             = #tag1
+    ref2             = #tag1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    // The markup type is good for presentation data
+    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+                         <body|
+                           Please choose from the following widgets:
+                           <div id=parent style=normal ref-id=1 |
+                             <* Here we use a backtick to induce verbatim processing.
+                                In this case, "##" is chosen as the ending sequence *>
+                             <script| `##
+                               document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+                             ##>
                            >
-    }
+                         >
+                       >
+}
+```
 
 The top-level object can also be a non-container type, for example:
 
@@ -567,20 +591,21 @@ Note that a continuation doesn't have to be preceded by whitespace; it just gene
 
 #### Verbatim Sequence
 
-A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The result must be a valid [string](#string).
+A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The contents must be a valid [string](#string).
 
 A verbatim sequence is composed of the following:
 
  * Backtick (`` ` ``).
- * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](#human-editability)).
- * A single whitespace sequence (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR/LF `u+000d u+000a`).
+ * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
+ * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
- * Another instance of the end-of-string identifier to mark the end of the string.
+ * A second instance of the end-of-string identifier (without whitespace termination).
 
 Example:
 
 ```
-`::: A verbatim string is not constrained like normal strings are.
+discussion = `:::
+A verbatim string is not constrained like normal strings are.
 It can contain problematic characters like ", `, \ and such without problems.
 
 The `\` at the end of this line is not a continuation: \
@@ -733,7 +758,9 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are better.
+A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents.
+
+Markup containers are best suited to presentation. For regular data, maps and lists are better.
 
 The CTE encoding of a markup container is similar to XML, except:
 
@@ -769,27 +796,41 @@ Examples:
 
 Although it may look a little different, the internal structure is the same, and can easily be converted to/from XML & HTML.
 
-#### Container Name
+#### Markup Container Name
 
-The container name follows the same rules as a [map key](#map). It's recommended to use values that are compatible with XML names, or can be automatically string-converted to such. See: [human editability](#human-editability).
+Although technically any type is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
 
 #### Attributes Section
 
-The attributes section behaves like a [map](#map). It's recommended to use values that are compatible with XML attribute names and values, or can be automatically string-converted to such. See: [human editability](#human-editability).
+The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in these fields.
 
 #### Contents Section
 
-The contents section behaves similarly to a [list](#list), except that it can only contain [content strings](#content-string) and markup containers. The contents section is in string processing mode whenever it's not processing a sub-container (initiated by an unescaped `<` character).
+The contents section behaves similarly to a [list](#list), except that it can only contain:
+
+ * [Content strings](#content-string)
+ * [Comments](#markup-comment)
+ * Other markup containers
+
+The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` character).
 
 #### Container End
 
-The markup container ends when an unescaped `>` character is encountered while processing a [content string](#content-string). There are no separate "end tags" or slash characters like in XML.
+The markup container ends when an unescaped `>` character is encountered while processing a [content string](#content-string). There are no separate "end tags" or slash character encoding like in XML.
 
 #### Content String
 
+A content string is encoded as a [string](#string), with additional processing requirements and restrictions:
+
+ * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
+ * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
+ * The sequences `<*` and `*>` must not be present unescaped (they must be escaped to `\<*` and `*\>`).
+
 A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
 
-Within a content string, a [verbatim sequence](#verbatim-sequence) can be started at any time using the backtick (`` ` ``) character. The verbatim contents of the sequence are appended to the growing content string. Literal backtick values outside of a verbatim sequence must be escaped.
+#### Escape Sequence
+
+An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible.
 
 The following escape sequences are recognised inside of a content string (except during [verbatim sequence](#verbatim-sequence) processing):
 
@@ -802,9 +843,15 @@ The following escape sequences are recognised inside of a content string (except
 | `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
 
-#### Entity References
+A decoder must interpret escape sequences and pass the translated value to the application.
 
-Entity references in CTE work the same as they do in XML and HTML, except that the standard escape character (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
+
+#### Entity Reference
+
+Entity references are the same as in XML and HTML, except that the backslash (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+
+Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
 
 #### Doctype
 
@@ -814,7 +861,7 @@ Use a [metadata map](#metadata-map) entry to specify a doctype:
 ( xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"] )
 ```
 
-#### Style Sheets
+#### Style Sheet
 
 Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
@@ -822,6 +869,11 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 ( xml-stylesheet={type=text/xsl href=my-stylesheet.xsl} )
 ```
 
+#### Markup Comment
+
+Strings within a comment in a markup contents section have the same restrictions and requirements as a [content string](#content-string). Comments may be nested.
+
+TODO: Harmonize with regular comments
 
 #### Example
 
@@ -967,7 +1019,7 @@ Example:
 
 ### Comment
 
-Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used in most programming languages.
+A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
@@ -975,13 +1027,13 @@ Comments can be written in single-line or multi-line form. The single-line form 
 
 Note: Comments must not be placed before the [version specifier](#version-specifier).
 
-#### Comment Character Restrictions
+#### Comment String Character Restrictions
 
 The following characters are explicitly allowed:
 
  * Horizontal Tab (u+0009)
  * Linefeed (u+000a) - discarded in single line comments
- * Carriage Return (u+000d) - always ignored and discarded
+ * Carriage Return (u+000d) - discarded in single line comments
 
 The following characters are disallowed if they aren't in the above allowed section:
 

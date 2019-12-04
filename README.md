@@ -99,60 +99,68 @@ Example
 
 Here's an example of the text format in action. Everything here is 1:1 compatible with the binary format.
 
-    v1
-    // _ct is the creation time, in this case referring to the entire document
-    (_ct = 2019-9-1/22:14:01)
-    {
-        /* Comments look very C-like, except:
-           /* Nested comments are allowed! */
-           Note: Markup comments use <* and *> (shown later).
-        */
-        // Notice that there are no commas in maps and lists
-        (metadata_about_a_list = "something interesting about a_list")
-        a_list           = [1 2 "a string"]
-        map              = {2=two 3=3000 1=one}
-        string           = "A string value"
-        boolean          = @true
-        "binary int"     = -0b10001011
-        "octal int"      = 0o644
-        "regular int"    = -10000000
-        "hex int"        = 0xfffe0001
-        "decimal float"  = -14.125
-        "hex float"      = 0x5.1ec4p20
-        date             = 2019-7-1
-        // Note: Time zones can also be location based.
-        //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
-        time             = 18:04:00.940231541/E/Prague
-        timestamp        = 2010-7-15/13:28:15.415942344/Z
-        nil              = @nil
-        bytes            = h"10ff389add004f4f91"
-        url              = u"https://example.com/"
-        email            = u"mailto:me@somewhere.com"
-        1.5              = "Keys don't have to be strings"
-        marked_object    = *tag1 {
-        	                         description = "This map will be referenced later using #tag1"
-        	                         value = -@inf
-        	                         child_elements = @nil
-        	                     }
-        ref1             = #tag1
-        ref2             = #tag1
-        outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
-        // The markup type is good for presentation data
-        html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                           <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
-                             <body|
-                               Please choose from the following widgets:
-                               <div id=parent style=normal ref-id=1 |
-                                 <* Here we use a backtick to induce verbatim processing.
-                                    In this case, "##" is chosen as the ending sequence *>
-                                 <script| `##
-                                   document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
-                                 ##>
-                               >
-                             >
+```
+v1
+// _ct is the creation time, in this case referring to the entire document
+(_ct = 2019-9-1/22:14:01)
+{
+    /* Comments look very C-like, except:
+       /* Nested comments are allowed! */
+       Note: Markup comments use <* and *> (shown later).
+    */
+    // Notice that there are no commas in maps and lists
+    (metadata_about_a_list = "something interesting about a_list")
+    a_list           = [1 2 "a string"]
+    map              = {2=two 3=3000 1=one}
+    string           = "A string value"
+    boolean          = @true
+    "binary int"     = -0b10001011
+    "octal int"      = 0o644
+    "regular int"    = -10000000
+    "hex int"        = 0xfffe0001
+    "decimal float"  = -14.125
+    "hex float"      = 0x5.1ec4p20
+    date             = 2019-7-1
+    // Note: Time zones can also be latitude/longitude based. For example,
+    //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
+    time             = 18:04:00.940231541/E/Prague
+    timestamp        = 2010-7-15/13:28:15.415942344/Z
+    nil              = @nil
+    bytes            = h"10ff389add004f4f91"
+    url              = u"https://example.com/"
+    email            = u"mailto:me@somewhere.com"
+    1.5              = "Keys don't have to be strings"
+    long-string      = `@@@
+A backtick induces verbatim processing, which in this case will continue
+until three @ characters are encountered, similar to how here documents in
+bash work.
+You can put anything in here, including double-quote ("), or even more
+backticks (`). Verbatim processing stops at the end sequence, which in this
+case is three @ characters, specified earlier as a sentinel.@@@
+    marked_object    = *tag1 {
+    	                         description = "This map will be referenced later using #tag1"
+    	                         value = -@inf
+    	                         child_elements = @nil
+    	                     }
+    ref1             = #tag1
+    ref2             = #tag1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    // The markup type is good for presentation data
+    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+                         <body|
+                           Please choose from the following widgets:
+                           <div id=parent style=normal ref-id=1 |
+                             <* Here we use a backtick to induce verbatim processing.
+                                In this case, "##" is chosen as the ending sequence *>
+                             <script| `##
+                               document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+                             ##>
                            >
-    }
-
+                         >
+                       >
+}
+```
 
 
 Supported Types

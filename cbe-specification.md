@@ -60,6 +60,16 @@ Contents
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
+    - [Container Name](#markup-container-name)
+    - [Attributes Section](#attributes-section)
+    - [Contents Section](#contents-section)
+    - [Content String](#content-string)
+    - [Verbatim Sequence](#verbatim-sequence)
+    - [Escape Sequence](#escape-sequence)
+    - [Entity Reference](#entity-reference)
+    - [Doctype](#doctype)
+    - [Style Sheet](#style-sheet)
+    - [Markup Comment](#markup-comment)
   - [Inline Containers](#inline-containers)
 * [Metadata](#metadata)
   - [Metadata Association](#metadata-association)
@@ -155,13 +165,13 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  72 | 114 | RESERVED                  |                                               |
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
-|  75 | 117 | List                      | Object ... End of Container                   |
-|  76 | 118 | Map                       | Key Value ... End of Container                |
+|  75 | 117 | RESERVED                  |                                               |
+|  76 | 118 | Comment                   | (String or sub-comment) ... End of Container  |
 |  77 | 119 | Metadata Map              | Key Value ... End of Container                |
 |  78 | 120 | Markup                    | Name, kv-pairs, contents                      |
-|  79 | 121 | End of Container          |                                               |
-|  7a | 122 | Marker                    | Positive Integer / dequotable string          |
-|  7b | 123 | Reference                 | Positive Integer / dequotable string / URI    |
+|  79 | 121 | Map                       | Key Value ... End of Container                |
+|  7a | 122 | List                      | Object ... End of Container                   |
+|  7b | 123 | End of Container          |                                               |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
 |  7e | 126 | Nil (no data)             |                                               |
@@ -184,13 +194,13 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  8f | 143 | String: 15 bytes          | [15 octets of data]                           |
 |  90 | 144 | String                    | [byte length] [UTF-8 encoded string]          |
 |  91 | 145 | Bytes                     | [byte length] [data]                          |
-|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)]                           |
-|  93 | 147 | Comment                   | [byte length] [UTF-8 encoded string]          |
+|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
+|  93 | 147 | RESERVED                  |                                               |
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
-|  97 | 151 | RESERVED                  |                                               |
-|  98 | 152 | RESERVED                  |                                               |
+|  97 | 151 | Marker                    | Positive Integer / dequotable string          |
+|  98 | 152 | Reference                 | Positive Integer / dequotable string / URI    |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -281,7 +291,7 @@ Timestamps are represented using the [compact timestamp](https://github.com/kste
 
 Example:
 
-    [9b 40 56 d0 0a 3a 8f 9a f7 28] Oct 26, 1985 1:22:16 at location 33.99, -117.93
+    [9b 40 56 d0 0a 3a 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
 
@@ -375,7 +385,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 Example:
 
-    [75 01 6a 88 13 79] = A list containing integers (1, 5000)
+    [7a 01 6a 88 13 7b] = A list containing integers (1, 5000)
 
 
 ### Map
@@ -392,22 +402,24 @@ All keys in a map must resolve to a unique value, even across data types. For ex
 
 Map contents are stored as key-value pairs of objects:
 
-    [76] [key 1] [value 1] [key 2] [value 2] ... [79]
+    [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
 
 Example:
 
-    [77 81 61 01 81 62 02 79] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes followed by a list of content strings and other markup containers. Markup containers are best suited to presentation. For regular data, maps and lists are better.
+A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents.
 
-Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and one to mark the end of the content section:
+Markup containers are best suited to presentation. For regular data, maps and lists are better.
 
-    [78] [name] [attr1] [v1] [attr2] [v2] ... [79] [contents] [contents] ... [79]
+Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and another one to mark the end of the contents section:
+
+    [78] [name] [attr1] [v1] [attr2] [v2] ... [7b] [contents] [contents] ... [7b]
 
 #### Markup Container Name
 
@@ -419,46 +431,37 @@ The attributes section behaves like a [map](#map). Be aware that XML and HTML ha
 
 #### Contents Section
 
-The contents section behaves similarly to a [list](#list), except that it can only contain [content strings](#content-string) and markup containers.
+The contents section behaves similarly to a [list](#list), except that it can only contain:
+
+ * [Content strings](#content-string)
+ * [Comments](#comment)
+ * Other markup containers
 
 #### Content String
 
-A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`). It can contain [escape sequences](#escape-sequences), [entity references](#entity-reference), and [verbatim sequences](#verbatim-sequence). Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret any special sequences. Rather, it must pass them on unchanged so that the application can deal with them according to whichver spec it adheres to.
+A content string is encoded as a [string](#string), with additional processing requirements and restrictions in order to maintain compatibility with [CTE](cte-specification.md#markup):
 
-##### Escape Sequences
-
-The following escape sequences are valid within a content string:
-
-| Sequence            | Interpretation              |
-| ------------------- | --------------------------- |
-| `` \` ``            | backtick (u+0060)           |
-| `\<`                | less-than (u+003c)          |
-| `\>`                | greater-than (u+003e)       |
-| `\\`                | backslash (u+005c)          |
-| `\_`                | non-breaking space (u+00a0) |
-| `\` + entity name   | entity reference            |
-| `\u0001` - `\uffff` | unicode character           |
-
-##### Entity References
-
-Entity references are the same as in XML and HTML, except that the standard escape character (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+ * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
+ * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
+ * The sequences `<*` and `*>` must not be present unescaped (they must be escaped to `\<*` and `*\>`).
 
 ##### Verbatim Sequence
 
-A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The result must be a valid [string](#string).
+A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The contents must be a valid [string](#string).
 
 A verbatim sequence is composed of the following:
 
  * Backtick (`` ` ``).
- * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](#human-editability)).
- * A single whitespace sequence (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR/LF `u+000d u+000a`).
+ * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
+ * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
- * Another instance of the end-of-string identifier to mark the end of the string.
+ * A second instance of the end-of-string identifier (without whitespace termination).
 
 Example:
 
 ```
-`::: A verbatim string is not constrained like normal strings are.
+discussion = `:::
+A verbatim string is not constrained like normal strings are.
 It can contain problematic characters like ", `, \ and such without problems.
 
 The `\` at the end of this line is not a continuation: \
@@ -470,17 +473,47 @@ Whitespace, including newlines and "leading" whitespace, is also read verbatim.
         For example, this line really is indented 8 spaces.:::
 ```
 
+##### Escape Sequence
+
+An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible.
+
+The following escape sequences are valid within a content string:
+
+| Sequence                | Interpretation              |
+| ----------------------- | --------------------------- |
+| `` \` ``                | backtick (u+0060)           |
+| `\<`                    | less-than (u+003c)          |
+| `\>`                    | greater-than (u+003e)       |
+| `\\`                    | backslash (u+005c)          |
+| `\_`                    | non-breaking space (u+00a0) |
+| `\u0001` - `\uffff`     | unicode character           |
+| `\` + entity name + `;` | entity reference            |
+
+A decoder must interpret escape sequences and pass the translated value to the application.
+
+For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
+
+##### Entity Reference
+
+Entity references are the same as in XML and HTML, except that the backslash (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+
+Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
+
 #### Doctype
 
 Use a [metadata map](#metadata-map) entry to specify a doctype:
 
-    [77 8c] "xml-doctype" [75 84] "html" [86] "PUBLIC" [90 20] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 31] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [79 79]
+    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 20] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 31] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
 
-#### Style Sheets
+#### Style Sheet
 
 Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
-    [77 8f] "xml-stylesheet" [76 84] "type" [88] "text/xsl" [84] "href" [90 10] "stylesheet.xsl" [79 79]
+    [77 8f] "xml-stylesheet" [7a 84] "type" [88] "text/xsl" [84] "href" [90 10] "stylesheet.xsl" [7b 7b]
+
+#### Markup Comment
+
+Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
 
 
 ### Inline Containers
@@ -532,20 +565,21 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 Example:
 
-    [77 82 5f 74 85 61 5f 74 61 67 79] = metadata map: (_t = ["a_tag"])
+    [77 82 5f 74 85 61 5f 74 61 67 7b] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
 
-Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
 
-Comments have additional restricions on their content beyond those of normal strings:
+Strings inside comment containers have additional restrictions:
 
-#### Comment Character Restrictions
+#### Comment String Character Restrictions
 
 The following characters are explicitly allowed:
 
  * Horizontal Tab (u+0009)
+ * Carriage Return (u+000d)
  * Linefeed (u+000a)
 
 The following characters are disallowed if they aren't in the above allowed section:
@@ -559,15 +593,11 @@ The following characters are allowed if they aren't in the above disallowed sect
  * UTF-8 printable characters
  * UTF-8 whitespace characters
 
-#### Comment Line Endings
-
-As only the linefeed character is allowed for line endings, an encoder must convert native line endings (for example CR+LF) to linefeeds for encoding. A decoder may convert linefeeds to another line ending format if desired.
-
 #### Example
 
-    [93 40 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66 61
-     69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20 75
-     6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74]
+    [76 93 40 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
+     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
+     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
     = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
@@ -600,8 +630,8 @@ Rules:
 
 Example:
 
-    [7a 01 77 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
-     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 79]
+    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
+     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {some_value = "repeat this value"}, tagged with integer 1
 
 #### Tag Value
@@ -636,14 +666,14 @@ Rules:
 
 Examples:
 
-    [7b 01] = reference to the object tagged with the integer value 1
+    [98 01] = reference to the object tagged with the integer value 1
 
-    [7b 81 61] = reference to the object tagged with the string value "a"
+    [98 81 61] = reference to the object tagged with the string value "a"
 
-    [7b 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [98 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", tag "legalese"
 
-    [7b 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [98 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
