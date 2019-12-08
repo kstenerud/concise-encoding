@@ -721,7 +721,7 @@ Smallest Possible Size
 
 Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest type that stores a value without data loss.
 
-For specialized applications, an encoder implementation may choose to preserve larger types and widths as a tradeoff in processing cost vs data size, or to preserve type information.
+Specialized applications (for example marshalers) may wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
 
 
 
