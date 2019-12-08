@@ -53,8 +53,8 @@ The following predefined metadata keys should be used for the specified type of 
 | `_origin`               | `_o`      | List<String or URI> | Origin(s) of this data                                             |
 | `_schema`               | `_s`      | URI                 | [Schema](#schema) describing how to interpret the data             |
 | `_specification`        | `_sp`     | URI                 | Human-readable specification about the data                        |
-| `_tags`                 | `_ta`     | List<String>        | Set of tags associated with this data (free-form)                  |
 | `_type`                 | `_t`      | String              | Name of the type/class/struct that this structure represents       |
+| `_tags`                 | `_tg`     | List<String>        | Set of tags associated with this data (free-form)                  |
 
 All other string-based metadata keys beginning with `_` are reserved for future expansion, and must not be used as metadata keys for any purpose.
 
@@ -107,7 +107,7 @@ An example of metadata in a [CTE](cte-specification.md) document:
             (
                 _t = CUSREC
                 _ct = 2019.05.14-10:22:55/Z
-                _ta = ["longtime client" "big purchases"]
+                _tg = ["longtime client" "big purchases"]
             )
             {
                 client = "ABC Corp"
