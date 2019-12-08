@@ -40,7 +40,6 @@ The following predefined metadata keys should be used for the specified type of 
 | ----------------------- | --------- | ------------------- | ------------------------------------------------------------------ |
 | `_access_time`          | `_at`     | Timestamp           | Last access time                                                   |
 | `_attributes`           | `_a`      | Map<String:Any>     | Attributes (free-form)                                             |
-| `_class`                | `_cl`     | String              | Name of the class or type that this structure represents           |
 | `_copyright`            | `_cr`     | String or URI       | Holder of copyright over data (Name or URI)                        |
 | `_creation_time`        | `_ct`     | Timestamp           | Creation time                                                      |
 | `_creator`              | `_c`      | List<String or URI> | Creator(s) of the data                                             |
@@ -48,13 +47,14 @@ The following predefined metadata keys should be used for the specified type of 
 | `_description`          | `_d`      | String              | Description (free-form)                                            |
 | `_human_language`       | `_hl`     | String              | Human language, as an ISO 639 alpha-2 or alpha-3 code              |
 | `_identifier`           | `_id`     | Any                 | Identifier (free-form)                                             |
+| `_language`             | `_l`      | String              | The [programming language](#language-name) that generated the data |
 | `_license`              | `_li`     | URI                 | Pointer to the license for this data                               |
 | `_modification_time`    | `_mt`     | Timestamp           | Last modification time                                             |
 | `_origin`               | `_o`      | List<String or URI> | Origin(s) of this data                                             |
-| `_programming_language` | `_pl`     | String              | The [programming language](#language-name) that generated the data |
 | `_schema`               | `_s`      | URI                 | [Schema](#schema) describing how to interpret the data             |
 | `_specification`        | `_sp`     | URI                 | Human-readable specification about the data                        |
-| `_tags`                 | `_t`      | List<String>        | Set of tags associated with this data (free-form)                  |
+| `_tags`                 | `_ta`     | List<String>        | Set of tags associated with this data (free-form)                  |
+| `_type`                 | `_t`      | String              | Name of the type/class/struct that this structure represents       |
 
 All other string-based metadata keys beginning with `_` are reserved for future expansion, and must not be used as metadata keys for any purpose.
 
@@ -94,26 +94,33 @@ An example of metadata in a [CTE](cte-specification.md) document:
 
     v1
     // Metadata for the entire document
-    #{
+    (
         _ct = 2017.01.14-15:22:41/Z
         _mt = 2019.08.17-12:44:31/Z
         _at = 2019.09.14-09:55:00/Z
-    }
+        _l = cobol
+    )
     {
-        #{ _o = [u"https://all-your-data-are-belong-to-us.com"] }
+        ( _o = [u"https://all-your-data-are-belong-to-us.com"] )
         records = [
             // Metadata for "ABC Corp" record
-            #{
+            (
+                _t = CUSREC
                 _ct = 2019.05.14-10:22:55/Z
-                _t = ["longtime client" "big purchases"]
-            }
+                _ta = ["longtime client" "big purchases"]
+            )
             {
                 client = "ABC Corp"
                 amount = 10499.28
                 due = 2020.05.14
             }
+
             // Metadata for "XYZ Corp" record
-            #{ _ct=2019.02.30-09:00:01/Z _mt=2019.08.17-12:44:31/Z }
+            (
+                _t = CUSREC
+                _ct=2019.02.30-09:00:01/Z
+                _mt=2019.08.17-12:44:31/Z
+            )
             {
                 client = "XYZ Corp"
                 amount = 3994.01
@@ -121,7 +128,7 @@ An example of metadata in a [CTE](cte-specification.md) document:
             }
         ]
 
-        #{_s = u"schemas-r-us.com/schemas/v4/super-duper.schema"}
+        ( _s = u"schemas-r-us.com/schemas/v4/super-duper.schema" )
         external_packet = h"934f3ba6433000000b14"
     }
 
