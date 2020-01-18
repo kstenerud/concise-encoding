@@ -118,7 +118,9 @@ The following terms have specific meanings in this specification:
 Structure
 ---------
 
-A CBE document is a binary encoded document consisting of a version specifier, followed by zero or one objects of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+A CBE document is a binary encoded document containing data arranged in an ad-hoc hierarchical fashion.
+
+The document begins with a [version specifier](#version-specifier), followed by zero or one objects of any type. To store multiple values in a document, use a container as the top-level object and store other objects within that container.
 
     [version specifier] [object]
 
@@ -207,8 +209,8 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
-|  97 | 151 | Marker                    | Positive Integer / dequotable string          |
-|  98 | 152 | Reference                 | Positive Integer / dequotable string / URI    |
+|  97 | 151 | Marker                    | Positive Integer / unquoted string            |
+|  98 | 152 | Reference                 | Positive Integer / unquoted string / URI      |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -435,7 +437,7 @@ All keys in a map must resolve to a unique value, even across numeric data types
 
 The string value "2000", however, will not clash.
 
-Map contents are stored as key-value pairs of objects:
+Map contents are stored as key-value pairs of objects. A key without a paired value is invalid:
 
     [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
@@ -532,7 +534,7 @@ The following escape sequences are valid within a content string:
 | `\u0001` - `\uffff`     | unicode character           |
 | `\` + entity name + `;` | entity reference            |
 
-A decoder must interpret escape sequences and pass the translated value to the application.
+A decoder must interpret escape sequences and pass the translated values to the application.
 
 For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
 
@@ -599,10 +601,11 @@ Example:
 
 #### Tag Value
 
-A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
+A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string):
 
  * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), and dash (`-`).
+ * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
+ * The string does not end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
  * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
  * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string is not empty (`""`).
@@ -678,8 +681,6 @@ A comment is a specialized list container that can only contain strings or other
 Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
 
 Comments are completely invisible to all other objects in the document. Nothing can refer to a comment; the comment will be skipped while looking for a real object.
-
-Strings inside comment containers have additional restrictions:
 
 #### Comment String Character Restrictions
 

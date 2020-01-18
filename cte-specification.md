@@ -24,7 +24,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Map               | `{one=1 two=2}`                |
 | Markup            | `<span style=bold| Blah blah>` |
 | Metadata Map      | `(_id=12345)`                  |
-| Marker/Reference  | `*a_ref "something"`, `#a_ref` |
+| Marker/Reference  | `&a_ref "something"`, `#a_ref` |
 | Comment           | `// A comment`                 |
 | Multiline Comment | `/* A comment */`              |
 
@@ -86,16 +86,17 @@ Contents
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
-* [Metadata](#metadata)
-  - [Metadata Association](#metadata-association)
-  - [Metadata Map](#metadata-map)
-  - [Comment](#comment)
-    - [Comment Character Restrictions](#comment-character-restrictions)
-* [Other Types](#other-types)
-  - [Nil](#nil)
+* [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
     - [Tag Value](#tag-value)
   - [Reference](#reference)
+  - [Metadata Map](#metadata-map)
+    - [Metadata Reference](#metadata-reference)
+    - [Metadata Keys](#metadata-keys)
+  - [Comment](#comment)
+    - [Comment Character Restrictions](#comment-string-character-restrictions)
+* [Other Types](#other-types)
+  - [Nil](#nil)
 * [Named Values](#named-values)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
@@ -126,7 +127,7 @@ Structure
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-The document begins with a [version specifier](#version-specifier), followed by an object. Multiple objects can be stored in the document by using a container as the top-level object.
+The document begins with a [version specifier](#version-specifier), followed by zero or one objects of any type. To store multiple values in a document, use a container as the top-level object and store other objects within that container.
 
     [version specifier] [object]
 
@@ -172,7 +173,7 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three @ characters, specified earlier as a sentinel.@@@
-    marked_object    = *tag1 {
+    marked_object    = &tag1 {
                                description = "This map will be referenced later using #tag1"
                                value = -@inf
                                child_elements = @nil
@@ -214,14 +215,12 @@ In the spirit of human editability:
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
  * If a certain character is likely to be confusing or problematic, it's encouraged to use an escape sequence instead.
 
-**Note:** Problematic characters can be escaped in certain contexts.
-
 
 ### Version Specifier
 
 All CTE documents must begin with a version specifier, which must not be preceded by whitespace. In other words, the very first byte of a CTE document must be `c` (0x63).
 
-The version specifier is the lowercase letter `c` followed immediately by a number representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
+The version specifier is the lowercase letter `c` followed immediately by a positive integer representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
 
 Note: Because CBE places the version as the first byte in a document, the version value 99 is invalid. If 99 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `c` (0x63, or 99) as its first byte.
 
@@ -270,7 +269,7 @@ Supports the values `@true` and `@false`.
 
 Integer values can be positive or negative, and can be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. Values must be written in lower case.
 
-Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 must be prefixed:
+Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
 | Base | Name        | Digits           | Prefix | Example      | Decimal Equivalent |
 | ---- | ----------- | ---------------- | ------ | ------------ | ------------------ |
@@ -289,7 +288,7 @@ A floating point number is composed of a whole part and a fractional part, separ
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character may be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values must be normalized (only one digit to the left of the decimal point).
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character may be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values must be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
@@ -299,7 +298,7 @@ There is no maximum number of significant digits or exponent digits, but care sh
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character may be omitted if it's positive. Values should be normalized unless the source ieee754 value being represented is subnormal.
+Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character may be omitted if it's positive. Values must be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
@@ -373,9 +372,6 @@ Numeric whitespace characters must be ignored when decoding numeric values.
 Temporal Types
 --------------
 
-The temporal types deal with time.
-
-
 ### Temporal Type Notes
 
 #### Field Width
@@ -430,7 +426,7 @@ Since there are only a limited number of areas in the database, the following ab
 
 ##### Special Areas
 
-The following special psuedo-areas can also be used. They do not contain a location component.
+The following special pseudo-areas can also be used. They do not contain a location component.
 
 | Area    | Abbreviation | Meaning            |
 | ------- | ------------ | ------------------ |
@@ -447,7 +443,7 @@ The following special psuedo-areas can also be used. They do not contain a locat
 
 #### Global Coordinates
 
-The global coordinates method uses the global position to hundredths of degrees, giving a resolution of about 1km at the equator. Locations are written as longitude and latitude, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
+The global coordinates method uses the global position to hundredths of degrees, giving a resolution of about 1km at the equator. Locations are written as latitude and longitude, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
 
 This method has the advantage of being unambiguous, which can be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not easily decodable by humans.
 
@@ -526,7 +522,7 @@ Array Types
 
 An "array" for the purposes of this spec represents a contiguous sequence of octets. The array type determines how those octets are to be interpreted.
 
-Arrays begin with an encoding type, followed by the data enclosed within double-quotes (`"`) (no whitespace between the encoding type and the opening double-quote). [Strings](#string), are an exceptional case, and are handled differently.
+All arrays (except for strings) begin with an encoding type, followed by the data enclosed within double-quotes (`"`). There must be no whitespace between the encoding type and the opening double-quote.
 
 
 ### String
@@ -535,17 +531,15 @@ An array of UTF-8 encoded bytes. Strings must not contain BOM (u+feff), NUL (u+0
 
 Strings must always resolve to complete, valid unicode sequences (for example, no unpaired surrogates) when fully decoded (i.e. after evaluating all escape sequences).
 
-Unlike other array types, strings are not prefixed with an encoding type.
+Unlike other array types, strings are not prefixed with an encoding type, and are delimited differently:
 
-Strings are delimited using:
-
- * [A quoted sequence](#quoted-sequence)
- * [A verbatim sequence](#verbatim-sequence)
- * [Nothing at all](#unquoted-string)
+ * [Quoted sequence](#quoted-sequence)
+ * [Verbatim sequence](#verbatim-sequence)
+ * [Unquoted sequence](#unquoted-string)
 
 #### Quoted Sequence
 
-A quoted sequence encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, except where special processing occurs as a result of an escape sequence.
+A quoted sequence encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, with special processing whenever an escape sequence occurs.
 
 The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are allowed, and must be in lower case:
 
@@ -558,7 +552,6 @@ The backslash character (`\`) initiates an escape sequence inside a doube-quote 
 | `\r`                | carriage return (u+000d)        |
 | `\n`                | linefeed (u+000a)               |
 | `\t`                | horizontal tab (u+0009)         |
-| `\x01` - `\xff`     | one octet, hexadecimal notation |
 | `\u0001` - `\uffff` | unicode character               |
 
 Escape sequences aid [human editability](#human-editability).
@@ -572,7 +565,9 @@ Everything except for escape sequences are read as-is, until the closing double-
 
 ##### Continuation
 
-A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character. For example:
+A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character.
+
+Example:
 
 ```
     "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
@@ -587,8 +582,6 @@ The above string must be interpreted as:
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 ```
 
-Note that a continuation doesn't have to be preceded by whitespace; it just generally looks nicer to do it that way.
-
 #### Verbatim Sequence
 
 A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The contents must be a valid [string](#string).
@@ -599,22 +592,28 @@ A verbatim sequence is composed of the following:
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
  * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
- * A second instance of the end-of-string identifier (without whitespace termination).
+ * A second instance of the end-of-string identifier (no whitespace termination necessary).
 
 Example:
 
 ```
-discussion = `:::
-A verbatim string is not constrained like normal strings are.
-It can contain problematic characters like ", `, \ and such without problems.
+discussion = `@@@
+A verbatim string is not constrained like normal strings are. It can contain
+problematic characters like ", `, \ <, > and such.
+
+Three at-symbols (`@`) are being used to mark the end-of-string in this
+example, so we can't use that exact character sequence in the string contents.
+
+The initial newline after the initial at-symbols in this example is not part of
+the string; it terminates the end-of-string identifier. The actual text begins
+at "A verbatim string..." with no leading whitespace.
 
 The `\` at the end of this line is not a continuation: \
 
-Three colons (`:`) are being used to mark the end-of-string in this case,
-so we can't use that exact character sequence in the string contents.
-
 Whitespace, including newlines and "leading" whitespace, is also read verbatim.
-        For example, this line really is indented 8 spaces.:::
+        For example, this line really is indented 8 spaces.
+
+Here is the end sequence. There is no trailing newline in this example.@@@
 ```
 
 #### Unquoted String
@@ -634,6 +633,7 @@ For example, these cannot be unquoted strings:
     "String\twith\ttabs\nand\nnewlines"
     "[special-chars]"
     "ends-with-a-dash-"
+    ".dot"
 
 These can be unquoted strings:
 
@@ -723,7 +723,7 @@ A list is ordered by default unless otherwise understood between parties (for ex
 
 A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
-Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution.
+Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
 
 #### Example
 
@@ -736,7 +736,7 @@ A map associates objects (keys) with other objects (values). Keys can be any mix
 
 A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
 
-All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash:
+All keys in a map must resolve to a unique value, even across numeric data types. For example, the following keys would clash:
 
  * `2000`
  * `2000.0`
@@ -745,7 +745,7 @@ Map entries are split into key-value pairs using the equals `=` character and op
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution.
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
 #### Example
 
@@ -760,19 +760,21 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents.
 
+    [name] [attributes] [contents]
+
 Markup containers are best suited to presentation. For regular data, maps and lists are better.
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
+ * There are no end tags. All data is contained within the markup begin `<`, content begin `|`, and markup end `>` characters.
  * Comments use `<*` and `*>` instead of `<!--` and `-->`. Comments can also be nested.
  * CTE uses less commonly occurring characters for escape initiators (for example, `\` instead of `&`).
- * Quotes are not actually required anywhere in a CTE markup container, depending on how you name things.
+ * Quotes are not required where [unquoted strings](#unquoted-string) are used.
  * Non-string types can be stored in a markup container.
 
 #### Markup Structure
 
-A markup container structure in CTE consists of the following:
+The markup container structure in CTE consists of the following:
 
  * Markup container begin character (`<`).
  * Optional whitespace.
@@ -787,22 +789,22 @@ A markup container structure in CTE consists of the following:
  * Optional whitespace.
  * Markup container end character (`>`).
 
-Examples:
+| Attributes | Children | Example                                                 |
+| ---------- | -------- | ------------------------------------------------------- |
+|     N      |    N     | `<br>`                                                  |
+|     Y      |    N     | `<div id=fillme>`                                       |
+|     N      |    Y     | `<span| Some text here >`                               |
+|     Y      |    Y     | `<ul id=mylist style=boring | <li|first> <li|second> >` |
 
- * No attributes,  no children: `<br>`
- * Has attributes, no children: `<div id=fillme>`
- * No attributes, has children: `<span|Some text here>`
- * Has attributes and children: `<ul id=mylist style=boring | <li|first> <li|second> >`
-
-Although it may look a little different, the internal structure is the same, and can easily be converted to/from XML & HTML.
+Although it may look a little different on the surface, the internal structure is the same, and can easily be converted to/from XML & HTML.
 
 #### Markup Container Name
 
-Although technically any type is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+Although technically any [map-key allowable type](#map) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
 
 #### Attributes Section
 
-The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in these fields.
+The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in attribute keys and values.
 
 #### Contents Section
 
@@ -842,13 +844,13 @@ The following escape sequences are recognised inside of a content string (except
 | `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
 
-A decoder must interpret escape sequences and pass the translated value to the application.
+A decoder must interpret escape sequences and pass the translated values to the application.
 
 For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
 
 #### Entity Reference
 
-Entity references are the same as in XML and HTML, except that the backslash (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
 
 Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
 
@@ -875,6 +877,10 @@ Comments in a markup contents section must use `<*` and `*>` as sentinels rather
 Comments can be nested.
 
 Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
+
+**Note:** To guarantee that a comment's contents will not be interpreted in any way, embed the contents in a [verbatim sequence](#verbatim-sequence):
+
+    <*`ZZ All sorts of crazy things like *> and \escape `characters etc ZZ*>
 
 #### Example
 
@@ -939,50 +945,92 @@ This can easily be auto-converted to XML or HTML:
 
 
 
-Metadata
---------
+Peudo-Objects
+-------------
 
-Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
-Metadata must only be placed in front of another object. It cannot be placed at the end of a document, or before the version specifier. A CTE document containing only metadata and no real objects (for example `c1 (a=1)`) is invalid.
+Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
 
 
-### Metadata Association
+### Marker
 
-Metadata objects are pseudo-objects that can be placed anywhere a real object can be placed, but do not count as objects themselves. Instead, metadata is associated with the object that follows it. For example:
+A marker tags a real object in the document with a [tag value](#tag-value) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag value.
 
-    {"a key" = (some_metadata=500) "a value"}
+A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag value](#tag-value).
 
-In this case, the metadata refers to the value `"a value"`, but the actual data for purposes of decoding the map is `{"a key" = "a value"}`.
+Rules:
 
-    { "a key" = (some_metadata=500) }
+ * A marker cannot "see" a pseudo-object. It marks the next real object encountered in the current container.
+ * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
+ * Marker tags must be unique in the document; duplicate marker tags are invalid.
 
-This map is invalid, because it resolves to `{"a key"}`, where no value is associated with the key (the metadata doesn't count).
+Example:
 
-Metadata can also refer to other metadata, for example:
+    [ &remember_me "Assume this is a huge string" &1 {a = 1} ]
 
-    { (metadata_outer=1) (metadata_inner=1) "a key" = "a value" }
+The string `"Assume this is a huge string"` is marked with the tag `remember_me`, and the map `{a=1}` is marked with the tag `1`.
 
-In this case, `metadata_outer` refers to `metadata_inner`, and `metadata_inner` refers to the string `"a key"`. The actual map is `{"a key" = "a value"}`.
+#### Tag Value
 
-#### Exception: Comments
+A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](#unquoted-string).
 
-The metadata association rules do not apply to [comments](#comment). Comments stand entirely on their own, and do not officially refer to anything, nor can any other metadata refer to a comment (i.e. comments are invisible to other metadata). This is to keep their usage consistent with how comments are used in existing languages.
 
-    { (metadata_outer=1) (metadata_inner=1) /* a comment */ "a key" = "a value" }
+### Reference
 
-In this case, `metadata_inner` still refers to `"a key"`, not `a comment`, and `a comment` doesn't officially refer to anything.
+A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
+
+A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag value](#tag-value) or a [URI](#uri).
+
+Rules:
+
+ * A reference with a [tag value](#tag-value) must refer to another object previously declared in the same document (local reference).
+ * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
+ * Recursive references are allowed.
+ * A reference with a URI must point to:
+   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
+   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+ * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
+ * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
+ * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
+
+Example:
+
+    {
+        assumption = #remember_me
+        my_map = #1
+        // references an object in relative file "common.ce", tag "legalese"
+        substructure = #u"common.ce#legalese"
+        // references the entire document at the specified URL
+        my_document = #u"https://somewhere.com/my_document.cbe?format=long"
+    }
 
 
 ### Metadata Map
 
-A metadata map contains keyed values which are associated with the object that follows the metadata map. Metadata maps are delimited by parentheses: `(` and `)`.
+A metadata map contains keyed values which are associated with the object that follows the metadata map.
+
+Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
+
+#### Metadata Reference
+
+Metadata must refer to a real object or to another metadata map. A metadata map that precedes another metadata map is considered meta-metadata (data about the metadata). This may continue ad-infinitum, bounded by the limits of the implementation. The last metadata map in the chain must refer to a real object, even if indirectly through another pseudo-object (e.g. a reference).
+
+Example: `(metadata-map) (metadata-map) (marker) (int) (string)`
+
+In this case, the first metadata map describes the second metadata map. The second metadata map describes the string, which has incidentally also been marked with an integer.
+
+Example: `(metadata-map) (metadata-map) (marker) (int) (comment)`
+
+This is invalid, because there's no real object at the end of the chain for the second metadata map to refer to.
+
+#### Metadata Keys
 
 Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
-Implementations should make use of predefined metadata keys whenever possible to maximize interoperability between systems.
+Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
 
-Example:
+#### Metadata Example
 
     c1
     // Metadata for the entire document
@@ -1020,7 +1068,11 @@ Example:
 
 ### Comment
 
-A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document.
+
+Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+
+Comments are completely invisible to all other objects in the document. Nothing can refer to a comment; the comment will be skipped while looking for a real object.
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
@@ -1082,61 +1134,10 @@ Denotes the absence of data. Some languages implement this as the `null` value.
 
 Note: Use nil judiciously and sparingly, as some languages might have restrictions on how and if it can be used.
 
-#### Example
+Example:
 
     @nil
 
-
-### Marker
-
-A marker tags an object in the document with a [tag value](#tag-value) such that it can be referenced in another part of the document. The next object following the marker is associated with the marker's tag value. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects (they don't count as values in collections, for example).
-
-A marker begins with the marker initiator (`*`), followed immediately (with no whitespace) by a [tag value](#tag-value).
-
-Rules:
-
- * A marker cannot mark a comment; instead it would mark the next non-comment object.
- * A marker must not be followed by another marker (even with comments in between); markers must reference objects, not other markers.
- * Marker tags are globally unique to the document; duplicate tags are invalid.
-
-Example:
-
-    [ *remember_me "world" *1 {a = 1} ]
-
-#### Tag Value
-
-A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](#unquoted-string).
-
-
-### Reference
-
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations.
-
-A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag value](#tag-value) or a [URI](#uri).
-
-Rules:
-
- * A reference with a [tag value](#tag-value) must reference another object in the same document (local reference).
- * Forward references within a document are allowed. An implementation must keep track of unresolved local references, and resolve them as the markers are decoded.
- * A fully decoded document with unresolved local references is invalid.
- * Recursive references are allowed.
- * A reference with a URI must point to:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
- * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
- * An implementation may also choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
- * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
-
-Example:
-
-    {
-        hello = #remember_me
-        my_map = #1
-        // references an object in relative file "common.ce", tag "legalese"
-        substructure = #u"common.ce#legalese"
-        // references the entire document at the specified URL
-        my_document = #u"https://somewhere.com/my_document.cbe?format=long"
-    }
 
 
 
