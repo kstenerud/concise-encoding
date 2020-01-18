@@ -13,7 +13,24 @@ Data format efficiency is becoming a serious cost, battery, heat, and environmen
  * Documents and specifications are versioned to support future expansion.
  * Supports metadata and comments.
  * Supports references to other parts of the document or to other documents.
- * Supports the most commonly used data types.
+ * Supports the most commonly used data types:
+
+| Type      | Description                                         |
+| --------- | --------------------------------------------------- |
+| Nil       | No data                                             |
+| Boolean   | True or false                                       |
+| Integer   | Positive or negative, of arbitrary size             |
+| Float     | Decimal or binary floating point of arbitrary size  |
+| Time      | Date, time, or timestamp, of arbitrary size         |
+| String    | UTF-8 string of arbitrary size                      |
+| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986) |
+| Bytes     | Array of octets of arbitrary length                 |
+| List      | List of objects                                     |
+| Map       | Maps keyable objects to other objects               |
+| Markup    | Data structure similar to XML                       |
+| Reference | References a previously defined object              |
+| Metadata  | Data about other data                               |
+| Comment   | User definable comment                              |
 
 
 
@@ -52,47 +69,50 @@ Comparison to Other Formats
 
 #### Type Comparison
 
-| Type          | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
-| ------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Null          |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
-| Integer       |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Boolean       |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Binary Float  |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Decimal Float |        Y         |     |  Y   |  Y   |  Y   |             |           |             |        |       |
-| Timestamp     |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
-| Bytes         |        Y         |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| String        |        Y         |  Y  |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| URL           |        Y         |     |      |      |      |             |           |             |        |       |
-| List          |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Map           |        Y         |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |       |
-| Markup        |        Y         |  Y  |      |      |      |             |           |             |        |       |
-| Metadata      |        Y         |     |      |      |      |             |           |             |        |       |
-| Comment       |        Y         |  Y  |      |      |      |             |           |             |        |       |
-| Reference     |        Y         |     |      |      |  Y   |             |           |             |        |       |
+| Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
+| Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
+| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |           |             |        |       |
+| Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
+| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
+| Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |       |
+| Reference     |    Y    |     |      |      |  Y   |             |           |             |        |       |
+| Markup        |    Y    |  Y  |      |      |      |             |           |             |        |       |
+| Comment       |    Y    |  Y  |      |      |      |             |           |             |        |       |
+| URL           |    Y    |  Y  |      |      |      |             |           |             |        |       |
+| Metadata      |    Y    |     |      |      |      |             |           |             |        |       |
 
 
 #### Feature Comparison
 
-| Type                    | Concise Encoding | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
-| ----------------------- | ---------------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Int Max Size (bits)     |     infinite     |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Float Max Size (bits)   |     infinite     |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Time Zones              |        Y         |     |      |      |      |             |           |             |        |       |
-| Subsecond Precision     |       ns         |     |      |  ns  |   -  |     ns      |    ns     |             |        |  ns   |
-| Gregorian Time Fields   |        Y         |     |      |      |      |             |           |             |        |       |
-| Endianness              |        L         |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
-| Versioning              |        Y         |     |      |      |      |             |           |             |        |       |
-| Non-string map keys     |        Y         |     |      |   Y  |   Y  |      Y      |     Y     |             |        |       |
-| 1:1 Bin/Txt Compatible  |        Y         |     |      |      |      |             |           |             |        |       |
-| Size Optimization       |        Y         |     |      |      |   Y  |      Y      |           |             |        |       |
+| Type                    | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
+| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
+| Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |    ns     |             |        |  ns   |
+| Endianness              |    L    |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
+| Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |     Y     |             |        |       |
+| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |           |      Y      |        |   Y   |
+| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |           |             |        |       |
+| Cyclic References       |    Y    |     |      |      |   Y  |             |           |             |        |       |
+| Time Zones              |    Y    |     |      |      |   Y  |             |           |             |        |       |
+| Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |           |             |        |       |
+| 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |           |             |        |       |
+| Versioning              |    Y    |     |      |      |      |             |           |             |        |       |
 
+* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, so formats using this byte order can be more efficiently encoded/decoded.
+* **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
+* **Size Optimization**: Encoding is designed such that the more common types & values use less space.
+* **Cyclic References**: Cyclic (recursive) data structures can be represented using references.
 * **Time Zones**: Timestamps support time zones.
 * **Gregorian Time Fields**: Time values use Gregorian fields rather than monotonic types like seconds.
-* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, so formats using this byte order can be more efficiently encoded/decoded.
-* **Versioning**: Documents are versioned to match a specification version.
 * **1:1 Bin/Txt Compatible**: All types in the binary format match 1:1 to the same type in the text format.
-* **Size Optimization**: Encoding is designed such that the more common types & values use less space.
-
+* **Versioning**: Documents are versioned to match a specification version.
 
 Example
 -------
@@ -100,7 +120,7 @@ Example
 Here's an example of the text format in action. Everything here is 1:1 compatible with the binary format.
 
 ```
-v1
+c1
 // _ct is the creation time, in this case referring to the entire document
 (_ct = 2019-9-1/22:14:01)
 {
@@ -241,7 +261,6 @@ These are works-in-progress
 
 ### Concise Binary Encoding
 
- * [C Implementation](https://github.com/kstenerud/c-cbe)
  * [Go Implementation](https://github.com/kstenerud/go-cbe)
 
 ### Concise Text Encoding

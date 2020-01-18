@@ -22,7 +22,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Bytes             | `h"f1 e2 d3 c4 b5 a6 97 88"`   |
 | List              | `[1 2 3 4]`                    |
 | Map               | `{one=1 two=2}`                |
-| Markup            | `<span style=bold\| Blah blah>` |
+| Markup            | `<span style=bold| Blah blah>` |
 | Metadata Map      | `(_id=12345)`                  |
 | Marker/Reference  | `*a_ref "something"`, `#a_ref` |
 | Comment           | `// A comment`                 |
@@ -135,7 +135,7 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 #### Example
 
 ```
-v1
+c1
 // _ct is the creation time, in this case referring to the entire document
 (_ct = 2019-9-1/22:14:01)
 {
@@ -199,7 +199,7 @@ case is three @ characters, specified earlier as a sentinel.@@@
 
 The top-level object can also be a non-container type, for example:
 
-    v1 "A single string object"
+    c1 "A single string object"
 
 
 ### Human Editability
@@ -219,22 +219,22 @@ In the spirit of human editability:
 
 ### Version Specifier
 
-All CTE documents must begin with a version specifier, which must not be preceded by whitespace. In other words, the very first byte of a CTE document must be `v` (0x76).
+All CTE documents must begin with a version specifier, which must not be preceded by whitespace. In other words, the very first byte of a CTE document must be `c` (0x63).
 
-The version specifier is the lowercase letter `v` followed immediately by a number representing the version of this specification that the document adheres to (there must not be whitespace between the `v` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
+The version specifier is the lowercase letter `c` followed immediately by a number representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
 
-Note: Because CBE places the version as the first byte in a document, the version value 118 is invalid. If 118 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `v` (0x76, or 118) as its first byte.
+Note: Because CBE places the version as the first byte in a document, the version value 99 is invalid. If 99 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `c` (0x63, or 99) as its first byte.
 
 #### Examples
 
-    v1
+    c1
     {
         a = 1
     }
 
 Or:
 
-    v1 "this is a string"
+    c1 "this is a string"
 
 
 ### Maximum Depth
@@ -681,7 +681,7 @@ Hex format encodes each byte into two characters (4 bits per character), using a
 
 Example:
 
-    v1
+    c1
     {
         ws_at_8  = h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
 
@@ -703,7 +703,7 @@ In CTE documents, base64url encoding uses the [RFC 4648](https://tools.ietf.org/
 
 Example:
 
-    v1
+    c1
     {
         data = b"iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAACAAElEQVR4nOy9CX
                  gc1Znv_Xa3WotlWZJtbIMd22Bjmy0QIGDAZplAAoHJMiT5Eibrx71zb252kkzu
@@ -879,7 +879,7 @@ Strings within a comment in a markup contents section have the requirements and 
 #### Example
 
 ```
-v1
+c1
 (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
 <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
     <body|
@@ -944,7 +944,7 @@ Metadata
 
 Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
 
-Metadata must only be placed in front of another object. It cannot be placed at the end of a document, or before the version specifier. A CTE document containing only metadata and no real objects (for example `v1 (a=1)`) is invalid.
+Metadata must only be placed in front of another object. It cannot be placed at the end of a document, or before the version specifier. A CTE document containing only metadata and no real objects (for example `c1 (a=1)`) is invalid.
 
 
 ### Metadata Association
@@ -984,7 +984,7 @@ Implementations should make use of predefined metadata keys whenever possible to
 
 Example:
 
-    v1
+    c1
     // Metadata for the entire document
     (
         _ct = 2017.01.14-15:22:41/Z
@@ -1049,7 +1049,7 @@ The following characters are allowed if they aren't in the above disallowed sect
 
 #### Example
 
-    v1
+    c1
     // Comment before top level object
     {
         // Comment before the "name" object.

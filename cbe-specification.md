@@ -9,19 +9,24 @@ Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact bi
  * Supports metadata and comments.
  * Supports references to other parts of the document or to other documents.
  * Supports the most commonly used data types:
-   - Nil
-   - Boolean
-   - Integer
-   - Float
-   - Time
-   - String
-   - URI
-   - Bytes
-   - List
-   - Map
-   - Reference
-   - Metadata
-   - Comment
+
+
+| Type      | Description                                         |
+| --------- | --------------------------------------------------- |
+| Nil       | No data                                             |
+| Boolean   | True or false                                       |
+| Integer   | Positive or negative, of arbitrary size             |
+| Float     | Decimal or binary floating point of arbitrary size  |
+| Time      | Date, time, or timestamp, of arbitrary size         |
+| String    | UTF-8 string of arbitrary size                      |
+| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986) |
+| Bytes     | Array of octets of arbitrary length                 |
+| List      | List of objects                                     |
+| Map       | Maps keyable objects to other objects               |
+| Markup    | Data structure similar to XML                       |
+| Reference | References a previously defined object              |
+| Metadata  | Data about other data                               |
+| Comment   | User definable comment                              |
 
 
 
@@ -52,10 +57,12 @@ Contents
   - [Time](#time)
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
-  - [Array Length Field](#array-length-field)
-  - [Bytes](#bytes)
+  - [Chunking](#chunking)
+  - [Chunk Header](#chunk-header)
+    - [Zero Chunk](#zero-chunk)
   - [String](#string)
   - [URI](#uri)
+  - [Bytes](#bytes)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -71,17 +78,18 @@ Contents
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
   - [Inline Containers](#inline-containers)
-* [Metadata](#metadata)
-  - [Metadata Association](#metadata-association)
-  - [Metadata Map](#metadata-map)
-  - [Comment](#comment)
-    - [Comment Character Restrictions](#comment-character-restrictions)
-* [Other Types](#other-types)
-  - [Nil](#nil)
+* [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
     - [Tag Value](#tag-value)
   - [Reference](#reference)
+  - [Metadata Map](#metadata-map)
+    - [Metadata Reference](#metadata-reference)
+    - [Metadata Keys](#metadata-keys)
+  - [Comment](#comment)
+    - [Comment Character Restrictions](#comment-string-character-restrictions)
   - [Padding](#padding)
+* [Other Types](#other-types)
+  - [Nil](#nil)
   - [RESERVED](#reserved)
 * [Invalid Encodings](#invalid-encodings)
 * [Smallest Possible Size](#smallest-possible-size)
@@ -110,7 +118,7 @@ The following terms have specific meanings in this specification:
 Structure
 ---------
 
-A CBE document is a binary encoded document consisting of a version specifier, followed by a single, top-level object of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
+A CBE document is a binary encoded document consisting of a version specifier, followed by zero or one objects of any type. To store multiple values in a CBE document, use a container as the top-level object and store other objects within that container.
 
     [version specifier] [object]
 
@@ -119,14 +127,14 @@ A CBE document is a binary encoded document consisting of a version specifier, f
 
 The version specifier is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
 
-The version specifier is mandatory.
+The version specifier is mandatory, unless all parties have agreed to omit the specifier and use a specific version.
 
-Note: Because CBE places the version as the first byte in a document, the version value 0x76 is invalid. If 0x76 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `v` (0x76) as its first byte.
+Note: Because CBE places the version as the first byte in a document, the version value 99 is invalid. If 99 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `c` (0x63, or 99) as its first byte.
 
 
 ### Maximum Depth
 
-Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different maximum depth.
+Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to ensure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless both sending and receiving parties agree to a different maximum depth.
 
 
 ### Maximum Length
@@ -226,7 +234,7 @@ Examples:
 
 ### Integer
 
-Integers are encoded as positive or negative values, and can be of any width. The fixed width types (16 to 64 bit) are stored in little endian byte order.
+Integers are encoded as positive or negative values, and can be of any width. The multibyte fixed width types (16 to 64 bit) are stored in little endian byte order.
 
 Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value and the field type determining the sign to be applied.
 
@@ -245,7 +253,7 @@ Examples:
 
 ### Decimal Floating Point
 
-Decimal floating point values are represented using the [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
+Decimal floating point values are stored in [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
 Example:
 
@@ -255,7 +263,7 @@ Example:
 
 ### Binary Floating Point
 
-Binary floating point values are stored using 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, are more precise, and avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Examples:
 
@@ -269,7 +277,7 @@ Temporal Types
 
 ### Date
 
-Dates are represented using the [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
+Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
 
 Example:
 
@@ -278,7 +286,7 @@ Example:
 
 ### Time
 
-Time is represented using the [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
+Time values are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
 
 Example:
 
@@ -287,7 +295,7 @@ Example:
 
 ### Timestamp
 
-Timestamps are represented using the [compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp) format.
+Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp) format.
 
 Example:
 
@@ -298,14 +306,41 @@ Example:
 Array Types
 -----------
 
-An "array" for the purposes of this spec is a contiguous sequence of octets, preceded by a length field. The array type determines how those octets are to be interpreted.
+Array data for the purposes of this spec is a contiguous sequence of octets, stored in length delimited chunks. The array type determines how those octets are to be interpreted.
 
 
-### Array Length Field
+### Chunking
 
-All arrays are preceded by an array length field, representing the number of octets in the array.
+Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field:
 
-The array length field is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md).
+    [length-1] [chunk-1] [length-2] [chunk-2] ...
+
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same size.
+
+
+### Chunk Header
+
+All array chunks are preceded by a header containing the chunk length and a continuation bit. The header is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md). Chunk processing continues until the end of a chunk with a continuation bit of 0.
+
+| Field        | Bits | Description                          |
+| ------------ | ---- | ------------------------------------ |
+| Length       |   *  | Chunk length                         |
+| Continuation |   1  | If 1, another chunk follows this one |
+
+Implementations may encode array data into as many chunks as they like. This is particularly useful when the actual array length is not known from the start, or when an implementation must buffer the data.
+
+#### Zero Chunk
+
+A chunk header of `[0]` indicates a chunk length of 0 with continuation 0, effectively terminating any array type. It's no coincidence that 0 also acts as a string terminator in C-like languages. An encoder may use this to artificially null-terminate strings to create zero-copy documents even when the source buffer is immutable.
+
+Note: If the source buffer is mutable, you could achieve zero-copy using a scheme whereby the type code of the object following the string is temporarily overwritten with a 0 and then replaced once the string is processed.
+
+
+### Chunking Example
+
+    [1f] (15 bytes of data) [08] (4 bytes of data)
+
+In this case, the first chunk is 15 bytes long and has a continuation bit of 1. The second chunk has 4 bytes of data and a continuation bit of 0. The total length of the array is 19 bytes, split across two chunks.
 
 
 ### String
@@ -314,9 +349,9 @@ Strings are specialized byte arrays, containing the UTF-8 representation of a st
 
 The length field holds the byte length (length in octets), NOT the character length.
 
-    [90] [Length] [Octet 0] ... [Octet (Length-1)]
+    [90] [Length+continuation] [Octet 0] ... [Octet (Length-1)]
 
-For byte lengths from 0 to 15, there are special top-level inferred-length string types (0x80 - 0x8f). For longer strings, use the general (0x90) string type.
+For byte lengths from 0 to 15, there are special top-level inferred-length string types (0x80 - 0x8f) that contain only a single array chunk. For longer strings, use the general (0x90) string type.
 
     [80]
     [81] [octet 0]
@@ -325,13 +360,13 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
 
 Note: Escape sequences within strings are NOT interpteted; they are passed through as-is.
 
-Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems.
+Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
 
 Examples:
 
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
-    [90 15 e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### URI
@@ -342,17 +377,17 @@ The length field contains the byte length (length in octets), NOT the character 
 
 Example:
 
-    [92 55 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [92 81 19 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [92 1b 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [92 36 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [92 33 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [92 68 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
@@ -360,13 +395,11 @@ Example:
 
 ### Bytes
 
-An array of octets. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
-
-    [91] [Length] [Octet 0] ... [Octet (Length-1)]
+An array of octets with no specification as to how they should be interpreted. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
 
 Examples:
 
-    [91 05 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [91 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 
@@ -381,7 +414,7 @@ A list is ordered by default unless otherwise understood between parties (for ex
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
-Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution.
+Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
 
 Example:
 
@@ -394,17 +427,19 @@ A map associates objects (keys) with other objects (values). Keys can be any mix
 
 A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
 
-All keys in a map must resolve to a unique value, even across data types. For example, the following keys would clash, and are therefore invalid:
+All keys in a map must resolve to a unique value, even across numeric data types. For example, the following keys would clash, and are therefore invalid:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)
  * 2000.0 (decimal float)
 
+The string value "2000", however, will not clash.
+
 Map contents are stored as key-value pairs of objects:
 
     [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed key types if the implementation language doesn't support it.
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
 Example:
 
@@ -413,21 +448,23 @@ Example:
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents.
+A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents:
 
-Markup containers are best suited to presentation. For regular data, maps and lists are better.
+    [name] [attributes] [contents]
+
+Markup containers are best suited for presentation data. For regular data, maps and lists are better.
 
 Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and another one to mark the end of the contents section:
 
-    [78] [name] [attr1] [v1] [attr2] [v2] ... [7b] [contents] [contents] ... [7b]
+    [78] [name] [attr1] [v1] [attr2] [v2] ... [7b] [contents1] [contents2] ... [7b]
 
 #### Markup Container Name
 
-Although technically any type is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+Although technically any [map-key allowable type](#map) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
 
 #### Attributes Section
 
-The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in these fields.
+The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in attribute keys and values.
 
 #### Contents Section
 
@@ -443,7 +480,7 @@ A content string is encoded as a [string](#string), with additional processing r
 
  * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
  * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
- * The sequences `<*` and `*>` must not be present unescaped (they must be escaped to `\<*` and `*\>`).
+ * The characters `<` and `>` must be escaped to `\<` and `\>`.
 
 ##### Verbatim Sequence
 
@@ -455,22 +492,28 @@ A verbatim sequence is composed of the following:
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
  * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
- * A second instance of the end-of-string identifier (without whitespace termination).
+ * A second instance of the end-of-string identifier (no whitespace termination necessary).
 
 Example:
 
 ```
-discussion = `:::
-A verbatim string is not constrained like normal strings are.
-It can contain problematic characters like ", `, \ and such without problems.
+discussion = `@@@
+A verbatim string is not constrained like normal strings are. It can contain
+problematic characters like ", `, \ <, > and such.
+
+Three at-symbols (`@`) are being used to mark the end-of-string in this
+example, so we can't use that exact character sequence in the string contents.
+
+The initial newline after the initial at-symbols in this example is not part of
+the string; it terminates the end-of-string identifier. The actual text begins
+at "A verbatim string..." with no leading whitespace.
 
 The `\` at the end of this line is not a continuation: \
 
-Three colons (`:`) are being used to mark the end-of-string in this case,
-so we can't use that exact character sequence in the string contents.
-
 Whitespace, including newlines and "leading" whitespace, is also read verbatim.
-        For example, this line really is indented 8 spaces.:::
+        For example, this line really is indented 8 spaces.
+
+Here is the end sequence. There is no trailing newline in this example.@@@
 ```
 
 ##### Escape Sequence
@@ -495,7 +538,7 @@ For entity references, a decoder must only validate the format (starts with a ba
 
 ##### Entity Reference
 
-Entity references are the same as in XML and HTML, except that the backslash (`\`) is used instead of the ampersand (`&`) to initiate a reference (e.g. `\gt;` instead of `&gt;`).
+Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
 
 Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
 
@@ -503,19 +546,19 @@ Because the list of allowable entity references in XML and HTML can change indep
 
 Use a [metadata map](#metadata-map) entry to specify a doctype:
 
-    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 20] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 31] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
+    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 41] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 63] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
 
 #### Style Sheet
 
 Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
-    [77 8f] "xml-stylesheet" [7a 84] "type" [88] "text/xsl" [84] "href" [90 10] "stylesheet.xsl" [7b 7b]
+    [77 8f] "xml-stylesheet" [79 84] "type" [88] "text/xsl" [84] "href" [90 1d] "stylesheet.xsl" [7b 7b]
 
 #### Markup Comment
 
-Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
+Strings within a comment in a markup contents section have the requirements and restrictions of both [comment strings](#comment-string-character-restrictions) AND [content strings](#content-string).
 
-Comment containers can be nested.
+Like normal comment containers, markup comment containers can be nested.
 
 
 ### Inline Containers
@@ -526,53 +569,115 @@ An "inline container" document contains no version specifier, no container initi
 
 
 
-Metadata
---------
+Peudo-Objects
+-------------
 
-Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. For this reason, decoders are free to ignore and discard metadata if they so choose. Senders and receivers should negotiate beforehand how to react to metadata.
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
-Metadata must only be placed in front of another object. It cannot be placed at the end of a document (because there would be no object to refer to). A CBE document containing only metadata and no real objects is invalid.
+Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
 
 
-### Metadata Association
+### Marker
 
-Metadata objects are pseudo-objects that can be placed anywhere a real object can be placed, but do not count as objects themselves. Instead, metadata is associated with the object that follows it. For example:
+A marker tags a real object in the document with a [tag value](#tag-value) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag value.
 
-    (map) ("a key") (metadata) ("a value") (end)
+A marker begins with the marker type (0x97), followed by a [tag value](#tag-value) and then the marked object.
 
-In this case, the metadata refers to the value `"a value"`, but the actual data for purposes of decoding the map is `(map) ("a key") ("a value") (end)`.
+    [97] [tag] [marked object]
 
-    (map) ("a key") (metadata) (end)
+Rules:
 
-This map is invalid, because it resolves to `(map) ("a key") (end)`, with no value associated with the key (the metadata doesn't count).
+ * A marker cannot "see" a pseudo-object. It marks the next real object encountered in the current container.
+ * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
+ * Marker tags must be unique in the document; duplicate marker tags are invalid.
 
-Metadata can also refer to other metadata, for example:
+Example:
 
-    (map) (metadata-1) (metadata) ("a key") ("a value") (end)
+    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
+     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
+    = the map {some_value = "repeat this value"}, tagged with integer 1
 
-In this case, `(metadata)` refers to the string `"a key"`, and `(metadata-1)` refers to `(metadata)`. The actual map is `(map) ("a key") ("a value") (end)`.
+#### Tag Value
 
-#### Exception: Comments
+A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
 
-The metadata association rules do not apply to [comments](#comment). Comments stand entirely on their own, and do not officially refer to anything, nor can any other metadata refer to a comment (i.e. comments are invisible to other metadata).
+ * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
+ * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), and dash (`-`).
+ * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
+ * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
+ * The string is not empty (`""`).
+
+
+### Reference
+
+A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
+
+A reference begins with the reference type (0x98), followed by either a [tag value](#tag-value) or a [URI](#uri).
+
+Rules:
+
+ * A reference with a [tag value](#tag-value) must refer to another object previously declared in the same document (local reference).
+ * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
+ * Recursive references are allowed.
+ * A reference with a URI must point to:
+   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
+   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+ * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
+ * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
+ * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
+
+Examples:
+
+    [98 01] = reference to the object tagged with the integer value 1
+
+    [98 81 61] = reference to the object tagged with the string value "a"
+
+    [98 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    = reference to relative file "common.ce", tag "legalese"
+
+    [98 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+     68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
+     6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
+     6c 6f 6e 67]
+    = reference to entire document at https://some-external-place/my_document.cbe?format=long
 
 
 ### Metadata Map
 
 A metadata map contains keyed values which are associated with the object that follows the metadata map.
 
+Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
+
+#### Metadata Reference
+
+Metadata must refer to a real object or to another metadata map. A metadata map that precedes another metadata map is considered meta-metadata (data about the metadata). This may continue ad-infinitum, bounded by the limits of the implementation. The last metadata map in the chain must refer to a real object, even if indirectly through another pseudo-object (e.g. a reference).
+
+Example: `(metadata-map) (metadata-map) (marker) (int) (string)`
+
+In this case, the first metadata map describes the second metadata map. The second metadata map describes the string, which has incidentally also been marked with an integer.
+
+Example: `(metadata-map) (metadata-map) (marker) (int) (comment)`
+
+This is invalid, because there's no real object at the end of the chain for the second metadata map to refer to.
+
+#### Metadata Keys
+
 Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
 Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
 
-Example:
+#### Metadata Example
 
-    [77 82 5f 74 85 61 5f 74 61 67 7b] = metadata map: (_t = ["a_tag"])
+    [77 82 5f 74 7a 85 61 5f 74 61 67 7b 7b] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
 
-A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document. Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document.
+
+Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
+
+Comments are completely invisible to all other objects in the document. Nothing can refer to a comment; the comment will be skipped while looking for a real object.
 
 Strings inside comment containers have additional restrictions:
 
@@ -603,6 +708,17 @@ The following characters are allowed if they aren't in the above disallowed sect
     = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
+### Padding
+
+The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+
+Example:
+
+    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+
+Technically, padding could also be used as a sequence point in a CBE-style stream to help synchronize data on a noisy channel (for example, data chunk, 4x padding, data chunk, etc), but such schemes are outside of the scope of this document.
+
+
 
 Other Types
 -----------
@@ -616,81 +732,6 @@ Note: Use nil judiciously and sparingly, as some languages might have restrictio
 Example:
 
     [7e] = No data
-
-
-### Marker
-
-A marker tags an object in the document with a [tag value](#tag-value) such that it can be referenced in another part of the document. The next object following the marker is associated with the marker's tag value. Markers are not objects themselves, and are for all intents and purposes invisible to all other objects (they don't count as values in collections, for example).
-
-A marker begins with the marker type (0x97), followed by a [tag value](#tag-value).
-
-Rules:
-
- * A marker cannot mark a comment; instead it would mark the next non-comment object.
- * A marker must not be followed by another marker (even with comments in between); markers must reference objects, not other markers.
- * Marker tags are globally unique to the document; duplicate tags are invalid.
-
-Example:
-
-    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
-     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {some_value = "repeat this value"}, tagged with integer 1
-
-#### Tag Value
-
-A tag value is a globally unique (to the document) identifier for marked objects. A tag value can be either a positive integer or a dequotable string. A dequotable string is a string that can be used in a Concise Text Encoding document with double-quotes omitted (see: [Unquoted String](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)):
-
- * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), and dash (`-`).
- * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
- * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string is not empty (`""`).
-
-
-### Reference
-
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations.
-
-A reference begins with the reference type (0x98), followed by either a [tag value](#tag-value) or a [URI](#uri).
-
-Rules:
-
- * A reference with a [tag value](#tag-value) must reference another object in the same document (local reference).
- * Forward references within a document are allowed. An implementation must keep track of unresolved local references, and resolve them as the markers are decoded.
- * A fully decoded document with unresolved local references is invalid.
- * Recursive references are allowed.
- * A reference with a URI must point to:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
- * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
- * An implementation may also choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
- * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
-
-Examples:
-
-    [98 01] = reference to the object tagged with the integer value 1
-
-    [98 81 61] = reference to the object tagged with the string value "a"
-
-    [98 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
-    = reference to relative file "common.ce", tag "legalese"
-
-    [98 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
-     68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
-     6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
-     6c 6f 6e 67]
-    = reference to entire document at https://some-external-place/my_document.cbe?format=long
-
-
-### Padding
-
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
-
-Example:
-
-    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
-
-Technically, padding could also be used as a sequence point in a CBE-style stream to help synchronize data on a noisy channel (for example, data chunk, 4x padding, data chunk, etc), but streaming is outside of the scope of this document.
 
 
 ### RESERVED
@@ -709,7 +750,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * All map keys must have corresponding values. A key with a missing value is invalid.
  * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
- * An array's length field must match the byte-length of its data. An invalid array length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
+ * An array's chunk length field must match the byte-length of its data. An invalid chunk length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
  * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * RESERVED types are invalid, and must not be used.
  * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
@@ -734,7 +775,7 @@ Applications might require data to be aligned in some cases for optimal decoding
 | -- | -- | -- | -- | -- | -- | -- | -- |
 | 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
 
-Alignment is usually only useful when the target decoder is known prior to encoding. It is mostly an optimization for closed systems.
+Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It is mostly an optimization for closed systems.
 
 
 
