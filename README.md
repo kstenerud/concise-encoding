@@ -1,57 +1,33 @@
 Concise Encoding
 ================
 
-Data communications have become too bloated and inefficient. The open, text based formats that supplanted the proprietary ones in the 90s are becoming a liability due to their size, codec complexity, and limited type support. And while there now are open binary formats, they lack what made text formats so successful: *human readability and editability*. We're left with the choice between a text format (which wastes power and bandwidth), and a binary format (which can't be edited).
-
-Data format efficiency is becoming a serious cost, battery, heat, and environmental issue, so binary formats are an inevitability. The challenge is to come up with something versatile, compact, computationally simple to process, and also human editable.
+Data communications have become bloated and inefficient. The open, text based formats that supplanted proprietary ones in the 90s have become a liability due to their size, codec inefficiency, and limited type support. While there are now open binary formats, they lack the human readability and editability that made the text formats so successful. We're forced to choose between a wasteful text format and an unreadable binary format. What's needed is something with the benefits of both and the drawbacks of neither.
 
 **Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power, bandwidth, and human friendly way:
 
  * Split into two formats: [binary-based CBE](cbe-specification.md) and [text-based CTE](cte-specification.md).
  * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
  * Fully specified, eliminating ambiguities and covering edge cases.
- * Documents and specifications are versioned to support future expansion.
- * Supports metadata and comments.
- * Supports references to other parts of the document or to other documents.
- * Supports the most commonly used data types:
+ * Specifications and documents are versioned to support future expansion.
+ * Support for recursive/cyclic data.
+ * Support for the most commonly used data types:
 
-| Type      | Description                                         |
-| --------- | --------------------------------------------------- |
-| Nil       | No data                                             |
-| Boolean   | True or false                                       |
-| Integer   | Positive or negative, of arbitrary size             |
-| Float     | Decimal or binary floating point of arbitrary size  |
-| Time      | Date, time, or timestamp, of arbitrary size         |
-| String    | UTF-8 string of arbitrary size                      |
-| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986) |
-| Bytes     | Array of octets of arbitrary length                 |
-| List      | List of objects                                     |
-| Map       | Maps keyable objects to other objects               |
-| Markup    | Data structure similar to XML                       |
-| Reference | References a previously defined object              |
-| Metadata  | Data about other data                               |
-| Comment   | User definable comment                              |
-
-
-
-Contents
---------
-
- * [Request for Comments](#request-for-comments)
- * [Specifications](#specifications)
- * [Comparison to Other Formats](#comparison-to-other-formats)
- * [Example](#example)
- * [Supported Types](#supported-types)
- * [Design](#design)
- * [Implementations](#implementations)
- * [License](#license)
-
-
-
-Request for Comments
---------------------
-
-This prototype specification is now [open to comments from the public](request-for-comments.md). Please join the discussion!
+| Type      | Description                                             |
+| --------- | ------------------------------------------------------- |
+| Nil       | No data (NULL)                                          |
+| Boolean   | True or false                                           |
+| Integer   | Positive or negative, arbitrary size                    |
+| Float     | Binary or decimal floating point, arbitrary size        |
+| Time      | Date, time, or timestamp, arbitrary size                |
+| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
+| String    | UTF-8 string, arbitrary length                          |
+| Bytes     | Array of octets, arbitrary length                       |
+| List      | List of objects                                         |
+| Map       | Mapping keyable objects to other objects                |
+| Markup    | Presentation data, similar to XML                       |
+| Reference | Points to previously defined objects or other documents |
+| Metadata  | Data about data                                         |
+| Comment   | Arbitrary comments about anything, nesting supported    |
 
 
 
@@ -61,13 +37,29 @@ Specifications
  * [Binary (CBE)](cbe-specification.md)
  * [Text (CTE)](cte-specification.md)
  * [Common Generic Metadata](common-generic-metadata.md)
+ * [Design Document](design.md)
+
+
+
+Implementations
+---------------
+
+**Note:** These are works-in-progress!
+
+#### Concise Binary Encoding
+
+ * [Go Implementation](https://github.com/kstenerud/go-cbe)
+
+#### Concise Text Encoding
+
+ * [Go Implementation](https://github.com/kstenerud/go-cte)
 
 
 
 Comparison to Other Formats
 ---------------------------
 
-#### Type Comparison
+#### Types
 
 | Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
@@ -88,7 +80,7 @@ Comparison to Other Formats
 | Metadata      |    Y    |     |      |      |      |             |           |             |        |       |
 
 
-#### Feature Comparison
+#### Features
 
 | Type                    | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
@@ -96,16 +88,18 @@ Comparison to Other Formats
 | Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
 | Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |    ns     |             |        |  ns   |
 | Endianness              |    L    |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
+| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |           |             |        |       |
 | Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |     Y     |             |        |       |
 | Zero-copy               |    Y    |     |      |      |   Y  |      Y      |           |      Y      |        |   Y   |
-| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |           |             |        |       |
+| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |           |             |        |   Y   |
 | Cyclic References       |    Y    |     |      |      |   Y  |             |           |             |        |       |
 | Time Zones              |    Y    |     |      |      |   Y  |             |           |             |        |       |
 | Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |           |             |        |       |
 | 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |           |             |        |       |
 | Versioning              |    Y    |     |      |      |      |             |           |             |        |       |
 
-* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, so formats using this byte order can be more efficiently encoded/decoded.
+* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian. Formats using this byte order can be more efficiently encoded/decoded.
+* **Ad-hoc**: Supports ad-hoc data (does not require a schema).
 * **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
 * **Size Optimization**: Encoding is designed such that the more common types & values use less space.
 * **Cyclic References**: Cyclic (recursive) data structures can be represented using references.
@@ -113,6 +107,8 @@ Comparison to Other Formats
 * **Gregorian Time Fields**: Time values use Gregorian fields rather than monotonic types like seconds.
 * **1:1 Bin/Txt Compatible**: All types in the binary format match 1:1 to the same type in the text format.
 * **Versioning**: Documents are versioned to match a specification version.
+
+
 
 Example
 -------
@@ -150,17 +146,18 @@ c1
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
-    long-string      = `@@@
+    long-string      = `ZZZ
 A backtick induces verbatim processing, which in this case will continue
-until three @ characters are encountered, similar to how here documents in
+until three Z characters are encountered, similar to how here documents in
 bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
-case is three @ characters, specified earlier as a sentinel.@@@
-    marked_object    = *tag1 {
+case is three Z characters, specified earlier as a sentinel.ZZZ
+    marked_object    = &tag1 {
     	                         description = "This map will be referenced later using #tag1"
     	                         value = -@inf
     	                         child_elements = @nil
+                                 recursive = #tag1
     	                     }
     ref1             = #tag1
     ref2             = #tag1
@@ -183,96 +180,11 @@ case is three @ characters, specified earlier as a sentinel.@@@
 ```
 
 
-Supported Types
----------------
-
-### Numeric Types
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| Boolean       | True or false                                              |
-| Integer       | Positive or negative integer of arbitrary size             |
-| Decimal Float | Decimal exponent based floating point of arbitrary size    |
-| Binary Float  | IEEE754 compatible binary floating point                   |
-
-
-### Temporal Types
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| Date          | Date with unlimited year range                             |
-| Time          | Time with time zone and precision to the nanosecond        |
-| Timestamp     | Combined date and time                                     |
-
-
-### Array Types
-
-Array types refer to arrays of octets, encoded in specific ways.
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| Bytes         | Array of binary data                                       |
-| String        | Array of UTF-8 encoded characters                          |
-| URI           | Universal Resource Identifier                              |
-
-
-### Container Types
-
-Containers can hold other objects, including other containers. Contents can be of any type, including mixed types. Map keys can be of any type except containers, nil, and NaN.
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| List          | Ordered collection of objects                              |
-| Map           | Ordered mapping of key objects to value objects            |
-| Markup        | Name, attributes, contents (similar to XML structures)     |
-
-
-### Metadata Types
-
-Metadata types describe other data.
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| Metadata      | A map containing metadata about the object that follows it |
-| Comment       | A UTF-8 encoded comment string                             |
-
-
-### Other Types
-
-| Type          | Description                                                |
-| ------------- | ---------------------------------------------------------- |
-| Nil           | Denotes the absence of data                                |
-| Reference     | References another object in the document or externally    |
-| Padding       | Optional data alignment type (CBE only)                    |
-
-
-
-Design
-------
-
- * [Design document](design.md)
-
-
-
-Implementations
----------------
-
-These are works-in-progress
-
-### Concise Binary Encoding
-
- * [Go Implementation](https://github.com/kstenerud/go-cbe)
-
-### Concise Text Encoding
-
- * [Go Implementation](https://github.com/kstenerud/go-cte)
-
-
 
 License
 -------
 
-Copyright (C) Karl Stenerud. All rights reserved.
+Copyright 2018 Karl Stenerud. All rights reserved.
 
 Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
 License deed: https://creativecommons.org/licenses/by/4.0/

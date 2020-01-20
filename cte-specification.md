@@ -166,18 +166,19 @@ c1
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
-    long-string      = `@@@
+    long-string      = `ZZZ
 A backtick induces verbatim processing, which in this case will continue
-until three @ characters are encountered, similar to how here documents in
+until three Z characters are encountered, similar to how here documents in
 bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
-case is three @ characters, specified earlier as a sentinel.@@@
+case is three Z characters, specified earlier as a sentinel.ZZZ
     marked_object    = &tag1 {
-                               description = "This map will be referenced later using #tag1"
-                               value = -@inf
-                               child_elements = @nil
-                           }
+                                 description = "This map will be referenced later using #tag1"
+                                 value = -@inf
+                                 child_elements = @nil
+                                 recursive = #tag1
+                             }
     ref1             = #tag1
     ref2             = #tag1
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
