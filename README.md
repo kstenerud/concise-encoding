@@ -59,44 +59,45 @@ Implementations
 Comparison to Other Formats
 ---------------------------
 
+Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON & CBOR than it does with Protobufs, Flatbuffers & Cap'n proto. Ad-hoc data doesn't require a schema, but as a result it can't always be as compact as the schema-based encodings because it must record type data. Then again, ad-hoc data allows more compression opportunities than schema-based encodings can, which Concise encoding takes advantage of.
+
 #### Types
 
-| Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
-| ------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
-| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |           |             |        |       |
-| Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |             |        |   Y   |
-| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |   Y   |
-| Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |     Y     |      Y      |   Y    |       |
-| Reference     |    Y    |     |      |      |  Y   |             |           |             |        |       |
-| Markup        |    Y    |  Y  |      |      |      |             |           |             |        |       |
-| Comment       |    Y    |  Y  |      |      |      |             |           |             |        |       |
-| URL           |    Y    |  Y  |      |      |      |             |           |             |        |       |
-| Metadata      |    Y    |     |      |      |      |             |           |             |        |       |
-
+| Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
+| Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
+| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |
+| Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |
+| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |
+| List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |
+| Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
+| Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| URL           |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Metadata      |    Y    |     |      |      |      |             |       |           |             |        |       |
 
 #### Features
 
-| Type                    | Concise | XML | JSON | BSON | CBOR | Messagepack | Protobufs | Flatbuffers | Thrift | ASN.1 |
-| ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | --------- | ----------- | ------ | ----- |
-| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |    64     |     64      |   64   |  64   |
-| Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |    ns     |             |        |  ns   |
-| Endianness              |    L    |     |      |   L  |   B  |      B      |     L     |      L      |    B   |   B   |
-| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |           |             |        |       |
-| Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |     Y     |             |        |       |
-| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |           |      Y      |        |   Y   |
-| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |           |             |        |   Y   |
-| Cyclic References       |    Y    |     |      |      |   Y  |             |           |             |        |       |
-| Time Zones              |    Y    |     |      |      |   Y  |             |           |             |        |       |
-| Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |           |             |        |       |
-| 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |           |             |        |       |
-| Versioning              |    Y    |     |      |      |      |             |           |             |        |       |
+| Type                    | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
+| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
+| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
+| Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |       |    ns     |             |        |  ns   |
+| Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |
+| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |             |        |       |
+| Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |       |     Y     |             |        |       |
+| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |    Y  |           |      Y      |        |   Y   |
+| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |    Y  |           |             |        |   Y   |
+| Cyclic References       |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
+| Time Zones              |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
+| Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
+| 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
 
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian. Formats using this byte order can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).

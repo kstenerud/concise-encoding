@@ -77,7 +77,6 @@ Contents
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
-  - [Inline Containers](#inline-containers)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
     - [Tag Value](#tag-value)
@@ -91,6 +90,9 @@ Contents
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [RESERVED](#reserved)
+* [Implied Structure](#implied-structure)
+  - [Implied Version](#implied-version)
+  - [Inline Containers](#inline-containers)
 * [Invalid Encodings](#invalid-encodings)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -563,13 +565,6 @@ Strings within a comment in a markup contents section have the requirements and 
 Like normal comment containers, markup comment containers can be nested.
 
 
-### Inline Containers
-
-CBE documents in data communication messages are often implemented as lists or maps at the top level. To help save bytes, CBE allows "inline" top-level list and map containers as a special case.
-
-An "inline container" document contains no version specifier, no container initiator, and no container end. It is up to the implementation to specify the CBE version in use, and how the container is delimited.
-
-
 
 Peudo-Objects
 -------------
@@ -738,6 +733,27 @@ Example:
 ### RESERVED
 
 This type is reserved for future expansion of the format, and must not be used.
+
+
+
+Implied Structure
+-----------------
+
+In certain cases, it is desirable to predefine parts of the document structure when their constraints have already been defined elsewhere in your system or protocol design. When parts of the structure are predefined and agreed to among all parties, it is no longer necessary to transmit information about them.
+
+These implied structure options must not be used unless all involved parties know of it and will adhere to it. For general purpose data transmission, it's better to use the full document structure. Implied structure is just a way to shave off bytes in a tightly defined, specialized system.
+
+
+### Implied Version
+
+If all parties have a preexisting agreement for what specification version the documents will adhere to, the [version specifier](#version-specifier) may be omitted from the document, thus creating an "implied version" document.
+
+
+### Inline Containers
+
+Data communication messages are often implemented as lists or maps at the top level. To help save bytes, "inline" top-level containers may be used.
+
+An "inline container" document is an [implied version](#implied-version) document that is also implied as already having a [list](#list) or [map](#map) opened. Processing would begin as if the container were already opened, and would have no way of knowing where the document ends without help (because there's no end-container marker to match the implied open). It would be up to your implementation to define which kind of inline container is implicitly opened, and to provide a way for the document end to be found during the decoding phase so that the implied container can be verified as complete.
 
 
 

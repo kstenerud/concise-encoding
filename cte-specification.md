@@ -100,6 +100,9 @@ Contents
 * [Named Values](#named-values)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
+* [Implied Structure](#implied-structure)
+  - [Implied Version](#implied-version)
+  - [Inline Containers](#inline-containers)
 * [Invalid Encodings](#invalid-encodings)
 * [Version History](#version-history)
 * [License](#license)
@@ -1227,6 +1230,29 @@ Examples:
     and a newline, which are all preserved."
 
     //   Comment whitepsace      is preserved.
+
+
+
+Implied Structure
+-----------------
+
+This section is included primarily to provide feature parity with CBE, so that an implied structure CBE document can also be viewed as CTE when needed. It's unlikely that saving a few bytes in a CTE document will ever matter.
+
+In certain cases, it is desirable to predefine parts of the document structure when their constraints have already been defined elsewhere in your system or protocol design. When parts of the structure are predefined and agreed to among all parties, it is no longer necessary to transmit information about them.
+
+These implied structure options must not be used unless all involved parties know of it and will adhere to it. For general purpose data transmission, it's better to use the full document structure. Implied structure is just a way to shave off bytes in a tightly defined, specialized system.
+
+
+### Implied Version
+
+If all parties have a preexisting agreement for what specification version the documents will adhere to, the [version specifier](#version-specifier) may be omitted from the document, thus creating an "implied version" document.
+
+
+### Inline Containers
+
+Data communication messages are often implemented as lists or maps at the top level. To help save bytes, "inline" top-level containers may be used.
+
+An "inline container" document is an [implied version](#implied-version) document that is also implied as already having a [list](#list) or [map](#map) opened. Processing would begin as if the container were already opened, and would have no way of knowing where the document ends without help (because there's no end-container marker to match the implied open). It would be up to your implementation to define which kind of inline container is implicitly opened, and to provide a way for the document end to be found during the decoding phase so that the implied container can be verified as complete.
 
 
 
