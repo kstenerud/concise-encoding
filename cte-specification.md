@@ -19,7 +19,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Time              | `2019-7-15/18:04:00/E/Rome`    |
 | String            | `"A string"`                   |
 | URI               | `u"http://example.com?q=1"`    |
-| Bytes             | `h"f1 e2 d3 c4 b5 a6 97 88"`   |
+| Bytes             | `b"f1 e2 d3 c4 b5 a6 97 88"`   |
 | List              | `[1 2 3 4]`                    |
 | Map               | `{one=1 two=2}`                |
 | Markup            | `<span style=bold| Blah blah>` |
@@ -27,6 +27,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Marker/Reference  | `&a_ref "something"`, `#a_ref` |
 | Comment           | `// A comment`                 |
 | Multiline Comment | `/* A comment */`              |
+| Custom            | `c"9f 77 4a 1c"`               |
 
 
 
@@ -71,6 +72,7 @@ Contents
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
   - [Bytes](#bytes)
+  - [Custom](#custom)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -165,7 +167,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = h"10ff389add004f4f91"
+    bytes            = b"10ff389add004f4f91"
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
@@ -652,7 +654,7 @@ These can be unquoted strings:
 
 Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any [problematic characters](#human-editability) must be percent-encoded.
 
-URIs have the encoding type `u`.
+URIs use the encoding type `u`.
 
 #### Examples
 
@@ -667,52 +669,40 @@ URIs have the encoding type `u`.
 
 ### Bytes
 
-An array of octets. This data type should only be used as a last resort if the other data types cannot represent the data you need. To maximize cross-platform compatibility, multibyte data types stored within a binary blob should be represented in little endian byte order whenever possible.
+An array of octets representing an arbitrary series of bytes, with no specification as to how they should be interpreted. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
+
+Bytes uses the encoding type `b`.
+
+Each byte is encoded into two characters (4 bits per character), using a lowercase hex alphabet (0-9, a-f).
 
 The encoded contents can contain whitespace (CR, LF, TAB, SPACE) at any point. Implementations should use whitespace to keep line lengths reasonable (assume that humans will be reading and editing the document).
 
-The supported encoding types are:
-
-| Type      | Prefix | Bloat | Features                        |
-| --------- | ------ | ----- | ------------------------------- |
-| Hex       |    h   | 2.0   | Human readable                  |
-| Base64url |    b   | 1.33  | Smaller size, compresses better |
-
-
-#### Hex Encoding
-
-Hex format encodes each byte into two characters (4 bits per character), using a lowercase hex alphabet (0-9, a-f). This is the most convenient method for human input of binary data.
-
 Example:
 
     c1
     {
-        ws_at_8  = h"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
+        ws_at_8_bits  = b"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
 
-        ws_at_16 = h"1f48 ae45 63ff"
+        ws_at_16_bits = b"1f48 ae45 63ff"
 
-        large    = h"89504e470d0a1a0a0000000d4948445200000190000001900806000000
-                     80bf36cc0000800049444154789cecbd09781cd599effd76b75a8b6559
-                     926d6c831ddb60639b2d102060c06699400281c93224f91226ebc7bd73
-                     6f6e76924c"
+        ws_strange    = b"e 8f4a a 355 1 2c 9 9"
+
+        ws_eol = b"89504e470d0a1a0a0000000d4948445200000190000001900806000000
+                   80bf36cc0000800049444154789cecbd09781cd599effd76b75a8b6559
+                   926d6c831ddb60639b2d102060c06699400281c93224f91226ebc7bd73
+                   6f6e76924c"
     }
 
 
-#### Base64url Encoding
+### Custom
 
-In CTE documents, base64url encoding uses the [RFC 4648](https://tools.ietf.org/html/rfc4648) url-safe alphabet (using `-` and `_`), with the following special rules:
+An array of octets representing a user-defined custom data type. The internal encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
- * Padding must not be used (the end delimiter `"` is enough to mark the end of the data stream).
- * Whitespace characters (CR, LF, TAB, SPACE) can occur anywhere in the stream to help align the contents in the document and keep line lengths down (the idea is to make it easy to open and modify a CTE document in your average text editor).
+Custom data is encoded in the same manner as the [bytes type](#bytes), except that it uses the encoding type `c`.
 
 Example:
 
-    c1
-    {
-        data = b"iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAACAAElEQVR4nOy9CX
-                 gc1Znv_Xa3WotlWZJtbIMd22Bjmy0QIGDAZplAAoHJMiT5Eibrx71zb252kkzu
-                 zTKZPElmyJchIRMuWQkJSYBJyAaY"
-    }
+    c"04 ff 91 aa 2e"
 
 
 
@@ -1122,7 +1112,7 @@ The following characters are allowed if they aren't in the above disallowed sect
         =
         //
         // Comment before some binary data (but not inside it)
-        h"01 02 03 04 05 06 07 08 09 0a"
+        b"01 02 03 04 05 06 07 08 09 0a"
     }
     // Comments at the
     // end of the document.
@@ -1169,8 +1159,8 @@ Letter Case
 A CTE document must be entirely in lower case, with the following exceptions:
 
  * String and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \x3d"`
+ * URI contents.
  * [Time zones](#time-zones) are case sensitive, and contain uppercase characters.
- * Binary and URI array contents can contain uppercase characters where allowed by their respective encoding specifications.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
@@ -1204,7 +1194,7 @@ While there are many characters classified as "whitespace" within the Unicode se
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `h" 01 02 03   0 4 "` is equivalent to `h"01020304"`
+ * `b" 01 02 03   0 4 "` is equivalent to `b"01020304"`
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 

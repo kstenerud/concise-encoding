@@ -28,6 +28,7 @@ Data communications have become bloated and inefficient. The open, text based fo
 | Reference | Points to previously defined objects or other documents |
 | Metadata  | Data about data                                         |
 | Comment   | Arbitrary comments about anything, nesting supported    |
+| Custom    | User-defined data type                                  |
 
 
 

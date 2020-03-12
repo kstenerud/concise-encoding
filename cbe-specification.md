@@ -27,6 +27,7 @@ Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact bi
 | Reference | References a previously defined object              |
 | Metadata  | Data about other data                               |
 | Comment   | User definable comment                              |
+| Custom    | User-defined data type                              |
 
 
 
@@ -63,6 +64,7 @@ Contents
   - [String](#string)
   - [URI](#uri)
   - [Bytes](#bytes)
+  - [Custom](#custom)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -207,7 +209,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  90 | 144 | String                    | [byte length] [UTF-8 encoded string]          |
 |  91 | 145 | Bytes                     | [byte length] [data]                          |
 |  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  93 | 147 | RESERVED                  |                                               |
+|  93 | 147 | Custom                    | [byte length] [data]                          |
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
@@ -399,11 +401,18 @@ Example:
 
 ### Bytes
 
-An array of octets with no specification as to how they should be interpreted. This data type should only be used as a last resort if the other data types are unable to represent the data you need. To reduce cross-platform confusion, multibyte data types stored within the binary blob should be represented in little endian byte order whenever possible.
+An array of octets representing an arbitrary series of bytes, with no specification as to how they should be interpreted. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
 
 Examples:
 
     [91 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+
+
+### Custom
+
+An array of octets representing a user-defined custom data type. The internal encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
+
+    [93 09 04 ff 91 aa 2e] = custom data type made up of the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}
 
 
 
