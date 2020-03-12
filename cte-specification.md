@@ -10,24 +10,25 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
  * Supports references to other parts of the document or to other documents.
  * Supports the most commonly used data types:
 
-| Type              | Example                        |
-| ----------------- | ------------------------------ |
-| Nil               | `@nil`                         |
-| Boolean           | `@true`                        |
-| Integer           | `-1_000_000_000_000_000`       |
-| Float             | `4.8255`                       |
-| Time              | `2019-7-15/18:04:00/E/Rome`    |
-| String            | `"A string"`                   |
-| URI               | `u"http://example.com?q=1"`    |
-| Bytes             | `b"f1 e2 d3 c4 b5 a6 97 88"`   |
-| List              | `[1 2 3 4]`                    |
-| Map               | `{one=1 two=2}`                |
-| Markup            | `<span style=bold| Blah blah>` |
-| Metadata Map      | `(_id=12345)`                  |
-| Marker/Reference  | `&a_ref "something"`, `#a_ref` |
-| Comment           | `// A comment`                 |
-| Multiline Comment | `/* A comment */`              |
-| Custom            | `c"9f 77 4a 1c"`               |
+| Type              | Example                                |
+| ----------------- | -------------------------------------- |
+| Nil               | `@nil`                                 |
+| Boolean           | `@true`                                |
+| Integer           | `-1_000_000_000_000_000`               |
+| Float             | `4.8255`                               |
+| UUID              | `123e4567-e89b-12d3-a456-426655440000` |
+| Time              | `2019-7-15/18:04:00/E/Rome`            |
+| String            | `"A string"`                           |
+| URI               | `u"http://example.com?q=1"`            |
+| Bytes             | `b"f1 e2 d3 c4 b5 a6 97 88"`           |
+| List              | `[1 2 3 4]`                            |
+| Map               | `{one=1 two=2}`                        |
+| Markup            | `<span style=bold| Blah blah>`         |
+| Metadata Map      | `(_id=12345)`                          |
+| Marker/Reference  | `&a_ref "something"`, `#a_ref`         |
+| Comment           | `// A comment`                         |
+| Multiline Comment | `/* A comment */`                      |
+| Custom            | `c"9f 77 4a 1c"`                       |
 
 
 
@@ -56,6 +57,7 @@ Contents
     - [Base-16 Notation](#base-16-notation)
     - [Floating Point Rules](#floating-point-rules)
     - [Infinity and Not a Number](#infinity-and-not-a-number)
+  - [UUID](#uuid)
   - [Numeric Whitespace](#numeric-whitespace)
 * [Temporal Types](#temporal-types)
   - [Temporal Type Notes](#temporal-type-notes)
@@ -88,7 +90,7 @@ Contents
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
-* [Peudo-Objects](#peudo-objects)
+* [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
     - [Tag Value](#tag-value)
   - [Reference](#reference)
@@ -161,6 +163,7 @@ c1
     "hex int"        = 0xfffe0001
     "decimal float"  = -14.125
     "hex float"      = 0x5.1ec4p20
+    uuid             = f1ce4567-e89b-12d3-a456-426655440000
     date             = 2019-7-1
     // Note: Time zones can also be latitude/longitude based. For example,
     //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
@@ -352,6 +355,15 @@ The following are special floating point values:
  * `-@inf`: Negative Infinity
  * `@nan`: Not a Number (quiet)
  * `@snan`: Not a Number (signaling)
+
+
+## UUID
+
+A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), written according to the formal definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
+
+Example:
+
+    123e4567-e89b-12d3-a456-426655440000
 
 
 ### Numeric Whitespace
@@ -626,25 +638,28 @@ Here is the end sequence. There is no trailing newline in this example.@@@
 
 Strings must normally be delimited, but this rule can be relaxed if:
 
- * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
- * The string does not end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
- * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
- * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string is not empty (`""`).
+ * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
+ * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
+ * The string doesn't end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
+ * The string doesn't contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
+ * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
+ * The string doesn't match the format of a [UUID](#uuid).
+ * The string isn't empty (`""`).
 
 For example, these cannot be unquoted strings:
 
     "String with spaces"
     "String\twith\ttabs\nand\nnewlines"
+    "a23e4567-e89b-12d3-a456-426655440000" /* Matches the UUID format */
     "[special-chars]"
     "ends-with-a-dash-"
-    ".dot"
+    ".begins-with-a-dot"
+    "twenty‐five" /* Using the u+2010 hyphen instead of u+002d */
 
 These can be unquoted strings:
 
-    string.two-25
-    std:value
+    twenty-five
+    Std:value.next
     _contains_underscores
     _150
     飲み物
@@ -939,8 +954,8 @@ This can easily be auto-converted to XML or HTML:
 
 
 
-Peudo-Objects
--------------
+Pseudo-Objects
+--------------
 
 Pseudo-objects add additional metadata to a real object, or to the document, or affect the structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
@@ -1156,13 +1171,17 @@ Note: Named values must not be broken by whitespace.
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, with the following exceptions:
+A CTE document must be entirely in lower case, except where the data is case sensitive:
 
  * String and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \x3d"`
  * URI contents.
  * [Time zones](#time-zones) are case sensitive, and contain uppercase characters.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
+
+A decoder must accept uppercase letters for case-insensitive data, because humans will do this regardless of the rules.
+
+An encoder must output letter case in accordance with this specification.
 
 
 
@@ -1178,10 +1197,10 @@ While there are many characters classified as "whitespace" within the Unicode se
 
 | Code Point | Name            |
 | ---------- | --------------- |
-| U+0009     | horizontal tab  |
-| U+000A     | line feed       |
-| U+000D     | carriage return |
-| U+0020     | space           |
+| u+0009     | horizontal tab  |
+| u+000a     | line feed       |
+| u+000d     | carriage return |
+| u+0020     | space           |
 
 
 ### Whitespace **can** occur:
@@ -1207,10 +1226,10 @@ Examples:
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between an array encoding type and the opening double-quote (`h "` is invalid).
- * Between a marker or reference initiator and its tag value (`* 1234` and `# u"mydoc.cbe"` are invalid).
+ * Between an array encoding type and the opening double-quote (`u "` is invalid).
+ * Between a marker or reference initiator and its tag value (`& 1234` and `# u"mydoc.cbe"` are invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
- * Splitting a numeric value (`3f h`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
+ * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ nil`, `@i nf`, `@n a n` are invalid).
 
 
@@ -1259,7 +1278,6 @@ Invalid encodings must not be used, as they will likely cause problems or even A
  * Map keys must not be container types, the `@nil` type, or values the resolve to NaN (not-a-number).
  * Maps must not contain duplicate keys. This includes numeric keys of different types that resolve to the same value.
  * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
- * Upper case text is not allowed, except as described in section [Letter Case](#letter-case).
  * Whitespace must only occur as described in section [Whitespace](#whitespace).
 
 

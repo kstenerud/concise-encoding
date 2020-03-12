@@ -17,6 +17,7 @@ Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact bi
 | Boolean   | True or false                                       |
 | Integer   | Positive or negative, of arbitrary size             |
 | Float     | Decimal or binary floating point of arbitrary size  |
+| UUID      | Universally unique identifier                       |
 | Time      | Date, time, or timestamp, of arbitrary size         |
 | String    | UTF-8 string of arbitrary size                      |
 | URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986) |
@@ -53,13 +54,14 @@ Contents
   - [Integer](#integer)
   - [Decimal Floating Point](#decimal-floating-point)
   - [Binary Floating Point](#binary-floating-point)
+  - [UUID](#uuid)
 * [Temporal Types](#temporal-types)
   - [Date](#date)
   - [Time](#time)
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
   - [Chunking](#chunking)
-  - [Chunk Header](#chunk-header)
+    - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
   - [URI](#uri)
@@ -176,7 +178,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
 |  70 | 112 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
 |  71 | 113 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
-|  72 | 114 | RESERVED                  |                                               |
+|  72 | 114 | UUID                      | [128 bits of data, big endian]                |
 |  73 | 115 | RESERVED                  |                                               |
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
@@ -242,7 +244,7 @@ Examples:
 
 Integers are encoded as positive or negative values, and can be of any width. The multibyte fixed width types (16 to 64 bit) are stored in little endian byte order.
 
-Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value and the field type determining the sign to be applied.
+Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value, and the low bit of the field type determining the sign to be applied.
 
 Examples:
 
@@ -275,6 +277,15 @@ Examples:
 
     [70 00 e2 af 44] = 0x1.5fc4p10
     [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
+
+
+### UUID
+
+A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) (i.e. in network byte order).
+
+Example:
+
+    [72 12 3e 45 67 e8 9b 12 d3 a4 56 42 66 55 44 00 00] = UUID 123e4567-e89b-12d3-a456-426655440000
 
 
 
@@ -321,10 +332,9 @@ Array data is "chunked", meaning that it is represented as a series of chunks of
 
     [length-1] [chunk-1] [length-2] [chunk-2] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same size.
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there may be cases where you need multiple chunks, such as when the array length is not known from the start (i.e. it gets built progressively).
 
-
-### Chunk Header
+#### Chunk Header
 
 All array chunks are preceded by a header containing the chunk length and a continuation bit. The header is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
@@ -333,16 +343,28 @@ All array chunks are preceded by a header containing the chunk length and a cont
 | Length       |   *  | Chunk length                         |
 | Continuation |   1  | If 1, another chunk follows this one |
 
-Implementations may encode array data into as many chunks as they like. This is particularly useful when the actual array length is not known from the start, or when an implementation must buffer the data.
-
 #### Zero Chunk
 
-A chunk header of `[0]` indicates a chunk length of 0 with continuation 0, effectively terminating any array type. It's no coincidence that 0 also acts as a string terminator in C-like languages. An encoder may use this to artificially null-terminate strings to create zero-copy documents even when the source buffer is immutable.
+The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for strings in C. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support c-style string implementations.
 
-Note: If the source buffer is mutable, you could achieve zero-copy using a scheme whereby the type code of the object following the string is temporarily overwritten with a 0 and then replaced once the string is processed.
+    [90 20 s u p e r i m p o s i t i o n ...]
 
+vs
 
-### Chunking Example
+    [90 21 s u p e r i m p o s i t i o n 00 ...]
+
+Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
+
+If the source buffer in your decoder is mutable, you could achieve c-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
+
+    ...                          // buffer = [84 t e s t 6a 10 a0 ...]
+    case string (length 4):      // 0x84 = string (length 4)
+      cachedType = buffer[5]     // 0x6a (16-bit positive int type)
+      buffer[5] = 0              // buffer = [84 t e s t 00 10 a0 ...]
+      notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
+      next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
+
+#### Chunking Example
 
     [1f] (15 bytes of data) [08] (4 bytes of data)
 

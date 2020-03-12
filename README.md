@@ -18,6 +18,7 @@ Data communications have become bloated and inefficient. The open, text based fo
 | Boolean   | True or false                                           |
 | Integer   | Positive or negative, arbitrary size                    |
 | Float     | Binary or decimal floating point, arbitrary size        |
+| UUID      | Universally unique identifier                           |
 | Time      | Date, time, or timestamp, arbitrary size                |
 | URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
 | String    | UTF-8 string, arbitrary length                          |
@@ -62,7 +63,7 @@ Comparison to Other Formats
 
 Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON & CBOR than it does with Protobufs, Flatbuffers & Cap'n proto. Ad-hoc data doesn't require a schema, but as a result it can't always be as compact as the schema-based encodings because it must record type data. Then again, ad-hoc data allows more compression opportunities than schema-based encodings can, which Concise encoding takes advantage of.
 
-#### Types
+#### Natively supported types
 
 | Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
@@ -71,6 +72,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |
+| UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |
 | Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |
 | Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |
