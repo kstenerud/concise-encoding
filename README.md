@@ -18,7 +18,7 @@ Data communications have become bloated and inefficient. The open, text based fo
 | Boolean   | True or false                                           |
 | Integer   | Positive or negative, arbitrary size                    |
 | Float     | Binary or decimal floating point, arbitrary size        |
-| UUID      | Universally unique identifier                           |
+| UUID      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
 | Time      | Date, time, or timestamp, arbitrary size                |
 | URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
 | String    | UTF-8 string, arbitrary length                          |
@@ -102,7 +102,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
 
-* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian. Formats using this byte order can be more efficiently encoded/decoded.
+* **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
 * **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
 * **Size Optimization**: Encoding is designed such that the more common types & values use less space.
@@ -146,7 +146,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = h"10ff389add004f4f91"
+    bytes            = b"10ff389add004f4f91"
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"

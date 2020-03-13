@@ -10,25 +10,25 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
  * Supports references to other parts of the document or to other documents.
  * Supports the most commonly used data types:
 
-| Type              | Example                                |
-| ----------------- | -------------------------------------- |
-| Nil               | `@nil`                                 |
-| Boolean           | `@true`                                |
-| Integer           | `-1_000_000_000_000_000`               |
-| Float             | `4.8255`                               |
-| UUID              | `123e4567-e89b-12d3-a456-426655440000` |
-| Time              | `2019-7-15/18:04:00/E/Rome`            |
-| String            | `"A string"`                           |
-| URI               | `u"http://example.com?q=1"`            |
-| Bytes             | `b"f1 e2 d3 c4 b5 a6 97 88"`           |
-| List              | `[1 2 3 4]`                            |
-| Map               | `{one=1 two=2}`                        |
-| Markup            | `<span style=bold| Blah blah>`         |
-| Metadata Map      | `(_id=12345)`                          |
-| Marker/Reference  | `&a_ref "something"`, `#a_ref`         |
-| Comment           | `// A comment`                         |
-| Multiline Comment | `/* A comment */`                      |
-| Custom            | `c"9f 77 4a 1c"`                       |
+| Type                                        | Example                                |
+| ------------------------------------------- | -------------------------------------- |
+| Nil                                         | `@nil`                                 |
+| Boolean                                     | `@true`                                |
+| Integer                                     | `-1_000_000_000_000_000`               |
+| Float                                       | `4.8255`                               |
+| [UUID](https://tools.ietf.org/html/rfc4122) | `123e4567-e89b-12d3-a456-426655440000` |
+| Time                                        | `2019-7-15/18:04:00/E/Rome`            |
+| String                                      | `"A string"`                           |
+| [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`            |
+| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`           |
+| List                                        | `[1 2 3 4]`                            |
+| Map                                         | `{one=1 two=2}`                        |
+| Markup                                      | `<span style=bold| Blah blah>`         |
+| Metadata Map                                | `(_id=12345)`                          |
+| Marker/Reference                            | `&a_ref "something"`, `#a_ref`         |
+| Comment                                     | `// A comment`                         |
+| Multiline Comment                           | `/* A comment */`                      |
+| Custom                                      | `c"9f 77 4a 1c"`                       |
 
 
 

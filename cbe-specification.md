@@ -11,24 +11,24 @@ Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact bi
  * Supports the most commonly used data types:
 
 
-| Type      | Description                                         |
-| --------- | --------------------------------------------------- |
-| Nil       | No data                                             |
-| Boolean   | True or false                                       |
-| Integer   | Positive or negative, of arbitrary size             |
-| Float     | Decimal or binary floating point of arbitrary size  |
-| UUID      | Universally unique identifier                       |
-| Time      | Date, time, or timestamp, of arbitrary size         |
-| String    | UTF-8 string of arbitrary size                      |
-| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986) |
-| Bytes     | Array of octets of arbitrary length                 |
-| List      | List of objects                                     |
-| Map       | Maps keyable objects to other objects               |
-| Markup    | Data structure similar to XML                       |
-| Reference | References a previously defined object              |
-| Metadata  | Data about other data                               |
-| Comment   | User definable comment                              |
-| Custom    | User-defined data type                              |
+| Type      | Description                                          |
+| --------- | ---------------------------------------------------- |
+| Nil       | No data                                              |
+| Boolean   | True or false                                        |
+| Integer   | Positive or negative, of arbitrary size              |
+| Float     | Decimal or binary floating point of arbitrary size   |
+| UUID      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122) |
+| Time      | Date, time, or timestamp, of arbitrary size          |
+| String    | UTF-8 string of arbitrary size                       |
+| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
+| Bytes     | Array of octets of arbitrary length                  |
+| List      | List of objects                                      |
+| Map       | Maps keyable objects to other objects                |
+| Markup    | Data structure similar to XML                        |
+| Reference | References a previously defined object               |
+| Metadata  | Data about other data                                |
+| Comment   | User definable comment                               |
+| Custom    | User-defined data type                               |
 
 
 
