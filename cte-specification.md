@@ -92,7 +92,7 @@ Contents
     - [Markup Comment](#markup-comment)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
-    - [Tag Value](#tag-value)
+    - [Tag Name](#tag-name)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
     - [Metadata Reference](#metadata-reference)
@@ -964,41 +964,42 @@ Some pseudo-objects must refer to a real object, while others (for example comme
 
 ### Marker
 
-A marker tags a real object in the document with a [tag value](#tag-value) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag value.
+A marker tags a real object in the document with a [tag name](#tag-name) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag name.
 
-A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag value](#tag-value).
+A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag name](#tag-name).
 
 Rules:
 
  * A marker cannot "see" a pseudo-object. It marks the next real object encountered in the current container.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
  * Marker tags must be unique in the document; duplicate marker tags are invalid.
+ * If a tag name is followed by a value whose type's valid starting characters intersect with characters that are valid for a tag name (i.e. the tagged value's type can start with characters that are also valid in a positive integer or unquoted string), the tag name and tagged value must be separated by whitespace.
 
 Example:
 
-    [ &remember_me "Assume this is a huge string" &1 {a = 1} ]
+    [ &remember_me "Pretend that this is a huge string" &1{a = 1} &2 -100_000_000_000]
 
-The string `"Assume this is a huge string"` is marked with the tag `remember_me`, and the map `{a=1}` is marked with the tag `1`.
+The string `"Pretend that this is a huge string"` is marked with the tag `remember_me`, the map `{a=1}` is marked with the tag `1`, and `-100_000_000_000` is marked with the tag `2`. In this example, `&2` must be separated by whitespace from `-100_000_000_000` because `-` is a valid character in a tag name.
 
-#### Tag Value
+#### Tag Name
 
-A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](#unquoted-string).
+A tag name is a unique (to the document) identifier for marked objects. A tag name can be either a positive integer or an [unquoted string](#unquoted-string).
 
 
 ### Reference
 
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
+A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag name (it's much like a pointer, with the tag name acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
 
-A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag value](#tag-value) or a [URI](#uri).
+A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag name](#tag-name) or a [URI](#uri).
 
 Rules:
 
- * A reference with a [tag value](#tag-value) must refer to another object previously declared in the same document (local reference).
+ * A reference with a [tag name](#tag-name) must refer to another object previously declared in the same document (local reference).
  * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
  * Recursive references are allowed.
  * A reference with a URI must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+   - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
  * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
  * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
@@ -1227,7 +1228,7 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between an array encoding type and the opening double-quote (`u "` is invalid).
- * Between a marker or reference initiator and its tag value (`& 1234` and `# u"mydoc.cbe"` are invalid).
+ * Between a marker or reference initiator and its tag name (`& 1234` and `# u"mydoc.cbe"` are invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ nil`, `@i nf`, `@n a n` are invalid).
