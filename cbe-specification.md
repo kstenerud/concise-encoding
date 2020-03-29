@@ -83,11 +83,9 @@ Contents
     - [Markup Comment](#markup-comment)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
-    - [Tag Value](#tag-value)
+    - [Tag Name](#tag-name)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
-    - [Metadata Reference](#metadata-reference)
-    - [Metadata Keys](#metadata-keys)
   - [Comment](#comment)
     - [Comment Character Restrictions](#comment-string-character-restrictions)
   - [Padding](#padding)
@@ -604,18 +602,25 @@ Pseudo-objects add additional metadata to a real object, or to the document, or 
 
 Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
 
+#### Referring Pseudo-objects
+
+"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a non-invisible pseudo-object
+
+#### Invisible Pseudo-objects
+
+Invsible pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
+
 
 ### Marker
 
-A marker tags a real object in the document with a [tag value](#tag-value) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag value.
+A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name) such that it can be referenced from another part of the document.
 
-A marker begins with the marker type (0x97), followed by a [tag value](#tag-value) and then the marked object.
+A marker begins with the marker type (0x97), followed by a [tag name](#tag-name) and then the marked object (except when intervening "invisible" pseudo-objects are present).
 
     [97] [tag] [marked object]
 
 Rules:
 
- * A marker cannot "see" a pseudo-object. It marks the next real object encountered in the current container.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
  * Marker tags must be unique in the document; duplicate marker tags are invalid.
 
@@ -625,9 +630,9 @@ Example:
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {some_value = "repeat this value"}, tagged with integer 1
 
-#### Tag Value
+#### Tag Name
 
-A tag value is a unique (to the document) identifier for marked objects. A tag value can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string):
+A tag name is a unique (to the document) identifier for marked objects. A tag name can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string):
 
  * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
@@ -639,21 +644,23 @@ A tag value is a unique (to the document) identifier for marked objects. A tag v
 
 ### Reference
 
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag value (it's much like a pointer, with the tag value acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
+A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag name (it's much like a pointer, with the tag name acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
 
-A reference begins with the reference type (0x98), followed by either a [tag value](#tag-value) or a [URI](#uri).
+Note: Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+
+A reference begins with the reference type (0x98), followed by either a [tag name](#tag-name) or a [URI](#uri).
 
 Rules:
 
- * A reference with a [tag value](#tag-value) must refer to another object previously declared in the same document (local reference).
+ * A reference with a [tag name](#tag-name) must refer to another object previously declared in the same document (local reference).
  * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
  * Recursive references are allowed.
  * A reference with a URI must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag value inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+   - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
  * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
- * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
+ * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
 Examples:
 
@@ -673,21 +680,11 @@ Examples:
 
 ### Metadata Map
 
-A metadata map contains keyed values which are associated with the object that follows the metadata map.
+A metadata map is a referring pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
-Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
+Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
 
-#### Metadata Reference
-
-Metadata must refer to a real object or to another metadata map. A metadata map that precedes another metadata map is considered meta-metadata (data about the metadata). This may continue ad-infinitum, bounded by the limits of the implementation. The last metadata map in the chain must refer to a real object, even if indirectly through another pseudo-object (e.g. a reference).
-
-Example: `(metadata-map) (metadata-map) (marker) (int) (string)`
-
-In this case, the first metadata map describes the second metadata map. The second metadata map describes the string, which has incidentally also been marked with an integer.
-
-Example: `(metadata-map) (metadata-map) (marker) (int) (comment)`
-
-This is invalid, because there's no real object at the end of the chain for the second metadata map to refer to.
+Metadata can refer to other metadata (meta-metadata).
 
 #### Metadata Keys
 
@@ -702,11 +699,9 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 ### Comment
 
-A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document.
+A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
-
-Comments are completely invisible to all other objects in the document. Nothing can refer to a comment; the comment will be skipped while looking for a real object.
+Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, be it a single object, a series of objects, some distant object, or possibly even entirely standalone (similar to how source code comments are used).
 
 #### Comment String Character Restrictions
 

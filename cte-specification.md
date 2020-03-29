@@ -10,25 +10,25 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
  * Supports references to other parts of the document or to other documents.
  * Supports the most commonly used data types:
 
-| Type                                        | Example                                |
-| ------------------------------------------- | -------------------------------------- |
-| Nil                                         | `@nil`                                 |
-| Boolean                                     | `@true`                                |
-| Integer                                     | `-1_000_000_000_000_000`               |
-| Float                                       | `4.8255`                               |
-| [UUID](https://tools.ietf.org/html/rfc4122) | `123e4567-e89b-12d3-a456-426655440000` |
-| Time                                        | `2019-7-15/18:04:00/E/Rome`            |
-| String                                      | `"A string"`                           |
-| [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`            |
-| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`           |
-| List                                        | `[1 2 3 4]`                            |
-| Map                                         | `{one=1 two=2}`                        |
-| Markup                                      | `<span style=bold| Blah blah>`         |
-| Metadata Map                                | `(_id=12345)`                          |
-| Marker/Reference                            | `&a_ref "something"`, `#a_ref`         |
-| Comment                                     | `// A comment`                         |
-| Multiline Comment                           | `/* A comment */`                      |
-| Custom                                      | `c"9f 77 4a 1c"`                       |
+| Type                                        | Example                                 |
+| ------------------------------------------- | --------------------------------------- |
+| Nil                                         | `@nil`                                  |
+| Boolean                                     | `@true`                                 |
+| Integer                                     | `-1_000_000_000_000_000`                |
+| Float                                       | `4.8255`                                |
+| [UUID](https://tools.ietf.org/html/rfc4122) | `@123e4567-e89b-12d3-a456-426655440000` |
+| Time                                        | `2019-7-15/18:04:00/E/Rome`             |
+| String                                      | `"A string"`                            |
+| [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
+| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`            |
+| Custom Type                                 | `c"9f 77 4a 1c"`                        |
+| List                                        | `[1 2 3 4]`                             |
+| Map                                         | `{one=1 two=2}`                         |
+| Markup                                      | `<span style=bold| Blah blah>`          |
+| Metadata Map                                | `(_id=12345)`                           |
+| Marker/Reference                            | `&a_ref "something"`, `#a_ref`          |
+| Comment                                     | `// A comment`                          |
+| Multiline Comment                           | `/* A comment */`                       |
 
 
 
@@ -95,8 +95,6 @@ Contents
     - [Tag Name](#tag-name)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
-    - [Metadata Reference](#metadata-reference)
-    - [Metadata Keys](#metadata-keys)
   - [Comment](#comment)
     - [Comment Character Restrictions](#comment-string-character-restrictions)
 * [Other Types](#other-types)
@@ -163,7 +161,7 @@ c1
     "hex int"        = 0xfffe0001
     "decimal float"  = -14.125
     "hex float"      = 0x5.1ec4p20
-    uuid             = f1ce4567-e89b-12d3-a456-426655440000
+    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
     date             = 2019-7-1
     // Note: Time zones can also be latitude/longitude based. For example,
     //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
@@ -182,11 +180,11 @@ You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
     marked_object    = &tag1 {
-                                 description = "This map will be referenced later using #tag1"
-                                 value = -@inf
-                                 child_elements = @nil
-                                 recursive = #tag1
-                             }
+                                description = "This map will be referenced later using #tag1"
+                                value = -@inf
+                                child_elements = @nil
+                                recursive = #tag1
+                            }
     ref1             = #tag1
     ref2             = #tag1
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
@@ -354,16 +352,17 @@ The following are special floating point values:
  * `@inf`: Infinity
  * `-@inf`: Negative Infinity
  * `@nan`: Not a Number (quiet)
- * `@snan`: Not a Number (signaling)
 
 
 ## UUID
 
 A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), written according to the formal definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
 
+UUIDs are prefixed with an at (`@`) character.
+
 Example:
 
-    123e4567-e89b-12d3-a456-426655440000
+    @123e4567-e89b-12d3-a456-426655440000
 
 
 ### Numeric Whitespace
@@ -373,7 +372,7 @@ The `_` character can be used as "numeric whitespace" when encoding numeric valu
 Rules:
 
  * Numeric values of any type can contain any amount of whitespace at any point after the first digit and before the last digit.
- * Special named values `@nan`, `@snan`, and `@inf` must not contain whitespace.
+ * Special named values `@nan` and `@inf` must not contain whitespace.
 
 | Value       | Valid Whitespace     | Invalid Whitespace | Notes                                         |
 | ----------- | -------------------- | ------------------ | --------------------------------------------- |
@@ -643,14 +642,12 @@ Strings must normally be delimited, but this rule can be relaxed if:
  * The string doesn't end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
  * The string doesn't contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string doesn't match the format of a [UUID](#uuid).
  * The string isn't empty (`""`).
 
 For example, these cannot be unquoted strings:
 
     "String with spaces"
     "String\twith\ttabs\nand\nnewlines"
-    "a23e4567-e89b-12d3-a456-426655440000" /* Matches the UUID format */
     "[special-chars]"
     "ends-with-a-dash-"
     ".begins-with-a-dot"
@@ -961,25 +958,32 @@ Pseudo-objects add additional metadata to a real object, or to the document, or 
 
 Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
 
+#### Referring Pseudo-objects
+
+"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a non-invisible pseudo-object
+
+#### Invisible Pseudo-objects
+
+Invsible pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
+
 
 ### Marker
 
-A marker tags a real object in the document with a [tag name](#tag-name) such that it can be referenced from another part of the document. The next real object following a marker is associated with the marker's tag name.
+A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name) such that it can be referenced from another part of the document.
 
 A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag name](#tag-name).
 
 Rules:
 
- * A marker cannot "see" a pseudo-object. It marks the next real object encountered in the current container.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
  * Marker tags must be unique in the document; duplicate marker tags are invalid.
- * If a tag name is followed by a value whose type's valid starting characters intersect with characters that are valid for a tag name (i.e. the tagged value's type can start with characters that are also valid in a positive integer or unquoted string), the tag name and tagged value must be separated by whitespace.
+ * Marker tags must be followed by whitespace.
 
 Example:
 
-    [ &remember_me "Pretend that this is a huge string" &1{a = 1} &2 -100_000_000_000]
+    [ &remember_me "Pretend that this is a huge string" &1 {a = 1}]
 
-The string `"Pretend that this is a huge string"` is marked with the tag `remember_me`, the map `{a=1}` is marked with the tag `1`, and `-100_000_000_000` is marked with the tag `2`. In this example, `&2` must be separated by whitespace from `-100_000_000_000` because `-` is a valid character in a tag name.
+The string `"Pretend that this is a huge string"` is marked with the tag `remember_me`, and the map `{a=1}` is marked with the tag `1`.
 
 #### Tag Name
 
@@ -989,6 +993,8 @@ A tag name is a unique (to the document) identifier for marked objects. A tag na
 ### Reference
 
 A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag name (it's much like a pointer, with the tag name acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
+
+Note: Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag name](#tag-name) or a [URI](#uri).
 
@@ -1002,7 +1008,7 @@ Rules:
    - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
  * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
- * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and should be fully specified in the implementation of your use case.
+ * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
 Example:
 
@@ -1018,21 +1024,11 @@ Example:
 
 ### Metadata Map
 
-A metadata map contains keyed values which are associated with the object that follows the metadata map.
+A metadata map is a referring pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
-Metadata is data about the data. It describes whatever data follows it in a document, which might or might not necessarily be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
+Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
 
-#### Metadata Reference
-
-Metadata must refer to a real object or to another metadata map. A metadata map that precedes another metadata map is considered meta-metadata (data about the metadata). This may continue ad-infinitum, bounded by the limits of the implementation. The last metadata map in the chain must refer to a real object, even if indirectly through another pseudo-object (e.g. a reference).
-
-Example: `(metadata-map) (metadata-map) (marker) (int) (string)`
-
-In this case, the first metadata map describes the second metadata map. The second metadata map describes the string, which has incidentally also been marked with an integer.
-
-Example: `(metadata-map) (metadata-map) (marker) (int) (comment)`
-
-This is invalid, because there's no real object at the end of the chain for the second metadata map to refer to.
+Metadata can refer to other metadata (meta-metadata).
 
 #### Metadata Keys
 
@@ -1078,11 +1074,9 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 ### Comment
 
-A comment is a specialized list container that can only contain strings or other comment containers (to support nested comments). Comments are user-defined string metadata equivalent to comments in a source code document.
+A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Comments do not officially refer to other objects, although conventionally they tend to refer to what follows in the document, be it a single object, a series of objects, a distant object, or they might even be entirely standalone. This is similar to how source code comments are used.
-
-Comments are completely invisible to all other objects in the document. Nothing can refer to a comment; the comment will be skipped while looking for a real object.
+Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, be it a single object, a series of objects, some distant object, or possibly even entirely standalone (similar to how source code comments are used).
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
@@ -1160,7 +1154,6 @@ Certain values cannot be expressed other than by their names. These named values
 | -------- | ------------------------ |
 | `@nil`   | No data                  |
 | `@nan`   | Not a number (quiet)     |
-| `@snan`  | Not a number (signaling) |
 | `@inf`   | Infinity (signed value)  |
 | `@true`  | Boolean true             |
 | `@false` | Boolean false            |

@@ -140,6 +140,7 @@ c1
     "hex int"        = 0xfffe0001
     "decimal float"  = -14.125
     "hex float"      = 0x5.1ec4p20
+    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
     date             = 2019-7-1
     // Note: Time zones can also be latitude/longitude based. For example,
     //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
@@ -158,11 +159,11 @@ You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
     marked_object    = &tag1 {
-    	                         description = "This map will be referenced later using #tag1"
-    	                         value = -@inf
-    	                         child_elements = @nil
-                                 recursive = #tag1
-    	                     }
+                                description = "This map will be referenced later using #tag1"
+                                value = -@inf
+                                child_elements = @nil
+                                recursive = #tag1
+                            }
     ref1             = #tag1
     ref2             = #tag1
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
