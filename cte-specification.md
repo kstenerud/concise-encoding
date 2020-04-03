@@ -51,13 +51,13 @@ Contents
   - [Line Endings](#line-endings)
 * [Numeric Types](#numeric-types)
   - [Boolean](#boolean)
+  - [UUID](#uuid)
   - [Integer](#integer)
   - [Floating Point](#floating-point)
     - [Base-10 Notation](#base-10-notation)
     - [Base-16 Notation](#base-16-notation)
     - [Floating Point Rules](#floating-point-rules)
     - [Infinity and Not a Number](#infinity-and-not-a-number)
-  - [UUID](#uuid)
   - [Numeric Whitespace](#numeric-whitespace)
 * [Temporal Types](#temporal-types)
   - [Temporal Type Notes](#temporal-type-notes)
@@ -272,6 +272,17 @@ Supports the values `@true` and `@false`.
     @false
 
 
+### UUID
+
+The [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier) must be structured according to the formal definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
+
+UUIDs are prefixed with an at (`@`) character.
+
+Example:
+
+    @123e4567-e89b-12d3-a456-426655440000
+
+
 ### Integer
 
 Integer values can be positive or negative, and can be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. Values must be written in lower case.
@@ -354,33 +365,19 @@ The following are special floating point values:
  * `@nan`: Not a Number (quiet)
 
 
-## UUID
-
-A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), written according to the formal definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
-
-UUIDs are prefixed with an at (`@`) character.
-
-Example:
-
-    @123e4567-e89b-12d3-a456-426655440000
-
-
 ### Numeric Whitespace
 
-The `_` character can be used as "numeric whitespace" when encoding numeric values.
+The `_` character can be used as "numeric whitespace" when encoding numeric values. Other [whitespace](#whitespace) characters are not allowed.
 
 Rules:
 
- * Numeric values of any type can contain any amount of whitespace at any point after the first digit and before the last digit.
- * Special named values `@nan` and `@inf` must not contain whitespace.
+ * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
+ * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain whitespace.
+ * Values can contain any amount of whitespace at any point after the first character.
 
 | Value       | Valid Whitespace     | Invalid Whitespace | Notes                                         |
 | ----------- | -------------------- | ------------------ | --------------------------------------------- |
-| `1000000`   | `1_000_000`          | `_1_000_000`       | `_1_000_000` would be interpreted as a string |
-| `1000000`   | `1_000_000`          | `1_000_000_`       | `1_000_000_` would cause a decoding error     |
-| `-7.4e+100` | `-7_._4__e_+___100`  | `-_7.4e+100`       |                                               |
-| `@nan`      | `@nan`               | `@n_an`            |                                               |
-| `-@inf`     | `-@inf`              | `-_@inf`           |                                               |
+| `1000000`   | `1__000___000____`   | `_1_000_000`       | `_1_000_000` would be interpreted as a string |
 
 Numeric whitespace characters must be ignored when decoding numeric values.
 
@@ -389,19 +386,22 @@ Numeric whitespace characters must be ignored when decoding numeric values.
 Temporal Types
 --------------
 
+Temporal types record time with varying degrees of precision.
+
+
 ### Temporal Type Notes
 
 #### Field Width
 
 Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits for aesthetic reasons if desired. Minutes and seconds must always be padded to 2 digits.
 
-Field values must never be abbreviated (the year 19 refers to 19 AD, not 2019).
+Field values must never be abbreviated (the year value `19` refers to 19 AD, not 2019 AD).
 
 #### The Year Field
 
 The year field can be any number of digits, and can be positive (representing AD dates) or negative (representing BC dates). Negative (BC) years are prefixed with a dash character (`-`). The year must always be written in full, and must not be abbreviated.
 
-Note: The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid. Many date systems internally use the value 0 to represent 1 BC and offset all BC dates by 1 for mathematical continuity, but in interchange formats it's better to avoid exposing potentially confusing internal details, and so the year value 0 is invalid.
+Note: The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid.
 
 #### Date Structure
 
@@ -601,7 +601,7 @@ The only people for me are the mad ones, the ones who are mad to live, mad to ta
 
 #### Verbatim Sequence
 
-A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The contents must be a valid [string](#string).
+A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
 
 A verbatim sequence is composed of the following:
 
@@ -616,7 +616,8 @@ Example:
 ```
 discussion = `@@@
 A verbatim string is not constrained like normal strings are. It can contain
-problematic characters like ", `, \ <, > and such.
+problematic characters like ", `, \ <, > and such, which are interpreted
+literally.
 
 Three at-symbols (`@`) are being used to mark the end-of-string in this
 example, so we can't use that exact character sequence in the string contents.
@@ -639,17 +640,15 @@ Strings must normally be delimited, but this rule can be relaxed if:
 
  * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
- * The string doesn't end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
  * The string doesn't contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string isn't empty (`""`).
+ * The string isn't empty.
 
 For example, these cannot be unquoted strings:
 
     "String with spaces"
     "String\twith\ttabs\nand\nnewlines"
     "[special-chars]"
-    "ends-with-a-dash-"
     ".begins-with-a-dot"
     "twenty‐five" /* Using the u+2010 hyphen instead of u+002d */
 
@@ -664,7 +663,7 @@ These can be unquoted strings:
 
 ### URI
 
-Uniform Resource Identifier, structured in accordance with [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any [problematic characters](#human-editability) must be percent-encoded.
+The Uniform Resource Identifier must be structured according to [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any [problematic characters](#human-editability) must be percent-encoded.
 
 URIs use the encoding type `u`.
 
@@ -681,13 +680,13 @@ URIs use the encoding type `u`.
 
 ### Bytes
 
-An array of octets representing an arbitrary series of bytes, with no specification as to how they should be interpreted. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
+An array of octets representing an arbitrary series of bytes, with no implied structure. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
 
 Bytes uses the encoding type `b`.
 
 Each byte is encoded into two characters (4 bits per character), using a lowercase hex alphabet (0-9, a-f).
 
-The encoded contents can contain whitespace (CR, LF, TAB, SPACE) at any point. Implementations should use whitespace to keep line lengths reasonable (assume that humans will be reading and editing the document).
+The encoded contents can contain whitespace (CR, LF, TAB, SPACE) at any point. Implementations should use whitespace to keep line lengths reasonable in accordance with [human editability](#human-editability).
 
 Example:
 
@@ -729,7 +728,7 @@ A list is ordered by default unless otherwise understood between parties (for ex
 
 A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
-Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
+Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing of a list of mixed types if the implementation language doesn't support it.
 
 #### Example
 
@@ -738,7 +737,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys can be any mix of scalar or array types. A key must not be a container type, the `@nil` type, or any value that evaluates to NaN (not-a-number). Values can be any mix of any type, including other containers.
+A map associates key objects with value objects. Keys can be any mix of scalar or array types. A key must not be a container type, the `@nil` type, or any value that evaluates to NaN (not-a-number). Values can be any mix of any type, including other containers.
 
 A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
 
@@ -751,7 +750,7 @@ Map entries are split into key-value pairs using the equals `=` character and op
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
+Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing of maps containing key-value pairs of mixed types if the implementation language doesn't support it.
 
 #### Example
 
@@ -764,7 +763,7 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents.
+A markup container stores XML-style data, which is essentially a map of attributes followed by a list of contents.
 
     [name] [attributes] [contents]
 
@@ -783,17 +782,15 @@ The CTE encoding of a markup container is similar to XML, except:
 The markup container structure in CTE consists of the following:
 
  * Markup container begin character (`<`).
- * Optional whitespace.
  * Container name.
  * Optional attributes section:
-   - Mandatory whitespace.
    - A map of attributes (e.g. `x=1 y=5 z=true`).
  * Optional contents section:
-   - Optional whitespace.
    - Contents-begin character (`|`).
    - A list of contents.
- * Optional whitespace.
  * Markup container end character (`>`).
+
+There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents-begin, and end characters.
 
 | Attributes | Children | Example                                                 |
 | ---------- | -------- | ------------------------------------------------------- |
@@ -852,7 +849,7 @@ The following escape sequences are recognised inside of a content string (except
 
 A decoder must interpret escape sequences and pass the translated values to the application.
 
-For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
+For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name contains valid characters). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
 
 #### Entity Reference
 
@@ -954,13 +951,11 @@ This can easily be auto-converted to XML or HTML:
 Pseudo-Objects
 --------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
-
-Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 #### Referring Pseudo-objects
 
-"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a non-invisible pseudo-object
+"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
 
 #### Invisible Pseudo-objects
 
@@ -969,7 +964,7 @@ Invsible pseudo-objects are effectively invisible to referring pseudo-objects, a
 
 ### Marker
 
-A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name) such that it can be referenced from another part of the document.
+A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name), such that it can be referenced from another part of the document (or from a different document).
 
 A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag name](#tag-name).
 
@@ -992,9 +987,7 @@ A tag name is a unique (to the document) identifier for marked objects. A tag na
 
 ### Reference
 
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag name (it's much like a pointer, with the tag name acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
-
-Note: Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag name](#tag-name) or a [URI](#uri).
 
@@ -1013,7 +1006,9 @@ Rules:
 Example:
 
     {
+        // references the object marked "remember_be" earlier in the document
         assumption = #remember_me
+        // references the object marked 1 earlier in the document
         my_map = #1
         // references an object in relative file "common.ce", tag "legalese"
         substructure = #u"common.ce#legalese"
@@ -1034,7 +1029,7 @@ Metadata can refer to other metadata (meta-metadata).
 
 Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
-Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
+Implementations should make use of the predefined metadata keys where possible to maximize interoperability between systems.
 
 #### Metadata Example
 
@@ -1076,11 +1071,11 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, be it a single object, a series of objects, some distant object, or possibly even entirely standalone (similar to how source code comments are used).
+Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
-Comments can be written in single-line or multi-line form. The single-line form starts with a double slash `//` and ends at a newline. The multi-line form starts with the sequence `/*` and ends with the sequence `*/`. They operate similarly to how comments operate in C-like languages, except that nested multiline comments are allowed.
+Comments can be written in single-line or multi-line form. The single-line form starts with a double slash `//` and ends at a newline. The multi-line form starts with the sequence `/*` and ends with the sequence `*/`. They operate similarly to C-like language comments, except that nested comments are allowed.
 
 Note: Comments must not be placed before the [version specifier](#version-specifier).
 
@@ -1238,8 +1233,6 @@ Examples:
 
 Implied Structure
 -----------------
-
-This section is included primarily to provide feature parity with CBE, so that an implied structure CBE document can also be viewed as CTE when needed. It's unlikely that saving a few bytes in a CTE document will ever matter.
 
 In certain cases, it is desirable to predefine parts of the document structure when their constraints have already been defined elsewhere in your system or protocol design. When parts of the structure are predefined and agreed to among all parties, it is no longer necessary to transmit information about them.
 

@@ -598,13 +598,11 @@ Like normal comment containers, markup comment containers can be nested.
 Peudo-Objects
 -------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
-
-Some pseudo-objects must refer to a real object, while others (for example comments) stand on their own.
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 #### Referring Pseudo-objects
 
-"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a non-invisible pseudo-object
+"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
 
 #### Invisible Pseudo-objects
 
@@ -613,7 +611,7 @@ Invsible pseudo-objects are effectively invisible to referring pseudo-objects, a
 
 ### Marker
 
-A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name) such that it can be referenced from another part of the document.
+A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name), such that it can be referenced from another part of the document (or from a different document).
 
 A marker begins with the marker type (0x97), followed by a [tag name](#tag-name) and then the marked object (except when intervening "invisible" pseudo-objects are present).
 
@@ -636,17 +634,14 @@ A tag name is a unique (to the document) identifier for marked objects. A tag na
 
  * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
- * The string does not end with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, and underscore (`_`).
  * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
  * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string is not empty (`""`).
+ * The string is not empty.
 
 
 ### Reference
 
-A reference is a shorthand used in place of an actual object to indicate that it is the same object as the one marked with the given tag name (it's much like a pointer, with the tag name acting as a labeled address). References can be useful for keeping the size down when there is repeating information in your document, or for following DRY principles in a configuration document. One could also use URI references as an include mechanism, whereby parts of a document are stored in separate locations, although such a mechanism is beyond the scope of this document.
-
-Note: Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference type (0x98), followed by either a [tag name](#tag-name) or a [URI](#uri).
 
@@ -690,7 +685,7 @@ Metadata can refer to other metadata (meta-metadata).
 
 Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
-Implementations should make use of the predefined metadata keys whenever possible to maximize interoperability between systems.
+Implementations should make use of the predefined metadata keys where possible to maximize interoperability between systems.
 
 #### Metadata Example
 
@@ -701,7 +696,9 @@ Implementations should make use of the predefined metadata keys whenever possibl
 
 A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, be it a single object, a series of objects, some distant object, or possibly even entirely standalone (similar to how source code comments are used).
+Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
+
+Comments operate similarly to C-like language comments, except that nested comments are allowed.
 
 #### Comment String Character Restrictions
 
