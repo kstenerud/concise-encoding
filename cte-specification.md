@@ -70,7 +70,7 @@ Contents
 * [Array Types](#array-types)
   - [String](#string)
     - [Quoted Sequence](#quoted-sequence)
-    - [Verbatim Sequence](#verbatim-sequence)
+    - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
   - [Bytes](#bytes)
@@ -97,6 +97,7 @@ Contents
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
     - [Comment Character Restrictions](#comment-string-character-restrictions)
+    - [Comment Processing Priority](#comment-processing-priority)
 * [Other Types](#other-types)
   - [Nil](#nil)
 * [Named Values](#named-values)
@@ -147,7 +148,6 @@ c1
 {
     /* Comments look very C-like, except:
        /* Nested comments are allowed! */
-       Note: Markup comments use <* and *> (shown later).
     */
     // Notice that there are no commas in maps and lists
     (metadata_about_a_list = "something interesting about a_list")
@@ -194,8 +194,8 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
                          <body|
                            Please choose from the following widgets:
                            <div id=parent style=normal ref-id=1 |
-                             <* Here we use a backtick to induce verbatim processing.
-                                In this case, "##" is chosen as the ending sequence *>
+                             /* Here we use a backtick to induce verbatim processing.
+                                In this case, "##" is chosen as the ending sequence */
                              <script| `##
                                document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
                              ##>
@@ -345,24 +345,13 @@ Base-16 notation should only be used to support legacy systems that can't handle
 | `.218901e+2` | `21.8901` | Or `2.18901e+1`                                      |
 | `-0`         | `-0.0`    | Special case: -0 cannot be represented as an integer |
 
-**Values with exponential notation must be normalized (one digit, non-zero, to the left of the dot):**
-
-| Invalid      | Valid        |
-| ------------ | ------------ |
-| `22e+50`     | `2.2e+51`    |
-| `508.44e+10` | `5.0844e+12` |
-| `-1000e+5`   | `-1.0e+8`    |
-| `65.0e-20`   | `6.5e-21`    |
-| `0.5e10`     | `5.0e9`      |
-| `0x1f.33p+1` | `0x1.f33p+5` |
-
 #### Infinity and Not a Number
 
 The following are special floating point values:
 
  * `@inf`: Infinity
  * `-@inf`: Negative Infinity
- * `@nan`: Not a Number (quiet)
+ * `@nan`: Not a Number
 
 
 ### Numeric Whitespace
@@ -551,7 +540,7 @@ Strings must always resolve to complete, valid unicode sequences (for example, n
 Unlike other array types, strings are not prefixed with an encoding type, and are delimited differently:
 
  * [Quoted sequence](#quoted-sequence)
- * [Verbatim sequence](#verbatim-sequence)
+ * [Verbatim sequence](#verbatim-string)
  * [Unquoted sequence](#unquoted-string)
 
 #### Quoted Sequence
@@ -599,11 +588,11 @@ The above string must be interpreted as:
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 ```
 
-#### Verbatim Sequence
+#### Verbatim String
 
-A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
+A verbatim strings is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
 
-A verbatim sequence is composed of the following:
+A verbatim string is composed of the following:
 
  * Backtick (`` ` ``).
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
@@ -772,7 +761,7 @@ Markup containers are best suited to presentation. For regular data, maps and li
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the markup begin `<`, content begin `|`, and markup end `>` characters.
- * Comments use `<*` and `*>` instead of `<!--` and `-->`. Comments can also be nested.
+ * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`. Comments can also be nested.
  * CTE uses less commonly occurring characters for escape initiators (for example, `\` instead of `&`).
  * Quotes are not required where [unquoted strings](#unquoted-string) are used.
  * Non-string types can be stored in a markup container.
@@ -827,7 +816,7 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 A content string is encoded as a [string](#string), with additional processing requirements and restrictions:
 
- * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
+ * An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string).
  * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
 
 A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
@@ -836,13 +825,14 @@ A content string works similarly to the text content inside of an XML tag (such 
 
 An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible.
 
-The following escape sequences are recognised inside of a content string (except during [verbatim sequence](#verbatim-sequence) processing):
+The following escape sequences are recognised inside of a content string (except during [verbatim string](#verbatim-string) processing):
 
 | Sequence            | Interpretation              |
 | ------------------- | --------------------------- |
 | `` \` ``            | backtick (u+0060)           |
 | `\<`                | less-than (u+003c)          |
 | `\>`                | greater-than (u+003e)       |
+| `\/`                | slash (u+002f)              |
 | `\\`                | backslash (u+005c)          |
 | `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
@@ -873,18 +863,6 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 ( xml-stylesheet={type=text/xsl href=my-stylesheet.xsl} )
 ```
 
-#### Markup Comment
-
-Comments in a markup contents section must use `<*` and `*>` as sentinels rather than `/* */` and `//` (these would be interpreted literally inside of markup contents).
-
-Comments can be nested.
-
-Strings within a comment in a markup contents section have the requirements and restrictions of both [markup content strings](#content-string) and [comment strings](#comment-string-character-restrictions).
-
-**Note:** To guarantee that a comment's contents will not be interpreted in any way, embed the contents in a [verbatim sequence](#verbatim-sequence):
-
-    <*`ZZ All sorts of crazy things like *> and \escape `characters etc ZZ*>
-
 #### Example
 
 ```
@@ -904,7 +882,7 @@ c1
             <li id=item_c | Item C>
         >
 
-        <* MathML: ax^2 + bx + c *>
+        /* MathML: ax^2 + bx + c */
         <mrow |
           <mi|a> <mo|\InvisibleTimes;> <msup| <mi|x> <mn|2> >
           <mo|+> <mi|b> <mo|\InvisibleTimes;> <mi|x>
@@ -1098,30 +1076,63 @@ The following characters are allowed if they aren't in the above disallowed sect
  * UTF-8 printable characters
  * UTF-8 whitespace characters
 
+#### Comment Processing Priority
+
+Because processing modes for comments and [verbatim strings](#verbatim-string) can come into conflict in certain situations, the following priority order must be enforced:
+
+##### Single-line comments have priority over all.
+
+Anything inside of a single-line comment is interpreted literally:
+
+    // Backticks `, multiline comments */, /* etc are not interpreted.
+
+This includes single-line comments inside of multiline comments:
+
+    /*
+    // Backticks `, multiline comments */ etc are still not interpreted.
+    */
+
+##### Verbatim strings have priority over multiline comments
+
+    `XX /* in a verbatim string is not interpreted as a comment initiatorXX
+
+##### Verbatim strings can be initiated inside multiline comments
+
+    /* `XX This */ does not end the comment.XX */
+
+
 #### Example
 
-    c1
-    // Comment before top level object
-    {
-        // Comment before the "name" object.
-        // And another comment.
-        "name" = "Joe Average" // Comment after the "Joe Average" object.
-        "email" = // Comment after the "email" key.
-        /* Multiline comment with nested comment inside
-          u"mailto:joe@average.org"
-          /* Unlike in C, nested multiline
-             comments are allowed */
-        */
-        u"mailto:someone@somewhere.com"
-        "data" // Comment after data
-        =
-        //
-        // Comment before some binary data (but not inside it)
-        b"01 02 03 04 05 06 07 08 09 0a"
-    }
-    // Comments at the
-    // end of the document.
+```
+c1
+// Comment before top level object
+{
+    // Comment before the "name" object.
+    // And another comment.
+    "name" = "Joe Average" // Comment after the "Joe Average" object.
 
+    "email" = // Comment after the "email" key.
+    /* Multiline comment with nested comment inside
+      u"mailto:joe@average.org"
+      /* Unlike in C, nested multiline
+         comments are allowed */
+    */
+    u"mailto:someone@somewhere.com"
+
+    "data" // Comment after data
+    =
+    // Comment before some binary data (but not inside it)
+    b"01 02 03 04 05 06 07 08 09 0a"
+
+    /* The whole of char_sequence and its contents are commented out here.
+    char_sequence = `ZZ
+The sequence */ isn't interpreted as a comment terminator when inside of
+a verbatim string, even if that string is inside a multiline comment.ZZ
+    */
+}
+// Comments at the
+// end of the document.
+```
 
 
 Other Types
