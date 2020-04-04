@@ -753,41 +753,42 @@ Note: While this spec allows mixed types in maps, not all languages do. Use mixe
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes followed by a list of contents.
+A markup container stores XML-style data, which is essentially a name, an optional map of attributes, and an optional list of contents.
 
     [name] [attributes] [contents]
 
-Markup containers are best suited to presentation. For regular data, maps and lists are better.
+Markup containers are best suited for presentation data. For regular data, maps and lists are better.
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the markup begin `<`, content begin `|`, and markup end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`. Comments can also be nested.
- * CTE uses less commonly occurring characters for escape initiators (for example, `\` instead of `&`).
- * Quotes are not required where [unquoted strings](#unquoted-string) are used.
+ * Entity references are initiated with `\` instead of `&`.
+ * [Unquoted strings](#unquoted-string) are allowed.
  * Non-string types can be stored in a markup container.
 
 #### Markup Structure
 
-The markup container structure in CTE consists of the following:
+| Section    | Delimiter  | Type    | Required |
+| ---------- | ---------- | ------- | -------- |
+| Begin      | `<`        |         | Y        |
+| Tag name   |            | Keyable | Y        |
+| Attributes | whitespace | Map     |          |
+| Contents   | `\|`       | List    |          |
+| End        | `>`        |         | Y        |
 
- * Markup container begin character (`<`).
- * Container name.
- * Optional attributes section:
-   - A map of attributes (e.g. `x=1 y=5 z=true`).
- * Optional contents section:
-   - Contents-begin character (`|`).
-   - A list of contents.
- * Markup container end character (`>`).
+The allowable types for the tag name are the same as the allowable types for [map keys](#map).
 
-There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents-begin, and end characters.
+Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
 
-| Attributes | Children | Example                                                 |
-| ---------- | -------- | ------------------------------------------------------- |
-|     N      |    N     | `<br>`                                                  |
-|     Y      |    N     | `<div id=fillme>`                                       |
-|     N      |    Y     | `<span| Some text here >`                               |
-|     Y      |    Y     | `<ul id=mylist style=boring | <li|first> <li|second> >` |
+Illustration of markup encodings (Note: `|` characters escaped with `\` so that they'll render properly in markdown viewers):
+
+| Attributes | Children | Example                                                    |
+| ---------- | -------- | ---------------------------------------------------------- |
+|     N      |    N     | `<br>`                                                     |
+|     Y      |    N     | `<div id=fillme>`                                          |
+|     N      |    Y     | `<span\|Some text here>`                                   |
+|     Y      |    Y     | `<ul id=mylist style=boring \| <li\|first> <li\|second> >` |
 
 Although it may look a little different on the surface, the internal structure is the same, and can easily be converted to/from XML & HTML.
 
@@ -960,7 +961,10 @@ Rules:
 
 Example:
 
-    [ &remember_me "Pretend that this is a huge string" &1 {a = 1}]
+    [
+        &remember_me "Pretend that this is a huge string"
+        &1 {a = 1}
+    ]
 
 The string `"Pretend that this is a huge string"` is marked with the tag `remember_me`, and the map `{a=1}` is marked with the tag `1`.
 
@@ -1030,13 +1034,13 @@ Implementations should make use of the predefined metadata keys where possible t
             // Metadata for "ABC Corp" record
             (
                 _ct = 2019.05.14-10:22:55/Z
-                _t = ["longtime client" "big purchases"]
+                _t = [longtime_client big_purchases]
             )
-            (
+            {
                 client = "ABC Corp"
                 amount = 10499.28
                 due = 2020.05.14
-            )
+            }
             // Metadata for "XYZ Corp" record
             (
                 _ct=2019.02.30-09:00:01/Z

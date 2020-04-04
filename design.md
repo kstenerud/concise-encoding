@@ -42,6 +42,7 @@ The biggest challenge of a text format is figuring out how to concisely and uniq
  * Nil
  * Boolean
  * Integer (arbitrary length)
+ * UUID
  * Float (binary and arbitrary length decimal)
  * Time (date, time, timestamp, to the nanosecond, with time zone)
  * String
@@ -53,6 +54,7 @@ The biggest challenge of a text format is figuring out how to concisely and uniq
  * Reference
  * Metadata
  * Comment
+ * Custom
 
 The most fundamental container types are the list and the map. Internally, almost every structure is composed of these two.
 
@@ -189,11 +191,11 @@ Bare strings are allowed (even though it complicates parsing) because putting ev
 
 Integers and floats can be written in different bases (base 2, 8, 10, and 16 for integers, and base 10 and 16 for floats).
 
+The canonical encoding is entirely in lowercase, with some exceptions where necessary.
+
 
 ### Other
 
-Almost everything must be in lowercase. This is purely to simplify parsing.
-
-Both hex and base64 binary encoding are allowed so that humans can enter binary data more easily by hand if they so choose, but there's also a way to keep the size down if the text format is ever transmitted. Earlier, I'd developed a base85 encoding to even further compress the data, but the computational efficiency was terrible compared to base64 (almost 3:1), and not worth the size savings in the end.
+I played with other binary encodings besides hex (base64, base85), but they complicate the format, and since the text format (CTE) is not designed for transmission or storage, reducing the document size is not a concern.
 
 The date format is completely new, designed to avoid the problems with ISO8601.

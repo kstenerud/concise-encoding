@@ -36,8 +36,9 @@ Data communications have become bloated and inefficient. The open, text based fo
 Specifications
 --------------
 
- * [Binary (CBE)](cbe-specification.md)
- * [Text (CTE)](cte-specification.md)
+ * [CTE Quick Description (read this first!)](cte-condensed.md)
+ * [Concise Text Encoding (CTE)](cte-specification.md)
+ * [Concise Binary Encoding (CBE)](cbe-specification.md)
  * [Common Generic Metadata](common-generic-metadata.md)
  * [Design Document](design.md)
 
