@@ -142,8 +142,6 @@ c1
     "hex float"      = 0x5.1ec4p20
     uuid             = @f1ce4567-e89b-12d3-a456-426655440000
     date             = 2019-7-1
-    // Note: Time zones can also be latitude/longitude based. For example,
-    //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil

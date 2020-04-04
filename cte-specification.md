@@ -69,7 +69,7 @@ Contents
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
   - [String](#string)
-    - [Quoted Sequence](#quoted-sequence)
+    - [Quoted String](#quoted-string)
     - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
@@ -96,8 +96,9 @@ Contents
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
+    - [Single Line Comment](#single-line-comment)
+    - [Multiline Comment](#multiline-comment)
     - [Comment Character Restrictions](#comment-string-character-restrictions)
-    - [Comment Processing Priority](#comment-processing-priority)
 * [Other Types](#other-types)
   - [Nil](#nil)
 * [Named Values](#named-values)
@@ -163,8 +164,6 @@ c1
     "hex float"      = 0x5.1ec4p20
     uuid             = @f1ce4567-e89b-12d3-a456-426655440000
     date             = 2019-7-1
-    // Note: Time zones can also be latitude/longitude based. For example,
-    //       18:04:00.940231541/50.07/14.43 would reference the same time zone.
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
@@ -539,28 +538,30 @@ Strings must always resolve to complete, valid unicode sequences (for example, n
 
 Unlike other array types, strings are not prefixed with an encoding type, and are delimited differently:
 
- * [Quoted sequence](#quoted-sequence)
+ * [Quoted sequence](#quoted-string)
  * [Verbatim sequence](#verbatim-string)
- * [Unquoted sequence](#unquoted-string)
+ * [Unquoted string](#unquoted-string)
 
-#### Quoted Sequence
+#### Quoted String
 
-A quoted sequence encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, with special processing whenever an escape sequence occurs.
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, with special processing whenever an escape sequence occurs.
 
 The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are allowed, and must be in lower case:
 
-| Sequence            | Interpretation                  |
-| ------------------- | ------------------------------- |
-| `\`, u+000a         | continuation                    |
-| `\`, u+000d, u+000a | continuation                    |
-| `\\`                | backslash (u+005c)              |
-| `\"`                | double quote (u+0022)           |
-| `\r`                | carriage return (u+000d)        |
-| `\n`                | linefeed (u+000a)               |
-| `\t`                | horizontal tab (u+0009)         |
-| `\u0001` - `\uffff` | unicode character               |
+| Sequence            | Interpretation           |
+| ------------------- | ------------------------ |
+| `\`, u+000a         | continuation             |
+| `\`, u+000d, u+000a | continuation             |
+| `\t`                | horizontal tab (u+0009)  |
+| `\n`                | linefeed (u+000a)        |
+| `\r`                | carriage return (u+000d) |
+| `\"`                | double quote (u+0022)    |
+| `\*`                | asterisk (u+002a)        |
+| `\/`                | slash (u+002f)           |
+| `\\`                | backslash (u+005c)       |
+| `\u0001` - `\uffff` | unicode character        |
 
-Escape sequences aid [human editability](#human-editability).
+Escape sequences aid [human editability](#human-editability), and can be used to avoid edge cases in [comments](#comment).
 
 Example:
 
@@ -829,15 +830,18 @@ The following escape sequences are recognised inside of a content string (except
 
 | Sequence            | Interpretation              |
 | ------------------- | --------------------------- |
-| `` \` ``            | backtick (u+0060)           |
+| `\*`                | asterisk (u+002a)           |
+| `\/`                | slash (u+002f)              |
 | `\<`                | less-than (u+003c)          |
 | `\>`                | greater-than (u+003e)       |
-| `\/`                | slash (u+002f)              |
 | `\\`                | backslash (u+005c)          |
+| `` \` ``            | backtick (u+0060)           |
 | `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
 
 A decoder must interpret escape sequences and pass the translated values to the application.
+
+The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
 
 For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name contains valid characters). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
 
@@ -930,6 +934,8 @@ Pseudo-Objects
 --------------
 
 Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+
+Like regular objects, pseudo-objects must not appear before the [version specifier](#version-specifier). Pseudo-objects also must not appear after the top-level object.
 
 #### Referring Pseudo-objects
 
@@ -1053,9 +1059,20 @@ Although comments are not "referring" pseudo-objects, they tend to unofficially 
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
-Comments can be written in single-line or multi-line form. The single-line form starts with a double slash `//` and ends at a newline. The multi-line form starts with the sequence `/*` and ends with the sequence `*/`. They operate similarly to C-like language comments, except that nested comments are allowed.
+Comments can be written in single-line or multi-line form.
 
-Note: Comments must not be placed before the [version specifier](#version-specifier).
+#### Single Line Comment
+
+A single line comment begins at the sequence `//` and continues until the next linefeed (u+000a) is encountered.
+
+#### Multiline Comment
+
+A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
+
+Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You can mitigate this edge case by preventing all occurrences of `/*` and `*/` that don't represent comment delimiters:
+
+* In [quoted strings](#quoted-string) and [markup contents](#content-string), you can break up the text using escape sequences.
+* [Verbatim strings](#verbatim-string) do not allow escape sequences, so you must either avoid putting such sequences in, or never comment such sections out using multiline comments (single line comments will work, though).
 
 #### Comment String Character Restrictions
 
@@ -1075,31 +1092,6 @@ The following characters are allowed if they aren't in the above disallowed sect
 
  * UTF-8 printable characters
  * UTF-8 whitespace characters
-
-#### Comment Processing Priority
-
-Because processing modes for comments and [verbatim strings](#verbatim-string) can come into conflict in certain situations, the following priority order must be enforced:
-
-##### Single-line comments have priority over all.
-
-Anything inside of a single-line comment is interpreted literally:
-
-    // Backticks `, multiline comments */, /* etc are not interpreted.
-
-This includes single-line comments inside of multiline comments:
-
-    /*
-    // Backticks `, multiline comments */ etc are still not interpreted.
-    */
-
-##### Verbatim strings have priority over multiline comments
-
-    `XX /* in a verbatim string is not interpreted as a comment initiatorXX
-
-##### Verbatim strings can be initiated inside multiline comments
-
-    /* `XX This */ does not end the comment.XX */
-
 
 #### Example
 
@@ -1123,15 +1115,7 @@ c1
     =
     // Comment before some binary data (but not inside it)
     b"01 02 03 04 05 06 07 08 09 0a"
-
-    /* The whole of char_sequence and its contents are commented out here.
-    char_sequence = `ZZ
-The sequence */ isn't interpreted as a comment terminator when inside of
-a verbatim string, even if that string is inside a multiline comment.ZZ
-    */
 }
-// Comments at the
-// end of the document.
 ```
 
 
