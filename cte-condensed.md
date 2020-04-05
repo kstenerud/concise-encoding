@@ -99,6 +99,7 @@ A date contains a year, month, and day field, in that order: `2018-11-4`
 A time contains an hour, minute, second, optional subsecond, and optional time zone, using a 24h clock. Subsecond values are supported down to the nanosecond.
 
     18:04:11
+    11:59:30/America/New_York
     14:41:13.148552211/Europe/Berlin
 
 Note: If the time zone is omitted, it is assumed to be UTC.
@@ -160,18 +161,16 @@ The `\` character acts as an escape character, with the following possible seque
 
 #### Verbatim String
 
-A verbatim string begins with a backtick `` ` ``, followed by an end marker sequence, then a single instance of either space, tab, linefeed, or cr+lf (to support Windows). All characters after that are interpreted literally until the end sequence.
+A verbatim string begins with a backtick `` ` ``. The next sequence of characters defines the "end sequence", and is terminated by a whitespace character (usually a space or linefeed). From that point, the string continues until that same end sequence is repeated (like here documents in Bash).
 
 Example:
 
 ```
-
 `ZZZ
 A verbatim sequence is like a "here" document in Bash.
 Everything (including newlines) is interpreted literally.
-Verbatim processing continues until three "Z" characters are encountered.
-ZZZ
-
+In this example, verbatim processing continues until three "Z" characters are
+encountered.ZZZ
 ```
 
 
@@ -212,7 +211,7 @@ A list is enclosed in `[]`, and contains whitespace separated objects:
 
 ### Map
 
-A map is enclosed in `{}`, and contains whitespace separated key-value pairs. A key-value pair's key and value components are separated by the `=` character with optional whitespace. A map key must not be a container type, the `@nil` type, or any value that evaluates to NaN (not-a-number).
+A map is enclosed in `{}`, and contains whitespace separated key-value pairs. A key-value pair's key and value components are separated by the `=` character with optional whitespace. A map key must not be a container type, the `@nil` type, or a value that evaluates to NaN (not-a-number).
 
     {
         name = "John Smith"
@@ -230,7 +229,7 @@ Markup containers are best suited for presentation data. For regular data, maps 
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
- * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`. Comments can also be nested.
+ * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * Entity references are initiated with `\` instead of `&`.
  * [Unquoted strings](#unquoted-string) are allowed.
  * Non-string types can be stored in a markup container.
@@ -249,7 +248,7 @@ The allowable types for the tag name are the same as the allowable types for [ma
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present).
 
-Illustration of markup encodings (Note: `|` characters escaped with `\` so that they'll render properly in markdown viewers):
+Illustration of markup encodings (Note: `|` characters are escaped with `\` here so that they'll render properly in tables in markdown viewers; do not escape them in a real document!):
 
 | Attributes | Children | Example                                                    |
 | ---------- | -------- | ---------------------------------------------------------- |
@@ -317,7 +316,7 @@ c1
 Pseudo-Objects
 --------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+Pseudo-objects add additional metadata to another object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 #### Referring Pseudo-objects
 
@@ -371,16 +370,18 @@ Example:
             }
         }
 
-        referenced_string = #big_string
-        referenced_map = #1
-        reference_to_local_doc = #u"common.cte#legalese"
+        reference_to_string = #big_string
+        reference_to_map = #1
+        reference_to_local_doc = #u"common.cte"
         reference_to_remote_doc = #u"https://somewhere.com/my_document.cbe?format=long"
+        reference_to_local_doc_marker = #u"common.cte#legalese"
+        reference_to_remote_doc_marker = #u"https://somewhere.com/my_document.cbe?format=long#examples"
     }
 
 
 ### Metadata Map
 
-A metadata map is a referring pseudo-object that associates keyed values with the next object following the metadata map:
+A metadata map is a referring pseudo-object that associates keyed values with the next object:
 
 ```
 c1
@@ -409,7 +410,7 @@ c1
 
 ### Comment
 
-Comments are C-style:
+Comments are written C-style:
 
 * Single line: `// A comment`
 * Multiline: `/* A comment */`

@@ -762,7 +762,7 @@ Markup containers are best suited for presentation data. For regular data, maps 
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
- * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`. Comments can also be nested.
+ * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * Entity references are initiated with `\` instead of `&`.
  * [Unquoted strings](#unquoted-string) are allowed.
  * Non-string types can be stored in a markup container.
@@ -781,7 +781,7 @@ The allowable types for the tag name are the same as the allowable types for [ma
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
 
-Illustration of markup encodings (Note: `|` characters escaped with `\` so that they'll render properly in markdown viewers):
+Illustration of markup encodings (Note: `|` characters are escaped with `\` here so that they'll render properly in tables in markdown viewers; do not escape them in a real document!):
 
 | Attributes | Children | Example                                                    |
 | ---------- | -------- | ---------------------------------------------------------- |
@@ -934,7 +934,7 @@ This can easily be auto-converted to XML or HTML:
 Pseudo-Objects
 --------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+Pseudo-objects add additional metadata to another object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 Like regular objects, pseudo-objects must not appear before the [version specifier](#version-specifier). Pseudo-objects also must not appear after the top-level object.
 
@@ -994,20 +994,25 @@ Rules:
 Example:
 
     {
-        // references the object marked "remember_be" earlier in the document
-        assumption = #remember_me
-        // references the object marked 1 earlier in the document
-        my_map = #1
-        // references an object in relative file "common.ce", tag "legalese"
-        substructure = #u"common.ce#legalese"
-        // references the entire document at the specified URL
-        my_document = #u"https://somewhere.com/my_document.cbe?format=long"
+        some_object = {
+            my_string = &big_string "Pretend that this is a huge string"
+            my_map = &1 {
+                a = 1
+            }
+        }
+
+        reference_to_string = #big_string
+        reference_to_map = #1
+        reference_to_local_doc = #u"common.cte"
+        reference_to_remote_doc = #u"https://somewhere.com/my_document.cbe?format=long"
+        reference_to_local_doc_marker = #u"common.cte#legalese"
+        reference_to_remote_doc_marker = #u"https://somewhere.com/my_document.cbe?format=long#examples"
     }
 
 
 ### Metadata Map
 
-A metadata map is a referring pseudo-object containing keyed values which are to be associated with the object following the metadata map.
+A metadata map is a referring pseudo-object that associates keyed values with the next object:
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
 
