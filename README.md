@@ -47,15 +47,9 @@ Specifications
 Implementations
 ---------------
 
-**Note:** These are works-in-progress!
+**Note:** Work-in-progress!
 
-#### Concise Binary Encoding
-
- * [Go Implementation](https://github.com/kstenerud/go-cbe)
-
-#### Concise Text Encoding
-
- * [Go Implementation](https://github.com/kstenerud/go-cte)
+ * [Go Implementation](https://github.com/kstenerud/go-concise-encoding)
 
 
 
