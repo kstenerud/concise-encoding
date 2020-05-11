@@ -131,7 +131,7 @@ The document begins with a [version specifier](#version-specifier), followed by 
 
 ### Version Specifier
 
-The version specifier is an unsigned [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md) with a value greater than 0, representing which version of this specification it adheres to.
+The version specifier is an unsigned [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) with a value greater than 0, representing which version of this specification it adheres to.
 
 The version specifier is mandatory, unless all parties have agreed to omit the specifier and use a specific version.
 
@@ -164,8 +164,8 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 | ... | ... | ...                       |                                               |
 |  64 | 100 | Integer value 100         |                                               |
 |  65 | 101 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  66 | 102 | Positive Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
-|  67 | 103 | Negative Integer          | [[RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md)] |
+|  66 | 102 | Positive Integer          | [[unsigned LEB128]](https://en.wikipedia.org/wiki/LEB128) |
+|  67 | 103 | Negative Integer          | [[unsigned LEB128]](https://en.wikipedia.org/wiki/LEB128) |
 |  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
 |  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
 |  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
@@ -240,11 +240,21 @@ Examples:
 
 ### Integer
 
-Integers are encoded as positive or negative values, and can be of any width. The multibyte fixed width types (16 to 64 bit) are stored in little endian byte order.
+Integers are stored in three possible ways:
 
-Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers. Values outside of this range are stored as separate types, with the payload containing the absolute value, and the low bit of the field type determining the sign to be applied.
+#### Fixed Width
 
-Examples:
+Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (stored in little endian byte order). The type field determines the sign.
+
+#### Variable width
+
+Variable width integers are encoded as [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). The type field determines the sign.
+
+#### Small Int
+
+Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
+
+#### Examples:
 
     [60] = 96
     [00] = 0
@@ -334,7 +344,7 @@ There is no limit to the number of chunks in an array, nor do the chunks have to
 
 #### Chunk Header
 
-All array chunks are preceded by a header containing the chunk length and a continuation bit. The header is encoded as an [RVLQ](https://github.com/kstenerud/vlq/blob/master/vlq-specification.md). Chunk processing continues until the end of a chunk with a continuation bit of 0.
+All array chunks are preceded by a header containing the chunk length and a continuation bit. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
 | Field        | Bits | Description                          |
 | ------------ | ---- | ------------------------------------ |
