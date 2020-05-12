@@ -240,7 +240,7 @@ Examples:
 
 ### Integer
 
-Integers are stored in three possible ways:
+Integers can be positive or negative, and are encoded in three ways:
 
 #### Fixed Width
 
@@ -255,6 +255,8 @@ Variable width integers are encoded as [unsigned LEB128](https://en.wikipedia.or
 Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
 
 #### Examples:
+
+TODO: Check these
 
     [60] = 96
     [00] = 0
@@ -273,6 +275,8 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 
 Example:
 
+TODO: Check these
+
     [65 07 4b] = -7.5
     [65 82 2c b8 9e 50] = 9.21424e80
 
@@ -282,6 +286,8 @@ Example:
 Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, are more precise, and avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Examples:
+
+TODO: Check these
 
     [70 00 e2 af 44] = 0x1.5fc4p10
     [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
@@ -306,6 +312,8 @@ Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blo
 
 Example:
 
+TODO: Check
+
     [99 56 01 66] = Oct 22, 2051
 
 
@@ -314,6 +322,8 @@ Example:
 Time values are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
 
 Example:
+
+TODO: Check
 
     [9a 6e cf ee b1 e8 f8 01 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
 
@@ -324,6 +334,8 @@ Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compac
 
 Example:
 
+TODO: Check
+
     [9b 40 56 d0 0a 3a 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
@@ -331,7 +343,7 @@ Example:
 Array Types
 -----------
 
-Array data for the purposes of this spec is a contiguous sequence of octets, stored in length delimited chunks. The array type determines how those octets are to be interpreted.
+An array for the purposes of this spec is a contiguous sequence of octets, stored in length delimited chunks. The array type determines how those octets are to be interpreted.
 
 
 ### Chunking
@@ -340,7 +352,7 @@ Array data is "chunked", meaning that it is represented as a series of chunks of
 
     [length-1] [chunk-1] [length-2] [chunk-2] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there may be cases where you need multiple chunks, such as when the array length is not known from the start (i.e. it gets built progressively).
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there may be cases where you need multiple chunks, such as when the array length is not known from the start (if it's being built progressively).
 
 #### Chunk Header
 
@@ -374,9 +386,9 @@ If the source buffer in your decoder is mutable, you could achieve c-style zero-
 
 #### Chunking Example
 
-    [1f] (15 bytes of data) [08] (4 bytes of data)
+    [1d] (14 bytes of data) [08] (4 bytes of data)
 
-In this case, the first chunk is 15 bytes long and has a continuation bit of 1. The second chunk has 4 bytes of data and a continuation bit of 0. The total length of the array is 19 bytes, split across two chunks.
+In this case, the first chunk is 14 bytes long and has a continuation bit of 1. The second chunk has 4 bytes of data and a continuation bit of 0. The total length of the array is 18 bytes, split across two chunks.
 
 
 ### String
@@ -451,9 +463,9 @@ Container Types
 
 ### List
 
-A sequential list of objects. Lists can contain any mix of any type, including other containers.
+A list of objects. Lists can contain any mix of any type, including other containers.
 
-A list is ordered by default unless otherwise understood between parties (for example via a schema), or the user has specified that order doesn't matter. Other characteristics (such as non-duplicate data in the case of sets) must be a-priori understood between parties.
+By default, a list is ordered and may contain duplicate values, unless otherwise negotiated between all parties (for example via a schema).
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
@@ -466,17 +478,15 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Keys can be any mix of scalar or array types. A key must not be a container type, the `nil` type, or a NaN (not-a-number) value. Values can be any mix of any type, including other containers.
+A map associates objects (keys) with other objects (values). Map keys can be any mix of [temporal](#temporal-types), [array](#array-types), or [numeric](#numeric-types) types except for NaN (not-a-number). Values can be any mix of any type, including other containers.
 
-A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
-
-All keys in a map must resolve to a unique value, even across numeric data types. For example, the following keys would clash, and are therefore invalid:
+A map is ordered by default unless otherwise negotiated between parties (for example via a schema), and must not contain duplicate keys (including values across numeric types). For example, the following keys would clash:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)
  * 2000.0 (decimal float)
 
-The string value "2000", however, will not clash.
+Note: The string value "2000" is not numeric, and will not clash.
 
 Map contents are stored as key-value pairs of objects. A key without a paired value is invalid:
 
@@ -491,7 +501,7 @@ Example:
 
 ### Markup
 
-A markup container stores XML-style data, which is essentially a map of attributes, followed by a list of contents:
+A markup container stores XML-style data, which is essentially a name, a map of attributes, and a list of contents:
 
     [name] [attributes] [contents]
 
@@ -503,11 +513,11 @@ Unlike other containers, a markup container requires two end-of-container marker
 
 #### Markup Container Name
 
-Although technically any [map-key allowable type](#map) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+Although technically any [map-key allowable type](#map) is allowed in this field, be aware that conversion to XML and HTML may be problematic with some types.
 
 #### Attributes Section
 
-The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in attribute keys and values.
+The attributes section behaves like a [map](#map), but be aware that conversion to XML and HTML may be problematic with some types.
 
 #### Contents Section
 
@@ -546,6 +556,7 @@ problematic characters like ", `, \ <, > and such.
 
 Three at-symbols (`@`) are being used to mark the end-of-string in this
 example, so we can't use that exact character sequence in the string contents.
+This behavior is very similar to here documents in bash.
 
 The initial newline after the initial at-symbols in this example is not part of
 the string; it terminates the end-of-string identifier. The actual text begins
@@ -597,18 +608,12 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
     [77 8f] "xml-stylesheet" [79 84] "type" [88] "text/xsl" [84] "href" [90 1d] "stylesheet.xsl" [7b 7b]
 
-#### Markup Comment
-
-Strings within a comment in a markup contents section have the requirements and restrictions of both [comment strings](#comment-string-character-restrictions) AND [content strings](#content-string).
-
-Like normal comment containers, markup comment containers can be nested.
-
 
 
 Peudo-Objects
 -------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects (except for [references](#reference)). For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 #### Referring Pseudo-objects
 
@@ -651,7 +656,7 @@ A tag name is a unique (to the document) identifier for marked objects. A tag na
 
 ### Reference
 
-A reference is a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a non-referring, visible pseudo-object that acts as a stand-in for an object that has been [marked](#marker) earlier in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference type (0x98), followed by either a [tag name](#tag-name) or a [URI](#uri).
 
@@ -663,7 +668,7 @@ Rules:
  * A reference with a URI must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
- * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
+ * An implementation may choose to follow or not to follow URI references. Care must be taken when following links, as there will be security implications.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
  * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
@@ -685,11 +690,11 @@ Examples:
 
 ### Metadata Map
 
-A metadata map is a referring pseudo-object containing keyed values which are to be associated with the object following the metadata map.
+A metadata map is a referring, visible pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
-Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
+Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
 
-Metadata can refer to other metadata (meta-metadata).
+Note: Metadata can refer to other metadata (meta-metadata).
 
 #### Metadata Keys
 
@@ -704,7 +709,7 @@ Implementations should make use of the predefined metadata keys where possible t
 
 ### Comment
 
-A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
+A comment is a non-referring, invisible, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
 Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
@@ -739,7 +744,7 @@ The following characters are allowed if they aren't in the above disallowed sect
 
 ### Padding
 
-The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+Padding is non-referencing and invisible. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
@@ -772,21 +777,19 @@ This type is reserved for future expansion of the format, and must not be used.
 Implied Structure
 -----------------
 
-In certain cases, it is desirable to predefine parts of the document structure when their constraints have already been defined elsewhere in your system or protocol design. When parts of the structure are predefined and agreed to among all parties, it is no longer necessary to transmit information about them.
+In some cases it could be desirable to embed a CBE document into another structure, in which case the version and top-level object might always be the same. The implied structure forms allow an implementation to omit certain parts of a document when all parties are made aware of it (such as via a schema or specification).
 
-These implied structure options must not be used unless all involved parties know of it and will adhere to it. For general purpose data transmission, it's better to use the full document structure. Implied structure is just a way to shave off bytes in a tightly defined, specialized system.
+For general purpose data transmission, it's better to use the full document structure. The implied structure forms are just a way to shave off a few redundant bytes in a tightly defined, specialized system.
 
 
 ### Implied Version
 
-If all parties have a preexisting agreement for what specification version the documents will adhere to, the [version specifier](#version-specifier) may be omitted from the document, thus creating an "implied version" document.
+An "implied version" document omits the [version specifier](#version-specifier), which must be specified elsewhere.
 
 
 ### Inline Containers
 
-Data communication messages are often implemented as lists or maps at the top level. To help save bytes, "inline" top-level containers may be used.
-
-An "inline container" document is an [implied version](#implied-version) document that is also implied as already having a [list](#list) or [map](#map) opened. Processing would begin as if the container were already opened, and would have no way of knowing where the document ends without help (because there's no end-container marker to match the implied open). It would be up to your implementation to define which kind of inline container is implicitly opened, and to provide a way for the document end to be found during the decoding phase so that the implied container can be verified as complete.
+An "inline container" document is an [implied version](#implied-version) document that also implies an already opened [list](#list) or [map](#map), omitting the begin and possibly also the end container fields. Processing of the document begins inside the implied container. What type of container it is, and and how the container (and thus the document) is terminated, must be specified elsewhere.
 
 
 
@@ -799,7 +802,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
  * All map keys must have corresponding values. A key with a missing value is invalid.
  * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
- * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit 0x1000 and 32-bit 0x00001000 and 32-bit float 1000.0).
+ * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit int 1000, 32-bit int 1000, float 1000.0).
  * An array's chunk length field must match the byte-length of its data. An invalid chunk length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
  * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * RESERVED types are invalid, and must not be used.
@@ -810,7 +813,7 @@ The structure and format of CBE leaves room for certain encodings that contain p
 Smallest Possible Size
 ----------------------
 
-Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest type that stores a value without data loss.
+Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest encoding that stores a value without data loss.
 
 Specialized applications (for example marshalers) may wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
 
@@ -825,7 +828,7 @@ Applications might require data to be aligned in some cases for optimal decoding
 | -- | -- | -- | -- | -- | -- | -- | -- |
 | 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
 
-Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It is mostly an optimization for closed systems.
+Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It's mostly an optimization for closed systems.
 
 
 
