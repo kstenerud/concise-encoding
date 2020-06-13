@@ -15,13 +15,13 @@ Concise Binary Encoding (CBE) is a general purpose, machine-readable, compact bi
 | --------- | ---------------------------------------------------- |
 | Nil       | No data                                              |
 | Boolean   | True or false                                        |
-| Integer   | Positive or negative, of arbitrary size              |
-| Float     | Decimal or binary floating point of arbitrary size   |
+| Integer   | Positive or negative integers                        |
+| Float     | Decimal or binary floating point                     |
 | UUID      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122) |
-| Time      | Date, time, or timestamp, of arbitrary size          |
+| Time      | Date, time, or timestamp                             |
 | String    | UTF-8 string of arbitrary size                       |
 | URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
-| Bytes     | Array of octets of arbitrary length                  |
+| Bytes     | Array of octets                                      |
 | List      | List of objects                                      |
 | Map       | Maps keyable objects to other objects                |
 | Markup    | Data structure similar to XML                        |
@@ -256,17 +256,15 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 #### Examples:
 
-TODO: Check these
-
     [60] = 96
     [00] = 0
     [ca] = -54
     [68 7f] = 127
     [68 ff] = 255
     [69 ff] = -255
-    [66 bd 84 40] = 1000000
+    [66 c0 84 3d] = 1000000
     [6c 80 96 98 00] = 10000000
-    [67 9d 8d a5 94 a0 00] = -1000000000000
+    [67 80 a0 94 a5 8d 1d] = -1000000000000
 
 
 ### Decimal Floating Point
@@ -275,10 +273,8 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 
 Example:
 
-TODO: Check these
-
     [65 07 4b] = -7.5
-    [65 82 2c b8 9e 50] = 9.21424e80
+    [65 ac 02 d0 9e 38] = 9.21424e80
 
 
 ### Binary Floating Point
@@ -286,8 +282,6 @@ TODO: Check these
 Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, are more precise, and avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Examples:
-
-TODO: Check these
 
     [70 00 e2 af 44] = 0x1.5fc4p10
     [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
@@ -312,9 +306,7 @@ Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blo
 
 Example:
 
-TODO: Check
-
-    [99 56 01 66] = Oct 22, 2051
+    [99 56 cd 00] = Oct 22, 2051
 
 
 ### Time
@@ -323,9 +315,7 @@ Time values are stored in [compact time](https://github.com/kstenerud/compact-ti
 
 Example:
 
-TODO: Check
-
-    [9a 6e cf ee b1 e8 f8 01 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
+    [9a f7 58 74 fc f6 a7 01 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
 
 
 ### Timestamp
@@ -334,9 +324,7 @@ Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compac
 
 Example:
 
-TODO: Check
-
-    [9b 40 56 d0 0a 3a 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
+    [9b 81 ac a0 b5 03 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
 
@@ -367,11 +355,11 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for strings in C. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support c-style string implementations.
 
-    [90 20 s u p e r i m p o s i t i o n ...]
+    [90 20 m i s u n d e r s t a n d i n g ...]
 
 vs
 
-    [90 21 s u p e r i m p o s i t i o n 00 ...]
+    [90 21 m i s u n d e r s t a n d i n g 00 ...]
 
 Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
 
@@ -414,7 +402,7 @@ Examples:
 
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
-    [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [90 2b e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### URI
@@ -425,17 +413,17 @@ The length field contains the byte length (length in octets), NOT the character 
 
 Example:
 
-    [92 81 19 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [92 ab 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [92 36 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [92 37 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [92 68 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [92 67 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
@@ -447,14 +435,14 @@ An array of octets representing an arbitrary series of bytes, with no specificat
 
 Examples:
 
-    [91 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [91 0b 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### Custom
 
 An array of octets representing a user-defined custom data type. The internal encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-    [93 09 04 ff 91 aa 2e] = custom data type made up of the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}
+    [93 0b 04 ff 91 aa 2e] = custom data type made up of the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}
 
 
 
@@ -639,7 +627,7 @@ Rules:
 
 Example:
 
-    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 11 72
+    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 23 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {some_value = "repeat this value"}, tagged with integer 1
 
@@ -678,14 +666,14 @@ Examples:
 
     [98 81 61] = reference to the object tagged with the string value "a"
 
-    [98 92 12 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [98 92 25 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", tag "legalese"
 
-    [98 92 31 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [98 92 63 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
-    = reference to entire document at https://some-external-place/my_document.cbe?format=long
+    = reference to entire document at https://somewhere.com/my_document.cbe?format=long
 
 
 ### Metadata Map
@@ -736,9 +724,9 @@ The following characters are allowed if they aren't in the above disallowed sect
 
 #### Example
 
-    [76 93 40 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20 66
-     61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34 20
-     75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
+    [76 90 81 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
+     66 61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34
+     20 75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
     = Bug #95512: System fails to start on arm64 unless B latch is set
 
 
