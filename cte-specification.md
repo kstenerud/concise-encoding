@@ -228,7 +228,7 @@ All CTE documents must begin with a version specifier, which must not be precede
 
 The version specifier is the lowercase letter `c` followed immediately by a positive integer representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
 
-Note: Because CBE places the version as the first byte in a document, the version value 99 is invalid. If 99 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `c` (0x63, or 99) as its first byte.
+Note: Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
 
 #### Examples
 

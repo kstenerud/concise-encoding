@@ -135,7 +135,7 @@ The version specifier is an unsigned [unsigned LEB128](https://en.wikipedia.org/
 
 The version specifier is mandatory, unless all parties have agreed to omit the specifier and use a specific version.
 
-Note: Because CBE places the version as the first byte in a document, the version value 99 is invalid. If 99 were allowed, it would clash with CTE when differentiating the file type by its contents because CTE uses `c` (0x63, or 99) as its first byte.
+Note: Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
 
 
 ### Maximum Depth
