@@ -83,7 +83,7 @@ Contents
     - [Markup Comment](#markup-comment)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
-    - [Tag Name](#tag-name)
+    - [Marker ID](#marker-id)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
@@ -521,7 +521,7 @@ A content string is encoded as a [string](#string), with additional processing r
 
  * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
  * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
- * The characters `<` and `>` must be escaped to `\<` and `\>`.
+ * The characters `` ` ``, `<`, `>`, `\` must be escaped.
 
 ##### Verbatim Sequence
 
@@ -605,35 +605,43 @@ Pseudo-objects add additional metadata to a real object, or to the document, or 
 
 #### Referring Pseudo-objects
 
-"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
+_Referring_ pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
 
 #### Invisible Pseudo-objects
 
-Invsible pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
+_Invsible_ pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
 
 
 ### Marker
 
-A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name), such that it can be referenced from another part of the document (or from a different document).
+A marker is a _referring_, _invisible_ pseudo-object that tags the next object with a [marker ID](#marker-id), such that it can be referenced from another part of the document (or from a different document).
 
-A marker begins with the marker type (0x97), followed by a [tag name](#tag-name) and then the marked object (except when intervening "invisible" pseudo-objects are present).
+A marker begins with the marker type (0x97), followed by a [marker ID](#marker-id) and then the marked object (except when intervening "invisible" pseudo-objects are present).
 
-    [97] [tag] [marked object]
+    [97] [ID] [marked object]
 
 Rules:
 
- * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
- * Marker tags must be unique in the document; duplicate marker tags are invalid.
+ * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+ID) (end-list) (string)` is invalid.
+ * Marker IDs must be unique within the document; duplicate marker IDs are invalid.
 
 Example:
 
     [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 23 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {some_value = "repeat this value"}, tagged with integer 1
+    = the map {some_value = "repeat this value"}, tagged with ID integer 1
 
-#### Tag Name
+#### Marker ID
 
-A tag name is a unique (to the document) identifier for marked objects. A tag name can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string):
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)
+
+An integer ID:
+
+ * Must be positive
+ * Must not be larger than 64 bits
+ * Must be represented as an integer type (not as a whole-number float)
+
+A string ID:
 
  * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
@@ -644,30 +652,30 @@ A tag name is a unique (to the document) identifier for marked objects. A tag na
 
 ### Reference
 
-A reference is a non-referring, visible pseudo-object that acts as a stand-in for an object that has been [marked](#marker) earlier in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
-A reference begins with the reference type (0x98), followed by either a [tag name](#tag-name) or a [URI](#uri).
+A reference begins with the reference type (0x98), followed by either a [marker ID](#marker-id) or a [URI](#uri).
 
 Rules:
 
- * A reference with a [tag name](#tag-name) must refer to another object previously declared in the same document (local reference).
- * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
+ * A reference with a [marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
+ * Forward references within a document are allowed.
  * Recursive references are allowed.
  * A reference with a URI must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+   - A marker ID inside another CBE or CTE document, using the fragment section of the URI as an ID
  * An implementation may choose to follow or not to follow URI references. Care must be taken when following links, as there will be security implications.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
  * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
 Examples:
 
-    [98 01] = reference to the object tagged with the integer value 1
+    [98 01] = reference to the object marked with ID 1
 
-    [98 81 61] = reference to the object tagged with the string value "a"
+    [98 81 61] = reference to the object marked with ID "a"
 
     [98 92 25 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
-    = reference to relative file "common.ce", tag "legalese"
+    = reference to relative file "common.ce", ID "legalese"
 
     [98 92 63 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
@@ -678,7 +686,7 @@ Examples:
 
 ### Metadata Map
 
-A metadata map is a referring, visible pseudo-object containing keyed values which are to be associated with the object following the metadata map.
+A metadata map is a _referring_, _visible_ pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
 
@@ -697,9 +705,9 @@ Implementations should make use of the predefined metadata keys where possible t
 
 ### Comment
 
-A comment is a non-referring, invisible, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
+A comment is a _non-referring_, _invisible_, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
+Although comments are not _referring_ pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
 Comments operate similarly to C-like language comments, except that nested comments are allowed.
 
@@ -732,7 +740,7 @@ The following characters are allowed if they aren't in the above disallowed sect
 
 ### Padding
 
-Padding is non-referencing and invisible. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+Padding is _non-referring_ and _invisible_. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Example:
 
@@ -740,6 +748,7 @@ Example:
 
 Technically, padding could also be used as a sequence point in a CBE-style stream to help synchronize data on a noisy channel (for example, data chunk, 4x padding, data chunk, etc), but such schemes are outside of the scope of this document.
 
+Padding is the only CBE type that has no matching CTE type.
 
 
 Other Types

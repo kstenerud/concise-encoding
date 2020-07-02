@@ -65,7 +65,7 @@ Integers are positive or negative, and can be written in different bases:
 |   2  | Binary      | 01               | `0b`   | `-0b1100`    | -12                |
 |   8  | Octal       | 01234567         | `0o`   | `0o755`      | 493                |
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
-|  16  | Hexadecimal | 0123456789abcdef | `0h`   | `0xdeadbeef` | 3735928559         |
+|  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
 You can use `_` as "numeric whitespace": `1_000_000`
 
@@ -320,18 +320,18 @@ Pseudo-objects add additional metadata to another object, or to the document, or
 
 #### Referring Pseudo-objects
 
-"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
+_Referring_ pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
 
 #### Invisible Pseudo-objects
 
-Invsible pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
+_Invsible_ pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
 
 
 ### Marker
 
-A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name), such that it can be referenced from another part of the document (or from a different document).
+A marker is a _referring_, _invisible_ pseudo-object that tags the next object with a [marker ID](#marker-id), such that it can be referenced from another part of the document (or from a different document).
 
-A marker begins with the marker initiator (`&`), followed immediately by a [tag name](#tag-name), followed by the object being marked.
+A marker begins with the marker initiator (`&`), followed immediately by a [marker ID](#marker-id), followed by the object being marked.
 
 Example:
 
@@ -340,25 +340,16 @@ Example:
         &1 {a = 1}
     ]
 
-#### Tag Name
+#### Marker ID
 
-A tag name is a unique (to the document) identifier for marked objects. A tag name can be either a positive integer or an [unquoted string](#unquoted-string).
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer or an [unquoted string](#unquoted-string).
 
 
 ### Reference
 
-A reference is a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
-A reference begins with the reference initiator (`#`), followed immediately by either a [tag name](#tag-name) or a [URI](#uri).
-
-Rules:
-
- * A reference with a [tag name](#tag-name) must refer to another object previously declared in the same document (local reference).
- * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
- * Recursive references are allowed.
- * A reference with a URI must point to:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
+A reference begins with the reference initiator (`#`), followed immediately by either a [marker ID](#marker-id) or a [URI](#uri).
 
 Example:
 
@@ -381,7 +372,7 @@ Example:
 
 ### Metadata Map
 
-A metadata map is a referring pseudo-object that associates keyed values with the next object:
+A metadata map is a _referring_, _visible_ pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
 ```
 c1
@@ -410,12 +401,14 @@ c1
 
 ### Comment
 
+A comment is a _non-referring_, _invisible_, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
+
 Comments are written C-style:
 
 * Single line: `// A comment`
 * Multiline: `/* A comment */`
 
-Multiline comments can be nested: `/* /* */ */`
+Comments can be nested: `/* /* */ */`
 
 
 
@@ -458,15 +451,15 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &tag1 {
-                                description = "This map will be referenced later using #tag1"
+    marked_object    = &id1 {
+                                description = "This map will be referenced later using #id1"
                                 value = -@inf
                                 child_elements = @nil
-                                recursive = #tag1
+                                recursive = #id1
                             }
-    ref1             = #tag1
-    ref2             = #tag1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    ref1             = #id1
+    ref2             = #id1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
                        <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |

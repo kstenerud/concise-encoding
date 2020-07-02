@@ -92,7 +92,7 @@ Contents
     - [Markup Comment](#markup-comment)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
-    - [Tag Name](#tag-name)
+    - [Marker ID](#marker-id)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
@@ -178,15 +178,15 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &tag1 {
-                                description = "This map will be referenced later using #tag1"
+    marked_object    = &id1 {
+                                description = "This map will be referenced later using #id1"
                                 value = -@inf
                                 child_elements = @nil
-                                recursive = #tag1
+                                recursive = #id1
                             }
-    ref1             = #tag1
-    ref2             = #tag1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    ref1             = #id1
+    ref2             = #id1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
                        <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
@@ -293,7 +293,7 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 |   2  | Binary      | 01               | `0b`   | `-0b1100`    | -12                |
 |   8  | Octal       | 01234567         | `0o`   | `0o755`      | 493                |
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
-|  16  | Hexadecimal | 0123456789abcdef | `0h`   | `0xdeadbeef` | 3735928559         |
+|  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
 
 ### Floating Point
@@ -305,7 +305,7 @@ A floating point number is composed of a whole part and a fractional part, separ
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character may be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values must be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character may be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
@@ -315,7 +315,7 @@ There is no maximum number of significant digits or exponent digits, but care sh
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character may be omitted if it's positive. Values must be normalized.
+Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character may be omitted if it's positive. Values should be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
@@ -940,24 +940,24 @@ Like regular objects, pseudo-objects must not appear before the [version specifi
 
 #### Referring Pseudo-objects
 
-"Referring" pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
+_Referring_ pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
 
 #### Invisible Pseudo-objects
 
-Invsible pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
+_Invsible_ pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
 
 
 ### Marker
 
-A marker is a referring, invisible pseudo-object that tags the next object with a [tag name](#tag-name), such that it can be referenced from another part of the document (or from a different document).
+A marker is a _referring_, _invisible_ pseudo-object that tags the next object with a [marker ID](#marker-id), such that it can be referenced from another part of the document (or from a different document).
 
-A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [tag name](#tag-name).
+A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [marker ID](#marker-id).
 
 Rules:
 
- * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+tag) (end-list) (string)` is invalid.
- * Marker tags must be unique in the document; duplicate marker tags are invalid.
- * Marker tags must be followed by whitespace.
+ * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+ID) (end-list) (string)` is invalid.
+ * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
+ * Marker IDs must be followed by whitespace.
 
 Example:
 
@@ -966,28 +966,28 @@ Example:
         &1 {a = 1}
     ]
 
-The string `"Pretend that this is a huge string"` is marked with the tag `remember_me`, and the map `{a=1}` is marked with the tag `1`.
+The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
 
-#### Tag Name
+#### Marker ID
 
-A tag name is a unique (to the document) identifier for marked objects. A tag name can be either a positive integer or an [unquoted string](#unquoted-string).
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer (max value 18446744073709551615) or an [unquoted string](#unquoted-string).
 
 
 ### Reference
 
-A reference is a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
-A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [tag name](#tag-name) or a [URI](#uri).
+A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [marker ID](#marker-id) or a [URI](#uri).
 
 Rules:
 
- * A reference with a [tag name](#tag-name) must refer to another object previously declared in the same document (local reference).
- * Forward references within a document are not allowed (all referenced tags must be declared earlier in the document).
+ * A reference with a [marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
+ * Forward references within a document are allowed.
  * Recursive references are allowed.
  * A reference with a URI must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A tag name inside another CBE or CTE document, using the fragment section of the URI as a tag identifier
- * An implementation may choose to follow URI references, but care must be taken when doing this, as there are security implications when following unknown links.
+   - A marker ID inside another CBE or CTE document, using the fragment section of the URI as an ID
+ * An implementation may choose to follow or not to follow URI references. Care must be taken when following links, as there will be security implications.
  * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
  * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
@@ -1012,7 +1012,7 @@ Example:
 
 ### Metadata Map
 
-A metadata map is a referring pseudo-object that associates keyed values with the next object:
+A metadata map is a _referring_, _visible_ pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
 
@@ -1062,9 +1062,9 @@ Implementations should make use of the predefined metadata keys where possible t
 
 ### Comment
 
-A comment is an invisible list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
+A comment is a _non-referring_, _invisible_, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
 
-Although comments are not "referring" pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
+Although comments are not _referring_ pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
@@ -1220,7 +1220,7 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between an array encoding type and the opening double-quote (`u "` is invalid).
- * Between a marker or reference initiator and its tag name (`& 1234` and `# u"mydoc.cbe"` are invalid).
+ * Between a marker or reference initiator and its marker ID (`& 1234` and `# u"mydoc.cbe"` are invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ nil`, `@i nf`, `@n a n` are invalid).

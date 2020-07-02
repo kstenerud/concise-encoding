@@ -36,25 +36,26 @@ Predefined Keys
 
 The following predefined metadata keys should be used for the specified type of information. Implementations must accept both long and short versions of the keys they implement.
 
-| Long Key                | Short Key | Type                | Contents                                                           |
-| ----------------------- | --------- | ------------------- | ------------------------------------------------------------------ |
-| `_access_time`          | `_at`     | Timestamp           | Last access time                                                   |
-| `_attributes`           | `_a`      | Map<String:Any>     | Attributes (free-form)                                             |
-| `_copyright`            | `_cr`     | String or URI       | Holder of copyright over data (Name or URI)                        |
-| `_creation_time`        | `_ct`     | Timestamp           | Creation time                                                      |
-| `_creator`              | `_c`      | List<String or URI> | Creator(s) of the data                                             |
-| `_data_type`            | `_dt`     | String              | https://www.iana.org/assignments/media-types/media-types.xhtml     |
-| `_description`          | `_d`      | String              | Description (free-form)                                            |
-| `_human_language`       | `_hl`     | String              | Human language, as an ISO 639 alpha-2 or alpha-3 code              |
-| `_identifier`           | `_id`     | Any                 | Identifier (free-form)                                             |
-| `_language`             | `_l`      | String              | The [programming language](#language-name) that generated the data |
-| `_license`              | `_li`     | URI                 | Pointer to the license for this data                               |
-| `_modification_time`    | `_mt`     | Timestamp           | Last modification time                                             |
-| `_origin`               | `_o`      | List<String or URI> | Origin(s) of this data                                             |
-| `_schema`               | `_s`      | URI                 | [Schema](#schema) describing how to interpret the data             |
-| `_specification`        | `_sp`     | URI                 | Human-readable specification about the data                        |
-| `_type`                 | `_t`      | String              | Name of the type/class/struct that this structure represents       |
-| `_tags`                 | `_tg`     | List<String>        | Set of tags associated with this data (free-form)                  |
+| Long Key                | Short Key | Type                | Contents                                                                |
+| ----------------------- | --------- | ------------------- | ----------------------------------------------------------------------- |
+| `_access_time`          | `_at`     | Timestamp           | Last access time                                                        |
+| `_attributes`           | `_a`      | Map<String:Any>     | Attributes (free-form)                                                  |
+| `_copyright`            | `_cr`     | String or URI       | Holder of copyright over data (Name or URI)                             |
+| `_creation_time`        | `_ct`     | Timestamp           | Creation time                                                           |
+| `_creator`              | `_c`      | List<String or URI> | Creator(s) of the data                                                  |
+| `_data_type`            | `_dt`     | String              | https://www.iana.org/assignments/media-types/media-types.xhtml          |
+| `_description`          | `_d`      | String              | Description (free-form)                                                 |
+| `_human_language`       | `_hl`     | String              | Human language, as an ISO 639 alpha-2 or alpha-3 code                   |
+| `_identifier`           | `_id`     | Any                 | Identifier (free-form)                                                  |
+| `_language`             | `_l`      | String              | The [programming language](#language-name) that generated the data      |
+| `_license`              | `_li`     | URI                 | Pointer to the license for this data                                    |
+| `_modification_time`    | `_mt`     | Timestamp           | Last modification time                                                  |
+| `_origin`               | `_o`      | List<String or URI> | Origin(s) of this data                                                  |
+| `_schema`               | `_s`      | URI                 | [Schema](#schema) describing how to interpret the data                  |
+| `_specification`        | `_sp`     | URI                 | Human-readable specification about the data                             |
+| `_type`                 | `_t`      | String              | Name of the type/class/struct that this structure represents            |
+| `_tags`                 | `_tg`     | List<String>        | Set of tags associated with this data (free-form)                       |
+| `_context`              | `_co`     | Map<Any:Any>        | Context data that should be propagated to any further distributed calls |
 
 All other string-based metadata keys beginning with `_` are reserved for future expansion, and must not be used as metadata keys for any purpose.
 
