@@ -80,7 +80,7 @@ Contents
   - [Map](#map)
   - [Markup](#markup)
     - [Markup Structure](#markup-structure)
-    - [Container Name](#markup-container-name)
+    - [Tag Name](#markup-tag-name)
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
     - [Container End](#container-end)
@@ -727,7 +727,7 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 ### Map
 
-A map associates key objects with value objects. Keys can be any mix of scalar or array types. A key must not be a container type, the `@nil` type, or any value that evaluates to NaN (not-a-number). Values can be any mix of any type, including other containers.
+A map associates key objects with value objects. Keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
 
 A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
 
@@ -736,11 +736,23 @@ All keys in a map must resolve to a unique value, even across numeric data types
  * `2000`
  * `2000.0`
 
+Note: The string value "2000" is not numeric, and would not clash.
+
 Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing of maps containing key-value pairs of mixed types if the implementation language doesn't support it.
+
+#### Keyable types
+
+Only certain types can be used as keys in map-like containers:
+
+* [Numeric types](#numeric-types) except for NaN (not-a-number)
+* [Temporal types](#temporal-types)
+* [Array types](#array-types)
+
+@nil must not be used as a key.
 
 #### Example
 
@@ -769,15 +781,12 @@ The CTE encoding of a markup container is similar to XML, except:
 
 #### Markup Structure
 
-| Section    | Delimiter  | Type    | Required |
-| ---------- | ---------- | ------- | -------- |
-| Begin      | `<`        |         | Y        |
-| Tag name   |            | Keyable | Y        |
-| Attributes | whitespace | Map     |          |
-| Contents   | `\|`       | List    |          |
-| End        | `>`        |         | Y        |
-
-The allowable types for the tag name are the same as the allowable types for [map keys](#map).
+| Section    | Delimiter  | Type                      | Required |
+| ---------- | ---------- | ------------------------- | -------- |
+| Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
+| Attributes | whitespace | [Map](#map)               |          |
+| Contents   | `\|`       | [List](#list)             |          |
+| End        | `>`        |                           | Y        |
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
 
@@ -790,11 +799,11 @@ Illustration of markup encodings (Note: `|` characters are escaped with `\` here
 |     N      |    Y     | `<span\|Some text here>`                                   |
 |     Y      |    Y     | `<ul id=mylist style=boring \| <li\|first> <li\|second> >` |
 
-Although it may look a little different on the surface, the internal structure is the same, and can easily be converted to/from XML & HTML.
+Although it may look a little different on the surface, the internal structure is the same, and can trivially be converted to/from XML & HTML.
 
-#### Markup Container Name
+#### Markup Tag Name
 
-Although technically any [map-key allowable type](#map) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
 
 #### Attributes Section
 

@@ -71,7 +71,7 @@ Contents
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
-    - [Container Name](#markup-container-name)
+    - [Tag Name](#markup-tag-name)
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
     - [Content String](#content-string)
@@ -466,7 +466,7 @@ Example:
 
 ### Map
 
-A map associates objects (keys) with other objects (values). Map keys can be any mix of [temporal](#temporal-types), [array](#array-types), or [numeric](#numeric-types) types except for NaN (not-a-number). Values can be any mix of any type, including other containers.
+A map associates objects (keys) with other objects (values). Map keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
 
 A map is ordered by default unless otherwise negotiated between parties (for example via a schema), and must not contain duplicate keys (including values across numeric types). For example, the following keys would clash:
 
@@ -474,7 +474,7 @@ A map is ordered by default unless otherwise negotiated between parties (for exa
  * 2000 (32-bit integer)
  * 2000.0 (decimal float)
 
-Note: The string value "2000" is not numeric, and will not clash.
+Note: The string value "2000" is not numeric, and would not clash.
 
 Map contents are stored as key-value pairs of objects. A key without a paired value is invalid:
 
@@ -482,7 +482,17 @@ Map contents are stored as key-value pairs of objects. A key without a paired va
 
 Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
-Example:
+#### Keyable types
+
+Only certain types can be used as keys in map-like containers:
+
+* [Numeric types](#numeric-types) except for NaN (not-a-number)
+* [Temporal types](#temporal-types)
+* [Array types](#array-types)
+
+Nil must not be used as a key.
+
+#### Example:
 
     [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
@@ -499,9 +509,9 @@ Unlike other containers, a markup container requires two end-of-container marker
 
     [78] [name] [attr1] [v1] [attr2] [v2] ... [7b] [contents1] [contents2] ... [7b]
 
-#### Markup Container Name
+#### Markup Tag Name
 
-Although technically any [map-key allowable type](#map) is allowed in this field, be aware that conversion to XML and HTML may be problematic with some types.
+Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that conversion to XML and HTML may be problematic with some types.
 
 #### Attributes Section
 
