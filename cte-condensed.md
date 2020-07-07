@@ -347,7 +347,7 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
 ### Reference
 
-A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid). Note that references must not be used as map keys!
 
 A reference begins with the reference initiator (`#`), followed immediately by either a [marker ID](#marker-id) or a [URI](#uri).
 

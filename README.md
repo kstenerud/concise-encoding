@@ -1,42 +1,63 @@
 Concise Encoding
 ================
 
-Data communications have become bloated and inefficient. The open, text based formats that supplanted proprietary ones in the 90s have become a liability due to their size, codec inefficiency, and limited type support. While there are now open binary formats, they lack the human readability and editability that made the text formats so successful. We're forced to choose between a wasteful text format and an unreadable binary format. What's needed is something with the benefits of both and the drawbacks of neither.
+The convenience of JSON, in a twin text/binary format with full datatype support.
 
-**Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power, bandwidth, and human friendly way:
+ * **No schema necessary.** The simplicity of ad-hoc data, like in JSON & XML.
+ * **Rich type support.** No more special code for dates, bytes, large values, etc.
+ * **Edit text, transmit binary.** Twin binary and text formats are 1:1 compatible.
+ * **Plug and play.** No extra compilation phase or descriptor files.
+ * **Metadata.** Out-of-band data? Not a problem!
+ * **Recursive/cyclic data.** Recursive structures? Also not a problem!
+ * **Fully specified.** No more ambiguities in implementations.
 
- * Split into two formats: [binary-based CBE](cbe-specification.md) and [text-based CTE](cte-specification.md).
- * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
- * Fully specified, eliminating ambiguities and covering edge cases.
- * Specifications and documents are versioned to support future expansion.
- * Support for recursive/cyclic data.
- * Support for the most commonly used data types:
 
-| Type      | Description                                             |
-| --------- | ------------------------------------------------------- |
-| Nil       | No data (NULL)                                          |
-| Boolean   | True or false                                           |
-| Integer   | Positive or negative, arbitrary size                    |
-| Float     | Binary or decimal floating point, arbitrary size        |
-| UUID      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
-| Time      | Date, time, or timestamp, arbitrary size                |
-| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
-| String    | UTF-8 string, arbitrary length                          |
-| Bytes     | Array of octets, arbitrary length                       |
-| List      | List of objects                                         |
-| Map       | Mapping keyable objects to other objects                |
-| Markup    | Presentation data, similar to XML                       |
-| Reference | Points to previously defined objects or other documents |
-| Metadata  | Data about data                                         |
-| Comment   | Arbitrary comments about anything, nesting supported    |
-| Custom    | User-defined data type                                  |
+Contents
+--------
+
+* [Introduction](#introduction)
+* [Specifications](#specifications)
+* [Implementations](#implementations)
+* [Comparison to Other Formats](#comparison-to-other-formats)
+* [Example](#example)
+* [License](#license)
+
+
+
+Introduction
+------------
+
+Data communications have become bloated and inefficient. The open, text based formats that supplanted proprietary ones in the 90s have become a liability due to their size, codec inefficiency, and limited type support. While there are now open binary formats, they lack the human readability and editability that made the text formats so successful. We're forced to choose between a wasteful text format and an unreadable binary format. We need something with the benefits of both and the drawbacks of neither.
+
+**Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power, bandwidth, and human friendly way.
+
+#### Supported Types
+
+| Type          | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| **Nil**       | No data (NULL)                                          |
+| **Boolean**   | True or false                                           |
+| **Integer**   | Positive or negative, arbitrary size                    |
+| **Float**     | Binary or decimal floating point, arbitrary size        |
+| **UUID**      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
+| **Time**      | Date, time, or timestamp, arbitrary size                |
+| **URI**       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
+| **String**    | UTF-8 string, arbitrary length                          |
+| **Bytes**     | Array of octets, arbitrary length                       |
+| **List**      | List of objects                                         |
+| **Map**       | Mapping keyable objects to other objects                |
+| **Markup**    | Presentation data, similar to XML                       |
+| **Reference** | Points to previously defined objects or other documents |
+| **Metadata**  | Data about data                                         |
+| **Comment**   | Arbitrary comments about anything, nesting supported    |
+| **Custom**    | User-defined data type                                  |
 
 
 
 Specifications
 --------------
 
- * [CTE Quick Description (read this first!)](cte-condensed.md)
+ * [CTE condensed description (read this first)](cte-condensed.md)
  * [Concise Text Encoding (CTE)](cte-specification.md)
  * [Concise Binary Encoding (CBE)](cbe-specification.md)
  * [Common Generic Metadata](common-generic-metadata.md)
@@ -47,9 +68,7 @@ Specifications
 Implementations
 ---------------
 
-**Note:** Work-in-progress!
-
- * [Go Implementation](https://github.com/kstenerud/go-concise-encoding)
+ * [Go](https://github.com/kstenerud/go-concise-encoding)
 
 
 
@@ -87,7 +106,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
 | Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |       |    ns     |             |        |  ns   |
 | Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |
-| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |             |        |       |
+| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |      Y      |        |       |
 | Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |       |     Y     |             |        |       |
 | Zero-copy               |    Y    |     |      |      |   Y  |      Y      |    Y  |           |      Y      |        |   Y   |
 | Size Optimization       |    Y    |     |      |      |   Y  |      Y      |    Y  |           |             |        |   Y   |
@@ -121,7 +140,6 @@ c1
 {
     /* Comments look very C-like, except:
        /* Nested comments are allowed! */
-       Note: Markup comments use <* and *> (shown later).
     */
     // Notice that there are no commas in maps and lists
     (metadata_about_a_list = "something interesting about a_list")
@@ -166,8 +184,9 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
                          <body|
                            Please choose from the following widgets:
                            <div id=parent style=normal ref-id=1 |
-                             <* Here we use a backtick to induce verbatim processing.
-                                In this case, "##" is chosen as the ending sequence *>
+                             /* Here we use a backtick to induce verbatim processing.
+                              * In this case, "##" is chosen as the ending sequence
+                              */
                              <script| `##
                                document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
                              ##>

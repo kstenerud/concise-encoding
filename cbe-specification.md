@@ -490,7 +490,7 @@ Only certain types can be used as keys in map-like containers:
 * [Temporal types](#temporal-types)
 * [Array types](#array-types)
 
-Nil must not be used as a key.
+Nil must not be used as a key, and [references](#reference) are not allowed as keys.
 
 #### Example:
 
@@ -669,6 +669,7 @@ A reference begins with the reference type (0x98), followed by either a [marker 
 Rules:
 
  * A reference with a [marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
+ * A reference must not be used as a map key.
  * Forward references within a document are allowed.
  * Recursive references are allowed.
  * A reference with a URI must point to:
