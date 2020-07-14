@@ -336,8 +336,8 @@ A marker begins with the marker initiator (`&`), followed immediately by a [mark
 Example:
 
     [
-        &big_string "Pretend that this is a huge string"
-        &1 {a = 1}
+        &big_string:"Pretend that this is a huge string"
+        &1:{a = 1}
     ]
 
 #### Marker ID
@@ -355,8 +355,8 @@ Example:
 
     {
         some_object = {
-            my_string = &big_string "Pretend that this is a huge string"
-            my_map = &1 {
+            my_string = &big_string:"Pretend that this is a huge string"
+            my_map = &1:{
                 a = 1
             }
         }
@@ -451,7 +451,7 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &id1 {
+    marked_object    = &id1:{
                                 description = "This map will be referenced later using #id1"
                                 value = -@inf
                                 child_elements = @nil

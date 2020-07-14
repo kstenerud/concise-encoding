@@ -26,7 +26,7 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Map                                         | `{one=1 two=2}`                         |
 | Markup                                      | `<span style=bold| Blah blah>`          |
 | Metadata Map                                | `(_id=12345)`                           |
-| Marker/Reference                            | `&a_ref "something"`, `#a_ref`          |
+| Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
 | Comment                                     | `// A comment`                          |
 | Multiline Comment                           | `/* A comment */`                       |
 
@@ -178,7 +178,7 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &id1 {
+    marked_object    = &id1:{
                                 description = "This map will be referenced later using #id1"
                                 value = -@inf
                                 child_elements = @nil
@@ -929,8 +929,8 @@ This can easily be auto-converted to XML or HTML:
 
         <!-- MathML: ax^2 + bx + c -->
         <mrow>
-          <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
-          <mo>+</mo> <mi>b</mi> <mo>&InvisibleTimes;</mo> <mi>x</mi>
+          <mi>a</mi> <mo>\InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
+          <mo>+</mo> <mi>b</mi> <mo>\InvisibleTimes;</mo> <mi>x</mi>
           <mo>+</mo> <mi>c</mi>
         </mrow>
     </div>
@@ -960,7 +960,14 @@ _Invsible_ pseudo-objects are effectively invisible to referring pseudo-objects,
 
 A marker is a _referring_, _invisible_ pseudo-object that tags the next object with a [marker ID](#marker-id), such that it can be referenced from another part of the document (or from a different document).
 
-A marker begins with the marker initiator (`&`), followed immediately (with no whitespace) by a [marker ID](#marker-id).
+A marker sequence consists of the following, with no whitespace in between:
+
+ * `&` (the marker initiator)
+ * A [marker ID](#marker-id)
+ * `:` (the marker separator)
+ * The marked value
+
+In general, it will look like this: `&id:value`
 
 Rules:
 
@@ -971,8 +978,8 @@ Rules:
 Example:
 
     [
-        &remember_me "Pretend that this is a huge string"
-        &1 {a = 1}
+        &remember_me:"Pretend that this is a huge string"
+        &1:{a = 1}
     ]
 
 The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
@@ -1005,8 +1012,8 @@ Example:
 
     {
         some_object = {
-            my_string = &big_string "Pretend that this is a huge string"
-            my_map = &1 {
+            my_string = &big_string:"Pretend that this is a huge string"
+            my_map = &1:{
                 a = 1
             }
         }
@@ -1231,6 +1238,7 @@ Examples:
  * Before the [version specifier](#version-specifier).
  * Between an array encoding type and the opening double-quote (`u "` is invalid).
  * Between a marker or reference initiator and its marker ID (`& 1234` and `# u"mydoc.cbe"` are invalid).
+ * Between a marker ID and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ nil`, `@i nf`, `@n a n` are invalid).
