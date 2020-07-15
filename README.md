@@ -1,7 +1,7 @@
 Concise Encoding
 ================
 
-The convenience of JSON, in a twin text/binary format with full datatype support.
+Convenience like JSON, in a twin text/binary format with full datatype support.
 
  * **No schema necessary.** The simplicity of ad-hoc data, like in JSON & XML.
  * **Rich type support.** No more special code for dates, bytes, large values, etc.
@@ -169,7 +169,7 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &tag1 {
+    marked_object    = &tag1:{
                                 description = "This map will be referenced later using #tag1"
                                 value = -@inf
                                 child_elements = @nil

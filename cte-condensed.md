@@ -342,7 +342,9 @@ Example:
 
 #### Marker ID
 
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer or an [unquoted string](#unquoted-string).
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30. Integer marker IDs will generally use less space in the binary format than multibyte strings.
+
+**Note:** Marker ID comparisons are always case-insensitive.
 
 
 ### Reference

@@ -181,9 +181,9 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
 |  76 | 118 | Comment                   | (String or sub-comment) ... End of Container  |
-|  77 | 119 | Metadata Map              | Key Value ... End of Container                |
+|  77 | 119 | Metadata Map              | (Key, value) ... End of Container             |
 |  78 | 120 | Markup                    | Name, kv-pairs, contents                      |
-|  79 | 121 | Map                       | Key Value ... End of Container                |
+|  79 | 121 | Map                       | (Key, value) ... End of Container             |
 |  7a | 122 | List                      | Object ... End of Container                   |
 |  7b | 123 | End of Container          |                                               |
 |  7c | 124 | Boolean False             |                                               |
@@ -191,30 +191,30 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  7e | 126 | Nil (no data)             |                                               |
 |  7f | 127 | Padding                   |                                               |
 |  80 | 128 | String: 0 bytes           |                                               |
-|  81 | 129 | String: 1 byte            | [1 octet of data]                             |
-|  82 | 130 | String: 2 bytes           | [2 octets of data]                            |
-|  83 | 131 | String: 3 bytes           | [3 octets of data]                            |
-|  84 | 132 | String: 4 bytes           | [4 octets of data]                            |
-|  85 | 133 | String: 5 bytes           | [5 octets of data]                            |
-|  86 | 134 | String: 6 bytes           | [6 octets of data]                            |
-|  87 | 135 | String: 7 bytes           | [7 octets of data]                            |
-|  88 | 136 | String: 8 bytes           | [8 octets of data]                            |
-|  89 | 137 | String: 9 bytes           | [9 octets of data]                            |
-|  8a | 138 | String: 10 bytes          | [10 octets of data]                           |
-|  8b | 139 | String: 11 bytes          | [11 octets of data]                           |
-|  8c | 140 | String: 12 bytes          | [12 octets of data]                           |
-|  8d | 141 | String: 13 bytes          | [13 octets of data]                           |
-|  8e | 142 | String: 14 bytes          | [14 octets of data]                           |
-|  8f | 143 | String: 15 bytes          | [15 octets of data]                           |
-|  90 | 144 | String                    | [byte length] [UTF-8 encoded string]          |
-|  91 | 145 | Bytes                     | [byte length] [data]                          |
+|  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                       |
+|  82 | 130 | String: 2 bytes           | [2 octets of UTF-8 data]                      |
+|  83 | 131 | String: 3 bytes           | [3 octets of UTF-8 data]                      |
+|  84 | 132 | String: 4 bytes           | [4 octets of UTF-8 data]                      |
+|  85 | 133 | String: 5 bytes           | [5 octets of UTF-8 data]                      |
+|  86 | 134 | String: 6 bytes           | [6 octets of UTF-8 data]                      |
+|  87 | 135 | String: 7 bytes           | [7 octets of UTF-8 data]                      |
+|  88 | 136 | String: 8 bytes           | [8 octets of UTF-8 data]                      |
+|  89 | 137 | String: 9 bytes           | [9 octets of UTF-8 data]                      |
+|  8b | 139 | String: 11 bytes          | [11 octets of UTF-8 data]                     |
+|  8a | 138 | String: 10 bytes          | [10 octets of UTF-8 data]                     |
+|  8c | 140 | String: 12 bytes          | [12 octets of UTF-8 data]                     |
+|  8d | 141 | String: 13 bytes          | [13 octets of UTF-8 data]                     |
+|  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                     |
+|  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
+|  90 | 144 | String                    | [byte length] [UTF-8 data]                    |
+|  91 | 145 | Bytes                     | [byte length] [binary data]                   |
 |  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  93 | 147 | Custom                    | [byte length] [data]                          |
+|  93 | 147 | Custom                    | [byte length] [binary data]                   |
 |  94 | 148 | RESERVED                  |                                               |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
-|  97 | 151 | Marker                    | Positive Integer / unquoted string            |
-|  98 | 152 | Reference                 | Positive Integer / unquoted string / URI      |
+|  97 | 151 | Marker                    | Positive integer / string                     |
+|  98 | 152 | Reference                 | Positive integer / string / URI               |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -289,7 +289,7 @@ Examples:
 
 ### UUID
 
-A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) (i.e. in network byte order).
+A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) (i.e. big endian).
 
 Example:
 
@@ -643,21 +643,15 @@ Example:
 
 #### Marker ID
 
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer or an [unquoted string](https://github.com/kstenerud/concise-text-encoding/blob/master/cte-specification.md#unquoted-string)
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30. Integer marker IDs will generally use less space in the binary format than multibyte strings.
+
+**Note:** Marker ID comparisons are always case-insensitive.
 
 An integer ID:
 
  * Must be positive
  * Must not be larger than 64 bits
  * Must be represented as an integer type (not as a whole-number float)
-
-A string ID:
-
- * The string does not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string does not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
- * The string does not contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
- * The string does not contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string is not empty.
 
 
 ### Reference

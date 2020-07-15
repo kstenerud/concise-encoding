@@ -967,13 +967,12 @@ A marker sequence consists of the following, with no whitespace in between:
  * `:` (the marker separator)
  * The marked value
 
-In general, it will look like this: `&id:value`
+In general, it will look like this: `&id:some_marked_value`
 
 Rules:
 
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
- * Marker IDs must be followed by whitespace.
 
 Example:
 
@@ -986,7 +985,9 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 #### Marker ID
 
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be either a positive integer (max value 18446744073709551615) or an [unquoted string](#unquoted-string).
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30. Integer marker IDs will generally use less space in the binary format than multibyte strings.
+
+**Note:** Marker ID comparisons are always case-insensitive.
 
 
 ### Reference
@@ -1181,11 +1182,12 @@ Note: Named values must not be broken by whitespace.
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, except where the data is case sensitive:
+A CTE document must be entirely in lower case, except in the following cases:
 
  * String and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \x3d"`
  * URI contents.
  * [Time zones](#time-zones) are case sensitive, and contain uppercase characters.
+ * [Marker IDs](#marker-id) are not case sensitive, but case must still be preserved when converting between formats.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
