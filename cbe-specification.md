@@ -653,6 +653,10 @@ An integer ID:
  * Must not be larger than 64 bits
  * Must be represented as an integer type (not as a whole-number float)
 
+A string ID:
+
+ * Must not be the string representation of an integer value (must not consist only of [0-9])
+
 
 ### Reference
 

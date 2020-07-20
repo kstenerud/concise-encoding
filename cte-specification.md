@@ -362,10 +362,14 @@ Rules:
  * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
  * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain whitespace.
  * Values can contain any amount of whitespace at any point after the first character.
+ * There must not be numeric whitespace between the exponent marker (`e`, `p`) and the first digit of the exponent.
+ * There must not be numeric whitespace between the exponent sign (`+`, `-`) and the first digit of the exponent.
 
 | Value       | Valid Whitespace     | Invalid Whitespace | Notes                                         |
 | ----------- | -------------------- | ------------------ | --------------------------------------------- |
 | `1000000`   | `1__000___000____`   | `_1_000_000`       | `_1_000_000` would be interpreted as a string |
+| `1.5e50`    | `1_._5_e5_0`         | `1.5e_50`          |                                               |
+| `1.5e+50`     `1_._5_e+5_0`        | `1.5e_+50`         |                                               |
 
 Numeric whitespace characters must be ignored when decoding numeric values.
 
@@ -629,8 +633,8 @@ Here is the end sequence. There is no trailing newline in this example.@@@
 Strings must normally be delimited, but this rule can be relaxed if:
 
  * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), plus (`+`), period (`.`), colon (`:`), and slash (`/`).
- * The string doesn't contain unicode characters or sequences that would be mistaken by a human reader for symbol characters in the u+0000 to u+007f range (``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``).
+ * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), colon (`:`), and slash (`/`).
+ * The above two rules also apply to Unicode characters that LOOK similar to the excluded characters for a human (for example u+2052 `⁒`, u+ff11 `１`).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string isn't empty.
 
@@ -1231,8 +1235,11 @@ Examples:
 
 ### Whitespace **must** occur:
 
- * Between values in a list (`[12"a string"]` is invalid).
- * Between key-value pairs in a map (`{1="one"2="two"3="three"4="four"}` is invalid).
+ * Between the [version specifier](#version-specifier) and the first object.
+ * Between the end-of-string identifier and the beginning of the data in a [verbatim string](#verbatim-string).
+ * Between values in a [list](#list) (`["one""two"]` is invalid).
+ * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
+ * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
 
 
 ### Whitespace **must not** occur:
