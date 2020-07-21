@@ -12,6 +12,19 @@ html,body {
   opacity: 0.65;
 }
 
+.spec-icon {
+  opacity: 0.7;
+}
+
+.tags {
+  opacity: 0.5;
+}
+
+.copyright {
+  color: black;
+  padding-bottom: 0.3rem;
+}
+
 .hero-bgimage {
   background-image: url("header-bg.png");
   background-size: contain;
