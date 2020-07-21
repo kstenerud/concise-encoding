@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Concise Encoding</title>
+        <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css" />
+        <link rel="stylesheet" type="text/css" href="main.css">
+    </head>
+    <body>
+        <section class="hero is-info is-medium is-bold hero-bg">
+            <div class="hero-head">
+                <nav class="navbar">
+                    <div class="container">
+                        <div class="navbar-brand is-size-2 has-text-weight-bold">
+                            <figure class="mr-2"><img class="hero-image" src="ce-logo.svg"/></figure>
+                            <span class="mt-2 is-size-3">Concise Encoding</span>
+                            <span class="navbar-burger burger" data-target="navbarMenu">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                        </div>
+                        <div id="navbarMenu" class="navbar-menu align-top">
+                            <div class="navbar-end">
+                                <div class="tabs is-right">
+                                    <ul>
+                                        <li class="is-active"><a>Home</a></li>
+                                        <li><a href="specs.html">Specifications</a></li>
+                                        <li><a href="implementations.html">Implementations</a></li>
+                                    </ul>
+                                    <span class="navbar-item">
+                                        <a class="button is-white is-outlined" href="https://github.com/kstenerud/concise-encoding">
+                                            <span class="icon">
+                                                <i class="fa fa-github"></i>
+                                            </span>
+                                            <span>View Source</span>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            <div class="hero-body">
+                <div class="container has-text-centered">
+                    <h1 class="title">
+                    Next generation encoding format
+                    </h1>
+                </div>
+            </div>
+        </section>
+
+<!--         <div class="box cta">
+            <p class="has-text-centered">
+                <span class="tag is-primary">New</span> Version 1.0 is released!
+            </p>
+        </div>
+ -->
+
+        <section class="container">
+            <div class="columns features">
+                <div class="column is-4">
+                    <div class="card is-shady">
+                        <div class="card-image has-text-centered">
+                            <i class="fa fa-tachometer"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="content">
+                                <h4>Edit Text, Transmit Binary</h4>
+                                <p>Text is for humans, and binary is for machines. Concise Encoding offers 1:1 seamless conversion.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="card is-shady">
+                        <div class="card-image has-text-centered">
+                            <i class="fa fa-magic"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="content">
+                                <h4>Rich Type Support</h4>
+                                <p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</p>
+                                <!-- p><a href="#">Learn more</a></p -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="card is-shady">
+                        <div class="card-image has-text-centered">
+                            <i class="fa fa-plug"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="content">
+                                <h4>Plug and Play</h4>
+                                <p>No schema needed. No special syntax files. No code generation. Just import and go.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="intro column is-8 is-offset-2">
+                <h2 class="title">Another encoding format?</h2><br>
+                <p class="subtitle">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?</p>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="title">Twin Formats</p>
+                    <p class="feat subtitle">Edit Text, Transmit Binary</p>
+                    <div class="content">
+                        <p>Encoded data should be easy to read, easy to edit, as well as low-cost to process and transmit.<p>
+                        <p>Concise Encoding accomplishes this using 1:1 compatible twin formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#concise-binary-encoding">binary</a>.</p>
+                        <p>Keep everything in binary while transmitting and storing on machines, then seamlessly convert to/from text only where a human needs to be involved.</p>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="title">Rich Type Support</p>
+                    <p class="subtitle">All the types you need</p>
+                    <div class="content">
+                        <p>Tired of coercing your data into strings? Concise Encoding supports these types natively:</p>
+                        <ul>
+                            <li>Nil</li>
+                            <li>Bool</li>
+                            <li>Integer (arbitrary size)</li>
+                            <li>Float (arbitrary size)</li>
+                            <li>UUID</li>
+                            <li>Time (date, time, timestamp)</li>
+                            <li>URI</li>
+                            <li>String</li>
+                            <li>Bytes</li>
+                            <li>List</li>
+                            <li>Map</li>
+                            <li>Markup</li>
+                            <li>Reference (for recursive data)</li>
+                            <li>Metadata</li>
+                            <li>Comment</li>
+                            <li>Custom (encapsulate your own)</li>
+                        </ul>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="title">Show Me!</p>
+                    <p class="subtitle">An example of <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">Concise Text Encoding</a></p>
+                    <div class="content">
+                        <pre>
+c1
+// Metadata: _ct is the creation time
+(_ct = 2019-9-1/22:14:01)
+{
+    /* /* Nested comments are allowed */ */
+    // There are no commas in maps and lists
+    (info = "something interesting about a_list")
+    a_list           = [1 2 "a string"]
+    map              = {2=two 3=3000 1=one}
+    string           = "A string value"
+    boolean          = @true
+    "binary int"     = -0b10001011
+    "octal int"      = 0o644
+    "regular int"    = -10000000
+    "hex int"        = 0xfffe0001
+    "decimal float"  = -14.125
+    "hex float"      = 0x5.1ec4p20
+    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
+    date             = 2019-7-1
+    time             = 18:04:00.940231541/E/Prague
+    timestamp        = 2010-7-15/13:28:15.415942344/Z
+    nil              = @nil
+    bytes            = b"10ff389add004f4f91"
+    url              = u"https://example.com/"
+    email            = u"mailto:me@somewhere.com"
+    1.5              = "Keys don't have to be strings"
+    long-string      = `ZZZ
+A backtick induces verbatim processing, which in this case will continue
+until three Z characters are encountered, similar to how here documents in
+bash work.
+You can put anything in here, including double-quote ("), or even more
+backticks (`). Verbatim processing stops at the end sequence, which in this
+case is three Z characters, specified earlier as a sentinel.ZZZ
+    marked_object    = &tag1:{
+                                description = "This map will be referenced later using #tag1"
+                                value = -@inf
+                                child_elements = @nil
+                                recursive = #tag1
+                            }
+    ref1             = #tag1
+    ref2             = #tag1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    // The markup type is good for presentation data
+    html_compatible  = &lt;html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
+                         &lt;body|
+                           Please choose from the following widgets:
+                           &lt;div id=parent style=normal ref-id=1 |
+                             /* Here we use a backtick to induce verbatim processing.
+                              * In this case, "##" is chosen as the ending sequence
+                              */
+                             &lt;script| `##
+                               document.getElementById('parent').insertAdjacentHTML('beforeend',
+                                  '&lt;div id="idChild"&gt; content &lt;/div&gt;');
+                             ##&gt;
+                           &gt;
+                         &gt;
+                       &gt;
+}
+                        </pre>
+                        <a href="specs.html">See the full specs here</a>
+                    </div>
+                </article>
+            </div>
+
+        </section>
+        <footer class="footer">
+            <div class="container">
+                <div class="columns">
+                    <h2>Copyright &copy; 2020 Karl Stenerud</h2>
+                </div>
+
+                <div class="columns content has-text-centered">
+                    <a href="https://danlam.net/">
+                        <div class="tags has-addons pr-1">
+                            <span class="tag is-dark">danlam.net</span>
+                        </div>
+                    </a>
+                    <a href="https://github.com/BulmaTemplates/bulma-templates">
+                        <div class="tags has-addons pr-1">
+                            <span class="tag is-dark">Bulma Templates</span>
+                        </div>
+                    </a>
+                    <a href="https://fontawesome.com/">
+                        <div class="tags has-addons pr-1">
+                            <span class="tag is-dark">Font Awesome</span>
+                        </div>
+                    </a>
+                    <a href="https://www.flaticon.com/authors/pixel-perfect">
+                        <div class="tags has-addons pr-1">
+                            <span class="tag is-dark">Pixel-Perfect Icons</span>
+                        </div>
+                    </a>
+                    <a href="https://www.flaticon.com/authors/freepik">
+                        <div class="tags has-addons pr-1">
+                            <span class="tag is-dark">Freepik Icons</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <script src="bulma.js"></script>
+        </footer>
+    </body>
+</html>
