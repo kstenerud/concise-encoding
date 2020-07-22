@@ -64,9 +64,11 @@ Contents
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
+  - [Verbatim String](#verbatim-string)
   - [URI](#uri)
   - [Bytes](#bytes)
-  - [Custom](#custom)
+  - [Custom (Binary)](#custom-binary)
+  - [Custom (Text)](#custom-text)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -75,8 +77,6 @@ Contents
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
     - [Content String](#content-string)
-    - [Verbatim Sequence](#verbatim-sequence)
-    - [Escape Sequence](#escape-sequence)
     - [Entity Reference](#entity-reference)
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
@@ -207,11 +207,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                     |
 |  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
 |  90 | 144 | String                    | [byte length] [UTF-8 data]                    |
-|  91 | 145 | Bytes                     | [byte length] [binary data]                   |
-|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  93 | 147 | Custom                    | [byte length] [binary data]                   |
-|  94 | 148 | RESERVED                  |                                               |
-|  95 | 149 | RESERVED                  |                                               |
+|  91 | 145 | Verbatim String           | [byte length] [UTF-8 data]                    |
+|  92 | 146 | Bytes                     | [byte length] [binary data]                   |
+|  93 | 147 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
+|  94 | 148 | Custom (Binary)           | [byte length] [binary data]                   |
+|  95 | 149 | Custom (Text)             | [byte length] [UTF-8 data]                    |
 |  96 | 150 | RESERVED                  |                                               |
 |  97 | 151 | Marker                    | Positive integer / string                     |
 |  98 | 152 | Reference                 | Positive integer / string / URI               |
@@ -394,7 +394,7 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
     [82] [octet 0] [octet 1]
     ...
 
-Note: Escape sequences within strings are NOT interpteted; they are passed through as-is.
+Note: CBE has no concept of escape sequences; all strings must be passed through as-is.
 
 Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
 
@@ -405,6 +405,13 @@ Examples:
     [90 2b e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
+### Verbatim String
+
+A verbatim string is a string that must be taken literally (no interpretation) by all layers of the stack. This type exists primarily to maintain parity with CTE, where verbatim strings are sometimes needed for strings that contain many delimiter characters, and would be unwieldly if encoded with escapes. Any verbatim string in one Concise Encoding format must maintain its verbatim status when converted to the other. Decoders must provide a mechanism to inform higher layers of the verbatim status strings.
+
+Verbatim strings are encoded the same way as regular strings, using code `91` instead of `90`.
+
+
 ### URI
 
 Uniform Resource Identifier, which must be valid according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
@@ -413,17 +420,17 @@ The length field contains the byte length (length in octets), NOT the character 
 
 Example:
 
-    [92 ab 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [93 ab 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [92 37 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [93 37 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [92 67 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [93 67 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
@@ -435,14 +442,23 @@ An array of octets representing an arbitrary series of bytes, with no specificat
 
 Examples:
 
-    [91 0b 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [92 0b 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
-### Custom
+### Custom (Binary)
 
-An array of octets representing a user-defined custom data type. The internal encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
+An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-    [93 0b 04 ff 91 aa 2e] = custom data type made up of the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}
+    [94 0b 04 ff 91 aa 2e] = custom data encoded in the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}.
+
+
+### Custom (Text)
+
+A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
+
+The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
+
+    [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded in the string: cplx(2.94+3i)
 
 
 
@@ -521,84 +537,26 @@ The attributes section behaves like a [map](#map), but be aware that conversion 
 
 The contents section behaves similarly to a [list](#list), except that it can only contain:
 
- * [Content strings](#content-string)
+ * [Content strings](#string)
+ * [Verbatim Strings](#verbatim-string)
  * [Comments](#comment)
  * Other markup containers
 
-#### Content String
+Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
 
-A content string is encoded as a [string](#string), with additional processing requirements and restrictions in order to maintain compatibility with [CTE](cte-specification.md#markup):
-
- * An unescaped backtick (`` ` ``) character initiates a [verbatim sequence](#verbatim-sequence).
- * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
- * The characters `` ` ``, `<`, `>`, `\` must be escaped.
-
-##### Verbatim Sequence
-
-A verbatim sequences is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered. The contents must be a valid [string](#string).
-
-A verbatim sequence is composed of the following:
-
- * Backtick (`` ` ``).
- * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
- * The string contents.
- * A second instance of the end-of-string identifier (no whitespace termination necessary).
-
-Example:
-
-```
-discussion = `@@@
-A verbatim string is not constrained like normal strings are. It can contain
-problematic characters like ", `, \ <, > and such.
-
-Three at-symbols (`@`) are being used to mark the end-of-string in this
-example, so we can't use that exact character sequence in the string contents.
-This behavior is very similar to here documents in bash.
-
-The initial newline after the initial at-symbols in this example is not part of
-the string; it terminates the end-of-string identifier. The actual text begins
-at "A verbatim string..." with no leading whitespace.
-
-The `\` at the end of this line is not a continuation: \
-
-Whitespace, including newlines and "leading" whitespace, is also read verbatim.
-        For example, this line really is indented 8 spaces.
-
-Here is the end sequence. There is no trailing newline in this example.@@@
-```
-
-##### Escape Sequence
-
-An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible.
-
-The following escape sequences are valid within a content string:
-
-| Sequence                | Interpretation              |
-| ----------------------- | --------------------------- |
-| `` \` ``                | backtick (u+0060)           |
-| `\<`                    | less-than (u+003c)          |
-| `\>`                    | greater-than (u+003e)       |
-| `\\`                    | backslash (u+005c)          |
-| `\_`                    | non-breaking space (u+00a0) |
-| `\u0001` - `\uffff`     | unicode character           |
-| `\` + entity name + `;` | entity reference            |
-
-A decoder must interpret escape sequences and pass the translated values to the application.
-
-For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name is valid). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
+Note: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
 
 ##### Entity Reference
 
-Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
+The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
-Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
+Note: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Doctype
 
 Use a [metadata map](#metadata-map) entry to specify a doctype:
 
-    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 41] "-//W3C//DTD XHTML 1.0 Strict//EN" [92 63] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
+    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 41] "-//W3C//DTD XHTML 1.0 Strict//EN" [93 63] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
 
 #### Style Sheet
 
@@ -653,10 +611,6 @@ An integer ID:
  * Must not be larger than 64 bits
  * Must be represented as an integer type (not as a whole-number float)
 
-A string ID:
-
- * Must not be the string representation of an integer value (must not consist only of [0-9])
-
 
 ### Reference
 
@@ -666,7 +620,7 @@ A reference begins with the reference type (0x98), followed by either a [marker 
 
 Rules:
 
- * A reference with a [marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
+ * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference must not be used as a map key.
  * Forward references within a document are allowed.
  * Recursive references are allowed.
@@ -683,10 +637,10 @@ Examples:
 
     [98 81 61] = reference to the object marked with ID "a"
 
-    [98 92 25 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [98 93 25 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese"
 
-    [98 92 63 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [98 93 63 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]

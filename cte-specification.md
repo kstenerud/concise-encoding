@@ -74,7 +74,8 @@ Contents
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
   - [Bytes](#bytes)
-  - [Custom](#custom)
+  - [Custom (Binary)](#custom-binary)
+  - [Custom (Text)](#custom-text)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -595,9 +596,11 @@ The only people for me are the mad ones, the ones who are mad to live, mad to ta
 
 #### Verbatim String
 
-A verbatim strings is a section of a string that must not be interpreted in any way (no special interpretation of whitespace, character sequences, escape sequences, backticks etc) until the specified end sequence is encountered (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
+A verbatim string is a string that must be taken literally (no interpretation) by all layers of the stack. This type exists primarily so that CBE can maintain parity with CTE, where verbatim strings are sometimes needed for strings that contain many delimiter characters, and would be unwieldly if encoded with escapes. Any verbatim string in one Concise Encoding format must maintain its verbatim status when converted to the other. Decoders must provide a mechanism to inform higher layers of the verbatim status strings.
 
-A verbatim string is composed of the following:
+Any whitespace, character sequences, escape sequences, backticks etc must not be interpreted while processing a verbatim string, except for discovering the end sequence (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
+
+A verbatim string sequence is composed as follows:
 
  * Backtick (`` ` ``).
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
@@ -633,7 +636,7 @@ Here is the end sequence. There is no trailing newline in this example.@@@
 Strings must normally be delimited, but this rule can be relaxed if:
 
  * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), colon (`:`), and slash (`/`).
+ * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), and colon (`:`).
  * The above two rules also apply to Unicode characters that LOOK similar to the excluded characters for a human (for example u+2052 `⁒`, u+ff11 `１`).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string isn't empty.
@@ -642,7 +645,7 @@ For example, these cannot be unquoted strings:
 
     "String with spaces"
     "String\twith\ttabs\nand\nnewlines"
-    "[special-chars]"
+    "special*chars"
     ".begins-with-a-dot"
     "twenty‐five" /* Using the u+2010 hyphen instead of u+002d */
 
@@ -699,15 +702,30 @@ Example:
     }
 
 
-### Custom
+### Custom (Binary)
 
-An array of octets representing a user-defined custom data type. The internal encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
+An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-Custom data is encoded in the same manner as the [bytes type](#bytes), except that it uses the encoding type `c`.
+Custom binary data is encoded in the same manner as the [bytes type](#bytes), except that it uses the encoding type `c`.
 
 Example:
 
     c"04 ff 91 aa 2e"
+
+
+### Custom (Text)
+
+A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties. Every occurrence of the double-quote `"` or backslash `\` character in the custom data must be escaped with a backslash so that the ending double-quote delimiter can be found.
+
+Decoders must undo any escaping of quotes and backslash characters, and must leave the rest of the string value alone for upper layers to interpret.
+
+The custom text data must be a valid [UTF-8 string](#string), and must not contain escapes (other than for `"` and `\`). The data must not contain control characters or non-printable characters.
+
+Custom text data uses the encoding type `t`.
+
+Example:
+
+    t"cplx(2.94+3i)"
 
 
 
@@ -779,9 +797,8 @@ The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
- * Entity references are initiated with `\` instead of `&`.
- * [Unquoted strings](#unquoted-string) are allowed.
- * Non-string types can be stored in a markup container.
+ * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
+ * Non-string types can be used in attribute names and values, under the same rules as [map](#map) keys and values.
 
 #### Markup Structure
 
@@ -818,6 +835,7 @@ The attributes section behaves like a [map](#map). Be aware that XML and HTML ha
 The contents section behaves similarly to a [list](#list), except that it can only contain:
 
  * [Content strings](#content-string)
+ * [Verbatim strings](#verbatim-string)
  * [Comments](#markup-comment)
  * Other markup containers
 
@@ -836,11 +854,15 @@ A content string is encoded as a [string](#string), with additional processing r
 
 A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
 
+Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
+
+Note: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
+
 #### Escape Sequence
 
-An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible.
+An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible due to the encoding mechanism.
 
-The following escape sequences are recognised inside of a content string (except during [verbatim string](#verbatim-string) processing):
+The following escape sequences are recognised inside of a markup content string:
 
 | Sequence            | Interpretation              |
 | ------------------- | --------------------------- |
@@ -852,18 +874,19 @@ The following escape sequences are recognised inside of a content string (except
 | `` \` ``            | backtick (u+0060)           |
 | `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
+| `` ` ``             | Begin a [verbatim string](#verbatim-string) |
 
-A decoder must interpret escape sequences and pass the translated values to the application.
+A decoder must interpret escape sequences and pass the interpreted values to the application.
 
 The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
 
-For entity references, a decoder must only validate the format (starts with a backslash, ends with a semicolon, name contains valid characters). The entire entity reference sequence (including `\` and `;`) must be passed unchanged to the application.
+When a verbatim string is initiated, the current string is terminated (added to the current [contents section](#content-section)) and a new verbatim string begins. Once the verbatim string completes, it is added to the current contents section and a new regular content string begins.
 
 #### Entity Reference
 
-Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
+The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
-Because the list of allowable entity references in XML and HTML can change independently of this specification, a codec must not interpret entities. Rather, it must pass them unchanged so that the application can deal with them according to whichever spec it adheres to.
+Note: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Doctype
 
@@ -902,8 +925,8 @@ c1
 
         /* MathML: ax^2 + bx + c */
         <mrow |
-          <mi|a> <mo|\InvisibleTimes;> <msup| <mi|x> <mn|2> >
-          <mo|+> <mi|b> <mo|\InvisibleTimes;> <mi|x>
+          <mi|a> <mo|&InvisibleTimes;> <msup| <mi|x> <mn|2> >
+          <mo|+> <mi|b> <mo|&InvisibleTimes;> <mi|x>
           <mo|+> <mi|c>
         >
     >
@@ -933,8 +956,8 @@ This can easily be auto-converted to XML or HTML:
 
         <!-- MathML: ax^2 + bx + c -->
         <mrow>
-          <mi>a</mi> <mo>\InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
-          <mo>+</mo> <mi>b</mi> <mo>\InvisibleTimes;</mo> <mi>x</mi>
+          <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
+          <mo>+</mo> <mi>b</mi> <mo>&InvisibleTimes;</mo> <mi>x</mi>
           <mo>+</mo> <mi>c</mi>
         </mrow>
     </div>
@@ -1002,7 +1025,7 @@ A reference begins with the reference initiator (`#`), followed immediately (wit
 
 Rules:
 
- * A reference with a [marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
+ * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference must not be used as a map key.
  * Forward references within a document are allowed.
  * Recursive references are allowed.
