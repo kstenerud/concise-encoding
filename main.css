@@ -91,7 +91,7 @@ html,body {
   margin-bottom: 2rem;
 }
 .intro {
-  padding: 5rem 0;
+  padding-bottom: 5rem;
   text-align: center;
 }
 .sandbox {
