@@ -191,11 +191,18 @@ The bytes type begins with `b`, and is hex encoded in double-quotes (with whites
 
 ### Custom
 
-The custom type is for encoding custom data types that are not natively supported by CTE.
+The custom types are for encoding custom data types that are not natively supported by Concise Encoding.
 
-The custom type is encoded the same way as the bytes type, except it begins with `c`:
+The custom **binary** type is encoded the same way as the bytes type, except it begins with `c`:
 
-    c"04 ff 91 aa 2e"
+    c"04 f6 28 3c 40 00 00 40 40"
+    = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
+
+The custom **text** type is encoded using type `t`, and must escape all double-quote `"` and backslash `\` characters with a backslash:
+
+    t"cplx(2.94+3i)"
+
+The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
 
 
 

@@ -710,7 +710,8 @@ Custom binary data is encoded in the same manner as the [bytes type](#bytes), ex
 
 Example:
 
-    c"04 ff 91 aa 2e"
+    c"04 f6 28 3c 40 00 00 40 40"
+    = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 
 ### Custom (Text)
@@ -720,6 +721,8 @@ A string value representing a user-defined custom data type. The encoding and in
 Decoders must undo any escaping of quotes and backslash characters, and must leave the rest of the string value alone for upper layers to interpret.
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain escapes (other than for `"` and `\`). The data must not contain control characters or non-printable characters.
+
+The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
 
 Custom text data uses the encoding type `t`.
 
