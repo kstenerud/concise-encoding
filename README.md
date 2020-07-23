@@ -1,15 +1,11 @@
-Concise Encoding
-================
+[Concise Encoding](https://concise-encoding.org/)
+=================================================
 
-Convenience like JSON, in a twin text/binary format with full datatype support.
+The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.
 
- * **No schema necessary.** The simplicity of ad-hoc data, like in JSON & XML.
- * **Rich type support.** No more special code for dates, bytes, large values, etc.
- * **Edit text, transmit binary.** Twin binary and text formats are 1:1 compatible.
- * **Plug and play.** No extra compilation phase or descriptor files.
- * **Metadata.** Out-of-band data? Not a problem!
- * **Recursive/cyclic data.** Recursive structures? Also not a problem!
- * **Fully specified.** No more ambiguities in implementations.
+ * **Edit text, transmit binary.** Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.
+ * **Rich type support.** Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!
+ * **Plug and play.** No schema needed. No special syntax files. No code generation. Just import and go.
 
 
 Contents
@@ -27,7 +23,7 @@ Contents
 Introduction
 ------------
 
-Data communications have become bloated and inefficient. The open, text based formats that supplanted proprietary ones in the 90s have become a liability due to their size, codec inefficiency, and limited type support. While there are now open binary formats, they lack the human readability and editability that made the text formats so successful. We're forced to choose between a wasteful text format and an unreadable binary format. We need something with the benefits of both and the drawbacks of neither.
+Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?
 
 **Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a power, bandwidth, and human friendly way.
 
