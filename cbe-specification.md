@@ -402,7 +402,7 @@ Examples:
 
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
-    [90 2b e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+    [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
 ### Verbatim String
@@ -420,17 +420,17 @@ The length field contains the byte length (length in octets), NOT the character 
 
 Example:
 
-    [93 ab 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [93 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [93 37 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [93 36 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [93 67 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [93 66 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
@@ -442,14 +442,15 @@ An array of octets representing an arbitrary series of bytes, with no specificat
 
 Examples:
 
-    [92 0b 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [92 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### Custom (Binary)
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-    [94 0b 04 ff 91 aa 2e] = custom data encoded in the octets {0x04, 0xff, 0x91, 0xaa, 0x2e}.
+    [94 12 04 f6 28 3c 40 00 00 40 40]
+    = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 
 ### Custom (Text)
@@ -457,6 +458,8 @@ An array of octets representing a user-defined custom data type. The encoding an
 A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
+
+The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
 
     [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded in the string: cplx(2.94+3i)
 
@@ -556,13 +559,13 @@ Note: Text sequences that look like entity references (or any other interpretabl
 
 Use a [metadata map](#metadata-map) entry to specify a doctype:
 
-    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 41] "-//W3C//DTD XHTML 1.0 Strict//EN" [93 63] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
+    [77 8c] "xml-doctype" [7a 84] "html" [86] "PUBLIC" [90 b8] "-//W3C//DTD XHTML 1.0 Strict//EN" [93 63] "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [7b 7b]
 
 #### Style Sheet
 
 Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 
-    [77 8f] "xml-stylesheet" [79 84] "type" [88] "text/xsl" [84] "href" [90 1d] "stylesheet.xsl" [7b 7b]
+    [77 8f] "xml-stylesheet" [79 84] "type" [88] "text/xsl" [84] "href" [8e] "stylesheet.xsl" [7b 7b]
 
 
 
@@ -595,7 +598,7 @@ Rules:
 
 Example:
 
-    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 23 72
+    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {some_value = "repeat this value"}, tagged with ID integer 1
 
@@ -637,10 +640,10 @@ Examples:
 
     [98 81 61] = reference to the object marked with ID "a"
 
-    [98 93 25 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [98 93 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese"
 
-    [98 93 63 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [98 93 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
@@ -695,7 +698,7 @@ The following characters are allowed if they aren't in the above disallowed sect
 
 #### Example
 
-    [76 90 81 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
+    [76 90 80 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
      66 61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34
      20 75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
     = Bug #95512: System fails to start on arm64 unless B latch is set
