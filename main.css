@@ -42,7 +42,7 @@ html,body {
 }
 
 .hero-bgimage {
-  background-image: url("header-bg.png");
+  background-image: url("header-bg.svg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center bottom;
