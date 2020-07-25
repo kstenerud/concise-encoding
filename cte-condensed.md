@@ -161,7 +161,7 @@ The `\` character acts as an escape character, with the following possible seque
 
 #### Verbatim String
 
-A verbatim string begins with a backtick `` ` ``. The next sequence of characters defines the "end sequence", and is terminated by a whitespace character (usually a space or linefeed). From that point, the string continues until that same end sequence is repeated (like here documents in Bash).
+A verbatim string begins with a backtick `` ` ``. The next sequence of characters defines the end-of-string identifier, and is terminated by a whitespace character (space, tab, linefeed, or CR/LF). From that point, the string continues until that same end-of-string identifier is repeated (much like a "here" document in Bash).
 
 Example:
 

@@ -67,8 +67,9 @@ Contents
   - [Verbatim String](#verbatim-string)
   - [URI](#uri)
   - [Bytes](#bytes)
-  - [Custom (Binary)](#custom-binary)
-  - [Custom (Text)](#custom-text)
+  - [Custom Types](#custom-types)
+    - [Binary Encoding](#custom-type-binary-encoding)
+    - [Text Encoding](#custom-type-text-encoding)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -340,7 +341,7 @@ Array data is "chunked", meaning that it is represented as a series of chunks of
 
     [length-1] [chunk-1] [length-2] [chunk-2] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there may be cases where you need multiple chunks, such as when the array length is not known from the start (if it's being built progressively).
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (if it's being built progressively).
 
 #### Chunk Header
 
@@ -407,9 +408,11 @@ Examples:
 
 ### Verbatim String
 
-A verbatim string is a string that must be taken literally (no interpretation) by all layers of the stack. This type exists primarily to maintain parity with CTE, where verbatim strings are sometimes needed for strings that contain many delimiter characters, and would be unwieldly if encoded with escapes. Any verbatim string in one Concise Encoding format must maintain its verbatim status when converted to the other. Decoders must provide a mechanism to inform higher layers of the verbatim status strings.
+A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not. How the higher layers handle such information is implementation dependent.
 
-Verbatim strings are encoded the same way as regular strings, using code `91` instead of `90`.
+Example:
+
+    [91 10 5c 6e 5c 6e 5c 6e 5c 6e] = literal "\n\n\n\n" (not to be interpreted as linefeeds)
 
 
 ### URI
@@ -445,7 +448,15 @@ Examples:
     [92 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
-### Custom (Binary)
+### Custom Types
+
+There are many cases where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to be mapped directly to/from memory for performance reasons.
+
+Although not a requirement, it's generally expected that a custom type implementation would provide both a binary and text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. Note, however, that both encodings can handle both types. The only difference would be human readability in CTE documents, and codec efficiency in CBE documents.
+
+It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding (`t"mytype(1, 2.0, 'three')"`) is usually sufficient.
+
+#### Custom Type (Binary Encoding)
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
@@ -453,15 +464,13 @@ An array of octets representing a user-defined custom data type. The encoding an
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 
-### Custom (Text)
+#### Custom Type (Text Encoding)
 
 A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
 
-The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
-
-    [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded in the string: cplx(2.94+3i)
+    [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
 
 
 
@@ -472,7 +481,7 @@ Container Types
 
 A list of objects. Lists can contain any mix of any type, including other containers.
 
-By default, a list is ordered and may contain duplicate values, unless otherwise negotiated between all parties (for example via a schema).
+By default, a list is ordered and can contain duplicate values unless otherwise negotiated between all parties (for example via a schema).
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
@@ -530,11 +539,11 @@ Unlike other containers, a markup container requires two end-of-container marker
 
 #### Markup Tag Name
 
-Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that conversion to XML and HTML may be problematic with some types.
+Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that conversion to XML and HTML might be problematic with some types.
 
 #### Attributes Section
 
-The attributes section behaves like a [map](#map), but be aware that conversion to XML and HTML may be problematic with some types.
+The attributes section behaves like a [map](#map), but be aware that conversion to XML and HTML might be problematic with some types.
 
 #### Contents Section
 
@@ -617,7 +626,7 @@ An integer ID:
 
 ### Reference
 
-A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference type (0x98), followed by either a [marker ID](#marker-id) or a [URI](#uri).
 

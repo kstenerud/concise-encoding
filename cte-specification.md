@@ -21,7 +21,8 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | String                                      | `"A string"`                            |
 | [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
 | Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`            |
-| Custom Type                                 | `c"9f 77 4a 1c"`                        |
+| Custom Type (binary encoding)               | `c"04 f6 28 3c 40 00 00 40 40"`         |
+| Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
 | Markup                                      | `<span style=bold| Blah blah>`          |
@@ -74,8 +75,9 @@ Contents
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
   - [Bytes](#bytes)
-  - [Custom (Binary)](#custom-binary)
-  - [Custom (Text)](#custom-text)
+  - [Custom Types](#custom-types)
+    - [Binary Encoding](#custom-type-binary-encoding)
+    - [Text Encoding](#custom-type-text-encoding)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -306,7 +308,7 @@ A floating point number is composed of a whole part and a fractional part, separ
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character may be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character can be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
@@ -316,12 +318,12 @@ There is no maximum number of significant digits or exponent digits, but care sh
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character may be omitted if it's positive. Values should be normalized.
+Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character can be omitted if it's positive. Values should be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
 
-Base-16 notation should only be used to support legacy systems that can't handle decimal rounded values. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Base-10 floating point notation should be preferred over base-16 notation. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 #### Floating Point Rules
 
@@ -455,7 +457,7 @@ The following special pseudo-areas can also be used. They do not contain a locat
 
 The global coordinates method uses the global position to hundredths of degrees, giving a resolution of about 1km at the equator. Locations are written as latitude and longitude, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
 
-This method has the advantage of being unambiguous, which can be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not easily decodable by humans.
+This method has the advantage of being unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not easily decodable by humans.
 
 ##### Examples
 
@@ -551,7 +553,7 @@ Unlike other array types, strings are not prefixed with an encoding type, and ar
 
 A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, with special processing whenever an escape sequence occurs.
 
-The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are allowed, and must be in lower case:
+The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are recognized, and must be in lower case:
 
 | Sequence            | Interpretation           |
 | ------------------- | ------------------------ |
@@ -565,6 +567,10 @@ The backslash character (`\`) initiates an escape sequence inside a doube-quote 
 | `\/`                | slash (u+002f)           |
 | `\\`                | backslash (u+005c)       |
 | `\u0001` - `\uffff` | unicode character        |
+
+Unrecognized escape sequences are not allowed.
+
+A decoder must interpret escape sequences and pass the transformed string to the next layer.
 
 Escape sequences aid [human editability](#human-editability), and can be used to avoid edge cases in [comments](#comment).
 
@@ -596,15 +602,13 @@ The only people for me are the mad ones, the ones who are mad to live, mad to ta
 
 #### Verbatim String
 
-A verbatim string is a string that must be taken literally (no interpretation) by all layers of the stack. This type exists primarily so that CBE can maintain parity with CTE, where verbatim strings are sometimes needed for strings that contain many delimiter characters, and would be unwieldly if encoded with escapes. Any verbatim string in one Concise Encoding format must maintain its verbatim status when converted to the other. Decoders must provide a mechanism to inform higher layers of the verbatim status strings.
+A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not. How the higher layers handle such information is implementation dependent.
 
-Any whitespace, character sequences, escape sequences, backticks etc must not be interpreted while processing a verbatim string, except for discovering the end sequence (similar to how here-documents work in Bash). The contents must be a valid [string](#string).
-
-A verbatim string sequence is composed as follows:
+CTE encodes verbatim strings in a fashion similar to "here" documents in Bash, composed as follows:
 
  * Backtick (`` ` ``).
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A single whitespace sequence to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * A whitespace terminator to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-string identifier (no whitespace termination necessary).
 
@@ -614,10 +618,10 @@ Example:
 discussion = `@@@
 A verbatim string is not constrained like normal strings are. It can contain
 problematic characters like ", `, \ <, > and such, which are interpreted
-literally.
+literally ("\n" does not represent "newline" in this text).
 
 Three at-symbols (`@`) are being used to mark the end-of-string in this
-example, so we can't use that exact character sequence in the string contents.
+example, so that exact character sequence must not occur in the string contents.
 
 The initial newline after the initial at-symbols in this example is not part of
 the string; it terminates the end-of-string identifier. The actual text begins
@@ -702,27 +706,41 @@ Example:
     }
 
 
-### Custom (Binary)
+### Custom Types
+
+There are many cases where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to be mapped directly to/from memory for performance reasons.
+
+Although not a requirement, it's generally expected that a custom type implementation would provide both a binary and text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. Note, however, that both encodings can handle both types. The only difference would be human readability in CTE documents, and codec efficiency in CBE documents.
+
+It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding (`t"mytype(1, 2.0, 'three')"`) is usually sufficient.
+
+#### Custom Type (Binary Encoding)
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-Custom binary data is encoded in the same manner as the [bytes type](#bytes), except that it uses the encoding type `c`.
+Custom binary data is encoded in hex (in the same manner as the [bytes type](#bytes)), and uses the encoding type `c`.
 
 Example:
 
     c"04 f6 28 3c 40 00 00 40 40"
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
+#### Custom Type (Text Encoding)
 
-### Custom (Text)
+A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
 
-A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties. Every occurrence of the double-quote `"` or backslash `\` character in the custom data must be escaped with a backslash so that the ending double-quote delimiter can be found.
+The backslash character (`\`) initiates an escape sequence. The following escape sequences are recognized:
 
-Decoders must undo any escaping of quotes and backslash characters, and must leave the rest of the string value alone for upper layers to interpret.
+| Sequence            | Interpretation           |
+| ------------------- | ------------------------ |
+| `\"`                | double quote (u+0022)    |
+| `\\`                | backslash (u+005c)       |
 
-The custom text data must be a valid [UTF-8 string](#string), and must not contain escapes (other than for `"` and `\`). The data must not contain control characters or non-printable characters.
+Unrecognized escape sequences are not allowed.
 
-The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
+A decoder must interpret escape sequences and pass the transformed string to the custom type decoder.
+
+The custom text data must be a valid [UTF-8 string](#string). The data must not contain control characters or non-printable characters.
 
 Custom text data uses the encoding type `t`.
 
@@ -823,7 +841,7 @@ Illustration of markup encodings (Note: `|` characters are escaped with `\` here
 |     N      |    Y     | `<span\|Some text here>`                                   |
 |     Y      |    Y     | `<ul id=mylist style=boring \| <li\|first> <li\|second> >` |
 
-Although it may look a little different on the surface, the internal structure is the same, and can trivially be converted to/from XML & HTML.
+Although it might look a little different on the surface, the internal structure is the same, and could trivially be converted to/from XML & HTML.
 
 #### Markup Tag Name
 
@@ -879,7 +897,9 @@ The following escape sequences are recognised inside of a markup content string:
 | `\u0001` - `\uffff` | unicode character           |
 | `` ` ``             | Begin a [verbatim string](#verbatim-string) |
 
-A decoder must interpret escape sequences and pass the interpreted values to the application.
+Unrecognized escape sequences are not allowed.
+
+A decoder must interpret escape sequences and pass the transformed string to the next layer.
 
 The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
 
@@ -1022,7 +1042,7 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
 ### Reference
 
-A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
 
 A reference begins with the reference initiator (`#`), followed immediately (with no whitespace) by either a [marker ID](#marker-id) or a [URI](#uri).
 
@@ -1126,9 +1146,9 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You can mitigate this edge case by preventing all occurrences of `/*` and `*/` that don't represent comment delimiters:
+Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You could mitigate this edge case by preventing all occurrences of `/*` and `*/` that don't represent comment delimiters:
 
-* In [quoted strings](#quoted-string) and [markup contents](#content-string), you can break up the text using escape sequences.
+* In [quoted strings](#quoted-string) and [markup contents](#content-string), you could break up the text using escape sequences.
 * [Verbatim strings](#verbatim-string) do not allow escape sequences, so you must either avoid putting such sequences in, or never comment such sections out using multiline comments (single line comments will work, though).
 
 #### Comment String Character Restrictions
