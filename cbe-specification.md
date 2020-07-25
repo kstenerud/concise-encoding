@@ -410,6 +410,8 @@ Examples:
 
 A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not. How the higher layers handle such information is implementation dependent.
 
+The length field holds the byte length (length in octets), NOT the character length.
+
 Example:
 
     [91 10 5c 6e 5c 6e 5c 6e 5c 6e] = literal "\n\n\n\n" (not to be interpreted as linefeeds)
@@ -469,6 +471,8 @@ An array of octets representing a user-defined custom data type. The encoding an
 A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
+
+The length field holds the byte length (length in octets), NOT the character length.
 
     [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
 
