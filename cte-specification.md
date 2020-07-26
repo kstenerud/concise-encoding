@@ -539,11 +539,17 @@ All arrays (except for strings) begin with an encoding type, followed by the dat
 
 ### String
 
-An array of UTF-8 encoded bytes. Strings must not contain BOM (u+feff), NUL (u+0000), or escape sequences that evaluate to those.
+An array of UTF-8 encoded bytes.
+
+#### String content rules
+
+A string's content must not contain the NUL character (u+0000), reserved characters, or escape sequences that evaluate to those. Control characters and non-printable characters must be escaped where escape sequences are allowed, and must not be present at all where escape sequences are disallowed.
 
 Strings must always resolve to complete, valid unicode sequences (for example, no unpaired surrogates) when fully decoded (i.e. after evaluating all escape sequences).
 
-Unlike other array types, strings are not prefixed with an encoding type, and are delimited differently:
+#### Forms
+
+Unlike other array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
 
  * [Quoted sequence](#quoted-string)
  * [Verbatim sequence](#verbatim-string)
@@ -735,12 +741,16 @@ The backslash character (`\`) initiates an escape sequence. The following escape
 | ------------------- | ------------------------ |
 | `\"`                | double quote (u+0022)    |
 | `\\`                | backslash (u+005c)       |
+| `\t`                | horizontal tab (u+0009)  |
+| `\n`                | linefeed (u+000a)        |
+| `\r`                | carriage return (u+000d) |
+| `\u0001` - `\uffff` | unicode character        |
 
 Unrecognized escape sequences are not allowed.
 
 A decoder must interpret escape sequences and pass the transformed string to the custom type decoder.
 
-The custom text data must be a valid [UTF-8 string](#string). The data must not contain control characters or non-printable characters.
+The custom text contents must follow [string content rules](#string-content-rules).
 
 Custom text data uses the encoding type `t`.
 
@@ -868,7 +878,7 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 #### Content String
 
-A content string is encoded as a [string](#string), with additional processing requirements and restrictions:
+A markup content string must follow [string content rules](#string-content-rules), with additional processing rules:
 
  * An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string).
  * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
@@ -1334,7 +1344,7 @@ Invalid Encodings
 
 Invalid encodings must not be used, as they will likely cause problems or even API violations in certain languages. A parser must halt processing when invalid data is detected.
 
- * A CTE document must not contain the NUL (u+000) character, the BOM (u+feff) character, or any invalid characters.
+ * A CTE document must not contain the NUL (u+000) character, reserved characters, or any invalid characters.
  * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
  * Times must be valid. For example: `2000-2-30`, while technically encodable, is not allowed.
  * Containers must be properly terminated. Extra container endings (`}`, `]`, etc) are invalid.
