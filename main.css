@@ -3,6 +3,11 @@ html,body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
+.is-64x64 {
+  font-size: 64px;
+  color: black;
+}
+
 .release-number {
   font-weight: bold;
 }
