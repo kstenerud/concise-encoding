@@ -903,7 +903,6 @@ The following escape sequences are recognised inside of a markup content string:
 | `\>`                | greater-than (u+003e)       |
 | `\\`                | backslash (u+005c)          |
 | `` \` ``            | backtick (u+0060)           |
-| `\_`                | non-breaking space (u+00a0) |
 | `\u0001` - `\uffff` | unicode character           |
 | `` ` ``             | Begin a [verbatim string](#verbatim-string) |
 
