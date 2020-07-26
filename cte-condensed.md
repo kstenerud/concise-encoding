@@ -3,6 +3,33 @@ Concise Text Encoding: Quick Description
 
 As the [CTE specification](cte-specification.md) has become rather dense, this document is provided as a simpler description of how CTE documents are structured. Many details are glossed over, and so this document should not be considered a replacement for the [official specification](cte-specification.md).
 
+Concise Text Encoding (CTE) is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It aims to support 80% of data use cases in a human friendly way. Think JSON, but with 1:1 compatible twin binary and text formats and rich type support.
+
+CTE natively supports the following types:
+
+| Type                                        | Example                                 |
+| ------------------------------------------- | --------------------------------------- |
+| Nil                                         | `@nil`                                  |
+| Boolean                                     | `@true`                                 |
+| Integer                                     | `-1_000_000_000_000_000`                |
+| Float                                       | `4.8255`                                |
+| [UUID](https://tools.ietf.org/html/rfc4122) | `@123e4567-e89b-12d3-a456-426655440000` |
+| Time                                        | `2019-7-15/18:04:00/E/Rome`             |
+| String                                      | `"A string"`                            |
+| [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
+| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`            |
+| Custom Type (binary encoding)               | `c"04 f6 28 3c 40 00 00 40 40"`         |
+| Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
+| List                                        | `[1 2 3 4]`                             |
+| Map                                         | `{one=1 two=2}`                         |
+| Markup                                      | `<span style=bold| Blah blah>`          |
+| Metadata Map                                | `(_id=12345)`                           |
+| Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
+| Comment                                     | `// A comment`                          |
+| Multiline Comment                           | `/* A comment */`                       |
+
+CTE is the text-based counterpart to [Concise Binary Encoding](cbe-specification.md).
+
 
 
 General Layout

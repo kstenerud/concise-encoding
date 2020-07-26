@@ -1,7 +1,7 @@
 [Concise Encoding](https://concise-encoding.org/)
 =================================================
 
-The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.
+The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats and rich type support.
 
  * **Edit text, transmit binary.** Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.
  * **Rich type support.** Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!

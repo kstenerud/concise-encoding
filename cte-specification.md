@@ -1,13 +1,11 @@
 Concise Text Encoding
 =====================
 
-Concise Text Encoding (CTE) is a general purpose, human friendly, compact representation of semi-structured hierarchical data. CTE is the next step in the evolution of ad-hoc hierarchical data formats, aiming to support 80% of data use cases in a human friendly way:
+Concise Text Encoding (CTE) is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It aims to support 80% of data use cases in a human friendly way:
 
- * There are two formats: [binary-based CBE](cbe-specification.md) and text-based CTE.
- * 1:1 type compatibility between formats. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
- * Documents and specifications are versioned to support future expansion.
+ * There are two formats ([binary-based CBE](cbe-specification.md) and text-based CTE), which are 1:1 seamlessly compatible. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
  * Supports metadata and comments.
- * Supports references to other parts of the document or to other documents.
+ * Supports cyclic and recursive data.
  * Supports the most commonly used data types:
 
 | Type                                        | Example                                 |
@@ -30,6 +28,8 @@ Concise Text Encoding (CTE) is a general purpose, human friendly, compact repres
 | Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
 | Comment                                     | `// A comment`                          |
 | Multiline Comment                           | `/* A comment */`                       |
+
+CTE is the text-based counterpart to [Concise Binary Encoding](cbe-specification.md).
 
 
 
