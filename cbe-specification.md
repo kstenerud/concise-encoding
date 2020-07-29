@@ -76,8 +76,7 @@ Contents
     - [Tag Name](#markup-tag-name)
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
-    - [Content String](#content-string)
-    - [Entity Reference](#entity-reference)
+      - [Entity Reference](#entity-reference)
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
@@ -381,7 +380,9 @@ In this case, the first chunk is 14 bytes long and has a continuation bit of 1. 
 
 ### String
 
-Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark (u+feff) or the NUL (u+0000) character.
+Strings are specialized byte arrays, containing the UTF-8 representation of a string. Strings must not contain a byte order mark.
+
+Support for the NUL character (u+0000) is implementation defined due to potential issues with null string delimiters in some languages and platforms. It should be avoided in general for safety and portability. Support for NUL must not be assumed.
 
 The length field holds the byte length (length in octets), NOT the character length.
 

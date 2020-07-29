@@ -70,6 +70,8 @@ Contents
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
   - [String](#string)
+    - [String Content Rules](#string-content-rules)
+    - [Unicode Escape Sequences](#unicode-escape-sequences)
     - [Quoted String](#quoted-string)
     - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
@@ -86,10 +88,10 @@ Contents
     - [Tag Name](#markup-tag-name)
     - [Attributes Section](#attributes-section)
     - [Contents Section](#contents-section)
-    - [Container End](#container-end)
-    - [Content String](#content-string)
-    - [Escape Sequence](#escape-sequence)
-    - [Entity Reference](#entity-reference)
+      - [Container End](#container-end)
+      - [Content String](#content-string)
+      - [Content Escape Sequence](#content-escape-sequence)
+      - [Entity Reference](#entity-reference)
     - [Doctype](#doctype)
     - [Style Sheet](#style-sheet)
     - [Markup Comment](#markup-comment)
@@ -214,12 +216,12 @@ The top-level object can also be a non-container type, for example:
 
 ### Human Editability
 
-A CTE document must be editable by a human. This means that it must contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are permanently marked as non-characters, must not be present in the document. Unpaired surrogates are not allowed.
+A CTE document must be editable by a human. This means that it must contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are reserved or permanently marked as non-characters, must not be present in the document.
 
 In the spirit of human editability:
 
- * Implementations and document creators should avoid easily confused or otherwise difficult to use characters, especially in identifiers.
- * Implementations should avoid outputting characters that editors tend to convert automatically, in places where those characters have significance. The tab character and line ending characters come to mind.
+ * Implementations and document creators should avoid easily confused or otherwise difficult to use characters outside of quoted strings.
+ * Implementations should avoid outputting characters that editors tend to convert automatically.
  * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
  * If a certain character is likely to be confusing or problematic, it's encouraged to use an escape sequence instead.
@@ -231,7 +233,7 @@ All CTE documents must begin with a version specifier, which must not be precede
 
 The version specifier is the lowercase letter `c` followed immediately by a positive integer representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
 
-Note: Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
+Note: Because [CBE](cbe-specification.md) places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any printable ASCII characters that another text encoding format might use.
 
 #### Examples
 
@@ -539,21 +541,34 @@ All arrays (except for strings) begin with an encoding type, followed by the dat
 
 ### String
 
-An array of UTF-8 encoded bytes.
-
-#### String content rules
-
-A string's content must not contain the NUL character (u+0000), reserved characters, or escape sequences that evaluate to those. Control characters and non-printable characters must be escaped where escape sequences are allowed, and must not be present at all where escape sequences are disallowed.
-
-Strings must always resolve to complete, valid unicode sequences (for example, no unpaired surrogates) when fully decoded (i.e. after evaluating all escape sequences).
-
-#### Forms
-
-Unlike other array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
+An array of UTF-8 encoded bytes. Unlike other array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
 
  * [Quoted sequence](#quoted-string)
  * [Verbatim sequence](#verbatim-string)
  * [Unquoted string](#unquoted-string)
+
+#### String Content Rules
+
+Following [human editability](#human-editability), a string must not contain control characters or non-printable characters unless encoded as [unicode escape sequences](#unicode-escape-sequences).
+
+Support for the NUL character (u+0000, which must be escaped because it's a control character) is implementation defined due to potential issues with null string delimiters in some languages and platforms. It should be avoided in general for safety and portability. Support for NUL must not be assumed.
+
+Strings must always resolve to complete, valid UTF-8 sequences when fully decoded (i.e. after evaluating all escape sequences).
+
+#### Unicode Escape Sequences
+
+Unicode characters can in some string contexts be encoded using unicode escape sequences, which begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
+
+Examples:
+
+| Sequence  | Digits | Character     |
+| --------- | ------ | ------------- |
+| `\0`      | 0      | NUL           |
+| `\16`     | 1      | ACK           |
+| `\27f`    | 2      | DEL           |
+| `\3101`   | 3      | ā  (a macron) |
+| `\42191`  | 4      | ↑  (up arrow) |
+| `\51f415` | 5      | 🐕 (dog)      |
 
 #### Quoted String
 
@@ -561,20 +576,20 @@ A quoted string encloses the string contents within double-quote delimiters (for
 
 The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are recognized, and must be in lower case:
 
-| Sequence            | Interpretation           |
-| ------------------- | ------------------------ |
-| `\`, u+000a         | continuation             |
-| `\`, u+000d, u+000a | continuation             |
-| `\t`                | horizontal tab (u+0009)  |
-| `\n`                | linefeed (u+000a)        |
-| `\r`                | carriage return (u+000d) |
-| `\"`                | double quote (u+0022)    |
-| `\*`                | asterisk (u+002a)        |
-| `\/`                | slash (u+002f)           |
-| `\\`                | backslash (u+005c)       |
-| `\u0001` - `\uffff` | unicode character        |
+| Sequence                                    | Interpretation                |
+| ------------------------------------------- | ----------------------------- |
+| `\`, u+000a                                 | [continuation](#continuation) |
+| `\`, u+000d, u+000a                         | [continuation](#continuation) |
+| `\t`                                        | horizontal tab (u+0009)       |
+| `\n`                                        | linefeed (u+000a)             |
+| `\r`                                        | carriage return (u+000d)      |
+| `\"`                                        | double quote (u+0022)         |
+| `\*`                                        | asterisk (u+002a)             |
+| `\/`                                        | slash (u+002f)                |
+| `\\`                                        | backslash (u+005c)            |
+| [Unicode escape](#unicode-escape-sequences) | Unicode character             |
 
-Unrecognized escape sequences are not allowed.
+Unrecognized escape sequences are invalid.
 
 A decoder must interpret escape sequences and pass the transformed string to the next layer.
 
@@ -595,9 +610,9 @@ Example:
 
 ```
     "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
-    mad to be saved, desirous of everything at the same time, the ones who never yawn or \
-    say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
-    exploding like spiders across the stars."
+     mad to be saved, desirous of everything at the same time, the ones who never yawn or \
+     say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
+     exploding like spiders across the stars."
 ```
 
 The above string must be interpreted as:
@@ -737,16 +752,16 @@ A string value representing a user-defined custom data type. The encoding and in
 
 The backslash character (`\`) initiates an escape sequence. The following escape sequences are recognized:
 
-| Sequence            | Interpretation           |
-| ------------------- | ------------------------ |
-| `\"`                | double quote (u+0022)    |
-| `\\`                | backslash (u+005c)       |
-| `\t`                | horizontal tab (u+0009)  |
-| `\n`                | linefeed (u+000a)        |
-| `\r`                | carriage return (u+000d) |
-| `\u0001` - `\uffff` | unicode character        |
+| Sequence                                    | Interpretation           |
+| ------------------------------------------- | ------------------------ |
+| `\"`                                        | double quote (u+0022)    |
+| `\\`                                        | backslash (u+005c)       |
+| `\t`                                        | horizontal tab (u+0009)  |
+| `\n`                                        | linefeed (u+000a)        |
+| `\r`                                        | carriage return (u+000d) |
+| [Unicode escape](#unicode-escape-sequences) | Unicode character        |
 
-Unrecognized escape sequences are not allowed.
+Unrecognized escape sequences are invalid.
 
 A decoder must interpret escape sequences and pass the transformed string to the custom type decoder.
 
@@ -872,16 +887,16 @@ The contents section behaves similarly to a [list](#list), except that it can on
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` character).
 
-#### Container End
+##### Container End
 
 The markup container ends when an unescaped `>` character is encountered while processing a [content string](#content-string). There are no separate "end tags" or slash character encoding like in XML.
 
-#### Content String
+##### Content String
 
 A markup content string must follow [string content rules](#string-content-rules), with additional processing rules:
 
  * An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string).
- * An unescaped backslash (`\`) character initiates an [escape sequence](#escape-sequence).
+ * An unescaped backslash (`\`) character initiates an [escape sequence](#content-escape-sequence).
 
 A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
 
@@ -889,24 +904,24 @@ Whitespace in a markup content string is handled the same as in [XML](https://ww
 
 Note: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
 
-#### Escape Sequence
+##### Content Escape Sequence
 
 An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible due to the encoding mechanism.
 
 The following escape sequences are recognised inside of a markup content string:
 
-| Sequence            | Interpretation              |
-| ------------------- | --------------------------- |
-| `\*`                | asterisk (u+002a)           |
-| `\/`                | slash (u+002f)              |
-| `\<`                | less-than (u+003c)          |
-| `\>`                | greater-than (u+003e)       |
-| `\\`                | backslash (u+005c)          |
-| `` \` ``            | backtick (u+0060)           |
-| `\u0001` - `\uffff` | unicode character           |
-| `` ` ``             | Begin a [verbatim string](#verbatim-string) |
+| Sequence                                    | Interpretation                              |
+| ------------------------------------------- | ------------------------------------------- |
+| `\*`                                        | asterisk (u+002a)                           |
+| `\/`                                        | slash (u+002f)                              |
+| `\<`                                        | less-than (u+003c)                          |
+| `\>`                                        | greater-than (u+003e)                       |
+| `\\`                                        | backslash (u+005c)                          |
+| `` \` ``                                    | backtick (u+0060)                           |
+| [Unicode escape](#unicode-escape-sequences) | Unicode character                           |
+| `` ` ``                                     | Begin a [verbatim string](#verbatim-string) |
 
-Unrecognized escape sequences are not allowed.
+Unrecognized escape sequences are invalid.
 
 A decoder must interpret escape sequences and pass the transformed string to the next layer.
 
@@ -914,7 +929,7 @@ The `*` and `/` characters can be escaped to avoid edge cases with [comments](#c
 
 When a verbatim string is initiated, the current string is terminated (added to the current [contents section](#content-section)) and a new verbatim string begins. Once the verbatim string completes, it is added to the current contents section and a new regular content string begins.
 
-#### Entity Reference
+##### Entity Reference
 
 The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
@@ -1343,8 +1358,9 @@ Invalid Encodings
 
 Invalid encodings must not be used, as they will likely cause problems or even API violations in certain languages. A parser must halt processing when invalid data is detected.
 
- * A CTE document must not contain the NUL (u+000) character, reserved characters, or any invalid characters.
- * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
+ * A CTE document must not contain byte-order marks, reserved characters, or any invalid characters.
+ * All UTF-8 sequences must be complete and valid.
+ * Control characters, non-printable characters, and zero-width characters must not be present in unescaped form.
  * Times must be valid. For example: `2000-2-30`, while technically encodable, is not allowed.
  * Containers must be properly terminated. Extra container endings (`}`, `]`, etc) are invalid.
  * All map keys must have corresponding values. A key with a missing value is invalid.

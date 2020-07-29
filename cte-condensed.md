@@ -184,7 +184,7 @@ The `\` character acts as an escape character, with the following possible seque
 | `\r`                | carriage return (u+000d)        |
 | `\n`                | linefeed (u+000a)               |
 | `\t`                | horizontal tab (u+0009)         |
-| `\u0001` - `\uffff` | unicode character               |
+| `\0` - `\5fffff`    | unicode character               |
 
 #### Verbatim String
 
@@ -310,7 +310,7 @@ The following escape sequences are allowed in strings:
 | `\\`                | backslash (u+005c)          |
 | `` \` ``            | backtick (u+0060)           |
 | `\_`                | non-breaking space (u+00a0) |
-| `\u0001` - `\uffff` | unicode character           |
+| `\0` - `\5fffff`    | unicode character           |
 
 Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
 
