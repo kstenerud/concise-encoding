@@ -1227,7 +1227,7 @@ Other Types
 
 Denotes the absence of data. Some languages implement this as the `null` value.
 
-Note: Use nil judiciously and sparingly, as some languages might have restrictions on how and if it can be used.
+Nil is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and so the handling of the nil value is implementation defined. A decoder must consume a nil value, but how (and if) it stores the value is up to the implementation. It's advised to avoid using nil if at all possible.
 
 Example:
 
