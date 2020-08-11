@@ -173,10 +173,10 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  6d | 109 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
 |  6e | 110 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]      |
 |  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
-|  70 | 112 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
-|  71 | 113 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
-|  72 | 114 | UUID                      | [128 bits of data, big endian]                |
-|  73 | 115 | RESERVED                  |                                               |
+|  70 | 112 | Binary Float (16 bit)     | [16-bit [bfloat16](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf), little endian] |
+|  71 | 113 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
+|  72 | 114 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
+|  73 | 115 | UUID                      | [128 bits of data, big endian]                |
 |  74 | 116 | RESERVED                  |                                               |
 |  75 | 117 | RESERVED                  |                                               |
 |  76 | 118 | Comment                   | (String or sub-comment) ... End of Container  |
@@ -281,12 +281,13 @@ Example:
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order.
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format, or in 16-bit [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) format, in little endian byte order.
 
 Examples:
 
-    [70 00 e2 af 44] = 0x1.5fc4p10
-    [71 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p100
+    [70 af 44] = 0x1.5e4p+10
+    [71 00 e2 af 44] = 0x1.5fc4p+10
+    [72 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p+100
 
 
 ### UUID
@@ -295,7 +296,7 @@ A [universally unique identifier](https://en.wikipedia.org/wiki/Universally_uniq
 
 Example:
 
-    [72 12 3e 45 67 e8 9b 12 d3 a4 56 42 66 55 44 00 00] = UUID 123e4567-e89b-12d3-a456-426655440000
+    [73 12 3e 45 67 e8 9b 12 d3 a4 56 42 66 55 44 00 00] = UUID 123e4567-e89b-12d3-a456-426655440000
 
 
 
