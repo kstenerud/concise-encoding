@@ -8,24 +8,24 @@ Concise Binary Encoding (CBE) is a general purpose, human and machine friendly, 
  * Supports cyclic and recursive data.
  * Supports the most commonly used data types:
 
-| Type      | Description                                          |
-| --------- | ---------------------------------------------------- |
-| Nil       | No data                                              |
-| Boolean   | True or false                                        |
-| Integer   | Positive or negative integers                        |
-| Float     | Decimal or binary floating point                     |
-| UUID      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122) |
-| Time      | Date, time, or timestamp                             |
-| String    | UTF-8 string of arbitrary size                       |
-| URI       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
-| Bytes     | Array of octets                                      |
-| List      | List of objects                                      |
-| Map       | Maps keyable objects to other objects                |
-| Markup    | Data structure similar to XML                        |
-| Reference | References a previously defined object               |
-| Metadata  | Data about other data                                |
-| Comment   | User definable comment                               |
-| Custom    | User-defined data type                               |
+| Type        | Description                                          |
+| ----------- | ---------------------------------------------------- |
+| Nil         | No data                                              |
+| Boolean     | True or false                                        |
+| Integer     | Positive or negative integers                        |
+| Float       | Decimal or binary floating point                     |
+| UUID        | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122) |
+| Time        | Date, time, or timestamp                             |
+| String      | UTF-8 string of arbitrary size                       |
+| URI         | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
+| Typed Array | Array of type with fixed width                       |
+| List        | List of objects                                      |
+| Map         | Maps keyable objects to other objects                |
+| Markup      | Data structure similar to XML                        |
+| Reference   | References a previously defined object               |
+| Metadata    | Data about other data                                |
+| Comment     | User definable comment                               |
+| Custom      | User-defined data type                               |
 
 CBE is the binary-based counterpart to [Concise Text Encoding](cte-specification.md).
 
@@ -488,7 +488,9 @@ A typed array is structured as follows:
 | Elements     | The elements themselves                |
 | ...          | Possibly more chunks                   |
 
-Element byte order is according to the element type (big endian for UUID, little endian for everything else).
+The length in each chunk header is the byte length, not the element length. The total length of the array must be a multiple of the array element width.
+
+Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
 For integer types, the "sign" of the type determines whether the elements are signed or unsigned. "Negative" types are interpreted as signed (two's complement), and "positive" types are interpreted as unsigned.
 
