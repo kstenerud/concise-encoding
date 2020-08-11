@@ -163,8 +163,8 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 | ... | ... | ...                       |                                               |
 |  64 | 100 | Integer value 100         |                                               |
 |  65 | 101 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  66 | 102 | Positive Integer          | [[unsigned LEB128]](https://en.wikipedia.org/wiki/LEB128) |
-|  67 | 103 | Negative Integer          | [[unsigned LEB128]](https://en.wikipedia.org/wiki/LEB128) |
+|  66 | 102 | Positive Integer          | [byte length] [little endian bytes]           |
+|  67 | 103 | Negative Integer          | [byte length] [little endian bytes]           |
 |  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
 |  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
 |  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
@@ -239,7 +239,11 @@ Examples:
 
 ### Integer
 
-Integers can be positive or negative, and are encoded in three ways:
+Integers can be positive or negative, and are encoded in three possible ways:
+
+#### Small Int
+
+Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
 
 #### Fixed Width
 
@@ -247,11 +251,9 @@ Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (st
 
 #### Variable width
 
-Variable width integers are encoded as [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). The type field determines the sign.
+Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The type field determines the sign.
 
-#### Small Int
-
-Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
+    [length] [byte 1 (low)] [byte 2] ... [byte x (high)]
 
 #### Examples:
 
@@ -261,14 +263,15 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
     [68 7f] = 127
     [68 ff] = 255
     [69 ff] = -255
-    [66 c0 84 3d] = 1000000
     [6c 80 96 98 00] = 10000000
-    [67 80 a0 94 a5 8d 1d] = -1000000000000
+    [67 0f ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11] = -0x112233445566778899aabbccddeeff
 
 
 ### Decimal Floating Point
 
 Decimal floating point values are stored in [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
+
+Decimal floating point values tend to be smaller, are more precise, and avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 Example:
 
@@ -278,7 +281,7 @@ Example:
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order. Binary types should only be used to support legacy systems that are unable to handle decimal rounded values, or that rely on specific binary payload contents. Decimal floating point values tend to be smaller, are more precise, and avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format in little endian byte order.
 
 Examples:
 
