@@ -712,11 +712,11 @@ It's important to avoid parsing ambiguity when designing your custom type encodi
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-Custom binary data is encoded in hex (in the same manner as the [bytes type](#bytes)), and uses the encoding type `c`.
+Custom binary data is encoded in hex (in the same manner as the [bytes type](#bytes)), and uses the encoding type `b`.
 
 Example:
 
-    c"04 f6 28 3c 40 00 00 40 40"
+    b"04 f6 28 3c 40 00 00 40 40"
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 #### Custom Type (Text Encoding)

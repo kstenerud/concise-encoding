@@ -351,7 +351,7 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 | Field        | Bits | Description                          |
 | ------------ | ---- | ------------------------------------ |
-| Length       |   *  | Chunk length                         |
+| Length       |   *  | Chunk length (in octets)             |
 | Continuation |   1  | If 1, another chunk follows this one |
 
 #### Zero Chunk
@@ -388,7 +388,7 @@ Strings are specialized byte arrays, containing the UTF-8 representation of a st
 
 Support for the NUL character (u+0000) is implementation defined due to potential issues with null string delimiters in some languages and platforms. It should be avoided in general for safety and portability. Support for NUL must not be assumed.
 
-The length field holds the byte length (length in octets), NOT the character length.
+The length field holds the length in octets, NOT the character length.
 
     [90] [Length+continuation] [Octet 0] ... [Octet (Length-1)]
 
@@ -414,7 +414,7 @@ Examples:
 
 A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not. How the higher layers handle such information is implementation dependent.
 
-The length field holds the byte length (length in octets), NOT the character length.
+The length field holds the length in octets, NOT the character length.
 
 Example:
 
@@ -467,7 +467,7 @@ A string value representing a user-defined custom data type. The encoding and in
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
 
-The length field holds the byte length (length in octets), NOT the character length.
+The length field holds the length in octets, NOT the character length.
 
     [94 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
 
@@ -488,7 +488,7 @@ A typed array is structured as follows:
 | Elements     | The elements themselves                |
 | ...          | Possibly more chunks                   |
 
-The length in each chunk header is the byte length, not the element length. The total length of the array must be a multiple of the array element width.
+The length in each chunk header represents the number of octets in the chunk, not the number of elements. The total length of the array (after all chunks are added) must be a multiple of the array element width.
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
