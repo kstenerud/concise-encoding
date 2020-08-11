@@ -76,10 +76,10 @@ Contents
     - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
   - [URI](#uri)
-  - [Bytes](#bytes)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
     - [Text Encoding](#custom-type-text-encoding)
+  - [Typed Array](#typed-array)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -700,33 +700,6 @@ URIs use the encoding type `u`.
     u"https://example.com/percent-encoding/?double-quote=%22"
 
 
-### Bytes
-
-An array of octets representing an arbitrary series of bytes, with no implied structure. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
-
-Bytes uses the encoding type `b`.
-
-Each byte is encoded into two characters (4 bits per character), using a lowercase hex alphabet (0-9, a-f).
-
-The encoded contents can contain whitespace (CR, LF, TAB, SPACE) at any point. Implementations should use whitespace to keep line lengths reasonable in accordance with [human editability](#human-editability).
-
-Example:
-
-    c1
-    {
-        ws_at_8_bits  = b"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
-
-        ws_at_16_bits = b"1f48 ae45 63ff"
-
-        ws_strange    = b"e 8f4a a 355 1 2c 9 9"
-
-        ws_eol = b"89504e470d0a1a0a0000000d4948445200000190000001900806000000
-                   80bf36cc0000800049444154789cecbd09781cd599effd76b75a8b6559
-                   926d6c831ddb60639b2d102060c06699400281c93224f91226ebc7bd73
-                   6f6e76924c"
-    }
-
-
 ### Custom Types
 
 There are many cases where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to be mapped directly to/from memory for performance reasons.
@@ -772,6 +745,46 @@ Custom text data uses the encoding type `t`.
 Example:
 
     t"cplx(2.94+3i)"
+
+
+### Typed Array
+
+A typed array encodes an array of values of a fixed type and size. The advantage of arrays is that the values are all adjacent to each other in the stream when encoded using [CBE](cbe-specification.md), so that large amounts of data can be easily copied from internal structures in your program, and read from the stream using zero-copy semantics.
+
+Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
+
+Typed arrays are delimited by pipe (`|`) characters (with optional whitespace), and contain a whitespace separated element type, followed by the whitespace separated element values:
+
+    |type value value value ...|
+
+The following array element types are allowed:
+
+| Type   | Description             |
+| ------ | ----------------------- |
+| `bool` | Boolean                 |
+| `u8`   | 8-bit unsigned integer  |
+| `u16`  | 16-bit unsigned integer |
+| `u32`  | 32-bit unsigned integer |
+| `u64`  | 64-bit unsigned integer |
+| `i8`   | 8-bit signed integer    |
+| `i16`  | 16-bit signed integer   |
+| `i32`  | 32-bit signed integer   |
+| `i64`  | 64-bit signed integer   |
+| `f16`  | 16-bit floating point   |
+| `f32`  | 32-bit floating point   |
+| `f64`  | 64-bit floating point   |
+| `uuid` | 128-bit UUID            |
+
+Values can be any of the representations allowed for that type.
+
+#### Examples
+
+    |f32 1.5 0x4.f391p100 30 9.31e-30|
+    |i16 0b1001010 0o744 1000 0xffff|
+    // Whitespace wherever you like:
+    |   bool   true  true   false  true false |
+    // Empty array of UUIDs:
+    |uuid|
 
 
 

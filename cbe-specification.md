@@ -65,10 +65,10 @@ Contents
   - [String](#string)
   - [Verbatim String](#verbatim-string)
   - [URI](#uri)
-  - [Bytes](#bytes)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
     - [Text Encoding](#custom-type-text-encoding)
+  - [Typed Array](#typed-array)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -207,10 +207,10 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
 |  90 | 144 | String                    | [byte length] [UTF-8 data]                    |
 |  91 | 145 | Verbatim String           | [byte length] [UTF-8 data]                    |
-|  92 | 146 | Bytes                     | [byte length] [binary data]                   |
-|  93 | 147 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  94 | 148 | Custom (Binary)           | [byte length] [binary data]                   |
-|  95 | 149 | Custom (Text)             | [byte length] [UTF-8 data]                    |
+|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
+|  93 | 147 | Custom (Binary)           | [byte length] [binary data]                   |
+|  94 | 148 | Custom (Text)             | [byte length] [UTF-8 data]                    |
+|  95 | 149 | Typed Array               | [type] [unit length] [units]                  |
 |  96 | 150 | RESERVED                  |                                               |
 |  97 | 151 | Marker                    | Positive integer / string                     |
 |  98 | 152 | Reference                 | Positive integer / string / URI               |
@@ -334,7 +334,7 @@ Example:
 Array Types
 -----------
 
-An array for the purposes of this spec is a contiguous sequence of octets, stored in length delimited chunks. The array type determines how those octets are to be interpreted.
+An array for the purposes of this spec is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted.
 
 
 ### Chunking
@@ -429,29 +429,20 @@ The length field contains the byte length (length in octets), NOT the character 
 
 Example:
 
-    [93 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [92 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-    [93 36 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
+    [92 36 6d 61 69 6c 74 6f 3a 4a 6f 68 6e 2e 44 6f 65 40 65 78 61 6d 70
      6c 65 2e 63 6f 6d]
     = mailto:John.Doe@example.com
 
-    [93 66 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
+    [92 66 75 72 6e 3a 6f 61 73 69 73 3a 6e 61 6d 65 73 3a 73 70 65 63 69
      66 69 63 61 74 69 6f 6e 3a 64 6f 63 62 6f 6f 6b 3a 64 74 64 3a 78 6d
      6c 3a 34 2e 31 2e 32]
     = urn:oasis:names:specification:docbook:dtd:xml:4.1.2
-
-
-### Bytes
-
-An array of octets representing an arbitrary series of bytes, with no specification as to how they should be interpreted. This type would typically be used to represent arbitrary file contents, memory dumps, uninterpreted data sequences, etc.
-
-Examples:
-
-    [92 0a 01 02 03 04 05] = byte array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 ### Custom Types
@@ -466,7 +457,7 @@ It's important to avoid parsing ambiguity when designing your custom type encodi
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-    [94 12 04 f6 28 3c 40 00 00 40 40]
+    [93 12 04 f6 28 3c 40 00 00 40 40]
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 
@@ -478,7 +469,32 @@ The custom text data must be a valid [UTF-8 string](#string), and must not conta
 
 The length field holds the byte length (length in octets), NOT the character length.
 
-    [95 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
+    [94 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
+
+
+### Typed Array
+
+A typed array encodes an array of values of a fixed type and size. The advantage of arrays is that the values are all adjacent to each other in the stream, so that large amounts of data can be easily copied from internal structures in your program, and read from the stream using zero-copy semantics.
+
+Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
+
+A typed array is structured as follows:
+
+| Field        | Description                            |
+| ------------ | -------------------------------------- |
+| Type         | The type code 0x95 (typed array)       |
+| Element Type | The type of the elements in this array |
+| Chunk Header | The number of elements following       |
+| Elements     | The elements themselves                |
+| ...          | Possibly more chunks                   |
+
+Element byte order is according to the element type (big endian for UUID, little endian for everything else).
+
+For integer types, the "sign" of the type determines whether the elements are signed or unsigned. "Negative" types are interpreted as signed (two's complement), and "positive" types are interpreted as unsigned.
+
+Examples:
+
+    [95 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
 
 
 
