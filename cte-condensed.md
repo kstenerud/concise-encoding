@@ -17,8 +17,8 @@ CTE natively supports the following types:
 | Time                                        | `2019-7-15/18:04:00/E/Rome`             |
 | String                                      | `"A string"`                            |
 | [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
-| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`            |
-| Custom Type (binary encoding)               | `c"04 f6 28 3c 40 00 00 40 40"`         |
+| Bytes                                       | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
+| Custom Type (binary encoding)               | `b"04 f6 28 3c 40 00 00 40 40"`         |
 | Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
@@ -206,23 +206,13 @@ encountered.ZZZ
 A URI begins with `u`, and is enclosed in double-quotes: `u"http://example.com"`
 
 
-### Bytes
-
-The bytes type is for encoding arbitrary file or memory contents.
-
-The bytes type begins with `b`, and is hex encoded in double-quotes (with whitespace allowed):
-
-    b"39 12 82 e1 81 39 d9 8b 39 4c 63 9d 04 8c"
-    b"391282e18139d98b394c639d048c"
-
-
 ### Custom
 
 The custom types are for encoding custom data types that are not natively supported by Concise Encoding.
 
-The custom **binary** type is encoded the same way as the bytes type, except it begins with `c`:
+The custom **binary** type is encoded as a quoted array representation with type `b`, and uses hex encoding to represent the array's octets:
 
-    c"04 f6 28 3c 40 00 00 40 40"
+    b"04 f6 28 3c 40 00 00 40 40"
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
 The custom **text** type is encoded using type `t`, and must escape all double-quote `"` and backslash `\` characters with a backslash:
@@ -230,6 +220,57 @@ The custom **text** type is encoded using type `t`, and must escape all double-q
     t"cplx(2.94+3i)"
 
 The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
+
+
+### Typed Array
+
+A typed array encodes an array of values of a fixed type and size. Typed arrays are delimited by pipe (`|`) characters (with optional whitespace), and contain a whitespace separated element type, followed by the whitespace separated element values:
+
+    |type value value value ...|
+
+The following array element types are allowed:
+
+| Type   | Description             |
+| ------ | ----------------------- |
+| `bool` | Boolean                 |
+| `u8`   | 8-bit unsigned integer  |
+| `u16`  | 16-bit unsigned integer |
+| `u32`  | 32-bit unsigned integer |
+| `u64`  | 64-bit unsigned integer |
+| `i8`   | 8-bit signed integer    |
+| `i16`  | 16-bit signed integer   |
+| `i32`  | 32-bit signed integer   |
+| `i64`  | 64-bit signed integer   |
+| `f16`  | 16-bit floating point   |
+| `f32`  | 32-bit floating point   |
+| `f64`  | 64-bit floating point   |
+| `uuid` | 128-bit UUID            |
+
+Values can be any of the representations allowed for the specified type. The following additional representations are also allowed within an array:
+
+* UUID values within an array may optionally be represented without the initial `@` sentinel.
+* Boolean values within an array may optionally be represented using `0` for false and `1` for true.
+
+Optionally, a suffix can be appended to the type specifier to indicate that all values must be considered to have an implicit prefix (only if the type supports it).
+
+| Suffix | Implied element prefix | Example                       |
+| ------ | ---------------------- | ----------------------------- |
+| `b`    | `0b`                   | `|u8b 10011010 00010101|`     |
+| `o`    | `0o`                   | `|i16o -7445 644|`            |
+| `x`    | `0x`                   | `|f32x a.c9fp20 -1.ffe9p-40|` |
+
+#### Examples
+
+    |u8x 9f 47 cb 9a 3c|
+    |f32 1.5 0x4.f391p100 30 9.31e-30|
+    |i16 0b1001010 0o744 1000 0xffff|
+    |uuid 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    // Whitespace wherever you like:
+    |   bool   true  true   false  true false |
+    // The same boolean array using 0 and 1:
+    |bool 1 1 0 1 0|
+    // Empty array of UUIDs:
+    |uuid|
 
 
 
@@ -476,7 +517,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = b"10ff389add004f4f91"
+    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"

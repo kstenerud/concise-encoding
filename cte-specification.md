@@ -18,9 +18,9 @@ Concise Text Encoding (CTE) is a general purpose, human and machine friendly, co
 | Time                                        | `2019-7-15/18:04:00/E/Rome`             |
 | String                                      | `"A string"`                            |
 | [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
-| Bytes                                       | `b"f1 e2 d3 c4 b5 a6 97 88"`            |
-| Custom Type (binary encoding)               | `c"04 f6 28 3c 40 00 00 40 40"`         |
+| Custom Type (binary encoding)               | `b"04 f6 28 3c 40 00 00 40 40"`         |
 | Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
+| Typed Array                                 | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
 | Markup                                      | `<span style=bold| Blah blah>`          |
@@ -172,7 +172,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = b"10ff389add004f4f91"
+    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
@@ -536,12 +536,15 @@ Array Types
 
 An "array" for the purposes of this spec represents a contiguous sequence of octets. The array type determines how those octets are to be interpreted.
 
-All arrays (except for strings) begin with an encoding type, followed by the data enclosed within double-quotes (`"`). There must be no whitespace between the encoding type and the opening double-quote.
+There are two kinds of array representations in CTE:
+
+* Quoted array representations are enclosed within double-quotes (`"`), with a possible type prefix. For quoted array representations with a type prefix, there must be no whitespace between the type and the opening quoted (e.g. `u"http://x.com"`, not `u "http://x.com"`).
+* [Typed arrays](#typed-array) are enclosed within pipes (`|`), and begin with a type specifier.
 
 
 ### String
 
-An array of UTF-8 encoded bytes. Unlike other array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
+An array of UTF-8 encoded bytes. Unlike other quoted array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
 
  * [Quoted sequence](#quoted-string)
  * [Verbatim sequence](#verbatim-string)
@@ -712,7 +715,7 @@ It's important to avoid parsing ambiguity when designing your custom type encodi
 
 An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
 
-Custom binary data is encoded in hex (in the same manner as the [bytes type](#bytes)), and uses the encoding type `b`.
+Custom binary data is encoded as a quoted array representation with type `b`, and uses hex encoding to represent the array's octets. Whitespace is optional between hex encode bytes, and all bytes must be represented by two digits.
 
 Example:
 
@@ -722,6 +725,8 @@ Example:
 #### Custom Type (Text Encoding)
 
 A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
+
+Custom text data is encoded as a quoted array representation with type `t`. The actual text-based data encoding is implementation defined.
 
 The backslash character (`\`) initiates an escape sequence. The following escape sequences are recognized:
 
@@ -740,8 +745,6 @@ A decoder must interpret escape sequences and pass the transformed string to the
 
 The custom text contents must follow [string content rules](#string-content-rules).
 
-Custom text data uses the encoding type `t`.
-
 Example:
 
     t"cplx(2.94+3i)"
@@ -749,7 +752,7 @@ Example:
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. The advantage of arrays is that the values are all adjacent to each other in the stream when encoded using [CBE](cbe-specification.md), so that large amounts of data can be easily copied from internal structures in your program, and read from the stream using zero-copy semantics.
+A typed array encodes an array of values of a fixed type and size. With arrays, the values are all adjacent to each other in the stream when encoded using [CBE](cbe-specification.md), allowing large amounts of data to be easily copied between the stream and your internal structures.
 
 Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
 
@@ -775,14 +778,29 @@ The following array element types are allowed:
 | `f64`  | 64-bit floating point   |
 | `uuid` | 128-bit UUID            |
 
-Values can be any of the representations allowed for that type.
+Values can be any of the representations allowed for the specified type. The following additional representations are also allowed within an array:
+
+* UUID values within an array may optionally be represented without the initial `@` sentinel.
+* Boolean values within an array may optionally be represented using `0` for false and `1` for true.
+
+Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
+
+| Suffix | Implied element prefix | Example                       |
+| ------ | ---------------------- | ----------------------------- |
+| `b`    | `0b`                   | `|u8b 10011010 00010101|`     |
+| `o`    | `0o`                   | `|i16o -7445 644|`            |
+| `x`    | `0x`                   | `|f32x a.c9fp20 -1.ffe9p-40|` |
 
 #### Examples
 
+    |u8x 9f 47 cb 9a 3c|
     |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0xffff|
+    |uuid 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     // Whitespace wherever you like:
     |   bool   true  true   false  true false |
+    // The same boolean array using 0 and 1:
+    |bool 1 1 0 1 0|
     // Empty array of UUIDs:
     |uuid|
 
@@ -831,7 +849,9 @@ Only certain types can be used as keys in map-like containers:
 
 * [Numeric types](#numeric-types) except for NaN (not-a-number)
 * [Temporal types](#temporal-types)
-* [Array types](#array-types)
+* [Strings](#string)
+* [URI](#uri)
+* [Custom types](#custom-types)
 
 @nil must not be used as a key, and [references](#reference) are not allowed as keys.
 
@@ -1228,7 +1248,7 @@ c1
     "data" // Comment after data
     =
     // Comment before some binary data (but not inside it)
-    b"01 02 03 04 05 06 07 08 09 0a"
+    |u8x 01 02 03 04 05 06 07 08 09 0a|
 }
 ```
 
@@ -1312,7 +1332,7 @@ While there are many characters classified as "whitespace" within the Unicode se
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `b" 01 02 03   0 4 "` is equivalent to `b"01020304"`
+ * `| u8x 01   02 03   04 |` is equivalent to `|u8x 01 02 03 04|`
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 

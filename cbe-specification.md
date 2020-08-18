@@ -474,7 +474,7 @@ The length field holds the length in octets, NOT the character length.
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. The advantage of arrays is that the values are all adjacent to each other in the stream, so that large amounts of data can be easily copied from internal structures in your program, and read from the stream using zero-copy semantics.
+A typed array encodes an array of values of a fixed type and size. With arrays, the values are all adjacent to each other in the stream, allowing large amounts of data to be easily copied between the stream and your internal structures.
 
 Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
 
@@ -484,19 +484,41 @@ A typed array is structured as follows:
 | ------------ | -------------------------------------- |
 | Type         | The type code 0x95 (typed array)       |
 | Element Type | The type of the elements in this array |
-| Chunk Header | The number of elements following       |
-| Elements     | The elements themselves                |
+| Chunk Header | The number of octets of data following |
+| Elements     | The elements as a sequence of octets   |
 | ...          | Possibly more chunks                   |
 
-The length in each chunk header represents the number of octets in the chunk, not the number of elements. The total length of the array (after all chunks are added) must be a multiple of the array element width.
+The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be a multiple of the array element size (e.g. multiple of 2 for 16-bit elements, 8 for 64-bit elements, etc).
+
+The following element types are allowed:
+
+| Type Code                      | Actual Type               | Element Size (bits) |
+| ------------------------------ | ------------------------- | ------------------- |
+| 0x68 (8-bit positive integer)  | Unsigned int              | 8                   |
+| 0x6a (16-bit positive integer) | Unsigned int              | 16                  |
+| 0x6c (32-bit positive integer) | Unsigned int              | 32                  |
+| 0x6e (64-bit positive integer) | Unsigned int              | 64                  |
+| 0x69 (8-bit negative integer)  | 2's complement signed int | 8                   |
+| 0x6b (16-bit negative integer) | 2's complement signed int | 16                  |
+| 0x6d (32-bit negative integer) | 2's complement signed int | 32                  |
+| 0x6f (64-bit negative integer) | 2's complement signed int | 64                  |
+| 0x70 (16-bit binary float)     | Bfloat16                  | 16                  |
+| 0x71 (32-bit binary float)     | IEEE754 binary float      | 32                  |
+| 0x72 (64-bit binary float)     | IEEE754 binary float      | 64                  |
+| 0x73 (UUID)                    | RFC4122 UUID              | 128                 |
+| 0x7d (Boolean true)            | Boolean (0=false, 1=true) | 1                   |
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
-For integer types, the "sign" of the type determines whether the elements are signed or unsigned. "Negative" types are interpreted as signed (two's complement), and "positive" types are interpreted as unsigned.
+For boolean arrays, bits are encoded low-to-high, in 8-bit chunks, with trailing bits set to 0:
+
+    boolean array {0,0,1,1,1,0,0,1,0,1,1,0,1,1,1} would be encoded as [9c 76]
 
 Examples:
 
     [95 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [95 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
+    [95 7d 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 
 
@@ -542,7 +564,9 @@ Only certain types can be used as keys in map-like containers:
 
 * [Numeric types](#numeric-types) except for NaN (not-a-number)
 * [Temporal types](#temporal-types)
-* [Array types](#array-types)
+* [Strings](#string) and [verbatim strings](#verbatim-string)
+* [URI](#uri)
+* [Custom types](#custom-types)
 
 Nil must not be used as a key, and [references](#reference) are not allowed as keys.
 

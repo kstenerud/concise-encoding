@@ -154,7 +154,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = b"10ff389add004f4f91"
+    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
