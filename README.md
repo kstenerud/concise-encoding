@@ -176,14 +176,14 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
-                         <body:
+                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
+                         <body;
                            Please choose from the following widgets:
-                           <div id=parent style=normal ref-id=1:
+                           <div id=parent style=normal ref-id=1;
                              // Here we use a backtick to induce verbatim processing.
                              // In this case, "##" is chosen as the ending sequence.
-                             <script: `##
-                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild:content>');
+                             <script; `##
+                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild;content>');
                              ##>
                            >
                          >

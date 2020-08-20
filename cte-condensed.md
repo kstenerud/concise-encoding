@@ -22,7 +22,7 @@ CTE natively supports the following types:
 | Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
-| Markup                                      | `<span style=bold: Blah blah>`          |
+| Markup                                      | `<span style=bold; Blah blah>`          |
 | Metadata Map                                | `(_id=12345)`                           |
 | Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
 | Comment                                     | `// A comment`                          |
@@ -160,7 +160,7 @@ Special time zones:
 
 #### Unquoted String
 
-An unquoted string begins with a non-punctuation, non-numeric letter (except that `_` is allowed), after which alphanumerics and the symbols `_`, `-`. `+`, `.`, `:`, and `/` are allowed:
+An unquoted string begins with a non-punctuation, non-numeric letter (except that `_` is allowed), after which alphanumerics and the symbols `_`, `-`, `.`, and `:` are allowed:
 
     twenty-five
     Std:value.next
@@ -303,7 +303,7 @@ Markup containers are best suited for presentation data. For regular data, maps 
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `:`, and end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `;`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * Entity references are initiated with `\` instead of `&`.
  * [Unquoted strings](#unquoted-string) are allowed.
@@ -316,7 +316,7 @@ The CTE encoding of a markup container is similar to XML, except:
 | Begin      | `<`        |         | Y        |
 | Tag name   |            | Keyable | Y        |
 | Attributes | whitespace | Map     |          |
-| Contents   | `:`        | List    |          |
+| Contents   | `;`        | List    |          |
 | End        | `>`        |         | Y        |
 
 The allowable types for the tag name are the same as the allowable types for [map keys](#map).
@@ -329,8 +329,8 @@ Illustration of markup encodings:
 | ---------- | -------- | ---------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                     |
 |     Y      |    N     | `<div id=fillme>`                                          |
-|     N      |    Y     | `<span:Some text here>`                                    |
-|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >`     |
+|     N      |    Y     | `<span;Some text here>`                                    |
+|     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >`     |
 
 #### Markup Attributes
 
@@ -361,25 +361,25 @@ Entity references use the same names as in XML and HTML, except that they are in
 ```
 c1
 (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
-    <body:
-    <div id=parent style=normal ref-id=1:
-      <script: `##
+<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
+    <body;
+    <div id=parent style=normal ref-id=1;
+      <script; `##
         document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
       ##>
-        Here is some text <span style=highlighted: with highlighted text> and more text.
+        Here is some text <span style=highlighted; with highlighted text> and more text.
         <br>
-        <ul:
-            <li id=item_a : Item A>
-            <li id=item_b : Item B>
-            <li id=item_c : Item C>
+        <ul;
+            <li id=item_a ; Item A>
+            <li id=item_b ; Item B>
+            <li id=item_c ; Item C>
         >
 
         /* MathML: ax^2 + bx + c */
-        <mrow:
-          <mi:a> <mo:&InvisibleTimes;> <msup: <mi:x> <mn:2> >
-          <mo:+> <mi:b> <mo:&InvisibleTimes;> <mi:x>
-          <mo:+> <mi:c>
+        <mrow;
+          <mi;a> <mo;&InvisibleTimes;> <msup; <mi;x> <mn;2> >
+          <mo;+> <mi;b> <mo;&InvisibleTimes;> <mi;x>
+          <mo;+> <mi;c>
         >
     >
   >
@@ -539,14 +539,14 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
-                         <body:
+                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
+                         <body;
                            Please choose from the following widgets:
-                           <div id=parent style=normal ref-id=1:
+                           <div id=parent style=normal ref-id=1;
                              // Here we use a backtick to induce verbatim processing.
                              // In this case, "##" is chosen as the ending sequence.
-                             <script: `##
-                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild:content>');
+                             <script; `##
+                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild;content>');
                              ##>
                            >
                          >
