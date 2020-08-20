@@ -164,12 +164,14 @@
                     <div class="content scrollcontainer">
                         <pre class="scroll code">
 c1
-// Metadata: _ct is the creation time
+// _ct is the creation time, in this case referring to the entire document
 (_ct = 2019-9-1/22:14:01)
 {
-    /* /* Nested comments are allowed */ */
-    // There are no commas in maps and lists
-    (info = "something interesting about a_list")
+    /* Comments look very C-like, except:
+       /* Nested comments are allowed! */
+    */
+    // Notice that there are no commas in maps and lists
+    (metadata_about_a_list = "something interesting about a_list")
     a_list           = [1 2 "a string"]
     map              = {2=two 3=3000 1=one}
     string           = "A string value"
@@ -185,7 +187,7 @@ c1
     time             = 18:04:00.940231541/E/Prague
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
-    bytes            = b"10ff389add004f4f91"
+    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"
@@ -196,26 +198,25 @@ bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &tag1:{
-                                description = "This map will be referenced later using #tag1"
+    marked_object    = &amp;id1:{
+                                description = "This map will be referenced later using #id1"
                                 value = -@inf
                                 child_elements = @nil
-                                recursive = #tag1
+                                recursive = #id1
                             }
-    ref1             = #tag1
-    ref2             = #tag1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_tag"
+    ref1             = #id1
+    ref2             = #id1
+    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
-    html_compatible  = &lt;html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
-                         &lt;body|
+    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
+                       &lt;html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
+                         &lt;body:
                            Please choose from the following widgets:
-                           &lt;div id=parent style=normal ref-id=1 |
-                             /* Here we use a backtick to induce verbatim processing.
-                              * In this case, "##" is chosen as the ending sequence
-                              */
-                             &lt;script| `##
-                               document.getElementById('parent').insertAdjacentHTML('beforeend',
-                                  '&lt;div id="idChild"&gt; content &lt;/div&gt;');
+                           &lt;div id=parent style=normal ref-id=1:
+                             // Here we use a backtick to induce verbatim processing.
+                             // In this case, "##" is chosen as the ending sequence.
+                             &lt;script: `##
+                               document.getElementById('parent').insertAdjacent('beforeend', '&lt;div id=idChild:content&gt;');
                              ##&gt;
                            &gt;
                          &gt;
