@@ -23,7 +23,7 @@ Concise Text Encoding (CTE) is a general purpose, human and machine friendly, co
 | Typed Array                                 | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
-| Markup                                      | `<span style=bold| Blah blah>`          |
+| Markup                                      | `<span style=bold: Blah blah>`          |
 | Metadata Map                                | `(_id=12345)`                           |
 | Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
 | Comment                                     | `// A comment`                          |
@@ -194,14 +194,14 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
     outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
-                         <body|
+                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
+                         <body:
                            Please choose from the following widgets:
-                           <div id=parent style=normal ref-id=1 |
-                             /* Here we use a backtick to induce verbatim processing.
-                                In this case, "##" is chosen as the ending sequence */
-                             <script| `##
-                               document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
+                           <div id=parent style=normal ref-id=1:
+                             // Here we use a backtick to induce verbatim processing.
+                             // In this case, "##" is chosen as the ending sequence.
+                             <script: `##
+                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild:content>');
                              ##>
                            >
                          >
@@ -374,7 +374,7 @@ Rules:
 | ----------- | -------------------- | ------------------ | --------------------------------------------- |
 | `1000000`   | `1__000___000____`   | `_1_000_000`       | `_1_000_000` would be interpreted as a string |
 | `1.5e50`    | `1_._5_e5_0`         | `1.5e_50`          |                                               |
-| `1.5e+50`     `1_._5_e+5_0`        | `1.5e_+50`         |                                               |
+| `1.5e+50`   | `1_._5_e+5_0`        | `1.5e_+50`         |                                               |
 
 Numeric whitespace characters must be ignored when decoding numeric values.
 
@@ -664,7 +664,7 @@ Here is the end sequence. There is no trailing newline in this example.@@@
 Strings must normally be delimited, but this rule can be relaxed if:
 
  * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), and colon (`:`).
+ * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), and period (`.`).
  * The above two rules also apply to Unicode characters that LOOK similar to the excluded characters for a human (for example u+2052 `⁒`, u+ff11 `１`).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string isn't empty.
@@ -680,7 +680,7 @@ For example, these cannot be unquoted strings:
 These can be unquoted strings:
 
     twenty-five
-    Std:value.next
+    value.next
     _contains_underscores
     _150
     飲み物
@@ -874,7 +874,7 @@ Markup containers are best suited for presentation data. For regular data, maps 
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `|`, and end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `:`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
  * Non-string types can be used in attribute names and values, under the same rules as [map](#map) keys and values.
@@ -885,19 +885,19 @@ The CTE encoding of a markup container is similar to XML, except:
 | ---------- | ---------- | ------------------------- | -------- |
 | Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
 | Attributes | whitespace | [Map](#map)               |          |
-| Contents   | `\|`       | [List](#list)             |          |
+| Contents   | `:`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
 
-Illustration of markup encodings (Note: `|` characters are escaped with `\` here so that they'll render properly in tables in markdown viewers; do not escape them in a real document!):
+Illustration of markup encodings:
 
 | Attributes | Children | Example                                                    |
 | ---------- | -------- | ---------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                     |
 |     Y      |    N     | `<div id=fillme>`                                          |
-|     N      |    Y     | `<span\|Some text here>`                                   |
-|     Y      |    Y     | `<ul id=mylist style=boring \| <li\|first> <li\|second> >` |
+|     N      |    Y     | `<span:Some text here>`                                    |
+|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >`     |
 
 Although it might look a little different on the surface, the internal structure is the same, and could trivially be converted to/from XML & HTML.
 
@@ -989,25 +989,25 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 ```
 c1
 (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en |
-    <body|
-    <div id=parent style=normal ref-id=1 |
-      <script| `##
+<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en:
+    <body:
+    <div id=parent style=normal ref-id=1:
+      <script: `##
         document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
       ##>
-        Here is some text <span style=highlighted| with highlighted text> and more text.
+        Here is some text <span style=highlighted: with highlighted text> and more text.
         <br>
-        <ul|
-            <li id=item_a | Item A>
-            <li id=item_b | Item B>
-            <li id=item_c | Item C>
+        <ul:
+            <li id=item_a : Item A>
+            <li id=item_b : Item B>
+            <li id=item_c : Item C>
         >
 
         /* MathML: ax^2 + bx + c */
-        <mrow |
-          <mi|a> <mo|&InvisibleTimes;> <msup| <mi|x> <mn|2> >
-          <mo|+> <mi|b> <mo|&InvisibleTimes;> <mi|x>
-          <mo|+> <mi|c>
+        <mrow:
+          <mi:a> <mo:&InvisibleTimes;> <msup: <mi:x> <mn:2> >
+          <mo:+> <mi:b> <mo:&InvisibleTimes;> <mi:x>
+          <mo:+> <mi:c>
         >
     >
   >
@@ -1326,8 +1326,8 @@ While there are many characters classified as "whitespace" within the Unicode se
 
  * Before an object.
  * After an object.
- * Between array/container openings & closings: `[`, `]`, `{`, `}`
- * Between encoding characters in a byte array, and between array delimiters `"`.
+ * Between container delimiters: `[`, `]`, `{`, `}`, `<`, `:`, `>`
+ * Between array delimiters `|`.
 
 Examples:
 
@@ -1340,6 +1340,7 @@ Examples:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string identifier and the beginning of the data in a [verbatim string](#verbatim-string).
+ * Between typed array element type specifiers and contents, and between typed array contents.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
