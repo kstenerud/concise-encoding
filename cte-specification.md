@@ -753,7 +753,7 @@ Example:
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. With arrays, the values are all adjacent to each other in the stream when encoded using [CBE](cbe-specification.md), allowing large amounts of data to be easily copied between the stream and your internal structures.
+A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
 
 Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
 
@@ -1399,7 +1399,7 @@ Invalid encodings must not be used, as they will likely cause problems or even A
  * Times must be valid. For example: `2000-2-30`, while technically encodable, is not allowed.
  * Containers must be properly terminated. Extra container endings (`}`, `]`, etc) are invalid.
  * All map keys must have corresponding values. A key with a missing value is invalid.
- * Map keys must not be container types, the `@nil` type, or values the resolve to NaN (not-a-number).
+ * Map keys must be [keyable types](#keyable-types).
  * Maps must not contain duplicate keys. This includes numeric keys of different types that resolve to the same value.
  * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
  * Whitespace must only occur as described in section [Whitespace](#whitespace).

@@ -134,7 +134,7 @@ The version specifier is an unsigned [unsigned LEB128](https://en.wikipedia.org/
 
 The version specifier is mandatory, unless all parties have agreed to omit the specifier and use a specific version.
 
-Note: Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
+**Note:** Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
 
 
 ### Maximum Depth
@@ -334,16 +334,16 @@ Example:
 Array Types
 -----------
 
-An array for the purposes of this spec is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted.
+An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted, and the size of each element.
 
 
 ### Chunking
 
-Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field:
+Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
 
     [length-1] [chunk-1] [length-2] [chunk-2] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same size. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (if it's being built progressively).
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
 
 #### Chunk Header
 
@@ -356,7 +356,7 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 #### Zero Chunk
 
-The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for strings in C. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support c-style string implementations.
+The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for C-style strings. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support C-style string implementations.
 
     [90 20 m i s u n d e r s t a n d i n g ...]
 
@@ -366,7 +366,7 @@ vs
 
 Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
 
-If the source buffer in your decoder is mutable, you could achieve c-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
+If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
 
     ...                          // buffer = [84 t e s t 6a 10 a0 ...]
     case string (length 4):      // 0x84 = string (length 4)
@@ -399,9 +399,9 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
     [82] [octet 0] [octet 1]
     ...
 
-Note: CBE has no concept of escape sequences; all strings must be passed through as-is.
+**Note:** CBE has no concept of escape sequences; all strings must be passed through as-is.
 
-Note: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
+**Note:** While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
 
 Examples:
 
@@ -451,7 +451,7 @@ There are many cases where a custom data type is preferable to the standard type
 
 Although not a requirement, it's generally expected that a custom type implementation would provide both a binary and text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. Note, however, that both encodings can handle both types. The only difference would be human readability in CTE documents, and codec efficiency in CBE documents.
 
-It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding (`t"mytype(1, 2.0, 'three')"`) is usually sufficient.
+It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding such as `mytype(1, 2.0, 'three')` is usually sufficient.
 
 #### Custom Type (Binary Encoding)
 
@@ -467,6 +467,8 @@ A string value representing a user-defined custom data type. The encoding and in
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
 
+**Note:** Avoid use of the double-quote (`"`) character in your text encoding if possible because it will have to be escaped in a CTE document.
+
 The length field holds the length in octets, NOT the character length.
 
     [94 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
@@ -474,7 +476,7 @@ The length field holds the length in octets, NOT the character length.
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. With arrays, the values are all adjacent to each other in the stream, allowing large amounts of data to be easily copied between the stream and your internal structures.
+A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
 
 Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
 
@@ -484,11 +486,11 @@ A typed array is structured as follows:
 | ------------ | -------------------------------------- |
 | Type         | The type code 0x95 (typed array)       |
 | Element Type | The type of the elements in this array |
-| Chunk Header | The number of octets of data following |
+| Chunk Header | The number of elements following       |
 | Elements     | The elements as a sequence of octets   |
 | ...          | Possibly more chunks                   |
 
-The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be a multiple of the array element size (e.g. multiple of 2 for 16-bit elements, 8 for 64-bit elements, etc).
+The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 2 octets for 16-bit elements, 8 for 64-bit elements, etc).
 
 The following element types are allowed:
 
@@ -510,15 +512,17 @@ The following element types are allowed:
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
-For boolean arrays, bits are encoded low-to-high, in 8-bit chunks, with trailing bits set to 0:
+#### Boolean array
 
-    boolean array {0,0,1,1,1,0,0,1,0,1,1,0,1,1,1} would be encoded as [9c 76]
+For boolean arrays, the elements (bits) are encoded in 8-bit chunks, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits are cleared to 0.
 
-Examples:
+For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can incidentally be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
+
+#### Examples
 
     [95 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
     [95 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
-    [95 7d 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+    [95 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 
 
@@ -533,7 +537,7 @@ By default, a list is ordered and can contain duplicate values unless otherwise 
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
-Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
+**Note:** While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
 
 Example:
 
@@ -550,13 +554,13 @@ A map is ordered by default unless otherwise negotiated between parties (for exa
  * 2000 (32-bit integer)
  * 2000.0 (decimal float)
 
-Note: The string value "2000" is not numeric, and would not clash.
+**Note:** The string value "2000" is not numeric, and would not clash.
 
 Map contents are stored as key-value pairs of objects. A key without a paired value is invalid:
 
     [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
+**Note:** While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
 #### Keyable types
 
@@ -606,13 +610,13 @@ The contents section behaves similarly to a [list](#list), except that it can on
 
 Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
 
-Note: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
+**Note:** Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
 
 ##### Entity Reference
 
 The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
-Note: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
+**Note:** Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Doctype
 
@@ -715,7 +719,7 @@ A metadata map is a _referring_, _visible_ pseudo-object containing keyed values
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
 
-Note: Metadata can refer to other metadata (meta-metadata).
+**Note:** Metadata can refer to other metadata (meta-metadata).
 
 #### Metadata Keys
 
@@ -823,10 +827,10 @@ The structure and format of CBE leaves room for certain encodings that contain p
  * Times must be valid. For example: hour 30, while technically encodable, is invalid.
  * Containers must be properly terminated with `end container` tags. Extra `end container` tags are invalid.
  * All map keys must have corresponding values. A key with a missing value is invalid.
- * Map keys must not be container types, the `nil` type, or values the resolve to NaN (not-a-number).
+ * Map keys must be [keyable types](#keyable-types).
  * Maps must not contain duplicate keys. This includes numeric keys of different widths or types that resolve to the same value (for example: 16-bit int 1000, 32-bit int 1000, float 1000.0).
- * An array's chunk length field must match the byte-length of its data. An invalid chunk length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
- * All UTF-8 sequences must be complete and valid (no partial characters, unpaired surrogates, etc).
+ * An array's chunk length field must match the element-length of its data. An invalid chunk length might not be directly detectable, but in such a case will likely lead to other invalid encodings due to array data being interpreted as other types.
+ * All UTF-8 sequences must be complete and valid.
  * RESERVED types are invalid, and must not be used.
  * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
 
