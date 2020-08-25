@@ -97,6 +97,7 @@ Contents
 * [Invalid Encodings](#invalid-encodings)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
+* [Equivalence](#equivalence)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -282,6 +283,11 @@ Example:
 ### Binary Floating Point
 
 Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format, or in 16-bit [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) format, in little endian byte order.
+
+Following ieee754-2008 recommendations, the most significant bit of the significand field in a NaN (not a number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+
+    s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (float32)
+    s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (float32)
 
 Examples:
 
@@ -533,7 +539,7 @@ Container Types
 
 A list of objects. Lists can contain any mix of any type, including other containers.
 
-By default, a list is ordered and can contain duplicate values unless otherwise negotiated between all parties (for example via a schema).
+By default, a list is ordered and can contain duplicate values, unless otherwise negotiated between all parties (for example via a schema).
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
@@ -548,7 +554,9 @@ Example:
 
 A map associates objects (keys) with other objects (values). Map keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
 
-A map is ordered by default unless otherwise negotiated between parties (for example via a schema), and must not contain duplicate keys (including values across numeric types). For example, the following keys would clash:
+A map is unordered by default unless otherwise negotiated between parties (for example via a schema).
+
+A map must not contain duplicate keys (including values across numeric types). For example, the following keys would clash:
 
  * 2000 (16-bit integer)
  * 2000 (32-bit integer)
@@ -717,7 +725,7 @@ Examples:
 
 A metadata map is a _referring_, _visible_ pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
-Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
+A metadata map behaves like a [map](#map), except that metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
 
 **Note:** Metadata can refer to other metadata (meta-metadata).
 
@@ -855,6 +863,79 @@ Applications might require data to be aligned in some cases for optimal decoding
 | 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
 
 Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It's mostly an optimization for closed systems.
+
+
+
+Equivalence
+-----------
+
+There are many things to consider when determining if two Concise Encoding documents are equivalent. This section helps clear up possible confusion.
+
+The document encoding (CBE vs CTE) has no bearing on equivalence. Only the data contained within a document is considered.
+
+
+### Relaxed Equivalence
+
+Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some minor structural and type differences?
+
+#### Numeric Types
+
+Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
+
+**Note:** In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
+
+#### Custom Types
+
+By default, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values cannot be compared with custom binary values unless additional contextual information is provided by the schema that the receiver can understand.
+
+#### Strings
+
+Strings and verbatim strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
+
+#### Arrays
+
+Arrays must contain the same number of elements, and those elements must be equivalent.
+
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent.
+
+#### Containers
+
+Containers must be of the same type. For example, a map is never equivalent to a metadata map.
+
+Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to nil are considered equivalent to the same type of map where the key is not present.
+
+By default, list types must be compared ordered and map types unordered, unless otherwise specified by the schema.
+
+#### Markup Contents
+
+Whitespace in a markup contents section is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+
+#### Nil
+
+Two nil values are considered equivalent.
+
+#### Comments
+
+Comments are ignored when testing for relaxed equivalence.
+
+#### Padding
+
+Padding is always ignored when testing for equivalence.
+
+
+### Strict Equivalence
+
+Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
+
+* Comments are compared, but are trimmed of leading and trailing whitespace before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+* Keys mapping to nil values are not equivalent to maps where the key is absent.
+* Arrays must be of the same type to be considered equivalent.
+* Strings are never equivalent to verbatim strings.
+
+
+### Custom Equivalence
+
+A schema can specify relaxed or strict as the base equivalence rules for a document, and can override rules or introduce additional rules. Note, however, that a generic Concise Encoding implementation may not understand, and might ignore custom rules.
 
 
 

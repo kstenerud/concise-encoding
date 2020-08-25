@@ -113,6 +113,7 @@ Contents
   - [Implied Version](#implied-version)
   - [Inline Containers](#inline-containers)
 * [Invalid Encodings](#invalid-encodings)
+* [Equivalence](#equivalence)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -325,6 +326,11 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
 
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
+
+Following ieee754-2008 recommendations, the most significant bit of the significand field in a NaN (not a number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+
+    s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (float32)
+    s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (float32)
 
 Base-10 floating point notation should be preferred over base-16 notation. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
@@ -1403,6 +1409,79 @@ Invalid encodings must not be used, as they will likely cause problems or even A
  * Maps must not contain duplicate keys. This includes numeric keys of different types that resolve to the same value.
  * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
  * Whitespace must only occur as described in section [Whitespace](#whitespace).
+
+
+
+Equivalence
+-----------
+
+There are many things to consider when determining if two Concise Encoding documents are equivalent. This section helps clear up possible confusion.
+
+The document encoding (CBE vs CTE) has no bearing on equivalence. Only the data contained within a document is considered.
+
+
+### Relaxed Equivalence
+
+Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some minor structural and type differences?
+
+#### Numeric Types
+
+Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
+
+**Note:** In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
+
+#### Custom Types
+
+By default, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values cannot be compared with custom binary values unless additional contextual information is provided by the schema that the receiver can understand.
+
+#### Strings
+
+Strings and verbatim strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
+
+#### Arrays
+
+Arrays must contain the same number of elements, and those elements must be equivalent.
+
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent.
+
+#### Containers
+
+Containers must be of the same type. For example, a map is never equivalent to a metadata map.
+
+Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to nil are considered equivalent to the same type of map where the key is not present.
+
+By default, list types must be compared ordered and map types unordered, unless otherwise specified by the schema.
+
+#### Markup Contents
+
+Whitespace in a markup contents section is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+
+#### Nil
+
+Two nil values are considered equivalent.
+
+#### Comments
+
+Comments are ignored when testing for relaxed equivalence.
+
+#### Padding
+
+Padding is always ignored when testing for equivalence.
+
+
+### Strict Equivalence
+
+Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
+
+* Comments are compared, but are trimmed of leading and trailing whitespace before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+* Keys mapping to nil values are not equivalent to maps where the key is absent.
+* Arrays must be of the same type to be considered equivalent.
+* Strings are never equivalent to verbatim strings.
+
+
+### Custom Equivalence
+
+A schema can specify relaxed or strict as the base equivalence rules for a document, and can override rules or introduce additional rules. Note, however, that a generic Concise Encoding implementation may not understand, and might ignore custom rules.
 
 
 
