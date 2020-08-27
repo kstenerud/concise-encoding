@@ -166,14 +166,14 @@ You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
     marked_object    = &id1:{
-                                description = "This map will be referenced later using #id1"
+                                description = "This map will be referenced later using $id1"
                                 value = -@inf
                                 child_elements = @nil
-                                recursive = #id1
+                                recursive = $id1
                             }
-    ref1             = #id1
-    ref2             = #id1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
+    ref1             = $id1
+    ref2             = $id1
+    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
                        <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;

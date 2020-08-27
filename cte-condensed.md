@@ -24,7 +24,7 @@ CTE natively supports the following types:
 | Map                                         | `{one=1 two=2}`                         |
 | Markup                                      | `<span style=bold; Blah blah>`          |
 | Metadata Map                                | `(_id=12345)`                           |
-| Marker/Reference                            | `&a_ref:"something"`, `#a_ref`          |
+| Marker/Reference                            | `&a_ref:"something"`, `$a_ref`          |
 | Comment                                     | `// A comment`                          |
 | Multiline Comment                           | `/* A comment */`                       |
 
@@ -426,7 +426,7 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
 A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This can be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid). Note that references must not be used as map keys!
 
-A reference begins with the reference initiator (`#`), followed immediately by either a [marker ID](#marker-id) or a [URI](#uri).
+A reference begins with the reference initiator (`$`), followed immediately by either a [marker ID](#marker-id) or a [URI](#uri).
 
 Example:
 
@@ -438,12 +438,12 @@ Example:
             }
         }
 
-        reference_to_string = #big_string
-        reference_to_map = #1
-        reference_to_local_doc = #u"common.cte"
-        reference_to_remote_doc = #u"https://somewhere.com/my_document.cbe?format=long"
-        reference_to_local_doc_marker = #u"common.cte#legalese"
-        reference_to_remote_doc_marker = #u"https://somewhere.com/my_document.cbe?format=long#examples"
+        reference_to_string = $big_string
+        reference_to_map = $1
+        reference_to_local_doc = $u"common.cte"
+        reference_to_remote_doc = $u"https://somewhere.com/my_document.cbe?format=long"
+        reference_to_local_doc_marker = $u"common.cte#legalese"
+        reference_to_remote_doc_marker = $u"https://somewhere.com/my_document.cbe?format=long#examples"
     }
 
 
@@ -529,14 +529,14 @@ You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
     marked_object    = &id1:{
-                                description = "This map will be referenced later using #id1"
+                                description = "This map will be referenced later using $id1"
                                 value = -@inf
                                 child_elements = @nil
-                                recursive = #id1
+                                recursive = $id1
                             }
-    ref1             = #id1
-    ref2             = #id1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
+    ref1             = $id1
+    ref2             = $id1
+    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
     html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
                        <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
