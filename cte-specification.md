@@ -1200,7 +1200,14 @@ Although comments are not _referring_ pseudo-objects, they tend to unofficially 
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
-Comments must be separated from other document components by whitespace (`{ /**/ a /**/ = /**/ b /**/ }`, not `{/**/a/**/=/**/b/**/}`).
+There must be whitespace between the end of a non-delimited value (such as numbers, temporals, unquoted strings) and a comment. For example:
+
+| Invalid                         | Valid                             |
+| ------------------------------- | --------------------------------- |
+| `1.2// A comment`               | `1.2 // A comment`                |
+| `{a/**/=b}`                     | `{a /**/=b}`                      |
+| `[1 2 3/**/]`                   | `[1 2 3 /**/]`                    |
+| `/**/{/**/a/**/=/**/b/**/}/**/` | `/**/{/**/a /**/=/**/b /**/}/**/` |
 
 Comments can be written in single-line or multi-line form.
 
@@ -1353,7 +1360,7 @@ Examples:
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
- * Before and after a comment (`[a/**/]` is invalid).
+ * Between a non-delimited value and a comment (`[ a/**/ ]` is invalid).
 
 
 ### Whitespace **must not** occur:
