@@ -39,6 +39,18 @@ html,body {
   margin-bottom: 0.5rem;
 }
 
+.title-mid {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.example-title {
+  font-weight: bold;
+  font-size: 1.7rem;
+  margin-bottom: 0.3rem;
+}
+
 .subtitle {
   opacity: 0.65;
 }
@@ -115,6 +127,11 @@ html,body {
 }
 .intro {
   padding-bottom: 5rem;
+  text-align: center;
+}
+.mid {
+  padding-top: 5rem;
+  padding-bottom: 2rem;
   text-align: center;
 }
 .sandbox {

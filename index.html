@@ -157,70 +157,171 @@
                 </article>
             </div>
 
+            <div class="mid column is-8 is-offset-2">
+                <h2 class="title-mid">Examples</h2><br>
+                <p class="subtitle">Every example here is a valid <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">Concise Text Encoding</a> document.</p>
+            </div>
+
             <div class="tile column is-10 is-offset-1 is-shady">
                 <article class="tile is-child notification is-white">
-                    <p class="title">Show Me!</p>
-                    <p class="subtitle">An example of <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">Concise Text Encoding (the text format)</a>:</p>
+                    <p class="example-title">Numeric Types</p>
                     <div class="content scrollcontainer">
                         <pre class="scroll code">
 c1
-// _ct is the creation time, in this case referring to the entire document
-(_ct = 2019-9-1/22:14:01)
+{
+    boolean       = @true
+    binary-int    = -0b10001011
+    octal-int     = 0o644
+    decimal-int   = -10000000
+    hex-int       = 0xfffe0001
+    decimal-float = -14.125
+    hex-float     = 0x5.1ec4p20
+    not-a-number  = @nan
+    infinity      = @inf
+    n-infinity    = -@inf
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Strings & String-Like</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    unquoted-string = no_quotes_needed
+    quoted-string   = "A string delimited by quotes"
+    verbatim-string = `XX Like bash here docs. Can contain `"[!#$%^&*{( etc.XX
+    url             = u"https://example.com/"
+    email           = u"mailto:me@somewhere.com"
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Other Basic Types</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    uuid            = @f1ce4567-e89b-12d3-a456-426655440000
+    date            = 2019-7-1
+    time            = 18:04:00.940231541/E/Prague
+    timestamp       = 2010-7-15/13:28:15.415942344/Z
+    nil             = @nil
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Containers &amp; Arrays</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    list             = [1 2.5 "a string"]
+    map              = {one=1 2=two today=2020-09-10}
+    bytes            = |u8x 01 ff de ad be ef|
+    uint16-hex-array = |u16x 91fe 443a 9c15|
+    uint16-array     = |u16 37374 17466 39957|
+    float32-array    = |f32 1.5e10 -8.31e-12|
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Markup</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    &lt;View|
+      &lt;Image src=u"http://blahblah.com/some-image.jpg"&gt;
+      &lt;Text|
+        This is some kind of image.
+      &gt;
+      &lt;TextInput style={height=40 borderColor=gray borderWidth=1} | Name me! &gt;
+    &gt;
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">References</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    marked_object    = &id1:{
+        description = "This map will be referenced later using $id1"
+        value = -@inf
+        child_elements = @nil
+        recursive = $id1
+    }
+    ref1             = $id1
+    ref2             = $id1
+    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Metadata &amp; Comments</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+// Metadata about the entire document
+(
+    // _ct is the creation time, _d is description, _v is version.
+    // See common generic metadata spec.
+    _ct = 2019-9-1/22:14:01
+    _d = "Some description"
+    _v = 1.1.0
+    whatever = "some arbitrary data"
+)
 {
     /* Comments look very C-like, except:
        /* Nested comments are allowed! */
     */
-    // Notice that there are no commas in maps and lists
-    (metadata_about_a_list = "something interesting about a_list")
-    a_list           = [1 2 "a string"]
-    map              = {2=two 3=3000 1=one}
-    string           = "A string value"
-    boolean          = @true
-    "binary int"     = -0b10001011
-    "octal int"      = 0o644
-    "regular int"    = -10000000
-    "hex int"        = 0xfffe0001
-    "decimal float"  = -14.125
-    "hex float"      = 0x5.1ec4p20
-    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
-    date             = 2019-7-1
-    time             = 18:04:00.940231541/E/Prague
-    timestamp        = 2010-7-15/13:28:15.415942344/Z
-    nil              = @nil
-    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
-    url              = u"https://example.com/"
-    email            = u"mailto:me@somewhere.com"
-    1.5              = "Keys don't have to be strings"
-    long-string      = `ZZZ
-A backtick induces verbatim processing, which in this case will continue
-until three Z characters are encountered, similar to how here documents in
-bash work.
-You can put anything in here, including double-quote ("), or even more
-backticks (`). Verbatim processing stops at the end sequence, which in this
-case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &amp;id1:{
-                                description = "This map will be referenced later using #id1"
-                                value = -@inf
-                                child_elements = @nil
-                                recursive = #id1
-                            }
-    ref1             = #id1
-    ref2             = #id1
-    outside_ref      = #u"https://somewhere.else.com/path/to/document.cte#some_id"
-    // The markup type is good for presentation data
-    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       &lt;html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
-                         &lt;body;
-                           Please choose from the following widgets:
-                           &lt;div id=parent style=normal ref-id=1;
-                             // Here we use a backtick to induce verbatim processing.
-                             // In this case, "##" is chosen as the ending sequence.
-                             &lt;script; `##
-                               document.getElementById('parent').insertAdjacent('beforeend', '&lt;div id=idChild;content&gt;');
-                             ##&gt;
-                           &gt;
-                         &gt;
-                       &gt;
+
+    // Double-slash comments are also possible.
+
+    (info = "something interesting about a_list")
+    a_list           = [1 2 3]
+}
+                        </pre>
+                    </div>
+                </article>
+            </div>
+
+            <div class="tile column is-10 is-offset-1 is-shady">
+                <article class="tile is-child notification is-white">
+                    <p class="example-title">Custom Types</p>
+                    <div class="content scrollcontainer">
+                        <pre class="scroll code">
+c1
+{
+    // Custom types are user-defined, with user-supplied codecs.
+    custom-text     = t"cplx(2.94+3i)"
+    custom-binary   = b"04f6283c4000004040"
 }
                         </pre>
                     </div>
