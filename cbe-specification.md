@@ -18,7 +18,7 @@ Concise Binary Encoding (CBE) is a general purpose, human and machine friendly, 
 | Time        | Date, time, or timestamp                             |
 | String      | UTF-8 string of arbitrary size                       |
 | URI         | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
-| Typed Array | Array of type with fixed width                       |
+| Typed Array | Array of fixed-width type                            |
 | List        | List of objects                                      |
 | Map         | Maps keyable objects to other objects                |
 | Markup      | Data structure similar to XML                        |

@@ -29,24 +29,24 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 
 #### Supported Types
 
-| Type          | Description                                             |
-| ------------- | ------------------------------------------------------- |
-| **Nil**       | No data (NULL)                                          |
-| **Boolean**   | True or false                                           |
-| **Integer**   | Positive or negative, arbitrary size                    |
-| **Float**     | Binary or decimal floating point, arbitrary size        |
-| **UUID**      | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
-| **Time**      | Date, time, or timestamp, arbitrary size                |
-| **URI**       | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
-| **String**    | UTF-8 string, arbitrary length                          |
-| **Bytes**     | Array of octets, arbitrary length                       |
-| **List**      | List of objects                                         |
-| **Map**       | Mapping keyable objects to other objects                |
-| **Markup**    | Presentation data, similar to XML                       |
-| **Reference** | Points to previously defined objects or other documents |
-| **Metadata**  | Data about data                                         |
-| **Comment**   | Arbitrary comments about anything, nesting supported    |
-| **Custom**    | User-defined data type                                  |
+| Type            | Description                                             |
+| --------------- | ------------------------------------------------------- |
+| **Nil**         | No data (NULL)                                          |
+| **Boolean**     | True or false                                           |
+| **Integer**     | Positive or negative, arbitrary size                    |
+| **Float**       | Binary or decimal floating point, arbitrary size        |
+| **UUID**        | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
+| **Time**        | Date, time, or timestamp, arbitrary size                |
+| **URI**         | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
+| **String**      | UTF-8 string, arbitrary length                          |
+| **Typed Array** | Array of fixed-width type, arbitrary length             |
+| **List**        | List of objects                                         |
+| **Map**         | Mapping keyable objects to other objects                |
+| **Markup**      | Presentation data, similar to XML                       |
+| **Reference**   | Points to previously defined objects or other documents |
+| **Metadata**    | Data about data                                         |
+| **Comment**     | Arbitrary comments about anything, nesting supported    |
+| **Custom**      | User-defined data type                                  |
 
 
 
@@ -155,6 +155,7 @@ c1
     timestamp        = 2010-7-15/13:28:15.415942344/Z
     nil              = @nil
     bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
+    uint16_array     = |u16x ff91 84c4 009f 3aa1|
     url              = u"https://example.com/"
     email            = u"mailto:me@somewhere.com"
     1.5              = "Keys don't have to be strings"

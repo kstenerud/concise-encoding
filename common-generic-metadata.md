@@ -43,7 +43,7 @@ The following predefined metadata keys should be used for the specified type of 
 | `_copyright`            | `_cr`     | String or URI       | Holder of copyright over data (Name or URI)                             |
 | `_creation_time`        | `_ct`     | Timestamp           | Creation time                                                           |
 | `_creator`              | `_c`      | List<String or URI> | Creator(s) of the data                                                  |
-| `_data_type`            | `_dt`     | String              | https://www.iana.org/assignments/media-types/media-types.xhtml          |
+| `_data_type`            | `_dt`     | String or URI       | https://www.iana.org/assignments/media-types/media-types.xhtml          |
 | `_description`          | `_d`      | String              | Description (free-form)                                                 |
 | `_human_language`       | `_hl`     | String              | Human language, as an ISO 639 alpha-2 or alpha-3 code                   |
 | `_identifier`           | `_id`     | Any                 | Identifier (free-form)                                                  |
@@ -56,10 +56,14 @@ The following predefined metadata keys should be used for the specified type of 
 | `_type`                 | `_t`      | String              | Name of the type/class/struct that this structure represents            |
 | `_tags`                 | `_tg`     | List<String>        | Set of tags associated with this data (free-form)                       |
 | `_context`              | `_co`     | Map<Any:Any>        | Context data that should be propagated to any further distributed calls |
+| `_version`              | `_v`      | String              | Version. Recommended to use https://semver.org/                         |
 
 All other string-based metadata keys beginning with `_` are reserved for future expansion, and must not be used as metadata keys for any purpose.
 
 TODO: `_schema_format` to specify the format of the schema?
+TODO: data type can also be a URI pointing to the definition.
+TODO: Data type at the top of the document defines the document type?
+TODO: `_dt` can be URI, string namespaced with `:`, otherwise it is IANA identifier. `_dt` should refer to a schema or well known type.
 
 
 Definitions
