@@ -190,7 +190,7 @@ c1
 {
     unquoted-string = no_quotes_needed
     quoted-string   = "A string delimited by quotes"
-    verbatim-string = `XX Like bash here docs. Can contain `"[!#$%^&*{( etc.XX
+    verbatim-string = `# Like bash here docs. `"[!$%^&*{( are fine.#
     url             = u"https://example.com/"
     email           = u"mailto:me@somewhere.com"
 }
@@ -248,7 +248,7 @@ c1
       &lt;Text;
         Hello!
       &gt;
-      &lt;TextInput style={height=40 borderColor=gray borderWidth=1}; Please name me! &gt;
+      &lt;TextInput style={height=40 borderColor=gray}; Name me! &gt;
     &gt;
 }
                         </pre>
@@ -264,14 +264,14 @@ c1
 c1
 {
     marked_object    = &id1:{
-        description = "This map will be referenced later using $id1"
+        description = "This map will be referenced later as $id1"
         value = -@inf
         child_elements = @nil
         recursive = $id1
     }
     ref1             = $id1
     ref2             = $id1
-    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
+    outside_ref      = $u"https://xyz.com/document.cte#some_id"
 }
                         </pre>
                     </div>
