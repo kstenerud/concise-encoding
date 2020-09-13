@@ -17,12 +17,12 @@ CTE natively supports the following types:
 | Time                                        | `2019-7-15/18:04:00/E/Rome`             |
 | String                                      | `"A string"`                            |
 | [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
-| Bytes                                       | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
 | Custom Type (binary encoding)               | `b"04 f6 28 3c 40 00 00 40 40"`         |
 | Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
+| Typed Array                                 | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
-| Markup                                      | `<span style=bold; Blah blah>`          |
+| Markup                                      | `<textview height=40; Some text>`       |
 | Metadata Map                                | `(_id=12345)`                           |
 | Marker/Reference                            | `&a_ref:"something"`, `$a_ref`          |
 | Comment                                     | `// A comment`                          |
@@ -68,7 +68,7 @@ Basic Types
 
 ### Nil
 
-The "null" value: `@nil`
+Meaning "no data": `@nil`
 
 
 ### Boolean
@@ -160,7 +160,7 @@ Special time zones:
 
 #### Unquoted String
 
-An unquoted string begins with a non-punctuation, non-numeric letter (except that `_` is allowed), after which alphanumerics and the symbols `_`, `-`, `.`, and `:` are allowed:
+An unquoted string begins with a non-punctuation, non-numeric letter or `_`, after which alphanumerics and the symbols `_`, `-`, `.`, and `:` are allowed:
 
     twenty-five
     Std:value.next
@@ -184,7 +184,7 @@ The `\` character acts as an escape character, with the following possible seque
 | `\r`                | carriage return (u+000d)        |
 | `\n`                | linefeed (u+000a)               |
 | `\t`                | horizontal tab (u+0009)         |
-| `\0` - `\5fffff`    | unicode character               |
+| `\0` - `\5fffff`    | [unicode character](cte-specification.md#unicode-escape-sequences) |
 
 #### Verbatim String
 
@@ -210,21 +210,21 @@ A URI begins with `u`, and is enclosed in double-quotes: `u"http://example.com"`
 
 The custom types are for encoding custom data types that are not natively supported by Concise Encoding.
 
-The custom **binary** type is encoded as a quoted array representation with type `b`, and uses hex encoding to represent the array's octets:
+The custom **binary** type begins with `b`, and is enclosed in double-quotes. The contents are encoded as hex bytes to represent the array's octets:
 
     b"04 f6 28 3c 40 00 00 40 40"
     = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
 
-The custom **text** type is encoded using type `t`, and must escape all double-quote `"` and backslash `\` characters with a backslash:
+The custom **text** type begins with `t`, and is enclosed in double-quotes. All double-quote `"` and backslash `\` characters must be escaped:
 
     t"cplx(2.94+3i)"
 
-The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability).
+The general idea is to use the binary custom type for encoding into CBE, and the text custom type for encoding into CTE (to preserve human readability). Custom binary and text types must be 1:1 convertible to each other.
 
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. Typed arrays are delimited by pipe (`|`) characters (with optional whitespace), and contain a whitespace separated element type, followed by the whitespace separated element values:
+A typed array encodes an array of values of a fixed type and size. Typed arrays are delimited by pipe (`|`) characters, containing a whitespace separated element type, followed by the whitespace separated element values:
 
     |type value value value ...|
 
@@ -294,6 +294,18 @@ A map is enclosed in `{}`, and contains whitespace separated key-value pairs. A 
         age = 35
     }
 
+#### Keyable types
+
+Only certain types can be used as keys in map-like containers:
+
+* Numeric types except for NaN (not-a-number)
+* Temporal types (times, dates)
+* Strings
+* URI
+* Custom types (provided they represent keyable data)
+
+@nil must not be used as a key, and [references](#reference) are not allowed as keys.
+
 
 ### Markup
 
@@ -305,21 +317,17 @@ The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `;`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
- * Entity references are initiated with `\` instead of `&`.
- * [Unquoted strings](#unquoted-string) are allowed.
- * Non-string types can be stored in a markup container.
+ * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
+ * Non-string types can be used in attribute names and values, under the same rules as [map](#map) keys and values.
 
 #### Markup Structure
 
-| Section    | Delimiter  | Type    | Required |
-| ---------- | ---------- | ------- | -------- |
-| Begin      | `<`        |         | Y        |
-| Tag name   |            | Keyable | Y        |
-| Attributes | whitespace | Map     |          |
-| Contents   | `;`        | List    |          |
-| End        | `>`        |         | Y        |
-
-The allowable types for the tag name are the same as the allowable types for [map keys](#map).
+| Section    | Delimiter  | Type                      | Required |
+| ---------- | ---------- | ------------------------- | -------- |
+| Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
+| Attributes | whitespace | [Map](#map)               |          |
+| Contents   | `;`        | [List](#list)             |          |
+| End        | `>`        |                           | Y        |
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present).
 
@@ -342,19 +350,16 @@ The markup contents section behaves like a list, but can contain only strings, c
 
 The following escape sequences are allowed in strings:
 
-| Sequence            | Interpretation              |
-| ------------------- | --------------------------- |
-| `\*`                | asterisk (u+002a)           |
-| `\/`                | slash (u+002f)              |
-| `\<`                | less-than (u+003c)          |
-| `\>`                | greater-than (u+003e)       |
-| `\\`                | backslash (u+005c)          |
-| `` \` ``            | backtick (u+0060)           |
-| `\_`                | non-breaking space (u+00a0) |
-| `\0` - `\5fffff`    | unicode character           |
-
-Entity references use the same names as in XML and HTML, except that they are initiated with a backslash (`\`) rather than of an ampersand (`&`). (e.g. `\gt;` instead of `&gt;`).
-
+| Sequence            | Interpretation                                                     |
+| ------------------- | ------------------------------------------------------------------ |
+| `\*`                | asterisk (u+002a)                                                  |
+| `\/`                | slash (u+002f)                                                     |
+| `\<`                | less-than (u+003c)                                                 |
+| `\>`                | greater-than (u+003e)                                              |
+| `\\`                | backslash (u+005c)                                                 |
+| `` \` ``            | backtick (u+0060)                                                  |
+| `\0` - `\5fffff`    | [unicode character](cte-specification.md#unicode-escape-sequences) |
+| `` ` ``             | Begin a [verbatim string](#verbatim-string)                        |
 
 #### Markup Example
 

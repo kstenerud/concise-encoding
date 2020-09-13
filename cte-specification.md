@@ -23,7 +23,7 @@ Concise Text Encoding (CTE) is a general purpose, human and machine friendly, co
 | Typed Array                                 | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
 | List                                        | `[1 2 3 4]`                             |
 | Map                                         | `{one=1 two=2}`                         |
-| Markup                                      | `<span style=bold; Blah blah>`          |
+| Markup                                      | `<textview height=40; Some text>`       |
 | Metadata Map                                | `(_id=12345)`                           |
 | Marker/Reference                            | `&a_ref:"something"`, `$a_ref`          |
 | Comment                                     | `// A comment`                          |
@@ -716,6 +716,8 @@ There are many cases where a custom data type is preferable to the standard type
 
 Although not a requirement, it's generally expected that a custom type implementation would provide both a binary and text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. Note, however, that both encodings can handle both types. The only difference would be human readability in CTE documents, and codec efficiency in CBE documents.
 
+When both custom binary and text forms of a data type are provided, they must be 1:1 convertible to each other without data loss.
+
 It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding (`t"mytype(1, 2.0, 'three')"`) is usually sufficient.
 
 #### Custom Type (Binary Encoding)
@@ -858,7 +860,7 @@ Only certain types can be used as keys in map-like containers:
 * [Temporal types](#temporal-types)
 * [Strings](#string)
 * [URI](#uri)
-* [Custom types](#custom-types)
+* [Custom types](#custom-types) (provided they represent keyable data)
 
 @nil must not be used as a key, and [references](#reference) are not allowed as keys.
 
