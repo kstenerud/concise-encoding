@@ -64,7 +64,7 @@ Specifications
 Implementations
 ---------------
 
- * [Go](https://github.com/kstenerud/go-concise-encoding)
+ * [Go](https://github.com/kstenerud/go-concise-encoding) (reference implementation)
 
 
 
