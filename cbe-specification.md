@@ -1,33 +1,9 @@
 Concise Binary Encoding
 =======================
 
-Concise Binary Encoding (CBE) is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It aims to support 80% of data use cases in a human friendly way:
+Concise Binary Encoding (CBE) is the binary variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
- * There are two formats (binary-based CBE and [text-based CTE](cte-specification.md)), which are 1:1 seamlessly compatible. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
- * Supports metadata and comments.
- * Supports cyclic and recursive data.
- * Supports the most commonly used data types:
-
-| Type        | Description                                          |
-| ----------- | ---------------------------------------------------- |
-| Nil         | No data                                              |
-| Boolean     | True or false                                        |
-| Integer     | Positive or negative integers                        |
-| Float       | Decimal or binary floating point                     |
-| UUID        | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122) |
-| Time        | Date, time, or timestamp                             |
-| String      | UTF-8 string of arbitrary size                       |
-| URI         | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)  |
-| Typed Array | Array of fixed-width type                            |
-| List        | List of objects                                      |
-| Map         | Maps keyable objects to other objects                |
-| Markup      | Data structure similar to XML                        |
-| Reference   | References a previously defined object               |
-| Metadata    | Data about other data                                |
-| Comment     | User definable comment                               |
-| Custom      | User-defined data type                               |
-
-CBE is the binary-based counterpart to [Concise Text Encoding](cte-specification.md).
+The binary format aims for compactness and machine processing efficiency, while the 1:1 compatible [text format](cte-specification.md) aims to present data in a human friendly way.
 
 
 
@@ -131,11 +107,13 @@ The document begins with a [version specifier](#version-specifier), followed by 
 
 ### Version Specifier
 
-The version specifier is an unsigned [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) with a value greater than 0, representing which version of this specification it adheres to.
+A CBE document begins with a version specifier, which is composed of the octet `0x03`, followed by a version number.
 
-The version specifier is mandatory, unless all parties have agreed to omit the specifier and use a specific version.
+The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) with a value greater than 0, representing which version of this specification the document adheres to.
 
-**Note:** Because CBE places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any ASCII characters that another text encoding format might use.
+The version specifier is mandatory, [unless all parties have agreed to omit the specifier and use a specific version](#implied-structure).
+
+Example: `[03 01]` = Empty document (CBE version 1)
 
 
 ### Maximum Depth
@@ -248,13 +226,15 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 #### Fixed Width
 
-Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (stored in little endian byte order). The type field determines the sign.
+Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (stored in little endian byte order). The sign is encoded in the type field.
+
+    [type] [byte 1 (low)] ... [byte x (high)]
 
 #### Variable width
 
-Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The type field determines the sign.
+Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
-    [length] [byte 1 (low)] [byte 2] ... [byte x (high)]
+    [type] [length] [byte 1 (low)] ... [byte x (high)]
 
 #### Examples:
 
@@ -288,6 +268,8 @@ Following ieee754-2008 recommendations, the most significant bit of the signific
 
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (float32)
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (float32)
+
+**Note**: `s 1111111 000000000000000000000000` represents infinity, not NaN.
 
 Examples:
 
@@ -405,9 +387,9 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
     [82] [octet 0] [octet 1]
     ...
 
-**Note:** CBE has no concept of escape sequences; all strings must be passed through as-is.
+**Note**: CBE has no concept of escape sequences; all strings must be passed through as-is.
 
-**Note:** While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
+**Note**: While carriage return (u+000d) is technically allowed in strings, line endings should be converted to linefeed (u+0009) whenever possible to maximize compatibiity between systems and minimize data costs.
 
 Examples:
 
@@ -473,7 +455,7 @@ A string value representing a user-defined custom data type. The encoding and in
 
 The custom text data must be a valid [UTF-8 string](#string), and must not contain control characters or non-printable characters.
 
-**Note:** Avoid use of the double-quote (`"`) character in your text encoding if possible because it will have to be escaped in a CTE document.
+**Note**: Avoid use of the double-quote (`"`) character in your text encoding if possible because it will have to be escaped in a CTE document.
 
 The length field holds the length in octets, NOT the character length.
 
@@ -543,7 +525,7 @@ By default, a list is ordered and can contain duplicate values, unless otherwise
 
 List elements are simply objects (type field + possible payload). The list is terminated by an "end of container" marker.
 
-**Note:** While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
+**Note**: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore values of mixed types if the implementation language doesn't support it.
 
 Example:
 
@@ -562,13 +544,13 @@ A map must not contain duplicate keys (including values across numeric types). F
  * 2000 (32-bit integer)
  * 2000.0 (decimal float)
 
-**Note:** The string value "2000" is not numeric, and would not clash.
+**Note**: The string value "2000" is not numeric, and would not clash.
 
 Map contents are stored as key-value pairs of objects. A key without a paired value is invalid:
 
     [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
 
-**Note:** While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
+**Note**: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
 #### Keyable types
 
@@ -618,13 +600,13 @@ The contents section behaves similarly to a [list](#list), except that it can on
 
 Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
 
-**Note:** Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
+**Note**: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
 
 ##### Entity Reference
 
 The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
-**Note:** Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
+**Note**: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Doctype
 
@@ -677,7 +659,7 @@ Example:
 
 A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30 (Note: ID strings cannot begin with a numeric digit). Integer marker IDs will generally use less space in the binary format than multibyte strings.
 
-**Note:** Marker ID comparisons are always case-insensitive.
+**Note**: Marker ID comparisons are always case-insensitive.
 
 An integer ID:
 
@@ -727,7 +709,7 @@ A metadata map is a _referring_, _visible_ pseudo-object containing keyed values
 
 A metadata map behaves like a [map](#map), except that metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps depending on the use case.
 
-**Note:** Metadata can refer to other metadata (meta-metadata).
+**Note**: Metadata can refer to other metadata (meta-metadata).
 
 #### Metadata Keys
 
@@ -873,6 +855,8 @@ There are many things to consider when determining if two Concise Encoding docum
 
 The document encoding (CBE vs CTE) has no bearing on equivalence. Only the data contained within a document is considered.
 
+Equivalence is relaxed unless otherwise specified.
+
 
 ### Relaxed Equivalence
 
@@ -882,7 +866,7 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
 
-**Note:** In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
+**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
 
 #### Custom Types
 
@@ -896,7 +880,7 @@ Strings and verbatim strings are considered equivalent if their contents are equ
 
 Arrays must contain the same number of elements, and those elements must be equivalent.
 
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent.
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
 
 #### Containers
 
@@ -904,7 +888,7 @@ Containers must be of the same type. For example, a map is never equivalent to a
 
 Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to nil are considered equivalent to the same type of map where the key is not present.
 
-By default, list types must be compared ordered and map types unordered, unless otherwise specified by the schema.
+By default, list types must be compared ordered and map types unordered, unless their ordering was otherwise specified by the schema.
 
 #### Markup Contents
 

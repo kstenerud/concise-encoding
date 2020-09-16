@@ -1,35 +1,9 @@
 Concise Text Encoding
 =====================
 
-Concise Text Encoding (CTE) is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It aims to support 80% of data use cases in a human friendly way:
+Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
- * There are two formats ([binary-based CBE](cbe-specification.md) and text-based CTE), which are 1:1 seamlessly compatible. Use the more efficient binary format for data interchange and storage, and transparently convert to/from text only when a human needs to be involved.
- * Supports metadata and comments.
- * Supports cyclic and recursive data.
- * Supports the most commonly used data types:
-
-| Type                                        | Example                                 |
-| ------------------------------------------- | --------------------------------------- |
-| Nil                                         | `@nil`                                  |
-| Boolean                                     | `@true`                                 |
-| Integer                                     | `-1_000_000_000_000_000`                |
-| Float                                       | `4.8255`                                |
-| [UUID](https://tools.ietf.org/html/rfc4122) | `@123e4567-e89b-12d3-a456-426655440000` |
-| Time                                        | `2019-7-15/18:04:00/E/Rome`             |
-| String                                      | `"A string"`                            |
-| [URI](https://tools.ietf.org/html/rfc3986)  | `u"http://example.com?q=1"`             |
-| Custom Type (binary encoding)               | `b"04 f6 28 3c 40 00 00 40 40"`         |
-| Custom Type (text encoding)                 | `t"cplx(2.94+3i)"`                      |
-| Typed Array                                 | `|u8x f1 e2 d3 c4 b5 a6 97 88|`         |
-| List                                        | `[1 2 3 4]`                             |
-| Map                                         | `{one=1 two=2}`                         |
-| Markup                                      | `<textview height=40; Some text>`       |
-| Metadata Map                                | `(_id=12345)`                           |
-| Marker/Reference                            | `&a_ref:"something"`, `$a_ref`          |
-| Comment                                     | `// A comment`                          |
-| Multiline Comment                           | `/* A comment */`                       |
-
-CTE is the text-based counterpart to [Concise Binary Encoding](cbe-specification.md).
+The text format aims to present data in a human friendly way, while the 1:1 compatible [binary format](cbe-specification.md) aims for compactness and machine processing efficiency.
 
 
 
@@ -146,74 +120,40 @@ The document begins with a [version specifier](#version-specifier), followed by 
 
 Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace.
 
-#### Example
+#### Basic Examples
+
+Empty document (CTE version 1):
 
 ```
-c1
-// _ct is the creation time, in this case referring to the entire document
-(_ct = 2019-9-1/22:14:01)
-{
-    /* Comments look very C-like, except:
-       /* Nested comments are allowed! */
-    */
-    // Notice that there are no commas in maps and lists
-    (metadata_about_a_list = "something interesting about a_list")
-    a_list           = [1 2 "a string"]
-    map              = {2=two 3=3000 1=one}
-    string           = "A string value"
-    boolean          = @true
-    "binary int"     = -0b10001011
-    "octal int"      = 0o644
-    "regular int"    = -10000000
-    "hex int"        = 0xfffe0001
-    "decimal float"  = -14.125
-    "hex float"      = 0x5.1ec4p20
-    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
-    date             = 2019-7-1
-    time             = 18:04:00.940231541/E/Prague
-    timestamp        = 2010-7-15/13:28:15.415942344/Z
-    nil              = @nil
-    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
-    url              = u"https://example.com/"
-    email            = u"mailto:me@somewhere.com"
-    1.5              = "Keys don't have to be strings"
-    long-string      = `ZZZ
-A backtick induces verbatim processing, which in this case will continue
-until three Z characters are encountered, similar to how here documents in
-bash work.
-You can put anything in here, including double-quote ("), or even more
-backticks (`). Verbatim processing stops at the end sequence, which in this
-case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &id1:{
-                                description = "This map will be referenced later using $id1"
-                                value = -@inf
-                                child_elements = @nil
-                                recursive = $id1
-                            }
-    ref1             = $id1
-    ref2             = $id1
-    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
-    // The markup type is good for presentation data
-    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
-                         <body;
-                           Please choose from the following widgets:
-                           <div id=parent style=normal ref-id=1;
-                             // Here we use a backtick to induce verbatim processing.
-                             // In this case, "##" is chosen as the ending sequence.
-                             <script; `##
-                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild;content>');
-                             ##>
-                           >
-                         >
-                       >
-}
-}
+c1 
 ```
 
-The top-level object can also be a non-container type, for example:
+Document (CTE version 1) containing the top-level integer `1000`:
 
-    c1 "A single string object"
+```
+c1 1000
+```
+
+Document (CTE version 1) containing a top-level list (pretty printed):
+
+```
+c1 [
+  string1
+  string2
+  string3
+]
+```
+
+Document (CTE version 1) containing a top-level map (pretty printed):
+
+```
+c1 {
+  8 = "8 bit"
+  16 = "16 bit"
+  32 = "32 bit"
+  64 = "64 bit"
+}
+```
 
 
 ### Human Editability
@@ -231,22 +171,13 @@ In the spirit of human editability:
 
 ### Version Specifier
 
-All CTE documents must begin with a version specifier, which must not be preceded by whitespace. In other words, the very first byte of a CTE document must be `c` (0x63).
+A CTE document begins with a version specifier, which is composed of the character `c` (0x63), followed by a version number. There must be no whitespace between the `c` and the version number.
 
-The version specifier is the lowercase letter `c` followed immediately by a positive integer representing the version of this specification that the document adheres to (there must not be whitespace between the `c` and the number). The version specifier must be followed by whitespace to separate it from the rest of the document.
+The version number is an unsigned integer with a value greater than 0, representing which version of this specification the document adheres to. The version specifier must be followed by whitespace to separate it from the rest of the document.
 
-Note: Because [CBE](cbe-specification.md) places the version as the first byte in a document, versions from 32 to 126 are disallowed in order to prevent clashes with any printable ASCII characters that another text encoding format might use.
+The version specifier is mandatory, [unless all parties have agreed to omit the specifier and use a specific version](#implied-structure).
 
-#### Examples
-
-    c1
-    {
-        a = 1
-    }
-
-Or:
-
-    c1 "this is a string"
+Example: Empty document (CTE version 1): `c1 `
 
 
 ### Maximum Depth
@@ -332,6 +263,8 @@ Following ieee754-2008 recommendations, the most significant bit of the signific
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (float32)
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (float32)
 
+**Note**: `s 1111111 000000000000000000000000` represents infinity, not NaN.
+
 Base-10 floating point notation should be preferred over base-16 notation. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 #### Floating Point Rules
@@ -362,7 +295,8 @@ The following are special floating point values:
 
  * `@inf`: Infinity
  * `-@inf`: Negative Infinity
- * `@nan`: Not a Number
+ * `@nan`: Not a Number (quiet)
+ * `@snan`: Not a Number (signaling)
 
 
 ### Numeric Whitespace
@@ -403,9 +337,9 @@ Field values must never be abbreviated (the year value `19` refers to 19 AD, not
 
 #### The Year Field
 
-The year field can be any number of digits, and can be positive (representing AD dates) or negative (representing BC dates). Negative (BC) years are prefixed with a dash character (`-`). The year must always be written in full, and must not be abbreviated.
+The year field can be any number of digits, and can be positive (representing AD dates) or negative (representing BC dates), but not zero. Negative (BC) years are prefixed with a dash character (`-`). The year must always be written in full, and must not be abbreviated.
 
-Note: The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid.
+**Note**: The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid.
 
 #### Date Structure
 
@@ -809,6 +743,8 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
     // Whitespace wherever you like:
     |b   true  true   false  true false |
     // The same boolean array using 0 and 1:
+    |b 1 1 0 1 0|
+    // The same boolean array without whitespace:
     |b 11010|
     // Empty array of UUIDs:
     |uu|
@@ -826,7 +762,7 @@ A list is ordered by default unless otherwise understood between parties (for ex
 
 A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
-Note: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing of a list of mixed types if the implementation language doesn't support it.
+**Note**: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing of a list of mixed types if the implementation language doesn't support it.
 
 #### Example
 
@@ -837,20 +773,20 @@ Note: While this spec allows mixed types in lists, not all languages do. Use mix
 
 A map associates key objects with value objects. Keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
 
-A map is ordered by default unless otherwise negotiated between parties (for example via a schema), or the user has specified that order doesn't matter.
+A map is unordered by default unless otherwise negotiated between parties (for example via a schema).
 
 All keys in a map must resolve to a unique value, even across numeric data types. For example, the following keys would clash:
 
  * `2000`
  * `2000.0`
 
-Note: The string value "2000" is not numeric, and would not clash.
+**Note**: The string value "2000" is not numeric, and would not clash.
 
 Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
-Note: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing of maps containing key-value pairs of mixed types if the implementation language doesn't support it.
+**Note**: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
 
 #### Keyable types
 
@@ -946,7 +882,7 @@ A content string works similarly to the text content inside of an XML tag (such 
 
 Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
 
-Note: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
+**Note**: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
 
 ##### Content Escape Sequence
 
@@ -977,83 +913,20 @@ When a verbatim string is initiated, the current string is terminated (added to 
 
 The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
 
-Note: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
-
-#### Doctype
-
-Use a [metadata map](#metadata-map) entry to specify a doctype:
-
-```
-( xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"] )
-```
-
-#### Style Sheet
-
-Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
-
-```
-( xml-stylesheet={type=text/xsl href=my-stylesheet.xsl} )
-```
+**Note**: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Example
 
 ```
 c1
-(xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-<html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
-  <body;
-    <div id=parent style=normal ref-id=1;
-      <script; `##
-        document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
-      ##>
-        Here is some text <span style=highlighted; with highlighted text> and more text.
-        <br>
-        <ul;
-            <li id=item_a; Item A>
-            <li id=item_b; Item B>
-            <li id=item_c; Item C>
-        >
-
-        /* MathML: ax^2 + bx + c */
-        <mrow;
-          <mi;a> <mo; &InvisibleTimes;> <msup; <mi;x> <mn;2> >
-          <mo;+> <mi;b> <mo; &InvisibleTimes;> <mi;x>
-          <mo;+> <mi;c>
-        >
+<View;
+    <Image src=u"images/avatar-image.jpg">
+    <Text;
+        Hello! Please choose a name!
     >
-  >
+    /* <HRule style=thin> */
+    <TextInput id=name style={height=40 borderColor=gray}; Name me! >
 >
-```
-
-This can easily be auto-converted to XML or HTML:
-
-```
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-  <body>
-    <div id="parent" style="normal" ref-id="1">
-      <script>
-      //<![CDATA[
-        document.getElementById('parent').insertAdjacentHTML('beforeend', '<div id="idChild"> content </div>');
-      //]]>
-      </script>
-        Here is some text <span style="highlighted">with highlighted text</span> and more text.
-        <br/>
-        <ul>
-            <li id="item_a">Item A</li>
-            <li id="item_b">Item B</li>
-            <li id="item_c">Item C</li>
-        </ul>
-
-        <!-- MathML: ax^2 + bx + c -->
-        <mrow>
-          <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi> <mn>2</mn> </msup>
-          <mo>+</mo> <mi>b</mi> <mo>&InvisibleTimes;</mo> <mi>x</mi>
-          <mo>+</mo> <mi>c</mi>
-        </mrow>
-    </div>
-  </body>
-</html>
 ```
 
 
@@ -1105,7 +978,7 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30 (Note: ID strings cannot begin with a numeric digit). Integer marker IDs will generally use less space in the binary format than multibyte strings.
 
-**Note:** Marker ID comparisons are always case-insensitive.
+**Note**: Marker ID comparisons are always case-insensitive.
 
 
 ### Reference
@@ -1302,7 +1175,7 @@ Certain values cannot be expressed other than by their names. These named values
 | `@true`  | Boolean true             |
 | `@false` | Boolean false            |
 
-Note: Named values must not be broken by whitespace.
+**Note**: Named values must not be broken by whitespace.
 
 
 
@@ -1433,6 +1306,8 @@ There are many things to consider when determining if two Concise Encoding docum
 
 The document encoding (CBE vs CTE) has no bearing on equivalence. Only the data contained within a document is considered.
 
+Equivalence is relaxed unless otherwise specified.
+
 
 ### Relaxed Equivalence
 
@@ -1442,7 +1317,7 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
 
-**Note:** In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
+**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
 
 #### Custom Types
 
@@ -1456,7 +1331,7 @@ Strings and verbatim strings are considered equivalent if their contents are equ
 
 Arrays must contain the same number of elements, and those elements must be equivalent.
 
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent.
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
 
 #### Containers
 
@@ -1464,7 +1339,7 @@ Containers must be of the same type. For example, a map is never equivalent to a
 
 Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to nil are considered equivalent to the same type of map where the key is not present.
 
-By default, list types must be compared ordered and map types unordered, unless otherwise specified by the schema.
+By default, list types must be compared ordered and map types unordered, unless their ordering was otherwise specified by the schema.
 
 #### Markup Contents
 

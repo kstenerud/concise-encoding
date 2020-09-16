@@ -1,11 +1,13 @@
-Concise Text Encoding: Quick Description
-========================================
+Concise Text Encoding: Condensed Specification
+==============================================
 
-As the [CTE specification](cte-specification.md) has become rather dense, this document is provided as a simpler description of how CTE documents are structured. Many details are glossed over, and so this document should not be considered a replacement for the [official specification](cte-specification.md).
+As the [CTE specification](cte-specification.md) has become rather dense, this document is provided as a simpler description of how CTE documents are structured. Many details are glossed over, so this document should not be considered a replacement for the [official specification](cte-specification.md).
 
-Concise Text Encoding (CTE) is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It aims to support 80% of data use cases in a human friendly way. Think JSON, but with 1:1 compatible twin binary and text formats and rich type support.
+Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
-CTE natively supports the following types:
+The text format aims to present data in a human friendly way, while the 1:1 compatible [binary format](cbe-specification.md) aims for compactness and machine processing efficiency.
+
+CTE is a lot like JSON with rich type support. The following types are natively supported:
 
 | Type                                        | Example                                 |
 | ------------------------------------------- | --------------------------------------- |
@@ -28,8 +30,6 @@ CTE natively supports the following types:
 | Comment                                     | `// A comment`                          |
 | Multiline Comment                           | `/* A comment */`                       |
 
-CTE is the text-based counterpart to [Concise Binary Encoding](cbe-specification.md).
-
 
 
 General Layout
@@ -45,8 +45,10 @@ Example: A CTE version 1 document containing a map as the top-level object:
 
     c1
     {
-        one = 1
-        two = 2
+        8 = "8 bit"
+        16 = "16 bit"
+        32 = "32 bit"
+        64 = "64 bit"
     }
 
 
@@ -99,13 +101,13 @@ You can use `_` as "numeric whitespace": `1_000_000`
 
 ### Floating Point
 
-Floating point numbers are written with a whole part, a fractional part, and possibly an exponential part. Base-10 floating point marks the exponential portion using `e`, and base-16 numbers use `p`:
+Floating point numbers are written with a whole part, a fractional part, and possibly an exponential part. Base-10 floating point marks the exponential portion using `e`, and base-16 numbers use `p`. Base-16 floating point numbers also begin with the prefix `0x`:
 
-| Exponent | Example        |
-| -------- | -------------- |
-| None     | `-105.67`      |
-| Base-10  | `1.944e-28`    |
-| Base-16  | `0xa.3fb8p+42` |
+| Exponent | Example         |
+| -------- | --------------- |
+| None     | `-105.67`       |
+| Base-10  | `1.944e-28`     |
+| Base-16  | `-0xa.3fb8p+42` |
 
 Floating point values can also use numeric whitespace: `-1.541_998e20`
 
@@ -113,7 +115,8 @@ Special floating point values:
 
  * `@inf`: Infinity
  * `-@inf`: Negative Infinity
- * `@nan`: Not a Number
+ * `@nan`: Not a Number (quiet)
+ * `@snan`: Not a Number (signaling)
 
 
 ### Date
@@ -232,7 +235,7 @@ The following array element types are allowed:
 
 | Type   | Description             |
 | ------ | ----------------------- |
-| `bool` | Boolean                 |
+| `b`    | Boolean                 |
 | `u8`   | 8-bit unsigned integer  |
 | `u16`  | 16-bit unsigned integer |
 | `u32`  | 32-bit unsigned integer |
@@ -244,12 +247,12 @@ The following array element types are allowed:
 | `f16`  | 16-bit floating point   |
 | `f32`  | 32-bit floating point   |
 | `f64`  | 64-bit floating point   |
-| `uuid` | 128-bit UUID            |
+| `uu`   | 128-bit UUID            |
 
 Values can be any of the representations allowed for the specified type. The following additional representations are also allowed within an array:
 
 * UUID values within an array may optionally be represented without the initial `@` sentinel.
-* Boolean values within an array may optionally be represented using `0` for false and `1` for true.
+* Boolean values within an array may optionally be represented using `0` for false and `1` for true (in which case whitespace is optional).
 
 Optionally, a suffix can be appended to the type specifier to indicate that all values must be considered to have an implicit prefix (only if the type supports it).
 
@@ -264,13 +267,15 @@ Optionally, a suffix can be appended to the type specifier to indicate that all 
     |u8x 9f 47 cb 9a 3c|
     |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0xffff|
-    |uuid 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     // Whitespace wherever you like:
-    |   bool   true  true   false  true false |
+    |b   true  true   false  true false |
     // The same boolean array using 0 and 1:
-    |bool 1 1 0 1 0|
+    |b 1 1 0 1 0|
+    // The same boolean array without whitespace:
+    |b 11010|
     // Empty array of UUIDs:
-    |uuid|
+    |uu|
 
 
 
@@ -507,55 +512,50 @@ c1
     */
     // Notice that there are no commas in maps and lists
     (metadata_about_a_list = "something interesting about a_list")
-    a_list           = [1 2 "a string"]
-    map              = {2=two 3=3000 1=one}
-    string           = "A string value"
-    boolean          = @true
-    "binary int"     = -0b10001011
-    "octal int"      = 0o644
-    "regular int"    = -10000000
-    "hex int"        = 0xfffe0001
-    "decimal float"  = -14.125
-    "hex float"      = 0x5.1ec4p20
-    uuid             = @f1ce4567-e89b-12d3-a456-426655440000
-    date             = 2019-7-1
-    time             = 18:04:00.940231541/E/Prague
-    timestamp        = 2010-7-15/13:28:15.415942344/Z
-    nil              = @nil
-    bytes            = |u8x 10 ff 38 9a dd 00 4f 4f 91|
-    url              = u"https://example.com/"
-    email            = u"mailto:me@somewhere.com"
-    1.5              = "Keys don't have to be strings"
-    long-string      = `ZZZ
+    a_list          = [1 2 "a string"]
+    map             = {2=two 3=3000 1=one}
+    string          = "A string value"
+    boolean         = @true
+    "binary int"    = -0b10001011
+    "octal int"     = 0o644
+    "regular int"   = -10000000
+    "hex int"       = 0xfffe0001
+    "decimal float" = -14.125
+    "hex float"     = 0x5.1ec4p20
+    uuid            = @f1ce4567-e89b-12d3-a456-426655440000
+    date            = 2019-7-1
+    time            = 18:04:00.940231541/E/Prague
+    timestamp       = 2010-7-15/13:28:15.415942344/Z
+    nil             = @nil
+    bytes           = |u8x 10 ff 38 9a dd 00 4f 4f 91|
+    "uint16 array"  = |u16x ff91 84c4 009f 3aa1|
+    url             = u"https://example.com/"
+    email           = u"mailto:me@somewhere.com"
+    1.5             = "Keys don't have to be strings"
+    long-string     = `ZZZ
 A backtick induces verbatim processing, which in this case will continue
 until three Z characters are encountered, similar to how here documents in
 bash work.
 You can put anything in here, including double-quote ("), or even more
 backticks (`). Verbatim processing stops at the end sequence, which in this
 case is three Z characters, specified earlier as a sentinel.ZZZ
-    marked_object    = &id1:{
-                                description = "This map will be referenced later using $id1"
-                                value = -@inf
-                                child_elements = @nil
-                                recursive = $id1
-                            }
-    ref1             = $id1
-    ref2             = $id1
-    outside_ref      = $u"https://somewhere.else.com/path/to/document.cte#some_id"
+    marked_object   = &id1:{
+                               description = "This map will be referenced later using $id1"
+                               value = -@inf
+                               child_elements = @nil
+                               recursive = $id1
+                           }
+    ref1            = $id1
+    ref2            = $id1
+    outside_ref     = $u"https://somewhere.else.com/path/to/document.cte#some_id"
     // The markup type is good for presentation data
-    html_compatible  = (xml-doctype=[html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"])
-                       <html xmlns=u"http://www.w3.org/1999/xhtml" xml:lang=en;
-                         <body;
-                           Please choose from the following widgets:
-                           <div id=parent style=normal ref-id=1;
-                             // Here we use a backtick to induce verbatim processing.
-                             // In this case, "##" is chosen as the ending sequence.
-                             <script; `##
-                               document.getElementById('parent').insertAdjacent('beforeend', '<div id=idChild;content>');
-                             ##>
-                           >
-                         >
-                       >
+    main-view       = <View;
+                          <Image src=u"images/avatar-image.jpg">
+                          <Text;
+                              Hello! Please choose a name!
+                          >
+                          <TextInput id=name style={height=40 borderColor=gray}; Name me! >
+                      >
 }
 ```
 
