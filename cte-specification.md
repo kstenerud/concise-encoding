@@ -773,7 +773,7 @@ The following array element types are allowed:
 
 | Type   | Description             |
 | ------ | ----------------------- |
-| `bool` | Boolean                 |
+| `b`    | Boolean                 |
 | `u8`   | 8-bit unsigned integer  |
 | `u16`  | 16-bit unsigned integer |
 | `u32`  | 32-bit unsigned integer |
@@ -785,12 +785,12 @@ The following array element types are allowed:
 | `f16`  | 16-bit floating point   |
 | `f32`  | 32-bit floating point   |
 | `f64`  | 64-bit floating point   |
-| `uuid` | 128-bit UUID            |
+| `uu`   | 128-bit UUID            |
 
 Values can be any of the representations allowed for the specified type. The following additional representations are also allowed within an array:
 
 * UUID values within an array may optionally be represented without the initial `@` sentinel.
-* Boolean values within an array may optionally be represented using `0` for false and `1` for true.
+* Boolean values within an array may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `1001011` = `1 0 0 1 0 1 1` = `true false false true false true true`)
 
 Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
 
@@ -805,13 +805,13 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
     |u8x 9f 47 cb 9a 3c|
     |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0xffff|
-    |uuid 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     // Whitespace wherever you like:
-    |   bool   true  true   false  true false |
+    |b   true  true   false  true false |
     // The same boolean array using 0 and 1:
-    |bool 1 1 0 1 0|
+    |b 11010|
     // Empty array of UUIDs:
-    |uuid|
+    |uu|
 
 
 
@@ -913,6 +913,8 @@ Although it might look a little different on the surface, the internal structure
 #### Markup Tag Name
 
 Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
+
+Markup tag names are case insensitive.
 
 #### Attributes Section
 
