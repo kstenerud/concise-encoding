@@ -625,7 +625,7 @@ Use a [metadata map](#metadata-map) entry to specify an XML style sheet:
 Peudo-Objects
 -------------
 
-Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects (except for [references](#reference)). For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+Pseudo-objects add additional metadata to a real object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a full object (not an array element) can be placed, but do not themselves constitute objects (except for [references](#reference)). For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 #### Referring Pseudo-objects
 

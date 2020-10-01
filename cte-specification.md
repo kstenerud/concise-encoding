@@ -934,7 +934,7 @@ c1
 Pseudo-Objects
 --------------
 
-Pseudo-objects add additional metadata to another object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a real object can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
+Pseudo-objects add additional metadata to another object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a full object (not an array element) can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
 
 Like regular objects, pseudo-objects must not appear before the [version specifier](#version-specifier). Pseudo-objects also must not appear after the top-level object.
 
