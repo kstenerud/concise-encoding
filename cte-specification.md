@@ -641,7 +641,7 @@ An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbati
 ```
 c1
 <View;
-    <Image src=u"images/avatar-image.jpg">
+    <Image src=|u images/avatar-image.jpg|>
     <Text;
         Hello! Please choose a name!
     >
@@ -785,11 +785,11 @@ c1
 
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
-      u"mailto:joe@average.org"
+      |u mailto:joe@average.org|
       /* Unlike in C, nested multiline
          comments are allowed */
     */
-    u"mailto:someone@somewhere.com"
+    |u mailto:someone@somewhere.com|
 
     "data" // Comment after data
     =
@@ -873,7 +873,7 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between an array encoding type and the opening double-quote (`u "` is invalid).
- * Between a marker or reference initiator and its marker ID (`& 1234` and `# u"mydoc.cbe"` are invalid).
+ * Between a marker or reference initiator and its marker ID (`& 1234` and `# |u mydoc.cbe|` are invalid).
  * Between a marker ID and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.

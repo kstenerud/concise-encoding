@@ -447,7 +447,7 @@ The Concise Encoding formats don't concern themselves with [entity references](h
 ```
 c1
 <View;
-    <Image src=u"images/avatar-image.jpg">
+    <Image src=|u images/avatar-image.jpg|>
     <Text;
         Hello! Please choose a name!
     >
@@ -532,10 +532,10 @@ Example:
 
         reference_to_string = $big_string
         reference_to_map = $1
-        reference_to_local_doc = $u"common.cte"
-        reference_to_remote_doc = $u"https://somewhere.com/my_document.cbe?format=long"
-        reference_to_local_doc_marker = $u"common.cte#legalese"
-        reference_to_remote_doc_marker = $u"https://somewhere.com/my_document.cbe?format=long#examples"
+        reference_to_local_doc = $|u common.cte|
+        reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
+        reference_to_local_doc_marker = $|u common.cte#legalese|
+        reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
     }
 
 
@@ -563,7 +563,6 @@ Predefined metadata keys should be used where possible to maximize interoperabil
         _at = 2019.09.14-09:55:00/Z
     )
     {
-        ( _o=[u"https://all-your-data-are-belong-to-us.com"] )
         records = [
             // Metadata for "ABC Corp" record
             (
@@ -574,16 +573,6 @@ Predefined metadata keys should be used where possible to maximize interoperabil
                 client = "ABC Corp"
                 amount = 10499.28
                 due = 2020.05.14
-            }
-            // Metadata for "XYZ Corp" record
-            (
-                _ct=2019.02.30-09:00:01/Z
-                _mt=2019.08.17-12:44:31/Z
-            )
-            {
-                client = "XYZ Corp"
-                amount = 3994.01
-                due = 2020.08.30
             }
         ]
     }
@@ -630,11 +619,11 @@ c1
 
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
-      u"mailto:joe@average.org"
+      |u mailto:joe@average.org|
       /* Unlike in C, nested multiline
          comments are allowed */
     */
-    u"mailto:someone@somewhere.com"
+    |u mailto:someone@somewhere.com|
 
     "data" // Comment after data
     =
