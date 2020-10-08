@@ -53,7 +53,7 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 Specifications
 --------------
 
- * [CTE condensed description (read this first)](cte-condensed.md)
+ * [Concise Encoding Structure](ce-structure.md)
  * [Concise Text Encoding (CTE)](cte-specification.md)
  * [Concise Binary Encoding (CBE)](cbe-specification.md)
  * [Common Generic Metadata](common-generic-metadata.md)
@@ -156,8 +156,8 @@ c1
     nil             = @nil
     bytes           = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     "uint16 array"  = |u16x ff91 84c4 009f 3aa1|
-    url             = u"https://example.com/"
-    email           = u"mailto:me@somewhere.com"
+    url             = |u https://example.com/|
+    email           = |u mailto:me@somewhere.com|
     1.5             = "Keys don't have to be strings"
     long-string     = `ZZZ
 A backtick induces verbatim processing, which in this case will continue
@@ -174,7 +174,7 @@ case is three Z characters, specified earlier as a sentinel.ZZZ
                            }
     ref1            = $id1
     ref2            = $id1
-    outside_ref     = $u"https://somewhere.else.com/path/to/document.cte#some_id"
+    outside_ref     = $|u https://somewhere.else.com/path/to/document.cte#some_id|
     // The markup type is good for presentation data
     main-view       = <View;
                           <Image src=u"images/avatar-image.jpg">

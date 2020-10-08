@@ -5,6 +5,8 @@ Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general p
 
 The text format aims to present data in a human friendly way, while the 1:1 compatible [binary format](cbe-specification.md) aims for compactness and machine processing efficiency.
 
+CTE documents must follow the [Concise Encoding structural rules](ce-structure.md).
+
 
 
 Version
@@ -18,60 +20,49 @@ Contents
 --------
 
 * [Terms](#terms)
-* [Structure](#structure)
+* [Geenral](#general)
   - [Human Editability](#human-editability)
-  - [Version Specifier](#version-specifier)
-  - [Maximum Depth](#maximum-depth)
-  - [Maximum Length](#maximum-length)
   - [Line Endings](#line-endings)
+  - [Escape Sequences](#escape-sequences)
+    - [Unicode Escape Sequences](#unicode-escape-sequences)
+    - [Continuation](#continuation)
+* [Version Specifier](#version-specifier)
 * [Numeric Types](#numeric-types)
   - [Boolean](#boolean)
-  - [UUID](#uuid)
   - [Integer](#integer)
   - [Floating Point](#floating-point)
     - [Base-10 Notation](#base-10-notation)
     - [Base-16 Notation](#base-16-notation)
+    - [Special Floating Point Values](#special-floating-point-values)
     - [Floating Point Rules](#floating-point-rules)
-    - [Infinity and Not a Number](#infinity-and-not-a-number)
   - [Numeric Whitespace](#numeric-whitespace)
+  - [UUID](#uuid)
 * [Temporal Types](#temporal-types)
-  - [Temporal Type Notes](#temporal-type-notes)
-  - [Time Zones](#time-zones)
-    - [Area/Location](#arealocation)
-    - [Global Coordinates](#global-coordinates)
   - [Date](#date)
   - [Time](#time)
   - [Timestamp](#timestamp)
+  - [Time Zones](#time-zones)
+    - [Area/Location](#arealocation)
+    - [Global Coordinates](#global-coordinates)
 * [Array Types](#array-types)
+  - [Element Array Encodings](#element-array-encodings)
+  - [String-Like Array Encodings](#string-like-array-encodings)
+  - [URI](#uri)
+  - [Custom Binary](#custom-binary)
+  - [Custom Text](#custom-text)
   - [String](#string)
-    - [String Content Rules](#string-content-rules)
-    - [Unicode Escape Sequences](#unicode-escape-sequences)
     - [Quoted String](#quoted-string)
     - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
-  - [URI](#uri)
-  - [Custom Types](#custom-types)
-    - [Binary Encoding](#custom-type-binary-encoding)
-    - [Text Encoding](#custom-type-text-encoding)
-  - [Typed Array](#typed-array)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
     - [Markup Structure](#markup-structure)
-    - [Tag Name](#markup-tag-name)
-    - [Attributes Section](#attributes-section)
-    - [Contents Section](#contents-section)
-      - [Container End](#container-end)
-      - [Content String](#content-string)
-      - [Content Escape Sequence](#content-escape-sequence)
-      - [Entity Reference](#entity-reference)
-    - [Doctype](#doctype)
-    - [Style Sheet](#style-sheet)
-    - [Markup Comment](#markup-comment)
+    - [Container End](#container-end)
+    - [Content String](#content-string)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
-    - [Marker ID](#marker-id)
   - [Reference](#reference)
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
@@ -79,15 +70,9 @@ Contents
     - [Multiline Comment](#multiline-comment)
     - [Comment Character Restrictions](#comment-string-character-restrictions)
 * [Other Types](#other-types)
-  - [Nil](#nil)
-* [Named Values](#named-values)
+  - [Null](#null)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
-* [Implied Structure](#implied-structure)
-  - [Implied Version](#implied-version)
-  - [Inline Containers](#inline-containers)
-* [Invalid Encodings](#invalid-encodings)
-* [Equivalence](#equivalence)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -109,51 +94,19 @@ The following terms have specific meanings in this specification:
 
 
 
-Structure
----------
+General
+-------
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-The document begins with a [version specifier](#version-specifier), followed by zero or one objects of any type. To store multiple values in a document, use a container as the top-level object and store other objects within that container.
+Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace. Extraneous whitespace is ignored.
 
-    [version specifier] [object]
+**Examples**:
 
-Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace.
-
-#### Basic Examples
-
-Empty document (CTE version 1):
-
-```
-c1 
-```
-
-Document (CTE version 1) containing the top-level integer `1000`:
-
-```
-c1 1000
-```
-
-Document (CTE version 1) containing a top-level list (pretty printed):
-
-```
-c1 [
-  string1
-  string2
-  string3
-]
-```
-
-Document (CTE version 1) containing a top-level map (pretty printed):
-
-```
-c1 {
-  8 = "8 bit"
-  16 = "16 bit"
-  32 = "32 bit"
-  64 = "64 bit"
-}
-```
+ * CTE v1 empty document: `c1`
+ * CTE v1 document containing the top-level integer value 1000: `c1 1000`
+ * CTE v1 document containing a top-level list: `c1 [a b c]`
+ * CTE v1 document containing a top-level map: `c1 [a=1 b=2 c=3]`
 
 
 ### Human Editability
@@ -169,30 +122,80 @@ In the spirit of human editability:
  * If a certain character is likely to be confusing or problematic, it's encouraged to use an escape sequence instead.
 
 
-### Version Specifier
-
-A CTE document begins with a version specifier, which is composed of the character `c` (0x63), followed by a version number. There must be no whitespace between the `c` and the version number.
-
-The version number is an unsigned integer with a value greater than 0, representing which version of this specification the document adheres to. The version specifier must be followed by whitespace to separate it from the rest of the document.
-
-The version specifier is mandatory, [unless all parties have agreed to omit the specifier and use a specific version](#implied-structure).
-
-Example: Empty document (CTE version 1): `c1 `
-
-
-### Maximum Depth
-
-Since nested objects (in containers such as maps and lists) are possible, it is necessary to impose an arbitrary depth limit to insure interoperability between implementations. For the purposes of this spec, that limit is 1000 levels of nesting from the top level container to the most nested object (inclusive), unless a different maximum depth is established between parties.
-
-
-### Maximum Length
-
-Maximum lengths (max list length, max map length, max array length, max total objects in document, max byte length, etc) are implementation defined, and should be negotiated beforehand. A decoder is free to discard documents that threaten to exceed its resources.
-
-
 ### Line Endings
 
 Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should only output LF when the destination is a foreign or unknown system.
+
+
+### Escape Sequences
+
+Some kinds of data may contain information that cannot be safely represented in textual form in a CTE document. In these cases, escape sequences may be used to encode the data. For these data types, `\` acts as an escape sequence initiator, and the following escape sequences are recognized:
+
+| Sequence                                    | Interpretation                |
+| ------------------------------------------- | ----------------------------- |
+| `\`, u+000a                                 | [continuation](#continuation) |
+| `\`, u+000d, u+000a                         | [continuation](#continuation) |
+| `\t`                                        | horizontal tab (u+0009)       |
+| `\n`                                        | linefeed (u+000a)             |
+| `\r`                                        | carriage return (u+000d)      |
+| `\"`                                        | double quote (u+0022)         |
+| `\|`                                        | pipe (u+007c)                 |
+| `\\`                                        | backslash (u+005c)            |
+| `\*`                                        | asterisk (u+002a)             |
+| `\/`                                        | slash (u+002f)                |
+| `\<`                                        | less-than (u+003c)            |
+| `\>`                                        | greater-than (u+003e)         |
+| `` \` ``                                    | backtick (u+0060)             |
+| [Unicode escape](#unicode-escape-sequences) | Unicode character             |
+
+**Note**: The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
+
+#### Unicode Escape Sequences
+
+Unicode characters can in some string contexts be encoded using unicode escape sequences, which begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
+
+Examples:
+
+| Sequence  | Digits | Character     |
+| --------- | ------ | ------------- |
+| `\0`      | 0      | NUL           |
+| `\16`     | 1      | ACK           |
+| `\27f`    | 2      | DEL           |
+| `\3101`   | 3      | ā  (a macron) |
+| `\42191`  | 4      | ↑  (up arrow) |
+| `\51f415` | 5      | 🐕 (dog)      |
+
+#### Continuation
+
+A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character.
+
+Example:
+
+```
+    "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
+     mad to be saved, desirous of everything at the same time, the ones who never yawn or \
+     say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
+     exploding like spiders across the stars."
+```
+
+The above string is interpreted as:
+
+```
+The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
+```
+
+
+
+Version Specifier
+-----------------
+
+A CTE document begins with a version specifier, which is composed of the character `c` (0x63), followed by a version number. There must be no whitespace between the `c` and the version number.
+
+The version specifier and the top-level object (if present) must be separated by whitespace.
+
+**Example**:
+
+Version specifier (CTE version 1): `c1`
 
 
 
@@ -201,23 +204,7 @@ Numeric Types
 
 ### Boolean
 
-Supports the values `@true` and `@false`.
-
-#### Example
-
-    @true
-    @false
-
-
-### UUID
-
-The [universally unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier) must be structured according to the formal definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
-
-UUIDs are prefixed with an at (`@`) character.
-
-Example:
-
-    @123e4567-e89b-12d3-a456-426655440000
+Represented by the values `@true` and `@false`.
 
 
 ### Integer
@@ -233,10 +220,17 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
+**Examples**:
+
+    50000
+    -123
+
 
 ### Floating Point
 
 A floating point number is composed of a whole part and a fractional part, separated by a dot `.`, with an optional exponential portion. Negative values are prefixed with a dash `-`.
+
+**Examples**:
 
     1.0
     -98.413
@@ -258,14 +252,14 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
 
-Following ieee754-2008 recommendations, the most significant bit of the significand field in a NaN (not a number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
-
-    s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (float32)
-    s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (float32)
-
-**Note**: `s 1111111 000000000000000000000000` represents infinity, not NaN.
-
 Base-10 floating point notation should be preferred over base-16 notation. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+
+#### Special Floating Point Values
+
+ * `@inf`: Infinity
+ * `-@inf`: Negative Infinity
+ * `@nan`: Not a Number (quiet)
+ * `@snan`: Not a Number (signaling)
 
 #### Floating Point Rules
 
@@ -289,15 +283,6 @@ Base-10 floating point notation should be preferred over base-16 notation. Decim
 | `.218901e+2` | `21.8901` | Or `2.18901e+1`                                      |
 | `-0`         | `-0.0`    | Special case: -0 cannot be represented as an integer |
 
-#### Infinity and Not a Number
-
-The following are special floating point values:
-
- * `@inf`: Infinity
- * `-@inf`: Negative Infinity
- * `@nan`: Not a Number (quiet)
- * `@snan`: Not a Number (signaling)
-
 
 ### Numeric Whitespace
 
@@ -320,97 +305,25 @@ Rules:
 Numeric whitespace characters must be ignored when decoding numeric values.
 
 
+### UUID
+
+The 128-bit universally unique identifier begins with an at (`@`) character, and must follow definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
+
+Example:
+
+    @123e4567-e89b-12d3-a456-426655440000
+
+
 
 Temporal Types
 --------------
 
 Temporal types record time with varying degrees of precision.
 
-
-### Temporal Type Notes
-
-#### Field Width
-
 Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits for aesthetic reasons if desired. Minutes and seconds must always be padded to 2 digits.
-
-Field values must never be abbreviated (the year value `19` refers to 19 AD, not 2019 AD).
-
-#### The Year Field
-
-The year field can be any number of digits, and can be positive (representing AD dates) or negative (representing BC dates), but not zero. Negative (BC) years are prefixed with a dash character (`-`). The year must always be written in full, and must not be abbreviated.
-
-**Note**: The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid.
-
-#### Date Structure
-
-All dates are structured according to the Gregorian calendar, containing a month and day-of-month.
-
-#### Dates prior to 1582
-
-Dates prior to the introduction of the Gregorian calendar in 1582 must be written according to the proleptic Gregorian calendar.
-
-
-### Time Zones
-
-A time zone refers to the political designation of a location having a specific time offset from UTC during a particular time period. Time zones are in a constant state of flux, and can change at any time for all sorts of reasons. There are two ways to denote a time zone: by area/location, and by global coordinates.
-
-If the time zone is unspecified, it is assumed to be `Zero` (UTC).
-
-
-#### Area/Location
-
-The area/location method is the more human-readable of the two, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones are case-sensitive because they tend to be implemented that way on most platforms.
-
-##### Abbreviated Areas
-
-Since there are only a limited number of areas in the database, the following abbreviations can be used in the area portion of the time zone:
-
-| Area         | Abbreviation |
-| ------------ | ------------ |
-| `Africa`     | `F`          |
-| `America`    | `M`          |
-| `Antarctica` | `N`          |
-| `Arctic`     | `R`          |
-| `Asia`       | `S`          |
-| `Atlantic`   | `T`          |
-| `Australia`  | `U`          |
-| `Etc`        | `C`          |
-| `Europe`     | `E`          |
-| `Indian`     | `I`          |
-| `Pacific`    | `P`          |
-
-##### Special Areas
-
-The following special pseudo-areas can also be used. They do not contain a location component.
-
-| Area    | Abbreviation | Meaning            |
-| ------- | ------------ | ------------------ |
-| `Zero`  | `Z`          | Alias to `Etc/UTC` |
-| `Local` | `L`          | "Local" time zone, meaning that the accompanying time value is to be interpreted as if in the time zone of the observer. |
-
-##### Examples
-
- * `E/Paris`
- * `America/Vancouver`
- * `Etc/UTC` == `Zero` == `Z`
- * `L`
-
-
-#### Global Coordinates
-
-The global coordinates method uses the global position to hundredths of degrees, giving a resolution of about 1km at the equator. Locations are written as latitude and longitude, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
-
-This method has the advantage of being unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not easily decodable by humans.
-
-##### Examples
-
- * `51.60/11.11`
- * `-13.53/-172.37`
 
 
 ### Date
-
-Refers to a particular date without specifying a time during that day.
 
 A date is made up of the following fields, separated by a dash character (`-`):
 
@@ -420,7 +333,9 @@ A date is made up of the following fields, separated by a dash character (`-`):
 | Month |     Y     |         1 |        12 |          2 |
 | Day   |     Y     |         1 |        31 |          2 |
 
-#### Examples
+ * BC years are prefixed with a dash (`-`).
+
+**Examples**:
 
  * `2019-8-5`: August 5, 2019
  * `5081-03-30`: March 30, 5081
@@ -429,8 +344,6 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 
 ### Time
-
-Represents a time of day without specifying a particular date.
 
 A time is made up of the following fields:
 
@@ -442,15 +355,10 @@ A time is made up of the following fields:
 | Subseconds   |     N     |    `.`    |         0 | 999999999 |          9 |
 | Time Zone    |     N     |    `/`    |         - |         - |          - |
 
-#### Notes
-
- * Hours are always written according to the 24h clock (21:00, not 9:00 PM).
  * Minutes and seconds must always be padded to 2 digits.
- * Seconds go to 60 to support leap seconds.
- * Since there is no date component, time zone data must be interpreted as if it were "today", and so the time might not remain constant should the political situation at that time zone change at a later date (except when using `Etc/GMT+1`, etc).
  * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
-#### Examples
+**Examples**:
 
  * `9:04:21`: 9:04:21 UTC
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
@@ -464,112 +372,154 @@ A time is made up of the following fields:
 
 A timestamp combines a date and a time, separated by a slash character (`/`).
 
-#### Examples
+**Examples**:
 
  * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
  * `1985-10-26/01:20:01.105/M/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
  * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever is in the place of Paris at that time
 
 
+### Time Zones
+
+The time zone is an optional field. If omitted, it is assumed to be `Zero` (UTC).
+
+#### Area/Location
+
+An area/location time zone is written in the form `Area/Location`.
+
+**Examples**:
+
+ * `E/Paris`
+ * `America/Vancouver`
+ * `Etc/UTC` == `Zero` == `Z`
+ * `L`
+
+
+#### Global Coordinates
+
+Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
+
+**Examples**:
+
+ * `51.60/11.11`
+ * `-13.53/-172.37`
+
+
 
 Array Types
 -----------
 
-An "array" for the purposes of this spec represents a contiguous sequence of octets. The array type determines how those octets are to be interpreted.
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
 
-There are two kinds of array representations in CTE:
+    |type elem1 elem2 elem3 ...|
+    |type contents represented as a string|
 
-* Quoted array representations are enclosed within double-quotes (`"`), with a possible type prefix. For quoted array representations with a type prefix, there must be no whitespace between the type and the opening quoted (e.g. `u"http://x.com"`, not `u "http://x.com"`).
-* [Typed arrays](#typed-array) are enclosed within pipes (`|`), and begin with a type specifier.
+An empty array has a type but no contents:
+
+    |type|
+
+The following array types are available:
+
+| Type   | Description             | Encoding Kind |
+| ------ | ----------------------- | ------------- |
+| `b`    | Boolean                 | Element       |
+| `u8`   | 8-bit unsigned integer  | Element       |
+| `u16`  | 16-bit unsigned integer | Element       |
+| `u32`  | 32-bit unsigned integer | Element       |
+| `u64`  | 64-bit unsigned integer | Element       |
+| `i8`   | 8-bit signed integer    | Element       |
+| `i16`  | 16-bit signed integer   | Element       |
+| `i32`  | 32-bit signed integer   | Element       |
+| `i64`  | 64-bit signed integer   | Element       |
+| `f16`  | 16-bit floating point   | Element       |
+| `f32`  | 32-bit floating point   | Element       |
+| `f64`  | 64-bit floating point   | Element       |
+| `uu`   | 128-bit UUID            | Element       |
+| `u`    | URI                     | String-Like   |
+| `ct`   | Custom Text             | String-Like   |
+| `cb`   | Custom Binary           | Element       |
+
+
+### Element Array Encodings
+
+For element array encodings, any valid representation of the element data type may be used, provided the value fits within the type's width. 
+
+#### Implied Prefix
+
+Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
+
+| Suffix | Implied element prefix | Example                       |
+| ------ | ---------------------- | ----------------------------- |
+| `b`    | `0b`                   | `|u8b 10011010 00010101|`     |
+| `o`    | `0o`                   | `|i16o -7445 644|`            |
+| `x`    | `0x`                   | `|f32x a.c9fp20 -1.ffe9p-40|` |
+
+#### Special Rules
+
+ * UUID array elements may optionally be represented without the initial `@` sentinel.
+ * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `1001` = `1 0 0 1` = `true false false true`)
+
+**Examples**:
+
+    |u8x 9f 47 cb 9a 3c|
+    |f32 1.5 0x4.f391p100 30 9.31e-30|
+    |i16 0b1001010 0o744 1000 0xffff|
+    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    |b true true false true false|
+    |b 1 1 0 1 0|
+    |b 11010|
+
+
+### String-Like Array Encodings
+
+String-like array encodings are interpreted as a whole, and must not contain control characters, non-printable characters, pipe (`|`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences).
+
+
+### URI
+
+A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. CTE [escape sequences](#escape-sequences), however, must be interpreted.
+
+ * `|u http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
+ * `|u http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
+
+
+### Custom Binary
+
+Custom binary data is encoded like `u8x`: as hex encoded byte elements.
+
+**Example**:
+
+    |cb 04 f6 28 3c 40 00 00 40 40|
+
+
+### Custom Text
+
+Custom text data is encoded using string-like encoding.
+
+**Example**:
+
+    |ct cplx(2.94+3i)|
 
 
 ### String
 
-An array of UTF-8 encoded bytes. Unlike other quoted array types, the string type is not prefixed with an encoding type, and is delimited differently depending on the circumstances in order to be more human friendly:
+Strings are delimited differently from other array types in order to be more human friendly. There are three methods for encoding a string:
 
  * [Quoted sequence](#quoted-string)
  * [Verbatim sequence](#verbatim-string)
  * [Unquoted string](#unquoted-string)
 
-#### String Content Rules
-
-Following [human editability](#human-editability), a string must not contain control characters or non-printable characters unless encoded as [unicode escape sequences](#unicode-escape-sequences).
-
-Support for the NUL character (u+0000, which must be escaped because it's a control character) is implementation defined due to potential issues with null string delimiters in some languages and platforms. It should be avoided in general for safety and portability. Support for NUL must not be assumed.
-
-Strings must always resolve to complete, valid UTF-8 sequences when fully decoded (i.e. after evaluating all escape sequences).
-
-#### Unicode Escape Sequences
-
-Unicode characters can in some string contexts be encoded using unicode escape sequences, which begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
-
-Examples:
-
-| Sequence  | Digits | Character     |
-| --------- | ------ | ------------- |
-| `\0`      | 0      | NUL           |
-| `\16`     | 1      | ACK           |
-| `\27f`    | 2      | DEL           |
-| `\3101`   | 3      | ā  (a macron) |
-| `\42191`  | 4      | ↑  (up arrow) |
-| `\51f415` | 5      | 🐕 (dog)      |
-
 #### Quoted String
 
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence, with special processing whenever an escape sequence occurs.
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences).
 
-The backslash character (`\`) initiates an escape sequence inside a doube-quote enclosed sequence. The following escape sequences are recognized, and must be in lower case:
+**Example**:
 
-| Sequence                                    | Interpretation                |
-| ------------------------------------------- | ----------------------------- |
-| `\`, u+000a                                 | [continuation](#continuation) |
-| `\`, u+000d, u+000a                         | [continuation](#continuation) |
-| `\t`                                        | horizontal tab (u+0009)       |
-| `\n`                                        | linefeed (u+000a)             |
-| `\r`                                        | carriage return (u+000d)      |
-| `\"`                                        | double quote (u+0022)         |
-| `\*`                                        | asterisk (u+002a)             |
-| `\/`                                        | slash (u+002f)                |
-| `\\`                                        | backslash (u+005c)            |
-| [Unicode escape](#unicode-escape-sequences) | Unicode character             |
-
-Unrecognized escape sequences are invalid.
-
-A decoder must interpret escape sequences and pass the transformed string to the next layer.
-
-Escape sequences aid [human editability](#human-editability), and can be used to avoid edge cases in [comments](#comment).
-
-Example:
-
-```
-    "This string has a bare newline right here:
-Everything except for escape sequences are read as-is, until the closing double-quote."
-```
-
-##### Continuation
-
-A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character.
-
-Example:
-
-```
-    "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
-     mad to be saved, desirous of everything at the same time, the ones who never yawn or \
-     say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
-     exploding like spiders across the stars."
-```
-
-The above string must be interpreted as:
-
-```
-The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
-```
+    "Line 1\nLine 2\nLine 3"
 
 #### Verbatim String
 
-A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not. How the higher layers handle such information is implementation dependent.
-
-CTE encodes verbatim strings in a fashion similar to "here" documents in Bash, composed as follows:
+CTE encodes verbatim strings using a method similar to "here" documents in Bash, composed as follows:
 
  * Backtick (`` ` ``).
  * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
@@ -577,27 +527,17 @@ CTE encodes verbatim strings in a fashion similar to "here" documents in Bash, c
  * The string contents.
  * A second instance of the end-of-string identifier (no whitespace termination necessary).
 
-Example:
+**Example**:
 
 ```
-discussion = `@@@
-A verbatim string is not constrained like normal strings are. It can contain
-problematic characters like ", `, \ <, > and such, which are interpreted
-literally ("\n" does not represent "newline" in this text).
-
-Three at-symbols (`@`) are being used to mark the end-of-string in this
-example, so that exact character sequence must not occur in the string contents.
-
-The initial newline after the initial at-symbols in this example is not part of
-the string; it terminates the end-of-string identifier. The actual text begins
-at "A verbatim string..." with no leading whitespace.
-
-The `\` at the end of this line is not a continuation: \
+`@@@ In verbatim strings, everything is interpreted literally until the
+end-of-string identifier is encountered (in this case three @ characters).
+Characters like ", [, <, \ and such can appear unescaped.
 
 Whitespace, including newlines and "leading" whitespace, is also read verbatim.
         For example, this line really is indented 8 spaces.
 
-Here is the end sequence. There is no trailing newline in this example.@@@
+There is no trailing newline in this example.@@@
 ```
 
 #### Unquoted String
@@ -627,180 +567,26 @@ These can be unquoted strings:
     飲み物
 
 
-### URI
-
-The Uniform Resource Identifier must be structured according to [RFC 3986](https://tools.ietf.org/html/rfc3986). Instances of the double-quote character(`"`), control characters, whitespace characters, line break characters, and any [problematic characters](#human-editability) must be percent-encoded.
-
-URIs use the encoding type `u`.
-
-#### Examples
-
-    u"https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top"
-
-    u"mailto:John.Doe@example.com"
-
-    u"urn:oasis:names:specification:docbook:dtd:xml:4.1.2"
-
-    u"https://example.com/percent-encoding/?double-quote=%22"
-
-
-### Custom Types
-
-There are many cases where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to be mapped directly to/from memory for performance reasons.
-
-Although not a requirement, it's generally expected that a custom type implementation would provide both a binary and text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. Note, however, that both encodings can handle both types. The only difference would be human readability in CTE documents, and codec efficiency in CBE documents.
-
-When both custom binary and text forms of a data type are provided, they must be 1:1 convertible to each other without data loss.
-
-It's important to avoid parsing ambiguity when designing your custom type encodings. The simplest approach for binary data is to prepend a type field. For text data, "function-style" encoding (`t"mytype(1, 2.0, 'three')"`) is usually sufficient.
-
-#### Custom Type (Binary Encoding)
-
-An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, multibyte data types should be represented in little endian byte order whenever possible.
-
-Custom binary data is encoded as a quoted array representation with type `b`, and uses hex encoding to represent the array's octets. Whitespace is optional between hex encode bytes, and all bytes must be represented by two digits.
-
-Example:
-
-    b"04 f6 28 3c 40 00 00 40 40"
-    = example "cplx" struct{ type uint8(4), real float32(2.94), imag float32(3.0) }
-
-#### Custom Type (Text Encoding)
-
-A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
-
-Custom text data is encoded as a quoted array representation with type `t`. The actual text-based data encoding is implementation defined.
-
-The backslash character (`\`) initiates an escape sequence. The following escape sequences are recognized:
-
-| Sequence                                    | Interpretation           |
-| ------------------------------------------- | ------------------------ |
-| `\"`                                        | double quote (u+0022)    |
-| `\\`                                        | backslash (u+005c)       |
-| `\t`                                        | horizontal tab (u+0009)  |
-| `\n`                                        | linefeed (u+000a)        |
-| `\r`                                        | carriage return (u+000d) |
-| [Unicode escape](#unicode-escape-sequences) | Unicode character        |
-
-Unrecognized escape sequences are invalid.
-
-A decoder must interpret escape sequences and pass the transformed string to the custom type decoder.
-
-The custom text contents must follow [string content rules](#string-content-rules).
-
-Example:
-
-    t"cplx(2.94+3i)"
-
-
-### Typed Array
-
-A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
-
-Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
-
-Typed arrays are delimited by pipe (`|`) characters (with optional whitespace), and contain a whitespace separated element type, followed by the whitespace separated element values:
-
-    |type value value value ...|
-
-The following array element types are allowed:
-
-| Type   | Description             |
-| ------ | ----------------------- |
-| `b`    | Boolean                 |
-| `u8`   | 8-bit unsigned integer  |
-| `u16`  | 16-bit unsigned integer |
-| `u32`  | 32-bit unsigned integer |
-| `u64`  | 64-bit unsigned integer |
-| `i8`   | 8-bit signed integer    |
-| `i16`  | 16-bit signed integer   |
-| `i32`  | 32-bit signed integer   |
-| `i64`  | 64-bit signed integer   |
-| `f16`  | 16-bit floating point   |
-| `f32`  | 32-bit floating point   |
-| `f64`  | 64-bit floating point   |
-| `uu`   | 128-bit UUID            |
-
-Values can be any of the representations allowed for the specified type. The following additional representations are also allowed within an array:
-
-* UUID values within an array may optionally be represented without the initial `@` sentinel.
-* Boolean values within an array may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `1001011` = `1 0 0 1 0 1 1` = `true false false true false true true`)
-
-Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
-
-| Suffix | Implied element prefix | Example                       |
-| ------ | ---------------------- | ----------------------------- |
-| `b`    | `0b`                   | `|u8b 10011010 00010101|`     |
-| `o`    | `0o`                   | `|i16o -7445 644|`            |
-| `x`    | `0x`                   | `|f32x a.c9fp20 -1.ffe9p-40|` |
-
-#### Examples
-
-    |u8x 9f 47 cb 9a 3c|
-    |f32 1.5 0x4.f391p100 30 9.31e-30|
-    |i16 0b1001010 0o744 1000 0xffff|
-    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    // Whitespace wherever you like:
-    |b   true  true   false  true false |
-    // The same boolean array using 0 and 1:
-    |b 1 1 0 1 0|
-    // The same boolean array without whitespace:
-    |b 11010|
-    // Empty array of UUIDs:
-    |uu|
-
-
 
 Container Types
 ---------------
 
 ### List
 
-A sequential list of objects. Lists can contain any mix of any type, including other containers.
-
-A list is ordered by default unless otherwise understood between parties (for example via a schema), or the user has specified that order doesn't matter. Other characteristics (such as non-duplicate data in the case of sets) must be a-priori understood between parties.
-
 A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
 
-**Note**: While this spec allows mixed types in lists, not all languages do. Use mixed types with caution. A decoder may abort processing of a list of mixed types if the implementation language doesn't support it.
+**Example**:
 
-#### Example
-
-    [1 two 3.1 {} @nil]
+    [1 two 3.1 {} @null]
 
 
 ### Map
-
-A map associates key objects with value objects. Keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
-
-A map is unordered by default unless otherwise negotiated between parties (for example via a schema).
-
-All keys in a map must resolve to a unique value, even across numeric data types. For example, the following keys would clash:
-
- * `2000`
- * `2000.0`
-
-**Note**: The string value "2000" is not numeric, and would not clash.
 
 Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
 A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
 
-**Note**: While this spec allows mixed types in maps, not all languages do. Use mixed types with caution. A decoder may abort processing or ignore key-value pairs of mixed types if the implementation language doesn't support it.
-
-#### Keyable types
-
-Only certain types can be used as keys in map-like containers:
-
-* [Numeric types](#numeric-types) except for NaN (not-a-number)
-* [Temporal types](#temporal-types)
-* [Strings](#string)
-* [URI](#uri)
-* [Custom types](#custom-types) (provided they represent keyable data)
-
-@nil must not be used as a key, and [references](#reference) are not allowed as keys.
-
-#### Example
+**Example**:
 
     {
         1 = alpha
@@ -810,12 +596,6 @@ Only certain types can be used as keys in map-like containers:
 
 
 ### Markup
-
-A markup container stores XML-style data, which is essentially a name, an optional map of attributes, and an optional list of contents.
-
-    [name] [attributes] [contents]
-
-Markup containers are best suited for presentation data. For regular data, maps and lists are better.
 
 The CTE encoding of a markup container is similar to XML, except:
 
@@ -844,27 +624,6 @@ Illustration of markup encodings:
 |     N      |    Y     | `<span;Some text here>`                                    |
 |     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >`     |
 
-Although it might look a little different on the surface, the internal structure is the same, and could trivially be converted to/from XML & HTML.
-
-#### Markup Tag Name
-
-Although technically any [keyable type](#keyable-types) is allowed in this field, be aware that XML and HTML have restrictions on what they allow.
-
-Markup tag names are case insensitive.
-
-#### Attributes Section
-
-The attributes section behaves like a [map](#map). Be aware that XML and HTML have restrictions on what they allow in attribute keys and values.
-
-#### Contents Section
-
-The contents section behaves similarly to a [list](#list), except that it can only contain:
-
- * [Content strings](#content-string)
- * [Verbatim strings](#verbatim-string)
- * [Comments](#markup-comment)
- * Other markup containers
-
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` character).
 
 ##### Container End
@@ -873,49 +632,11 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 ##### Content String
 
-A markup content string must follow [string content rules](#string-content-rules), with additional processing rules:
+Content strings can contain escape sequences, which must be processed before applying the structural rules for content strings.
 
- * An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string).
- * An unescaped backslash (`\`) character initiates an [escape sequence](#content-escape-sequence).
+An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string). When a verbatim string is initiated, the current string is terminated (added to the current [contents section](#content-section)) and a new verbatim string begins. Once the verbatim string completes, it is added to the current contents section and a new regular content string begins.
 
-A content string works similarly to the text content inside of an XML tag (such as `<a>text content</a>`).
-
-Whitespace in a markup content string is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace should be elided.
-
-**Note**: Whitespace in [verbatim strings](#verbatim-string) must be delivered as-is (no eliding).
-
-##### Content Escape Sequence
-
-An escape sequence initiates special processing to allow specifying characters or sequences that would otherwise not be possible due to the encoding mechanism.
-
-The following escape sequences are recognised inside of a markup content string:
-
-| Sequence                                    | Interpretation                              |
-| ------------------------------------------- | ------------------------------------------- |
-| `\*`                                        | asterisk (u+002a)                           |
-| `\/`                                        | slash (u+002f)                              |
-| `\<`                                        | less-than (u+003c)                          |
-| `\>`                                        | greater-than (u+003e)                       |
-| `\\`                                        | backslash (u+005c)                          |
-| `` \` ``                                    | backtick (u+0060)                           |
-| [Unicode escape](#unicode-escape-sequences) | Unicode character                           |
-| `` ` ``                                     | Begin a [verbatim string](#verbatim-string) |
-
-Unrecognized escape sequences are invalid.
-
-A decoder must interpret escape sequences and pass the transformed string to the next layer.
-
-The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
-
-When a verbatim string is initiated, the current string is terminated (added to the current [contents section](#content-section)) and a new verbatim string begins. Once the verbatim string completes, it is added to the current contents section and a new regular content string begins.
-
-##### Entity Reference
-
-The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher level layers to use if so desired.
-
-**Note**: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
-
-#### Example
+**Example**:
 
 ```
 c1
@@ -934,36 +655,14 @@ c1
 Pseudo-Objects
 --------------
 
-Pseudo-objects add additional metadata to another object, or to the document, or affect the interpreted structure of the document in some way. Pseudo-objects can be placed anywhere a full object (not an array element) can be placed, but do not themselves constitute objects. For example, `(begin-map) ("a key") (pseudo-object) (end-container)` is not valid, because the pseudo-object isn't a real object, and therefore doesn't count as an actual map value for key "a key".
-
-Like regular objects, pseudo-objects must not appear before the [version specifier](#version-specifier). Pseudo-objects also must not appear after the top-level object.
-
-#### Referring Pseudo-objects
-
-_Referring_ pseudo-objects refer to the next object following at the current container level. This will either be a real object, or a visible pseudo-object
-
-#### Invisible Pseudo-objects
-
-_Invsible_ pseudo-objects are effectively invisible to referring pseudo-objects, and are skipped over when searching for the object that is being referred to.
-
-
 ### Marker
-
-A marker is a _referring_, _invisible_ pseudo-object that tags the next object with a [marker ID](#marker-id), such that it can be referenced from another part of the document (or from a different document).
 
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](#marker-id)
+ * A marker ID
  * `:` (the marker separator)
  * The marked value
-
-In general, it will look like this: `&id:some_marked_value`
-
-Rules:
-
- * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker+ID) (end-list) (string)` is invalid.
- * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
 
 Example:
 
@@ -974,31 +673,10 @@ Example:
 
 The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
 
-#### Marker ID
-
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[0-9A-Za-z_]`) with a minimum length of 1 and a maximum length of 30 (Note: ID strings cannot begin with a numeric digit). Integer marker IDs will generally use less space in the binary format than multibyte strings.
-
-**Note**: Marker ID comparisons are always case-insensitive.
-
 
 ### Reference
 
-A reference is a _non-referring_, _visible_ pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
-
 A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](#marker-id) or a [URI](#uri).
-
-Rules:
-
- * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
- * A reference must not be used as a map key.
- * Forward references within a document are allowed.
- * Recursive references are allowed.
- * A reference with a URI must point to:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A marker ID inside another CBE or CTE document, using the fragment section of the URI as an ID
- * An implementation may choose to follow or not to follow URI references. Care must be taken when following links, as there will be security implications.
- * An implementation may choose to simply pass along a URI as-is, leaving it up to the user to resolve it or not.
- * References to dead or invalid URI links are not considered invalid per se. How this situation is handled is implementation specific, and must be fully specified in the implementation of your use case.
 
 Example:
 
@@ -1012,38 +690,26 @@ Example:
 
         reference_to_string = $big_string
         reference_to_map = $1
-        reference_to_local_doc = $u"common.cte"
-        reference_to_remote_doc = $u"https://somewhere.com/my_document.cbe?format=long"
-        reference_to_local_doc_marker = $u"common.cte#legalese"
-        reference_to_remote_doc_marker = $u"https://somewhere.com/my_document.cbe?format=long#examples"
+        reference_to_local_doc = $|u common.cte|
+        reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
+        reference_to_local_doc_marker = $|u common.cte#legalese|
+        reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
     }
 
 
 ### Metadata Map
 
-A metadata map is a _referring_, _visible_ pseudo-object containing keyed values which are to be associated with the object following the metadata map.
+Metadata maps are encoded in the same manner as [regular maps](#map), except that they are enclosed within parenthesis `(`, `)`.
 
-Metadata is data about the data, which might or might not be of interest to a consumer of the data. An implementation may choose to pass on or ignore metadata maps according to the user's wishes.
-
-Metadata can refer to other metadata (meta-metadata).
-
-#### Metadata Keys
-
-Keys in metadata maps follow the same rules as for regular maps, except that all string typed keys beginning with the underscore `_` character are reserved for predefined keys, and must only be used in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
-
-Implementations should make use of the predefined metadata keys where possible to maximize interoperability between systems.
-
-#### Metadata Example
+**Example**:
 
     c1
     // Metadata for the entire document
     (
         _ct = 2017.01.14-15:22:41/Z
         _mt = 2019.08.17-12:44:31/Z
-        _at = 2019.09.14-09:55:00/Z
     )
     {
-        ( _o=[u"https://all-your-data-are-belong-to-us.com"] )
         records = [
             // Metadata for "ABC Corp" record
             (
@@ -1055,38 +721,28 @@ Implementations should make use of the predefined metadata keys where possible t
                 amount = 10499.28
                 due = 2020.05.14
             }
-            // Metadata for "XYZ Corp" record
-            (
-                _ct=2019.02.30-09:00:01/Z
-                _mt=2019.08.17-12:44:31/Z
-            )
-            {
-                client = "XYZ Corp"
-                amount = 3994.01
-                due = 2020.08.30
-            }
         ]
     }
 
 
 ### Comment
 
-A comment is a _non-referring_, _invisible_, list-style pseudo-object that can only contain strings or other comment containers (to support nested comments).
-
-Although comments are not _referring_ pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
-
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
-There must be whitespace between the end of a non-delimited value (such as numbers, temporals, unquoted strings) and a comment. For example:
+Comments must be separated from other objects and structural characters by whitespace.
 
-| Invalid                         | Valid                             |
-| ------------------------------- | --------------------------------- |
-| `1.2// A comment`               | `1.2 // A comment`                |
-| `{a/**/=b}`                     | `{a /**/=b}`                      |
-| `[1 2 3/**/]`                   | `[1 2 3 /**/]`                    |
-| `/**/{/**/a/**/=/**/b/**/}/**/` | `/**/{/**/a /**/=/**/b /**/}/**/` |
+Comment contents must be trimmed (leading and trailing whitespace removed) when decoding, and must be separated from the comment delimiters by whitespace when encoding.
+
+| Invalid                         | Valid                                     |
+| ------------------------------- | ----------------------------------------- |
+| `1.2//A comment`                | `1.2 // A comment`                        |
+| `{a/*x*/=b}`                    | `{a /* x */ =b}`                          |
+| `[1 2 3/**/]`                   | `[1 2 3 /**/ ]`                           |
+| `/**/{/**/a/**/=/**/b/**/}/**/` | `/**/ { /**/ a /**/ = /**/ b /**/ } /**/` |
 
 Comments can be written in single-line or multi-line form.
+
+Implementations must allow the user to choose whether to receive or ignore comments.
 
 #### Single Line Comment
 
@@ -1096,10 +752,7 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You could mitigate this edge case by preventing all occurrences of `/*` and `*/` that don't represent comment delimiters:
-
-* In [quoted strings](#quoted-string) and [markup contents](#content-string), you could break up the text using escape sequences.
-* [Verbatim strings](#verbatim-string) do not allow escape sequences, so you must either avoid putting such sequences in, or never comment such sections out using multiline comments (single line comments will work, though).
+Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You could mitigate this edge case by escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
 
 #### Comment String Character Restrictions
 
@@ -1120,7 +773,7 @@ The following characters are allowed if they aren't in the above disallowed sect
  * UTF-8 printable characters
  * UTF-8 whitespace characters
 
-#### Example
+**Example**:
 
 ```
 c1
@@ -1149,33 +802,9 @@ c1
 Other Types
 -----------
 
-### Nil
+### Null
 
-Denotes the absence of data. Some languages implement this as the `null` value.
-
-Nil is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and so the handling of the nil value is implementation defined. A decoder must consume a nil value, but how (and if) it stores the value is up to the implementation. It's advised to avoid using nil if at all possible.
-
-Example:
-
-    @nil
-
-
-
-
-Named Values
-------------
-
-Certain values cannot be expressed other than by their names. These named values are prefixed with an at (`@`) character:
-
-| Value    | Meaning                  |
-| -------- | ------------------------ |
-| `@nil`   | No data                  |
-| `@nan`   | Not a number (quiet)     |
-| `@inf`   | Infinity (signed value)  |
-| `@true`  | Boolean true             |
-| `@false` | Boolean false            |
-
-**Note**: Named values must not be broken by whitespace.
+Null is encoded as `@null`
 
 
 
@@ -1233,11 +862,11 @@ Examples:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string identifier and the beginning of the data in a [verbatim string](#verbatim-string).
- * Between typed array element type specifiers and contents, and between typed array contents.
+ * Between typed array element type specifiers and contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
- * Between a non-delimited value and a comment (`[ a/**/ ]` is invalid).
+ * Between an object and a comment (`[ a/**/ ]` is invalid).
 
 
 ### Whitespace **must not** occur:
@@ -1248,129 +877,7 @@ Examples:
  * Between a marker ID and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
- * Splitting named values: (`@t rue`, `@ nil`, `@i nf`, `@n a n` are invalid).
-
-
-### Whitespace is interpreted literally (not ignored) within a string or comment:
-
-    "This string has spaces
-    and a newline, which are all preserved."
-
-    //   Comment whitepsace      is preserved.
-
-
-
-Implied Structure
------------------
-
-In certain cases, it is desirable to predefine parts of the document structure when their constraints have already been defined elsewhere in your system or protocol design. When parts of the structure are predefined and agreed to among all parties, it is no longer necessary to transmit information about them.
-
-These implied structure options must not be used unless all involved parties know of it and will adhere to it. For general purpose data transmission, it's better to use the full document structure. Implied structure is just a way to shave off bytes in a tightly defined, specialized system.
-
-
-### Implied Version
-
-If all parties have a preexisting agreement for what specification version the documents will adhere to, the [version specifier](#version-specifier) may be omitted from the document, thus creating an "implied version" document.
-
-
-### Inline Containers
-
-Data communication messages are often implemented as lists or maps at the top level. To help save bytes, "inline" top-level containers may be used.
-
-An "inline container" document is an [implied version](#implied-version) document that is also implied as already having a [list](#list) or [map](#map) opened. Processing would begin as if the container were already opened, and would have no way of knowing where the document ends without help (because there's no end-container marker to match the implied open). It would be up to your implementation to define which kind of inline container is implicitly opened, and to provide a way for the document end to be found during the decoding phase so that the implied container can be verified as complete.
-
-
-
-Invalid Encodings
------------------
-
-Invalid encodings must not be used, as they will likely cause problems or even API violations in certain languages. A parser must halt processing when invalid data is detected.
-
- * A CTE document must not contain byte-order marks, reserved characters, or any invalid characters.
- * All UTF-8 sequences must be complete and valid.
- * Control characters, non-printable characters, and zero-width characters must not be present in unescaped form.
- * Times must be valid. For example: `2000-2-30`, while technically encodable, is not allowed.
- * Containers must be properly terminated. Extra container endings (`}`, `]`, etc) are invalid.
- * All map keys must have corresponding values. A key with a missing value is invalid.
- * Map keys must be [keyable types](#keyable-types).
- * Maps must not contain duplicate keys. This includes numeric keys of different types that resolve to the same value.
- * Metadata map keys beginning with `_` must not be used, except in accordance with the [Common Generic Metadata specification](common-generic-metadata.md).
- * Whitespace must only occur as described in section [Whitespace](#whitespace).
-
-
-
-Equivalence
------------
-
-There are many things to consider when determining if two Concise Encoding documents are equivalent. This section helps clear up possible confusion.
-
-The document encoding (CBE vs CTE) has no bearing on equivalence. Only the data contained within a document is considered.
-
-Equivalence is relaxed unless otherwise specified.
-
-
-### Relaxed Equivalence
-
-Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some minor structural and type differences?
-
-#### Numeric Types
-
-Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
-
-**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
-
-#### Custom Types
-
-By default, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values cannot be compared with custom binary values unless additional contextual information is provided by the schema that the receiver can understand.
-
-#### Strings
-
-Strings and verbatim strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
-
-#### Arrays
-
-Arrays must contain the same number of elements, and those elements must be equivalent.
-
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
-
-#### Containers
-
-Containers must be of the same type. For example, a map is never equivalent to a metadata map.
-
-Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to nil are considered equivalent to the same type of map where the key is not present.
-
-By default, list types must be compared ordered and map types unordered, unless their ordering was otherwise specified by the schema.
-
-#### Markup Contents
-
-Whitespace in a markup contents section is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
-
-#### Nil
-
-Two nil values are considered equivalent.
-
-#### Comments
-
-Comments are ignored when testing for relaxed equivalence.
-
-#### Padding
-
-Padding is always ignored when testing for equivalence.
-
-
-### Strict Equivalence
-
-Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
-
-* Comments are compared, but are trimmed of leading and trailing whitespace before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
-* Keys mapping to nil values are not equivalent to maps where the key is absent.
-* Arrays must be of the same type to be considered equivalent.
-* Strings are never equivalent to verbatim strings.
-
-
-### Custom Equivalence
-
-A schema can specify relaxed or strict as the base equivalence rules for a document, and can override rules or introduce additional rules. Note, however, that a generic Concise Encoding implementation may not understand, and might ignore custom rules.
+ * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@n a n` are invalid).
 
 
 
