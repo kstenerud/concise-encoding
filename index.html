@@ -140,7 +140,7 @@
                             <li>Time (date, time, timestamp)</li>
                             <li>URI</li>
                             <li>String</li>
-                            <li>Bytes</li>
+                            <li>Typed Array</li>
                             <li>List</li>
                             <li>Map</li>
                             <li>Markup</li>
@@ -191,8 +191,8 @@ c1
     unquoted-string = no_quotes_needed
     quoted-string   = "A string delimited by quotes"
     verbatim-string = `# Like bash here docs. `"[!$%^&*{( are fine.#
-    url             = u"https://example.com/"
-    email           = u"mailto:me@somewhere.com"
+    url             = |u https://example.com/|
+    email           = |u mailto:me@somewhere.com|
 }
                         </pre>
                     </div>
@@ -271,7 +271,7 @@ c1
     }
     ref1             = $id1
     ref2             = $id1
-    outside_ref      = $u"https://xyz.com/document.cte#some_id"
+    outside_ref      = $|u https://xyz.com/document.cte#some_id|
 }
                         </pre>
                     </div>
@@ -316,8 +316,8 @@ c1
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    custom-text     = t"cplx(2.94+3i)"
-    custom-binary   = b"04f6283c4000004040"
+    custom-text     = |ct cplx(2.94+3i)|
+    custom-binary   = |cb 04 f6 28 3c 40 00 00 40 40|
 }
                         </pre>
                     </div>
