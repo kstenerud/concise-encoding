@@ -444,11 +444,11 @@ For element array encodings, any valid representation of the element data type m
 
 Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
 
-| Suffix | Implied element prefix | Example                       |
-| ------ | ---------------------- | ----------------------------- |
-| `b`    | `0b`                   | `|u8b 10011010 00010101|`     |
-| `o`    | `0o`                   | `|i16o -7445 644|`            |
-| `x`    | `0x`                   | `|f32x a.c9fp20 -1.ffe9p-40|` |
+| Suffix | Implied element prefix | Example                         |
+| ------ | ---------------------- | ------------------------------- |
+| `b`    | `0b`                   | `\|u8b 10011010 00010101\|`     |
+| `o`    | `0o`                   | `\|i16o -7445 644\|`            |
+| `x`    | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
 
 #### Special Rules
 
