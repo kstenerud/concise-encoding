@@ -73,6 +73,7 @@ Contents
   - [Null](#null)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
+* [Pretty Printing](#pretty-printing)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -729,16 +730,7 @@ Metadata maps are encoded in the same manner as [regular maps](#map), except tha
 
 Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
 
-Comments must be separated from other objects and structural characters by whitespace.
-
 Comment contents must be trimmed (leading and trailing whitespace removed) when decoding, and must be separated from the comment delimiters by whitespace when encoding.
-
-| Invalid                         | Valid                                     |
-| ------------------------------- | ----------------------------------------- |
-| `1.2//A comment`                | `1.2 // A comment`                        |
-| `{a/*x*/=b}`                    | `{a /* x */ =b}`                          |
-| `[1 2 3/**/]`                   | `[1 2 3 /**/ ]`                           |
-| `/**/{/**/a/**/=/**/b/**/}/**/` | `/**/ { /**/ a /**/ = /**/ b /**/ } /**/` |
 
 Comments can be written in single-line or multi-line form.
 
@@ -878,6 +870,161 @@ Examples:
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@n a n` are invalid).
+
+
+
+Pretty Printing
+---------------
+
+Pretty printing is the act of laying out whitespace in a CTE document in a way that makes it easier for humans to parse. This section specifies how CTE documents should be prettied.
+
+
+#### Right Margin
+
+The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define for CTE documents because it depends a lot on the kind of data the document contains, and the container depth.
+
+In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data.
+
+
+#### Indentation
+
+The indentation string should be configurable, with a default of 4 spaces (u+0020).
+
+
+#### Lists
+
+Objects in a list should be placed on separate lines.
+```
+[
+    |u https://www.imdb.com/title/tt0090605/|
+    |u https://www.imdb.com/title/tt1029248/|
+]
+```
+
+If a list is empty, the closing `]` should be on the same line.
+```
+[]
+```
+
+Short lists containing small objects may be placed entirely on one line.
+```
+[a b c d]
+```
+
+
+#### Maps
+
+There should be a space between keys, values and the `=` in key-value pairs, and each key-value pair should be on a separate line.
+```
+{
+    aliens = |u https://www.imdb.com/title/tt0090605/|
+    moribito = |u https://www.imdb.com/title/tt1029248/|
+}
+```
+
+If a map is empty, the closing `}` should be on the same line.
+```
+{}
+```
+
+Small maps containing small objects may be placed entirely on one line. In such a case, omit the spaces around the `=`.
+```
+{a=b c=d}
+```
+
+
+#### Metadata Map
+
+The object that the metadata map refers to should follow it after a space, or possibly on a separate line if it's not breaking up a key-value pair.
+```
+{
+    (x=y) a = b
+
+    c = (x=y) d
+
+    (
+        x = 1
+        y = 2
+        z = 3
+    )
+    e = f
+
+    g = (
+        x = 1
+        y = 2
+        z = 3
+    ) h
+}
+```
+
+
+#### Markup
+
+The closing `>` should only be on a different line if there are contents, or if the attributes section is getting too long.
+```
+<a>
+
+<a;
+    contents
+>
+```
+
+The attributes section should be entirely on the same line as the tag name if it's not too long.
+```
+<a x=y>
+
+<a x=y;
+    contents
+>
+```
+
+If the attributes section is too long, indent the overflow.
+```
+<img src=|u http://somereallylongdomainname.likereallylong.com/images/2.jpg|
+    width=50 height=50 border-left=10 units=px>
+```
+
+
+#### Strings
+
+Strings should use [continuations](#continuation) if the line is getting too long.
+```
+"All that most maddens and torments; all that stirs up the lees of things; \
+all truth with malice in it; all that cracks the sinews and cakes the brain; \
+all the subtle demonisms of life and thought; all evil, to crazy Ahab, were \
+visibly personified, and made practically assailable in Moby Dick. He piled \
+upon the whale's white hump the sum of all the general rage and hate felt by \
+his whole race from Adam down; and then, as if his chest had been a mortar, \
+he burst his hot heart's shell upon it."
+```
+
+
+#### Typed Arrays
+
+Typed arrays should have newlines inserted if the line is getting too long.
+```
+|u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
+      bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
+      fb59 fdb0 1d93 5747 239d b16f 7d9c c48b 5581 13ba 19ca 6f3b 4ba9|
+```
+
+
+#### Comments
+
+Comments should have 1 space after the comment opening sequence. `/* */` style comments should also have a space before the closing sequence.
+```
+// abc
+
+/* abc */
+```
+
+The object following a comment should be on a different line.
+```
+{
+    /* See list of request types in request-types.md */
+    request-type = ping
+}
+```
 
 
 
