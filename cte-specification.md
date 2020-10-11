@@ -107,7 +107,7 @@ Whitespace is used to separate elements in a container. In maps, the key and val
  * CTE v1 empty document: `c1`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 [a b c]`
- * CTE v1 document containing a top-level map: `c1 [a=1 b=2 c=3]`
+ * CTE v1 document containing a top-level map: `c1 {a=1 b=2 c=3}`
 
 
 ### Human Editability
@@ -132,30 +132,30 @@ Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to main
 
 Some kinds of data may contain information that cannot be safely represented in textual form in a CTE document. In these cases, escape sequences may be used to encode the data. For these data types, `\` acts as an escape sequence initiator, and the following escape sequences are recognized:
 
-| Sequence                                    | Interpretation                |
+| Sequence (`\` + ...)                        | Interpretation                |
 | ------------------------------------------- | ----------------------------- |
-| `\`, u+000a                                 | [continuation](#continuation) |
-| `\`, u+000d, u+000a                         | [continuation](#continuation) |
-| `\t`                                        | horizontal tab (u+0009)       |
-| `\n`                                        | linefeed (u+000a)             |
-| `\r`                                        | carriage return (u+000d)      |
-| `\"`                                        | double quote (u+0022)         |
+| u+000a                                      | [continuation](#continuation) |
+| u+000d, u+000a                              | [continuation](#continuation) |
+| `t`                                         | horizontal tab (u+0009)       |
+| `n`                                         | linefeed (u+000a)             |
+| `r`                                         | carriage return (u+000d)      |
+| `"`                                         | double quote (u+0022)         |
 | `\|`                                        | pipe (u+007c)                 |
-| `\\`                                        | backslash (u+005c)            |
-| `\*`                                        | asterisk (u+002a)             |
-| `\/`                                        | slash (u+002f)                |
-| `\<`                                        | less-than (u+003c)            |
-| `\>`                                        | greater-than (u+003e)         |
-| `` \` ``                                    | backtick (u+0060)             |
+| `\`                                         | backslash (u+005c)            |
+| `*`                                         | asterisk (u+002a)             |
+| `/`                                         | slash (u+002f)                |
+| `<`                                         | less-than (u+003c)            |
+| `>`                                         | greater-than (u+003e)         |
+| `` ` ``                                     | backtick (u+0060)             |
 | [Unicode escape](#unicode-escape-sequences) | Unicode character             |
 
-**Note**: The `*` and `/` characters can be escaped to avoid edge cases with [comments](#comment).
+**Note**: The `*` and `/` escape sequences can help to avoid edge cases with [comments](#comment).
 
 #### Unicode Escape Sequences
 
 Unicode characters can in some string contexts be encoded using unicode escape sequences, which begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
 
-Examples:
+**Examples**:
 
 | Sequence  | Digits | Character     |
 | --------- | ------ | ------------- |
@@ -170,7 +170,7 @@ Examples:
 
 A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character.
 
-Example:
+**Example**:
 
 ```
     "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
@@ -190,7 +190,7 @@ The only people for me are the mad ones, the ones who are mad to live, mad to ta
 Version Specifier
 -----------------
 
-A CTE document begins with a version specifier, which is composed of the character `c` (0x63), followed by a version number. There must be no whitespace between the `c` and the version number.
+A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There must be no whitespace between the `c` and the version number.
 
 The version specifier and the top-level object (if present) must be separated by whitespace.
 
@@ -221,11 +221,6 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
-**Examples**:
-
-    50000
-    -123
-
 
 ### Floating Point
 
@@ -253,7 +248,7 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
 
-Base-10 floating point notation should be preferred over base-16 notation. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+Base-10 floating point notation should be preferred over base-16 notation unless your use case requires specific binary floating point values. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
 
 #### Special Floating Point Values
 
@@ -292,8 +287,9 @@ The `_` character can be used as "numeric whitespace" when encoding numeric valu
 Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
- * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain whitespace.
- * Values can contain any amount of whitespace at any point after the first character.
+ * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain numeric whitespace.
+ * Values can contain any amount of whitespace at any point after the first value character.
+ * There must not be numeric whitespace breaking up a numeric prefix (e.g. `0_x3f` is invalid).
  * There must not be numeric whitespace between the exponent marker (`e`, `p`) and the first digit of the exponent.
  * There must not be numeric whitespace between the exponent sign (`+`, `-`) and the first digit of the exponent.
 
@@ -308,7 +304,7 @@ Numeric whitespace characters must be ignored when decoding numeric values.
 
 ### UUID
 
-The 128-bit universally unique identifier begins with an at (`@`) character, and must follow definition of the UUID string representation in [rfc4122](https://tools.ietf.org/html/rfc4122).
+The 128-bit universally unique identifier begins with an at (`@`) character, and must follow the UUID string representation defined in [rfc4122](https://tools.ietf.org/html/rfc4122).
 
 Example:
 
@@ -321,18 +317,18 @@ Temporal Types
 
 Temporal types record time with varying degrees of precision.
 
-Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits for aesthetic reasons if desired. Minutes and seconds must always be padded to 2 digits.
+Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits for aesthetic reasons if desired.
 
 
 ### Date
 
 A date is made up of the following fields, separated by a dash character (`-`):
 
-| Field | Mandatory | Min Value | Max Value | Max Digits |
-| ----- | --------- | --------- | --------- | ---------- |
-| Year  |     Y     |         * |         * |          * |
-| Month |     Y     |         1 |        12 |          2 |
-| Day   |     Y     |         1 |        31 |          2 |
+| Field | Mandatory | Min Value | Max Value | Min Digits | Max Digits |
+| ----- | --------- | --------- | --------- | ---------- | ---------- |
+| Year  |     Y     |         * |         * |          1 |          * |
+| Month |     Y     |         1 |        12 |          1 |          2 |
+| Day   |     Y     |         1 |        31 |          1 |          2 |
 
  * BC years are prefixed with a dash (`-`).
 
@@ -346,18 +342,17 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 ### Time
 
-A time is made up of the following fields:
+A time is made up of the following mandatory and optional fields:
 
-| Field        | Mandatory | Separator | Min Value | Max Value | Max Digits |
-| ------------ | --------- | --------- | --------- | --------- | ---------- |
-| Hour         |     Y     |           |         0 |        23 |          2 |
-| Minute       |     Y     |    `:`    |         0 |        59 |          2 |
-| Second       |     Y     |    `:`    |         0 |        60 |          2 |
-| Subseconds   |     N     |    `.`    |         0 | 999999999 |          9 |
-| Time Zone    |     N     |    `/`    |         - |         - |          - |
+| Field        | Mandatory | Separator | Min Value | Max Value | Min Digits | Max Digits |
+| ------------ | --------- | --------- | --------- | --------- | ---------- | ---------- |
+| Hour         |     Y     |           |         0 |        23 |          2 |          2 |
+| Minute       |     Y     |    `:`    |         0 |        59 |          2 |          2 |
+| Second       |     Y     |    `:`    |         0 |        60 |          2 |          2 |
+| Subseconds   |     N     |    `.`    |         0 | 999999999 |          0 |          9 |
+| Time Zone    |     N     |    `/`    |         - |         - |          - |          - |
 
- * Minutes and seconds must always be padded to 2 digits.
- * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
+**Note**: If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
 **Examples**:
 
@@ -413,7 +408,7 @@ Array Types
 The standard array encoding format consists of a pipe character (`|`), followed by the array type, whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
-    |type contents represented as a string|
+    |type contents-represented-as-a-string|
 
 An empty array has a type but no contents:
 
@@ -458,7 +453,7 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 #### Special Rules
 
  * UUID array elements may optionally be represented without the initial `@` sentinel.
- * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `1001` = `1 0 0 1` = `true false false true`)
+ * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`)
 
 **Examples**:
 
@@ -466,8 +461,6 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
     |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0xffff|
     |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    |b true true false true false|
-    |b 1 1 0 1 0|
     |b 11010|
 
 
@@ -478,7 +471,7 @@ String-like array encodings are interpreted as a whole, and must not contain con
 
 ### URI
 
-A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. CTE [escape sequences](#escape-sequences), however, must be interpreted.
+A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. CTE [escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
 
  * `|u http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
  * `|u http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
@@ -486,7 +479,7 @@ A Concise Encoding implementation must not interpret percent escape sequences in
 
 ### Custom Binary
 
-Custom binary data is encoded like `u8x`: as hex encoded byte elements.
+Custom binary data is encoded like `u8x` (as hex encoded byte elements).
 
 **Example**:
 
@@ -728,9 +721,9 @@ Metadata maps are encoded in the same manner as [regular maps](#map), except tha
 
 ### Comment
 
-Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
+Comment contents must contain only complete and valid UTF-8 sequences. Comments do not respond to escape sequences (anything resembling an escape sequence is not interpreted).
 
-Comment contents must be trimmed (leading and trailing whitespace removed) when decoding, and must be separated from the comment delimiters by whitespace when encoding.
+Comment contents must be trimmed (leading and trailing whitespace removed) when decoding.
 
 Comments can be written in single-line or multi-line form.
 
@@ -858,30 +851,29 @@ Examples:
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
- * Between an object and a comment (`[ a/**/ ]` is invalid).
 
 
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between an array encoding type and the opening double-quote (`u "` is invalid).
+ * Between a typed array initiator and the element type (`| u8|` is invalid).
  * Between a marker or reference initiator and its marker ID (`& 1234` and `# |u mydoc.cbe|` are invalid).
  * Between a marker ID and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
- * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@n a n` are invalid).
+ * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@ nan` are invalid).
 
 
 
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out whitespace in a CTE document in a way that makes it easier for humans to parse. This section specifies how CTE documents should be prettied.
+Pretty printing is the act of laying out whitespace in a CTE document so that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
 
 
 #### Right Margin
 
-The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define for CTE documents because it depends a lot on the kind of data the document contains, and the container depth.
+The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define for CTE documents because it depends in part on the kind of data the document contains, and the container depth.
 
 In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data.
 
@@ -1011,7 +1003,7 @@ Typed arrays should have newlines inserted if the line is getting too long.
 
 #### Comments
 
-Comments should have 1 space after the comment opening sequence. `/* */` style comments should also have a space before the closing sequence.
+Comments should have one space (u+0020) after the comment opening sequence. `/* */` style comments should also have a space before the closing sequence.
 ```
 // abc
 
