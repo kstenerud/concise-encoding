@@ -268,6 +268,37 @@ This method has the advantage of being temporally unambiguous, which could be us
  * `-13.53/-172.37`
 
 
+### How to Record Time
+
+Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose the correct **kind** of time to store, and the right kind depends on what the purpose of recording the time is.
+
+There are three main kinds of time:
+
+#### Absolute Time
+
+Absolute time is a time that is fixed relative to UTC (or relative to an offset from UTC). It is not affected by daylight savings time, nor will it ever change if an area's time zone changes for political reasons. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
+
+#### Fixed Time
+
+Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 on December 1st in absolute terms due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example the abolition of daylight savings), fixed time adapts automatically.
+
+#### Floating Time
+
+Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes zones with you. If you and another observer are in different time zones and observe the same floating time value, the absolute times you calculate will be different. An example would be your 8:00 morning workout.
+
+
+### When to Use Each Kind
+
+Use whichever kind of time most succinctly and completely handles your time needs. Don't depend on time zone information as a proxy for a location; that's depending on a side effect, which is always brittle. Always store location information separately if it's important.
+
+| Situation              | Kind                                            |
+| ---------------------- | ----------------------------------------------- |
+| Log entries and events | Absolute                                        |
+| Appointments           | Fixed                                           |
+| Your daily schedule    | Floating                                        |
+| Deadlines              | Usually fixed time, but possibly absolute time. |
+
+
 
 Array Types
 -----------
