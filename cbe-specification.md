@@ -86,7 +86,7 @@ Version Specifier
 
 A CBE document begins with a version specifier, which is composed of the octet `0x03`, followed by a version number.
 
-The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) with a value greater than 0, representing which version of this specification the document adheres to.
+The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), representing which version of this specification the document adheres to.
 
 Example: `[03 01]` = Empty document (CBE version 1)
 
@@ -236,7 +236,7 @@ Binary floating point values are stored in 32 or 64-bit ieee754 binary floating 
 
 ### UUID
 
-A universally unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) (i.e. big endian).
+A universally unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format (i.e. big endian).
 
 **Example**:
 
@@ -285,13 +285,13 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
 
-    [length-1] [chunk-1] [length-2] [chunk-2] ...
+    [chunk-length-1] [chunk-data-1] [chunk-length-2] [chunk-data-2] ...
 
 There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
 
 #### Chunk Header
 
-All array chunks are preceded by a header containing the chunk length and a continuation bit. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). Chunk processing continues until the end of a chunk with a continuation bit of 0.
+All array chunks are preceded by a header containing the chunk length and a continuation bit (the low bit of the fully decoded header). The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
 | Field        | Bits | Description                          |
 | ------------ | ---- | ------------------------------------ |
@@ -321,9 +321,9 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
 
 **Example**:
 
-    [1d] (14 bytes of data) [08] (4 bytes of data)
+    [1d] (14 elements of data) [08] (4 elements of data)
 
-In this case, the first chunk is 14 bytes long and has a continuation bit of 1. The second chunk has 4 bytes of data and a continuation bit of 0. The total length of the array is 18 bytes, split across two chunks.
+In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
 
 
 ### String
@@ -372,7 +372,7 @@ URIs are encoded with the type 0x92. The length is in octets, NOT characters.
 
 #### Custom Type (Binary Encoding)
 
-Custom binary types are encoded with the type 0x93. The length is the number of octets used by the type.
+Custom binary types are encoded with the type 0x93. The length is the number of octets used by the data.
 
 **Example**:
 
@@ -430,9 +430,9 @@ Element byte ordering is according to the element type (big endian for UUID, lit
 
 #### Boolean Array
 
-In boolean arrays, the elements (bits) are encoded in 8-bit chunks, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits are cleared to 0.
+In boolean arrays, the elements (bits) are encoded in 8-bit chunks, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
 
-For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can incidentally be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
+For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
 **Examples**:
 
@@ -458,7 +458,7 @@ A list begins with 0x7a, followed by a series of objects, and is terminated with
 
 A map begins with 0x79, followed by a series of key-value pairs, and is terminated with 0x7b (end of container).
 
-    [79] [key 1] [value 1] [key 2] [value 2] ... [7b]
+    [79] [key-1] [value-1] [key-2] [value-2] ... [7b]
 
 **Example**:
 
@@ -469,7 +469,7 @@ A map begins with 0x79, followed by a series of key-value pairs, and is terminat
 
 Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and another one to mark the end of the contents section:
 
-    [78] [name] [attr key 1] [attr value 1] ... [7b] [contents 1] [contents 2] ... [7b]
+    [78] [name] [attr-key-1] [attr-value-1] ... [7b] [contents-1] [contents-2] ... [7b]
 
 **Example**:
 
@@ -490,7 +490,7 @@ A marker begins with the marker type (0x97), followed by a marker ID, and then t
 
     [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {some_value = "repeat this value"}, tagged with ID integer 1
+    = the map {some_value = "repeat this value"}, tagged with integer ID 1
 
 
 ### Reference
@@ -536,7 +536,7 @@ Comments are encoded the same as [lists](#list), using the type 0x76.
 
 ### Padding
 
-Padding is simply the type 0x7f.
+Padding is encoded as type 0x7f. Repeat as many times as needed.
 
 **Example**:
 
@@ -563,7 +563,7 @@ Smallest Possible Size
 
 Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest encoding that stores a value without data loss.
 
-Specialized applications (for example marshalers) may wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
+Specialized applications may wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
 
 
 
