@@ -280,7 +280,7 @@ Absolute time is a time that is fixed relative to UTC (or relative to an offset 
 
 #### Fixed Time
 
-Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 on December 1st in absolute terms due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example the abolition of daylight savings), fixed time adapts automatically.
+Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 on December 1st in absolute terms due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example the abolition of daylight savings or an act of government), fixed time adapts automatically.
 
 #### Floating Time
 
@@ -291,12 +291,13 @@ Floating (or local) time is always relative to the time zone of the observer. If
 
 Use whichever kind of time most succinctly and completely handles your time needs. Don't depend on time zone information as a proxy for a location; that's depending on a side effect, which is always brittle. Always store location information separately if it's important.
 
-| Situation              | Kind                                            |
-| ---------------------- | ----------------------------------------------- |
-| Log entries and events | Absolute                                        |
-| Appointments           | Fixed                                           |
-| Your daily schedule    | Floating                                        |
-| Deadlines              | Usually fixed time, but possibly absolute time. |
+| Situation                            | Kind                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| Log entries and events               | Absolute                                        |
+| Appointments                         | Fixed                                           |
+| Your daily schedule                  | Floating                                        |
+| Multi-zone shared repeating schedule | Absolute or fixed                               |
+| Deadlines                            | Usually fixed time, but possibly absolute time. |
 
 
 
