@@ -153,19 +153,35 @@ c1
     date            = 2019-7-1
     time            = 18:04:00.940231541/E/Prague
     timestamp       = 2010-7-15/13:28:15.415942344/Z
-    nil             = @nil
+    null            = @null
     bytes           = |u8x 10 ff 38 9a dd 00 4f 4f 91|
     "uint16 array"  = |u16x ff91 84c4 009f 3aa1|
     url             = |u https://example.com/|
     email           = |u mailto:me@somewhere.com|
     1.5             = "Keys don't have to be strings"
-    long-string     = `ZZZ
-A backtick induces verbatim processing, which in this case will continue
-until three Z characters are encountered, similar to how here documents in
-bash work.
-You can put anything in here, including double-quote ("), or even more
-backticks (`). Verbatim processing stops at the end sequence, which in this
-case is three Z characters, specified earlier as a sentinel.ZZZ
+    verbatim-seq    = "For string data with many difficult to use characters, \
+        use a verbatim sequence. \.ZZ Chars like " and \ etcZZ can appear \
+        inside without needing individual escapes."
+    tabs.go         = "\.@@
+package tabs
+
+import (
+  "fmt"
+  "strings"
+)
+
+// Generate a tab-separated string representation of values
+func ToColumns(values ...interface{}) string {
+  var b strings.Builder
+  for i, v := range values {
+    if i > 0 {
+      b.WriteString("\t")
+    }
+    b.WriteString(fmt.Sprintf("%v", v))
+  }
+  return b.String()
+}
+@@"
     marked_object   = &id1:{
                                description = "This map will be referenced later using $id1"
                                value = -@inf

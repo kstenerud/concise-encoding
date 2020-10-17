@@ -38,7 +38,6 @@ Contents
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
-  - [Verbatim String](#verbatim-string)
   - [URI](#uri)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
@@ -150,11 +149,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                     |
 |  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
 |  90 | 144 | String                    | [byte length] [UTF-8 data]                    |
-|  91 | 145 | Verbatim String           | [byte length] [UTF-8 data]                    |
-|  92 | 146 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  93 | 147 | Custom (Binary)           | [byte length] [binary data]                   |
-|  94 | 148 | Custom (Text)             | [byte length] [UTF-8 data]                    |
-|  95 | 149 | Typed Array               | [type] [unit length] [units]                  |
+|  91 | 145 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
+|  92 | 146 | Custom (Binary)           | [byte length] [binary data]                   |
+|  93 | 147 | Custom (Text)             | [byte length] [UTF-8 data]                    |
+|  94 | 148 | Typed Array               | [type] [unit length] [units]                  |
+|  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
 |  97 | 151 | Marker                    | Positive integer / string                     |
 |  98 | 152 | Reference                 | Positive integer / string / URI               |
@@ -344,15 +343,6 @@ For byte lengths from 0 to 15, there are special top-level inferred-length strin
     [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
     [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
     [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
-
-
-### Verbatim String
-
-Verbatim strings are encoded with the type 0x91. The length is in octets, NOT characters.
-
-**Example**:
-
-    [91 10 5c 6e 5c 6e 5c 6e 5c 6e] = literal "\n\n\n\n" (not to be interpreted as linefeeds)
 
 
 ### URI

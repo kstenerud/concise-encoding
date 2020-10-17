@@ -26,6 +26,7 @@ Contents
   - [Escape Sequences](#escape-sequences)
     - [Unicode Escape Sequences](#unicode-escape-sequences)
     - [Continuation](#continuation)
+    - [Verbatim Sequence](#verbatim-sequence)
 * [Version Specifier](#version-specifier)
 * [Numeric Types](#numeric-types)
   - [Boolean](#boolean)
@@ -52,8 +53,8 @@ Contents
   - [Custom Text](#custom-text)
   - [String](#string)
     - [Quoted String](#quoted-string)
-    - [Verbatim String](#verbatim-string)
     - [Unquoted String](#unquoted-string)
+    - [Confusable Characters](#confusable-characters)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -120,40 +121,40 @@ In the spirit of human editability:
  * Implementations should avoid outputting characters that editors tend to convert automatically.
  * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
- * If a certain character is likely to be confusing or problematic, it's encouraged to use an escape sequence instead.
+ * If a certain character is likely to be confusing or problematic to a human reader or editor, it should be escaped.
 
 
 ### Line Endings
 
-Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should only output LF when the destination is a foreign or unknown system.
+Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should output LF when the destination is a foreign or unknown system.
 
 
 ### Escape Sequences
 
-Some kinds of data may contain information that cannot be safely represented in textual form in a CTE document. In these cases, escape sequences may be used to encode the data. For these data types, `\` acts as an escape sequence initiator, and the following escape sequences are recognized:
+In some contexts, escape sequences may be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data:
 
-| Sequence (`\` + ...)                        | Interpretation                |
-| ------------------------------------------- | ----------------------------- |
-| u+000a                                      | [continuation](#continuation) |
-| u+000d, u+000a                              | [continuation](#continuation) |
-| `t`                                         | horizontal tab (u+0009)       |
-| `n`                                         | linefeed (u+000a)             |
-| `r`                                         | carriage return (u+000d)      |
-| `"`                                         | double quote (u+0022)         |
-| `\|`                                        | pipe (u+007c)                 |
-| `\`                                         | backslash (u+005c)            |
-| `*`                                         | asterisk (u+002a)             |
-| `/`                                         | slash (u+002f)                |
-| `<`                                         | less-than (u+003c)            |
-| `>`                                         | greater-than (u+003e)         |
-| `` ` ``                                     | backtick (u+0060)             |
-| [Unicode escape](#unicode-escape-sequences) | Unicode character             |
+| Sequence (`\` + ...)                        | Interpretation                          |
+| ------------------------------------------- | --------------------------------------- |
+| u+000a                                      | [continuation](#continuation)           |
+| u+000d                                      | [continuation](#continuation)           |
+| `t`                                         | horizontal tab (u+0009)                 |
+| `n`                                         | linefeed (u+000a)                       |
+| `r`                                         | carriage return (u+000d)                |
+| `"`                                         | double quote (u+0022)                   |
+| `*`                                         | asterisk (u+002a)                       |
+| `/`                                         | slash (u+002f)                          |
+| `<`                                         | less-than (u+003c)                      |
+| `>`                                         | greater-than (u+003e)                   |
+| `\`                                         | backslash (u+005c)                      |
+| `\|`                                        | pipe (u+007c)                           |
+| `.`                                         | [verbatim sequence](#verbatim-sequence) |
+| [Unicode escape](#unicode-escape-sequences) | Unicode character                       |
 
-**Note**: The `*` and `/` escape sequences can help to avoid edge cases with [comments](#comment).
+**Note**: The `*` and `/` escape sequences can help to avoid edge cases when [commenting out](#comment) big chunks of a document.
 
 #### Unicode Escape Sequences
 
-Unicode characters can in some string contexts be encoded using unicode escape sequences, which begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
+Unicode escape sequences begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
 
 **Examples**:
 
@@ -168,7 +169,7 @@ Unicode characters can in some string contexts be encoded using unicode escape s
 
 #### Continuation
 
-A continuation causes the decoder to ignore all whitespace characters until it reaches the next printable character.
+A continuation escape sequence causes the decoder to ignore all whitespace characters until it encounters the next printable character. An escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
 
 **Example**:
 
@@ -183,6 +184,42 @@ The above string is interpreted as:
 
 ```
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
+```
+
+#### Verbatim Sequence
+
+Verbatim escape sequences work similarly to "here" documents in Bash. They're composed as follows:
+
+ * Verbatim sequence escape initiator (`\.`).
+ * An end-of-sequence identifier, which is a sequence of printable, non-control, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
+ * A whitespace terminator to terminate the end-of-sequence identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * The string contents.
+ * A second instance of the end-of-sequence identifier (without whitespace terminator).
+
+**Example**:
+
+```
+"Verbatim sequences can occur anywhere escapes are allowed.
+\.@@@ In verbatim sequences, everything is interpreted literally until the
+end-of-string identifier is encountered (in this case three @ characters).
+Characters like ", [, <, \ and such can appear unescaped.
+
+Whitespace (including "leading" whitespace) is also read verbatim.
+          For example, this line really is indented 10 spaces.
+
+@@@After a verbatim sequence, normal processing resumes, so '\t' and such are interpreted."
+```
+Which is decoded to:
+```
+Verbatim sequences can occur anywhere escapes are allowed.
+In verbatim sequences, everything is interpreted literally until the
+end-of-string identifier is encountered (in this case three @ characters).
+Characters like ", [, <, \ and such can appear unescaped.
+
+Whitespace (including "leading" whitespace) is also read verbatim.
+          For example, this line really is indented 10 spaces.
+
+After a verbatim sequence, normal processing resumes, so '  ' and such are interpreted.
 ```
 
 
@@ -497,68 +534,88 @@ Custom text data is encoded using string-like encoding.
 
 ### String
 
-Strings are delimited differently from other array types in order to be more human friendly. There are three methods for encoding a string:
-
- * [Quoted sequence](#quoted-string)
- * [Verbatim sequence](#verbatim-string)
- * [Unquoted string](#unquoted-string)
+Strings can be quoted or unquoted.
 
 #### Quoted String
 
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences).
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences). Whitespace characters CR, LF, and TAB are allowed, but care must be taken, as different text editors may swap CRLF for CR, or tabs for spaces. See [human editability](cte-specification.md#human-editability)).
 
 **Example**:
 
     "Line 1\nLine 2\nLine 3"
 
-#### Verbatim String
-
-CTE encodes verbatim strings using a method similar to "here" documents in Bash, composed as follows:
-
- * Backtick (`` ` ``).
- * An end-of-string identifier, which is a sequence of printable, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A whitespace terminator to terminate the end-of-string identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
- * The string contents.
- * A second instance of the end-of-string identifier (no whitespace termination necessary).
-
-**Example**:
-
-```
-`@@@ In verbatim strings, everything is interpreted literally until the
-end-of-string identifier is encountered (in this case three @ characters).
-Characters like ", [, <, \ and such can appear unescaped.
-
-Whitespace, including newlines and "leading" whitespace, is also read verbatim.
-        For example, this line really is indented 8 spaces.
-
-There is no trailing newline in this example.@@@
-```
-
 #### Unquoted String
 
-Strings must normally be delimited, but this rule can be relaxed if:
+Strings must normally be double-quote delimited, but this rule can be relaxed if:
 
  * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), and colon (`:`).
- * The above two rules also apply to Unicode characters that LOOK similar to the excluded characters for a human (for example u+2052 `⁒`, u+ff11 `１`).
  * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
  * The string isn't empty.
 
-For example, these cannot be unquoted strings:
+Any characters that look [confusingly similar to printable characters from Unicode range 0000-007f](#confusable-characters) are subject to the same rules as their lookalikes (for example, u+ff15 `５` is disallowed as a first character, and u+2039 `‹` is disallowed entirely in an unquoted string).
 
-    "String with spaces"
-    "String\twith\ttabs\nand\nnewlines"
-    "special*chars"
-    ".begins-with-a-dot"
-    "twenty‐five" /* Using the u+2010 hyphen instead of u+002d */
+**Examples**:
+
+These are not allowed as unquoted strings:
+
+    String with whitespace
+    String\twith\tescapes
+    disallowed*symbol
+    .begins-with-a-dot
+    ．begins-with-a-dot-lookalike
+    contains-star-＊-lookalike
 
 These can be unquoted strings:
 
     twenty-five
     Std:value.next
-    _contains_underscores
+    _underscore
     _150
     飲み物
+    contains－dash－lookalikes
+
+#### Confusable Characters
+
+The following is a mostly complete list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
+
+**Note**: This list is not guaranteed complete! Use it as a guide only.
+
+| Character | Lookalikes (codepoints)                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
+| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
+| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
+| `#`       | fe5f, ff03                                                              |
+| `$`       | fe69, ff04                                                              |
+| `%`       | 2052, fe6a, ff05                                                        |
+| `&`       | fe60, ff06                                                              |
+| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
+| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
+| `)`       | fe5a, ff09                                                              |
+| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
+| `+`       | fe62, ff0b                                                              |
+| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
+| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, 3217, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
+| `.`       | fe52, ff0e                                                              |
+| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
+| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
+| `;`       | 037e, fe14, fe54, ff1b                                                  |
+| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
+| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
+| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
+| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
+| `@`       | fe6b, ff20                                                              |
+| `[`       | fe5d, ff3b, 1d115                                                       |
+| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
+| `]`       | fe5e, ff3d                                                              |
+| `^`       | ff3e                                                                    |
+| `_`       | 02cd, 23bd, ff3f                                                        |
+| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
+| `{`       | fe5b, ff5b, 1d114                                                       |
+| `|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
+| `}`       | fe5c, ff5d                                                              |
+| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
 
 
 
@@ -611,12 +668,12 @@ Attributes and contents are optional. There must be whitespace between the conta
 
 Illustration of markup encodings:
 
-| Attributes | Children | Example                                                    |
-| ---------- | -------- | ---------------------------------------------------------- |
-|     N      |    N     | `<br>`                                                     |
-|     Y      |    N     | `<div id=fillme>`                                          |
-|     N      |    Y     | `<span;Some text here>`                                    |
-|     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >`     |
+| Attributes | Children | Example                                                |
+| ---------- | -------- | ------------------------------------------------------ |
+|     N      |    N     | `<br>`                                                 |
+|     Y      |    N     | `<div id=fillme>`                                      |
+|     N      |    Y     | `<span;Some text here>`                                |
+|     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >` |
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` character).
 
@@ -627,8 +684,6 @@ The markup container ends when an unescaped `>` character is encountered while p
 ##### Content String
 
 Content strings can contain escape sequences, which must be processed before applying the structural rules for content strings.
-
-An unescaped backtick (`` ` ``) character initiates a [verbatim string](#verbatim-string). When a verbatim string is initiated, the current string is terminated (added to the current [contents section](#content-section)) and a new verbatim string begins. Once the verbatim string completes, it is added to the current contents section and a new regular content string begins.
 
 **Example**:
 
@@ -846,7 +901,7 @@ Examples:
 ### Whitespace **must** occur:
 
  * Between the [version specifier](#version-specifier) and the first object.
- * Between the end-of-string identifier and the beginning of the data in a [verbatim string](#verbatim-string).
+ * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between typed array element type specifiers and contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).

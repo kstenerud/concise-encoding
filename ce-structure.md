@@ -35,7 +35,6 @@ Contents
 * [Array Types](#array-types)
   - [String-like Arrays](#string-like-arrays)
     - [String](#string)
-    - [Verbatim String](#verbatim-string)
     - [URI](#uri)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#binary-custom-type)
@@ -325,10 +324,6 @@ Strings must always resolve to complete, valid UTF-8 sequences when fully decode
 
 Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should only output LF when the destination is a foreign or unknown system.
 
-#### Verbatim String
-
-A verbatim string is a string that must be taken literally (no interpretation, no escape processing, etc) by encoders and decoders, and should be taken literally by all layers of the stack. Decoders must pass along a string's status as "verbatim" or not.
-
 #### URI
 
 The Uniform Resource Identifier must be structured according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
@@ -445,7 +440,6 @@ A markup container stores data in a hierarchical style similar to XML. Each elem
  * Attributes behaves like a [map](#map)
  * The contents section behaves similarly to a [list](#list), except that it can only contain:
    - [Content strings](#content-string)
-   - [Verbatim strings](#verbatim-string)
    - [Comments](#markup-comment)
    - Other markup containers
 
@@ -466,13 +460,9 @@ In content strings, whitespace is by default not considered significant, and may
 
 Whitespace sequences between printable sequences in a content string are considered equivalent to a single space character (u+0020). Whitespace at the beginning or end of a string is ignored (trimmed).
 
-**Note**: Whitespace in [verbatim strings](#verbatim-string) *is* significant, and must be delivered as-is (no eliding).
-
 ##### Entity Reference
 
 The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher layers to interpret if so desired.
-
-**Note**: Text sequences that look like entity references (or any other interpretable sequence) in [verbatim strings](#verbatim-string) must NOT be interpreted by any layer in the stack.
 
 #### Example
 
@@ -708,7 +698,7 @@ By default, custom types are compared byte-by-byte, with no other consideration 
 
 #### Strings
 
-Strings and verbatim strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
+Strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
 
 #### Arrays
 
@@ -748,7 +738,6 @@ Strict equivalence concerns itself with differences that can still technically h
 * Comments are compared, but are trimmed of leading and trailing whitespace before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 * Keys mapping to null values are not equivalent to maps where the key is absent.
 * Arrays must be of the same type to be considered equivalent.
-* Strings are never equivalent to verbatim strings.
 
 
 
