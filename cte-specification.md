@@ -152,6 +152,8 @@ In some contexts, escape sequences may be used to encode data that would otherwi
 
 **Note**: The `*` and `/` escape sequences can help to avoid edge cases when [commenting out](#comment) big chunks of a document.
 
+Escape sequences must be converted before any other processing occurs during the decode process.
+
 #### Continuation
 
 A continuation escape sequence causes the decoder to ignore all whitespace characters until it encounters the next printable character. An escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
