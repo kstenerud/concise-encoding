@@ -132,7 +132,7 @@
                     <div class="content">
                         <p>Tired of coercing your data into strings? Concise Encoding supports these types natively:</p>
                         <ul>
-                            <li>Nil</li>
+                            <li>Null</li>
                             <li>Bool</li>
                             <li>Integer (arbitrary size)</li>
                             <li>Float (arbitrary size)</li>
@@ -188,9 +188,8 @@ c1
                         <pre class="scroll code">
 c1
 {
-    unquoted-string = no_quotes_needed
+    unquoted-string = no-quotes-needed
     quoted-string   = "A string delimited by quotes"
-    verbatim-string = `# Like bash here docs. `"[!$%^&*{( are fine.#
     url             = |u https://example.com/|
     email           = |u mailto:me@somewhere.com|
 }
@@ -210,7 +209,7 @@ c1
     date            = 2019-7-1
     time            = 18:04:00.940231541/E/Prague
     timestamp       = 2010-7-15/13:28:15.415942344/Z
-    nil             = @nil
+    null            = @null
 }
                         </pre>
                     </div>
@@ -266,7 +265,7 @@ c1
     marked_object    = &id1:{
         description = "This map will be referenced later as $id1"
         value = -@inf
-        child_elements = @nil
+        child_elements = @null
         recursive = $id1
     }
     ref1             = $id1
