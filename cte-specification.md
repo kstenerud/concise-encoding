@@ -24,8 +24,8 @@ Contents
   - [Human Editability](#human-editability)
   - [Line Endings](#line-endings)
   - [Escape Sequences](#escape-sequences)
-    - [Unicode Escape Sequences](#unicode-escape-sequences)
     - [Continuation](#continuation)
+    - [Unicode Sequence](#unicode-sequence)
     - [Verbatim Sequence](#verbatim-sequence)
 * [Version Specifier](#version-specifier)
 * [Numeric Types](#numeric-types)
@@ -135,8 +135,6 @@ In some contexts, escape sequences may be used to encode data that would otherwi
 
 | Sequence (`\` + ...)                        | Interpretation                          |
 | ------------------------------------------- | --------------------------------------- |
-| u+000a                                      | [continuation](#continuation)           |
-| u+000d                                      | [continuation](#continuation)           |
 | `t`                                         | horizontal tab (u+0009)                 |
 | `n`                                         | linefeed (u+000a)                       |
 | `r`                                         | carriage return (u+000d)                |
@@ -147,25 +145,12 @@ In some contexts, escape sequences may be used to encode data that would otherwi
 | `>`                                         | greater-than (u+003e)                   |
 | `\`                                         | backslash (u+005c)                      |
 | `\|`                                        | pipe (u+007c)                           |
+| u+000a                                      | [continuation](#continuation)           |
+| u+000d                                      | [continuation](#continuation)           |
+| `0` - `9`                                   | [Unicode sequence](#unicode-sequence)   |
 | `.`                                         | [verbatim sequence](#verbatim-sequence) |
-| [Unicode escape](#unicode-escape-sequences) | Unicode character                       |
 
 **Note**: The `*` and `/` escape sequences can help to avoid edge cases when [commenting out](#comment) big chunks of a document.
-
-#### Unicode Escape Sequences
-
-Unicode escape sequences begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
-
-**Examples**:
-
-| Sequence  | Digits | Character     |
-| --------- | ------ | ------------- |
-| `\0`      | 0      | NUL           |
-| `\16`     | 1      | ACK           |
-| `\27f`    | 2      | DEL           |
-| `\3101`   | 3      | ā  (a macron) |
-| `\42191`  | 4      | ↑  (up arrow) |
-| `\51f415` | 5      | 🐕 (dog)      |
 
 #### Continuation
 
@@ -185,6 +170,21 @@ The above string is interpreted as:
 ```
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 ```
+
+#### Unicode Sequence
+
+Unicode escape sequences begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
+
+**Examples**:
+
+| Sequence  | Digits | Character     |
+| --------- | ------ | ------------- |
+| `\0`      | 0      | NUL           |
+| `\16`     | 1      | ACK           |
+| `\27f`    | 2      | DEL           |
+| `\3101`   | 3      | ā  (a macron) |
+| `\42191`  | 4      | ↑  (up arrow) |
+| `\51f415` | 5      | 🐕 (dog)      |
 
 #### Verbatim Sequence
 
