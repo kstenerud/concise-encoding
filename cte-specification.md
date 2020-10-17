@@ -675,11 +675,11 @@ Illustration of markup encodings:
 |     N      |    Y     | `<span;Some text here>`                                |
 |     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >` |
 
-The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` character).
+The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
 
 ##### Container End
 
-The markup container ends when an unescaped `>` character is encountered while processing a [content string](#content-string). There are no separate "end tags" or slash character encoding like in XML.
+The markup container ends when an unescaped `>` character is encountered while processing the attributes or contents.
 
 ##### Content String
 
@@ -691,11 +691,15 @@ Content strings can contain escape sequences, which must be processed before app
 c1
 <View;
     <Image src=|u images/avatar-image.jpg|>
-    <Text;
+    <Text id=HelloText;
         Hello! Please choose a name!
     >
-    /* <HRule style=thin> */
-    <TextInput id=name style={height=40 borderColor=gray}; Name me! >
+    // <HRule style=thin>
+    <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+        HelloText.SetText("Hello, " + NameInput.Text + "!")
+    @@";
+        Name me!
+    >
 >
 ```
 
