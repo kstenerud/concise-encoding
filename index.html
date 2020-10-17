@@ -241,18 +241,20 @@ c1
                     <div class="content scrollcontainer">
                         <pre class="scroll code">
 c1
-&lt;View;
-    &lt;Image src=|u images/avatar-image.jpg|&gt;
-    &lt;Text id=HelloText;
-        Hello! Please choose a name!
+{
+    main-view = &lt;View;
+        &lt;Image src=|u images/avatar-image.jpg|&gt;
+        &lt;Text id=HelloText;
+            Hello! Please choose a name!
+        &gt;
+        // &lt;HRule style=thin&gt;
+        &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+            HelloText.SetText("Hello, " + NameInput.Text + "!")
+        @@";
+            Name me!
+        &gt;
     &gt;
-    // &lt;HRule style=thin&gt;
-    &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
-        HelloText.SetText("Hello, " + NameInput.Text + "!")
-    @@";
-        Name me!
-    &gt;
-&gt;
+}
                         </pre>
                     </div>
                 </article>
