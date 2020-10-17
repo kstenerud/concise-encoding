@@ -148,11 +148,11 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  8d | 141 | String: 13 bytes          | [13 octets of UTF-8 data]                     |
 |  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                     |
 |  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
-|  90 | 144 | String                    | [byte length] [UTF-8 data]                    |
-|  91 | 145 | URI                       | [byte length] [[URI](https://tools.ietf.org/html/rfc3986)] |
-|  92 | 146 | Custom (Binary)           | [byte length] [binary data]                   |
-|  93 | 147 | Custom (Text)             | [byte length] [UTF-8 data]                    |
-|  94 | 148 | Typed Array               | [type] [unit length] [units]                  |
+|  90 | 144 | String                    | [chunk length] [UTF-8 data] ...               |
+|  91 | 145 | URI                       | [chunk length] [[URI](https://tools.ietf.org/html/rfc3986) data] ... |
+|  92 | 146 | Custom (Binary)           | [chunk length] [data] ...                     |
+|  93 | 147 | Custom (Text)             | [chunk length] [UTF-8 data] ...               |
+|  94 | 148 | Typed Array               | [type] [chunk length] [elements] ...          |
 |  95 | 149 | RESERVED                  |                                               |
 |  96 | 150 | RESERVED                  |                                               |
 |  97 | 151 | Marker                    | Positive integer / string                     |
