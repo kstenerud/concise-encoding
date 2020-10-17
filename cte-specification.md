@@ -613,7 +613,7 @@ The following is a mostly complete list of [Unicode characters](https://unicode.
 | `_`       | 02cd, 23bd, ff3f                                                        |
 | `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
 | `{`       | fe5b, ff5b, 1d114                                                       |
-| `|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
+| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
 | `}`       | fe5c, ff5d                                                              |
 | `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
 
