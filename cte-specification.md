@@ -1007,7 +1007,7 @@ The object that the metadata map refers to should follow it after a space, or po
 
 #### Markup
 
-The closing `>` should only be on a different line if there are contents, or if the attributes section is getting too long.
+The closing `>` should only be on a different line if there are contents.
 ```
 <a>
 
@@ -1025,7 +1025,7 @@ The attributes section should be entirely on the same line as the tag name if it
 >
 ```
 
-If the attributes section is too long, indent the overflow.
+If the attributes section is too long, the overflow should be indented.
 ```
 <img src=|u http://somereallylongdomainname.likereallylong.com/images/2.jpg|
     width=50 height=50 border-left=10 units=px>
