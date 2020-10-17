@@ -525,7 +525,7 @@ Custom binary data is encoded like `u8x` (as hex encoded byte elements).
 
 ### Custom Text
 
-Custom text data is encoded using string-like encoding.
+Custom text data is encoded using string-like encoding. Custom text can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -683,7 +683,7 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 ##### Content String
 
-Content strings can contain escape sequences, which must be processed before applying the structural rules for content strings.
+Content strings can contain [escape sequences](#escape-sequences), which must be processed before applying the structural rules for content strings.
 
 **Example**:
 
