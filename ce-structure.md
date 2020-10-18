@@ -504,9 +504,13 @@ A marker is a **referring**, **invisible** pseudo-object that tags the next obje
 
 #### Marker ID
 
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can either be a positive integer (up to 18446744073709551615, 64 bits), or a string of case-insensitive basic alphanumerics plus underscore (`[A-Za-z_][0-9A-Za-z_]*`) with a minimum length of 1 and a maximum length of 30 (ID strings cannot begin with a numeric digit).
+A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be one of:
 
-**Note**: Marker ID comparisons are always case-insensitive.
+1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
+2. A case-insensitive string that is [CTE and text editor friendly](cte-specification.md#human-editability), and doesn't begin with a digit:
+   * First character printable, not whitespace or control or numeric, and not a symbol except for underscore `_`.
+   * Following characters printable, not whitespace or control, and not a symbol except for underscore `_`, dot `.`, dash `-`.
+   * Maximum length: 30 characters (not bytes).
 
 #### Rules:
 
@@ -622,12 +626,16 @@ The following characters are disallowed if they aren't in the above allowed sect
 
  * Control characters (such as u+0000 to u+001f, u+007f to u+009f).
  * Line breaking characters (such as u+2028, u+2029).
- * Byte order mark.
 
 The following characters are allowed if they aren't in the above disallowed section:
 
  * UTF-8 printable characters
  * UTF-8 whitespace characters
+
+The following character sequences must not be put into comment strings because they will cause problems in CTE:
+
+* `/*`
+* `*/`
 
 #### Example
 
