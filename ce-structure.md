@@ -507,10 +507,12 @@ A marker is a **referring**, **invisible** pseudo-object that tags the next obje
 A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be one of:
 
 1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
-2. A case-insensitive string that is [CTE and text editor friendly](cte-specification.md#human-editability), and doesn't begin with a digit:
-   * First character printable, not whitespace or control or numeric, and not a symbol except for underscore `_`.
-   * Following characters printable, not whitespace or control, and not a symbol except for underscore `_`, dot `.`, dash `-`.
-   * Maximum length: 30 characters (not bytes).
+2. A case-insensitive string that is [human and text editor friendly](cte-specification.md#human-editability), and doesn't begin with a digit:
+   * Characters must be visible and printable (not whitespace or control characters).
+   * First character must not be a digit from `0` to `9` or [lookalike](cte-specification.md#confusable-characters).
+   * First character must not be a symbol from Unicode 0000-007f or [lookalike](cte-specification.md#confusable-characters), except for underscore `_` (and lookalikes).
+   * Remaining characters must not be a symbol from Unicode 0000-007f or [lookalike](cte-specification.md#confusable-characters), except for underscore `_`, dot `.`, dash `-` (and lookalikes).
+   * Maximum length: 30 Unicode characters.
 
 #### Rules:
 
