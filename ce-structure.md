@@ -261,7 +261,7 @@ The global coordinates method uses the global position to hundredths of degrees,
 
 This method has the advantage of being temporally unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not as easily recognizable by humans.
 
-**Examples**:S
+**Examples**:
 
  * `51.60/11.11`
  * `-13.53/-172.37`
@@ -275,15 +275,15 @@ There are three main kinds of time:
 
 #### Absolute Time
 
-Absolute time is a time that is fixed relative to UTC (or relative to an offset from UTC). It is not affected by daylight savings time, nor will it ever change if an area's time zone changes for political reasons. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
+Absolute time is a time that is fixed relative to UTC (or an offset from UTC). It is not affected by daylight savings time, nor will it be affected if an area's time zone changes through political action. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
 
 #### Fixed Time
 
-Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 on December 1st in absolute terms due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example the abolition of daylight savings or an act of government), fixed time adapts automatically.
+Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 in Toronto on December 1st relative to UTC due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example an act of government such as a change to daylight savings), fixed time adapts automatically.
 
 #### Floating Time
 
-Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes zones with you. If you and another observer are in different time zones and observe the same floating time value, the absolute times you calculate will be different. An example would be your 8:00 morning workout.
+Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes time zones with you. If two observers in different time zones observe the same floating time, they will convert that same floating time to different absolute times. An example would be an 8:00 morning workout.
 
 
 ### When to Use Each Kind
@@ -292,10 +292,11 @@ Use whichever kind of time most succinctly and completely handles your time need
 
 | Situation                            | Kind                                            |
 | ------------------------------------ | ----------------------------------------------- |
-| Log entries and events               | Absolute                                        |
+| Log entries and past events          | Absolute                                        |
+| Future events                        | Absolute or fixed (it depends on the use case)  |
 | Appointments                         | Fixed                                           |
 | Your daily schedule                  | Floating                                        |
-| Multi-zone shared repeating schedule | Absolute or fixed                               |
+| Multi-zone shared repeating schedule | Absolute or fixed (it depends on the use case)  |
 | Deadlines                            | Usually fixed time, but possibly absolute time. |
 
 
