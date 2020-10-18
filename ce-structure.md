@@ -634,7 +634,7 @@ The following characters are allowed if they aren't in the above disallowed sect
  * UTF-8 printable characters
  * UTF-8 whitespace characters
 
-The following character sequences must not be put into comment strings because they will cause problems in CTE:
+The following character sequences must not be put into comment strings because they are comment delimiters in CTE:
 
 * `/*`
 * `*/`
