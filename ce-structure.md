@@ -726,7 +726,7 @@ By default, list types must be compared ordered and map types unordered, unless 
 
 #### Markup Contents
 
-Whitespace in a markup contents section is handled the same as in [XML](https://www.w3.org/TR/REC-xml/#sec-white-space). Any extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+Extraneous whitespace in a markup contents section is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 
 #### Null
 
