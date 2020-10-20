@@ -52,6 +52,8 @@ Contents
   - [Padding](#padding)
 * [Other Types](#other-types)
   - [Null](#null)
+* [Unquoted-Safe String](#unquoted-safe-string)
+  - [Confusable Characters](#confusable-characters)
 * [Equivalence](#equivalence)
 * [Document Limits](#document-limits)
 * [Version History](#version-history)
@@ -508,17 +510,13 @@ A marker is a **referring**, **invisible** pseudo-object that tags the next obje
 A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be one of:
 
 1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
-2. A case-insensitive string that is [human and text editor friendly](cte-specification.md#human-editability), and doesn't begin with a digit:
-   * Characters must be visible and printable (not whitespace or control characters).
-   * First character must not be a digit from `0` to `9` or [lookalike](cte-specification.md#confusable-characters).
-   * First character must not be a symbol from Unicode 0000-007f or [lookalike](cte-specification.md#confusable-characters), except for underscore `_` (and lookalikes).
-   * Remaining characters must not be a symbol from Unicode 0000-007f or [lookalike](cte-specification.md#confusable-characters), except for underscore `_`, dot `.`, dash `-` (and lookalikes).
-   * Maximum length: 30 Unicode characters.
+2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 30 Unicode characters.
 
 #### Rules:
 
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
+ * Marker IDs must be compared case-insensitive.
 
 #### Example:
 
@@ -613,7 +611,7 @@ A comment is a **non-referring**, **invisible**, list-style pseudo-object that c
 
 Although comments are not _referring_ pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
-Comment contents must contain only complete and valid UTF-8 sequences. Escape sequences in comments are not interpreted (they are passed through verbatim).
+Comment contents must contain only complete and valid UTF-8 sequences. Character sequences that look like escape sequences in comments are not interpreted (they are passed through verbatim).
 
 Implementations must allow the user to choose whether to receive or ignore comments.
 
@@ -682,6 +680,84 @@ Other Types
 Denotes the absence of data.
 
 **Note**: Null is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and should be used with caution.
+
+
+
+Unquoted-Safe String
+--------------------
+
+In certain contexts, string data must be restricted to characters that are safe to put in CTE documents without requiring special sentinel values such as double-quotes (`"`) or escape sequences. Such strings are called "unquoted-safe".
+
+An unquoted-safe string must adhere to the following rules:
+
+ * The string must not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
+ * The string must not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), and dot (`.`).
+ * The string must not contain line breaks, whitespace, control, reserved, unassigned, private, or unprintable characters.
+ * The string must not be empty.
+ * The string's CTE representation must not contain escape sequences.
+ * Any characters that look [confusingly similar to printable characters from Unicode range 0000-007f](#confusable-characters) are subject to the same rules as their lookalikes (for example, u+ff15 `５` is disallowed as a first character, and u+2039 `‹` is disallowed entirely in an unquoted-safe string).
+
+**Examples**:
+
+These are unquoted-safe strings:
+
+    twenty-five
+    value.next
+    _underscore
+    _150
+    飲み物
+    contains－dash－lookalikes
+
+These are not unquoted-safe strings:
+
+    String with whitespace
+    disallowed*symbol
+    contains-star-＊-lookalike
+    .begins-with-a-dot
+    ．begins-with-a-dot-lookalike
+
+
+### Confusable Characters
+
+The following is a mostly complete list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
+
+**Note**: This list is not guaranteed complete! Use it as a guide only.
+
+| Character | Lookalikes (codepoints)                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
+| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
+| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
+| `#`       | fe5f, ff03                                                              |
+| `$`       | fe69, ff04                                                              |
+| `%`       | 2052, fe6a, ff05                                                        |
+| `&`       | fe60, ff06                                                              |
+| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
+| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
+| `)`       | fe5a, ff09                                                              |
+| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
+| `+`       | fe62, ff0b                                                              |
+| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
+| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
+| `.`       | fe52, ff0e                                                              |
+| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
+| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
+| `;`       | 037e, fe14, fe54, ff1b                                                  |
+| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
+| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
+| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
+| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
+| `@`       | fe6b, ff20                                                              |
+| `[`       | fe5d, ff3b, 1d115                                                       |
+| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
+| `]`       | fe5e, ff3d                                                              |
+| `^`       | ff3e                                                                    |
+| `_`       | 02cd, 23bd, ff3f                                                        |
+| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
+| `{`       | fe5b, ff5b, 1d114                                                       |
+| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
+| `}`       | fe5c, ff5d                                                              |
+| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
 
 
 

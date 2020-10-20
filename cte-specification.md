@@ -54,7 +54,6 @@ Contents
   - [String](#string)
     - [Quoted String](#quoted-string)
     - [Unquoted String](#unquoted-string)
-    - [Confusable Characters](#confusable-characters)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -117,7 +116,6 @@ A CTE document must be editable by a human. This means that it must contain only
 
 In the spirit of human editability:
 
- * Implementations and document creators should avoid easily confused or otherwise difficult to use characters outside of quoted strings.
  * Implementations should avoid outputting characters that editors tend to convert automatically.
  * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
@@ -432,7 +430,7 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the period character (`.`) is used as a decimal separator.
+Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a decimal separator.
 
 **Examples**:
 
@@ -505,12 +503,12 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 ### String-Like Array Encodings
 
-String-like array encodings are interpreted as a whole, and must not contain control characters, non-printable characters, pipe (`|`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences).
+String-like array encodings are interpreted as a whole, and must encode control characters, non-printable characters, pipe (`|`) and backslash (`\`) as [escape sequences](#escape-sequences).
 
 
 ### URI
 
-A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. CTE [escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
+A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. [CTE escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
 
  * `|u http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
  * `|u http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
@@ -548,76 +546,23 @@ A quoted string encloses the string contents within double-quote delimiters (for
 
 #### Unquoted String
 
-Strings must normally be double-quote delimited, but this rule can be relaxed if:
+Strings must normally be double-quote delimited, but this rule can be relaxed if they are [unquoted-safe](ce-structure.md#unquoted-safe-string).
 
- * The string doesn't begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string doesn't contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), period (`.`), and colon (`:`).
- * The string doesn't contain escape sequences or whitespace or line breaks or unprintable characters.
- * The string isn't empty.
+**Example**:
 
-Any characters that look [confusingly similar to printable characters from Unicode range 0000-007f](#confusable-characters) are subject to the same rules as their lookalikes (for example, u+ff15 `５` is disallowed as a first character, and u+2039 `‹` is disallowed entirely in an unquoted string).
+```
+c1 [
+  "some-text"
+]
+```
 
-**Examples**:
+"some-text" is unquoted-safe, so this document could also be written as:
 
-These are not allowed as unquoted strings:
-
-    String with whitespace
-    String\twith\tescapes
-    disallowed*symbol
-    .begins-with-a-dot
-    ．begins-with-a-dot-lookalike
-    contains-star-＊-lookalike
-
-These can be unquoted strings:
-
-    twenty-five
-    Std:value.next
-    _underscore
-    _150
-    飲み物
-    contains－dash－lookalikes
-
-#### Confusable Characters
-
-The following is a mostly complete list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
-
-**Note**: This list is not guaranteed complete! Use it as a guide only.
-
-| Character | Lookalikes (codepoints)                                                 |
-| --------- | ----------------------------------------------------------------------- |
-| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
-| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
-| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
-| `#`       | fe5f, ff03                                                              |
-| `$`       | fe69, ff04                                                              |
-| `%`       | 2052, fe6a, ff05                                                        |
-| `&`       | fe60, ff06                                                              |
-| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
-| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
-| `)`       | fe5a, ff09                                                              |
-| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
-| `+`       | fe62, ff0b                                                              |
-| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
-| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, 3217, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
-| `.`       | fe52, ff0e                                                              |
-| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
-| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
-| `;`       | 037e, fe14, fe54, ff1b                                                  |
-| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
-| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
-| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
-| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
-| `@`       | fe6b, ff20                                                              |
-| `[`       | fe5d, ff3b, 1d115                                                       |
-| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
-| `]`       | fe5e, ff3d                                                              |
-| `^`       | ff3e                                                                    |
-| `_`       | 02cd, 23bd, ff3f                                                        |
-| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
-| `{`       | fe5b, ff5b, 1d114                                                       |
-| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
-| `}`       | fe5c, ff5d                                                              |
-| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
+```
+c1 [
+  some-text
+]
+```
 
 
 
@@ -715,7 +660,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A marker ID
+ * A [marker ID](ce-structure.md#marker-id)
  * `:` (the marker separator)
  * The marked value
 
@@ -731,7 +676,7 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 ### Reference
 
-A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](#marker-id) or a [URI](#uri).
+A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](ce-structure.md#marker-id) or a [URI](#uri).
 
 Example:
 
@@ -859,10 +804,10 @@ Letter Case
 
 A CTE document must be entirely in lower case, except in the following cases:
 
- * String and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \x3d"`
+ * String, string-like array, and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \1d"`
  * URI contents.
  * [Time zones](#time-zones) are case sensitive, and contain uppercase characters.
- * [Marker IDs](#marker-id) are not case sensitive, but case must still be preserved when converting between formats.
+ * [Marker ID](ce-structure.md#marker-id) case must be preserved.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
@@ -918,8 +863,8 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between a typed array initiator and the element type (`| u8|` is invalid).
- * Between a marker or reference initiator and its marker ID (`& 1234` and `# |u mydoc.cbe|` are invalid).
- * Between a marker ID and the object it marks (`&123: xyz` is invalid).
+ * Between a marker or reference initiator and its [marker ID](ce-structure.md#marker-id) (`& 1234` and `# |u mydoc.cbe|` are invalid).
+ * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
  * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@ nan` are invalid).
