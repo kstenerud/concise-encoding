@@ -242,14 +242,14 @@ c1
                         <pre class="scroll code">
 c1
 {
-    main-view = &lt;View;
+    main-view = &lt;View:
         &lt;Image src=|u images/avatar-image.jpg|&gt;
-        &lt;Text id=HelloText;
+        &lt;Text id=HelloText:
             Hello! Please choose a name!
         &gt;
         &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
             HelloText.SetText("Hello, " + NameInput.Text + "!")
-        @@";
+        @@":
             Name me!
         &gt;
     &gt;
