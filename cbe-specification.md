@@ -87,7 +87,9 @@ A CBE document begins with a version specifier, which is composed of the octet `
 
 The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), representing which version of this specification the document adheres to.
 
-Example: `[03 01]` = Empty document (CBE version 1)
+**Example**:
+
+    [03 01] = CBE version 1
 
 
 
@@ -369,9 +371,9 @@ Custom binary types are encoded with the type 0x93. The length is the number of 
     [93 12 04 f6 28 3c 40 00 00 40 40]
     = binary data representing a custom "cplx" struct
       {
-          type uint8(4)
-          real float32(2.94)
-          imag float32(3.0)
+          type:uint8 = 4
+          real:float32 = 2.94
+          imag:float32 = 3.0
       }
 
 
@@ -573,7 +575,10 @@ Alignment tuning is usually only useful when the target decoding environment is 
 Version History
 ---------------
 
-June 5, 2018: First draft
+| Date          | Version   |
+| ------------- | --------- |
+| July 22, 2018 | Draft     |
+| TBD           | Version 1 |
 
 
 

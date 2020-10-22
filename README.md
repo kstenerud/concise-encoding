@@ -145,7 +145,7 @@ c1
     boolean         = @true
     "binary int"    = -0b10001011
     "octal int"     = 0o644
-    "regular int"   = -10000000
+    "regular int"   = -10_000_000
     "hex int"       = 0xfffe0001
     "decimal float" = -14.125
     "hex float"     = 0x5.1ec4p20
@@ -192,12 +192,12 @@ func ToColumns(values ...interface{}) string {
     ref2            = $id1
     outside_ref     = $|u https://somewhere.else.com/path/to/document.cte#some_id|
     // The markup type is good for presentation data
-    main-view       = <View;
+    main-view       = <View:
                           <Image src=u"images/avatar-image.jpg">
-                          <Text;
+                          <Text:
                               Hello! Please choose a name!
                           >
-                          <TextInput id=name style={height=40 borderColor=gray}; Name me! >
+                          <TextInput id=name style={height=40 borderColor=gray}: Name me! >
                       >
 }
 ```

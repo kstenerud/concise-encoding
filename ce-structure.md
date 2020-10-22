@@ -3,7 +3,7 @@ Concise Encoding - Structural Specification
 
 Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
-It is composed of 1:1 type compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats, both of which follow the same structural rules. This document lays out those rules. Examples are given in the [text](cte-specification.md) format for clarity.
+It is composed of 1:1 type compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats, both of which follow the same structural and content rules laid out in this document. Examples are given in the [text](cte-specification.md) format for clarity.
 
 
 
@@ -36,10 +36,10 @@ Contents
   - [String-like Arrays](#string-like-arrays)
     - [String](#string)
     - [URI](#uri)
+  - [Typed Array](#typed-array)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#binary-custom-type)
     - [Text Encoding](#text-custom-type)
-  - [Typed Array](#typed-array)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -82,13 +82,13 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by zero or one objects of any type. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container.
+Documents begin with a [version specifier](#version-specifier), followed by one object of any type. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container.
 
     [version specifier] [object]
 
 **Examples**:
 
- * Empty document (CTE version 1): `c1`
+ * Empty document (CTE version 1): `c1 @null`
  * Document (CTE version 1) containing the top-level integer value 1000: `c1 1000`
  * Document (CTE version 1) containing a top-level list: `c1 [string1 string2 string3]`
 
@@ -122,14 +122,14 @@ Integer values can be positive or negative, and can be represented in various ba
 
 A floating point number is composed of a coefficient and an exponent, and can be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
 
-Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+Binary floating point values represent ieee754 binary floating point for 32-bit and 64-bit sizes, and [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) for 16-bit. Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (binary float32)
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (binary float32)
 
 An implementation may discard NaN information other than its signaling/quiet status.
 
-An implementation may alter the storage size of a floating point number when encoding/decoding as long as the numeric value remains the same.
+An implementation may alter the type and storage size of a floating point value when encoding/decoding as long as the final numeric value remains the same.
 
 #### Special Floating Point Values
 
@@ -142,7 +142,7 @@ Both decimal and binary floating point numbers have representations for the foll
 
 ### UUID
 
-The 128-bit universally unique identifier must be structured according to the formal definition of the UUID string representation (in CTE) or binary representation (in CBE) in [rfc4122](https://tools.ietf.org/html/rfc4122).
+The 128-bit universally unique identifier must be structured according to the [rfc4122](https://tools.ietf.org/html/rfc4122) definition of the UUID string representation (in CTE) or binary representation (in CBE).
 
 
 
@@ -164,7 +164,7 @@ A date is made up of the following fields:
 | Day   |     Y     |         1 |        31 |
 
  * Year, month, and day fields must not be 0 (counting starts at 1).
- * The year value must be negative to represent BC dates, and positive to represent AD dates. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), and so the year values `0` and `-0` are invalid.
+ * The year value must be negative to represent BC dates, and positive to represent AD dates. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year values `0` and `-0` are invalid.
  * The year field must contain the full year (no abbreviations).
 
 **Examples**:
@@ -190,7 +190,7 @@ A time is made up of the following fields:
 
  * Hours are always according to the 24h clock (21:00, not 9:00 PM).
  * Seconds go to 60 to support leap seconds.
- * Since a time by itself has no date component, time zone data must be interpreted as if it were "today", and so the absolute time value might not remain consistent from one day to the next should the political situation at that time zone change at a later date (except when using `Etc/GMT+1`, etc).
+ * Since a time by itself has no date component, time zone data must be interpreted as if it were "today". This means that time zones which are not offsets (such as `Etc/GMT+1`) might be interpreted differently on different dates for political reasons (such as daylight savings).
  * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
 **Examples**:
@@ -222,6 +222,10 @@ A time zone refers to the political designation of a location having a specific 
 #### Area/Location
 
 The area/location method is the more human-readable of the two, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones are case-sensitive because they tend to be implemented that way on most platforms.
+
+**Note**: Some locations might be split into sub-components for disambiguation (for example `America/Indiana/Petersburg`, which has area `America` and location `Indiana/Petersburg`).
+
+See "[Theory and pragmatics of the tz code and data](https://data.iana.org/time-zones/tzdb-2020b/theory.html)" for more information.
 
 ##### Abbreviated Areas
 
@@ -306,13 +310,13 @@ Use whichever kind of time most succinctly and completely handles your time need
 Array Types
 -----------
 
-An array is a contiguous sequence of fixed length elements. The array type determines how the contents are to be interpreted.
+Array types represents a contiguous sequence of fixed length elements. The type of an array determines how its contents are interpreted.
 
-There are three primary array classifications in Concise Encoding:
+There are three kinds of array representations in Concise Encoding:
 
-* String-like arrays, which contain UTF-8 data. String-like array lengths are counted in bytes.
-* Custom Types, which represent custom data as a sequence of bytes or UTF-8 characters. Custom type lengths are counted in bytes.
-* [Typed arrays](#typed-array), which represent binary encoded elements. A typed array's length is counted according to the width of its elements.
+ * String-like arrays, which contain UTF-8 data. String-like array lengths are counted in bytes.
+ * [Typed arrays](#typed-array), which represent binary encoded elements. A typed array's length is counted according to the width of its elements.
+ * Custom Types, which represent custom data as a sequence of bytes or UTF-8 characters. Custom type lengths are counted in bytes. Custom types are actually encoded using one of the other two representations, but have user-defined meanings.
 
 
 ### String-like Arrays
@@ -332,39 +336,6 @@ Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to main
 The Uniform Resource Identifier must be structured according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
 
 
-### Custom Types
-
-There are many cases where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to be mapped directly to/from memory for performance reasons.
-
-Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't recognize must report the problem to the user and substitute [null](#null).
-
-Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents.
-
-When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
-
-#### Binary Custom Type
-
-An array of octets representing a user-defined custom data type. The encoding and interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, data should be represented in little endian byte order whenever possible.
-
-**Example**:
-
-    [93 12 04 f6 28 3c 40 00 00 40 40]
-    = binary data representing a custom "cplx" struct
-      {
-          type uint8(4)
-          real float32(2.94)
-          imag float32(3.0)
-      }
-
-#### Text Custom Type
-
-A string value representing a user-defined custom data type. The encoding and interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
-
-**Example**:
-
-    |ct cplx(2.94+3i)|
-
-
 ### Typed Array
 
 A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
@@ -380,6 +351,39 @@ Array elements can be any of the representations allowed for the specified type 
     |i16 0b1001010 0o744 1000 0xffff|
     |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     |b 1 1 0 1 0|
+
+
+### Custom Types
+
+There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
+
+Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't recognize must report the problem to the user and substitute [null](#null).
+
+Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
+
+**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
+
+#### Binary Custom Type
+
+A uint8 array value representing a user-defined custom data type. The interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, data should be represented in little endian byte order.
+
+**Example**:
+
+    [93 12 04 f6 28 3c 40 00 00 40 40]
+    = binary data representing a custom "cplx" struct
+      {
+          type:uint8 = 4
+          real:float32 = 2.94
+          imag:float32 = 3.0
+      }
+
+#### Text Custom Type
+
+A string-like array value representing a user-defined custom data type. The interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
+
+**Example**:
+
+    |ct cplx(2.94+3i)|
 
 
 
@@ -399,13 +403,13 @@ By default, a list is ordered and allows duplicate values. Different rules can b
 
 ### Map
 
-A map associates key objects with value objects. Keys can be any mix of [keyable types](#keyable-types). Values can be any mix of any type, including other containers.
+A map associates key objects with value objects. Keys can be any mix of any [keyable type](#keyable-types). Values can be any mix of any type, including other containers.
 
 Map entries are stored as key-value pairs. A key without a paired value is invalid.
 
 By default, a map is unordered and does not allow duplicate keys. Different rules can be set using a schema.
 
-Key uniqueness transcends numeric data types. For example, the following keys are considered duplicates:
+Keys must be unique across numeric data types. For example, the following keys are considered duplicates:
 
  * Integer value 2000
  * Floating point value 2000.0
@@ -437,7 +441,7 @@ Null must not be used as a key.
 
 A markup container stores data in a hierarchical style similar to XML. Each element is composed of a name, an optional map of attributes, and an optional list of contents.
 
-    [name] [optional attributes] [ optional contents]
+    [name] [optional attributes] [optional contents]
 
  * Name is a [keyable type](#keyable-types), and is case-insensitive if it's a string.
  * Attributes behaves like a [map](#map)
@@ -459,9 +463,9 @@ Illustration of markup encodings:
 
 ##### Content String
 
-In content strings, whitespace is by default not considered significant, and may be altered by an implementation for aesthetic purposes.
+In content strings, leading and trailing whitespace is not considered significant. Whitespace sequences between printable sequences in a content string are considered equivalent to a single space character (u+0020). Whitespace at the beginning or end of a string can be ignored (trimmed).
 
-Whitespace sequences between printable sequences in a content string are considered equivalent to a single space character (u+0020). Whitespace at the beginning or end of a string is ignored (trimmed).
+Implementations may alter whitespace in content strings for aesthetic reasons so long as at least one whitespace character remains between printable sequences.
 
 ##### Entity Reference
 
@@ -611,7 +615,9 @@ A comment is a **non-referring**, **invisible**, list-style pseudo-object that c
 
 Although comments are not _referring_ pseudo-objects, they tend to unofficially refer to what follows in the document, similar to how comments are used in source code.
 
-Comment contents must contain only complete and valid UTF-8 sequences. Character sequences that look like escape sequences in comments are not interpreted (they are passed through verbatim).
+Comments do not support escape sequences. Character sequences that look like escape sequences in comments are not processed (they are passed through verbatim).
+
+Whitespace in a comment string is treated the same as in [markup content strings](#content-string).
 
 Implementations must allow the user to choose whether to receive or ignore comments.
 
@@ -838,7 +844,7 @@ Implementations should enforce limits to the documents they'll accept in order t
  * Maximum array length
  * Maximum total document size in bytes
  * Maximum container depth (from the top level to the most deeply nested container)
- * Maximum coefficient size in integer and fp numbers (in equivalent decimal digits)
+ * Maximum coefficient size in integer and fp numbers (significant digits)
 
 It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. Decoders must either make known what their limits are, or provide the user with a way to configure them (with reasonable defaults). A decoder is free to discard documents that threaten to exceed its resources.
 
@@ -856,7 +862,10 @@ As an illustration, for a general purpose decoder the following default limits s
 Version History
 ---------------
 
-July 22, 2018: First draft
+| Date          | Version   |
+| ------------- | --------- |
+| July 22, 2018 | Draft     |
+| TBD           | Version 1 |
 
 
 

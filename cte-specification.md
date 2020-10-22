@@ -68,7 +68,6 @@ Contents
   - [Comment](#comment)
     - [Single Line Comment](#single-line-comment)
     - [Multiline Comment](#multiline-comment)
-    - [Comment Character Restrictions](#comment-string-character-restrictions)
 * [Other Types](#other-types)
   - [Null](#null)
 * [Letter Case](#letter-case)
@@ -104,7 +103,7 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 
 **Examples**:
 
- * CTE v1 empty document: `c1`
+ * CTE v1 empty document: `c1 @null`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 [a b c]`
  * CTE v1 document containing a top-level map: `c1 {a=1 b=2 c=3}`
@@ -143,6 +142,8 @@ In some contexts, escape sequences may be used to encode data that would otherwi
 | `>`                                         | greater-than (u+003e)                   |
 | `\`                                         | backslash (u+005c)                      |
 | `\|`                                        | pipe (u+007c)                           |
+| `_`                                         | non-breaking space (u+00a0)             |
+| `-`                                         | soft-hyphen (u+00ad)                    |
 | u+000a                                      | [continuation](#continuation)           |
 | u+000d                                      | [continuation](#continuation)           |
 | `0` - `9`                                   | [Unicode sequence](#unicode-sequence)   |
@@ -200,7 +201,8 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 
 ```
 "Verbatim sequences can occur anywhere escapes are allowed.
-\.@@@ In verbatim sequences, everything is interpreted literally until the
+\.@@@
+In verbatim sequences, everything is interpreted literally until the
 end-of-string identifier is encountered (in this case three @ characters).
 Characters like ", [, <, \ and such can appear unescaped.
 
@@ -229,11 +231,12 @@ Version Specifier
 
 A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There must be no whitespace between the `c` and the version number.
 
-The version specifier and the top-level object (if present) must be separated by whitespace.
+The version specifier and the top-level object must be separated by whitespace.
 
 **Example**:
 
-Version specifier (CTE version 1): `c1`
+* Version specifier (CTE version 1): `c1`
+* Complete (and empty) document: `c1 @null`
 
 
 
@@ -276,7 +279,7 @@ The exponential portion of a base-10 number is denoted by the lowercase characte
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-There is no maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can store up to 16 significant digits.
+There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can store up to 16 significant digits.
 
 #### Base-16 Notation
 
@@ -319,24 +322,34 @@ Base-10 floating point notation should be preferred over base-16 notation unless
 
 ### Numeric Whitespace
 
-The `_` character can be used as "numeric whitespace" when encoding numeric values. Other [whitespace](#whitespace) characters are not allowed.
+The `_` character can be used as "numeric whitespace" when encoding certain numeric values. Other [whitespace](#whitespace) characters are not allowed.
 
 Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
  * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain numeric whitespace.
- * Values can contain any amount of whitespace at any point after the first value character.
- * There must not be numeric whitespace breaking up a numeric prefix (e.g. `0_x3f` is invalid).
- * There must not be numeric whitespace between the exponent marker (`e`, `p`) and the first digit of the exponent.
- * There must not be numeric whitespace between the exponent sign (`+`, `-`) and the first digit of the exponent.
+ * Numeric whitespace can only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on base).
+ * Numeric whitespace characters must be ignored when decoding numeric values.
 
-| Value       | Valid Whitespace     | Invalid Whitespace | Notes                                         |
-| ----------- | -------------------- | ------------------ | --------------------------------------------- |
-| `1000000`   | `1__000___000____`   | `_1_000_000`       | `_1_000_000` would be interpreted as a string |
-| `1.5e50`    | `1_._5_e5_0`         | `1.5e_50`          |                                               |
-| `1.5e+50`   | `1_._5_e+5_0`        | `1.5e_+50`         |                                               |
+**Examples**:
 
-Numeric whitespace characters must be ignored when decoding numeric values.
+Valid:
+
+ * `1_000_000` = 1000000
+ * `4_3.5_5_4e9_0` = 43.554e90
+ * `-0xa.fee_31p1_00` = -0xa.fee31p100
+
+Invalid:
+
+ * `_1000000`
+ * `1000000_`
+ * `43_.554e90`
+ * `43._554e90`
+ * `43.554_e90`
+ * `-_43.554e90`
+ * `-_0xa.fee31p100`
+ * `-0xa.fee31p_100`
+ * `-0_xa.fee31p100`
 
 
 ### UUID
@@ -430,7 +443,7 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a decimal separator.
+Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a fractional separator.
 
 **Examples**:
 
@@ -453,24 +466,24 @@ An empty array has a type but no contents:
 
 The following array types are available:
 
-| Type   | Description             | Encoding Kind |
-| ------ | ----------------------- | ------------- |
-| `b`    | Boolean                 | Element       |
-| `u8`   | 8-bit unsigned integer  | Element       |
-| `u16`  | 16-bit unsigned integer | Element       |
-| `u32`  | 32-bit unsigned integer | Element       |
-| `u64`  | 64-bit unsigned integer | Element       |
-| `i8`   | 8-bit signed integer    | Element       |
-| `i16`  | 16-bit signed integer   | Element       |
-| `i32`  | 32-bit signed integer   | Element       |
-| `i64`  | 64-bit signed integer   | Element       |
-| `f16`  | 16-bit floating point   | Element       |
-| `f32`  | 32-bit floating point   | Element       |
-| `f64`  | 64-bit floating point   | Element       |
-| `uu`   | 128-bit UUID            | Element       |
-| `u`    | URI                     | String-Like   |
-| `ct`   | Custom Text             | String-Like   |
-| `cb`   | Custom Binary           | Element       |
+| Type   | Description                     | Encoding Kind |
+| ------ | ------------------------------- | ------------- |
+| `b`    | Boolean                         | Element       |
+| `u8`   | 8-bit unsigned integer          | Element       |
+| `u16`  | 16-bit unsigned integer         | Element       |
+| `u32`  | 32-bit unsigned integer         | Element       |
+| `u64`  | 64-bit unsigned integer         | Element       |
+| `i8`   | 8-bit signed integer            | Element       |
+| `i16`  | 16-bit signed integer           | Element       |
+| `i32`  | 32-bit signed integer           | Element       |
+| `i64`  | 64-bit signed integer           | Element       |
+| `f16`  | 16-bit floating point (bfloat)  | Element       |
+| `f32`  | 32-bit floating point (ieee754) | Element       |
+| `f64`  | 64-bit floating point (ieee754) | Element       |
+| `uu`   | 128-bit UUID                    | Element       |
+| `u`    | URI                             | String-Like   |
+| `ct`   | Custom Text                     | String-Like   |
+| `cb`   | Custom Binary                   | Element       |
 
 
 ### Element Array Encodings
@@ -516,16 +529,22 @@ A Concise Encoding implementation must not interpret percent escape sequences in
 
 ### Custom Binary
 
-Custom binary data is encoded like `u8x` (as hex encoded byte elements).
+Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
 
 **Example**:
 
     |cb 04 f6 28 3c 40 00 00 40 40|
+    = binary data representing a custom "cplx" struct
+      {
+          type:uint8 = 4
+          real:float32 = 2.94
+          imag:float32 = 3.0
+      }
 
 
 ### Custom Text
 
-Custom text data is encoded using string-like encoding. Custom text can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
+Custom text data is encoded as a string-like array. Custom text can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -571,7 +590,7 @@ Container Types
 
 ### List
 
-A list begins with an opening square bracket `[`, whitespace separated contents, and finally a closing bracket `]`.
+A list begins with an opening square bracket `[`, contains whitespace separated contents, and finishes with a closing bracket `]`.
 
 **Example**:
 
@@ -580,9 +599,9 @@ A list begins with an opening square bracket `[`, whitespace separated contents,
 
 ### Map
 
-Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
+A map begins with an opening curly brace `{`, contains whitespace separated key-value pairs, and finishes with a closing brace `}`.
 
-A map begins with an opening curly brace `{`, whitespace separated key-value pairs, and finally a closing brace `}`.
+Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
 **Example**:
 
@@ -597,10 +616,10 @@ A map begins with an opening curly brace `{`, whitespace separated key-value pai
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `;`, and end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `:`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
- * Non-string types can be used in attribute names and values, under the same rules as [map](#map) keys and values.
+ * Non-string types can be used in tag names and attribute key-value pairs (under the same rules as [map](#map) keys and values).
 
 #### Markup Structure
 
@@ -608,7 +627,7 @@ The CTE encoding of a markup container is similar to XML, except:
 | ---------- | ---------- | ------------------------- | -------- |
 | Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
 | Attributes | whitespace | [Map](#map)               |          |
-| Contents   | `;`        | [List](#list)             |          |
+| Contents   | `:`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
@@ -619,8 +638,8 @@ Illustration of markup encodings:
 | ---------- | -------- | ------------------------------------------------------ |
 |     N      |    N     | `<br>`                                                 |
 |     Y      |    N     | `<div id=fillme>`                                      |
-|     N      |    Y     | `<span;Some text here>`                                |
-|     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >` |
+|     N      |    Y     | `<span:Some text here>`                                |
+|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >` |
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
 
@@ -636,15 +655,15 @@ Content strings can contain [escape sequences](#escape-sequences), which must be
 
 ```
 c1
-<View;
+<View:
     <Image src=|u images/avatar-image.jpg|>
-    <Text id=HelloText;
+    <Text id=HelloText:
         Hello! Please choose a name!
     >
     // <HRule style=thin>
     <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
         HelloText.SetText("Hello, " + NameInput.Text + "!")
-    @@";
+    @@":
         Name me!
     >
 >
@@ -727,13 +746,7 @@ Metadata maps are encoded in the same manner as [regular maps](#map), except tha
 
 ### Comment
 
-Comment contents must contain only complete and valid UTF-8 sequences. Comments do not respond to escape sequences (anything resembling an escape sequence is not interpreted).
-
-Comment contents must be trimmed (leading and trailing whitespace removed) when decoding.
-
 Comments can be written in single-line or multi-line form.
-
-Implementations must allow the user to choose whether to receive or ignore comments.
 
 #### Single Line Comment
 
@@ -743,26 +756,7 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-Commenting out strings or markup contents containing the sequences `/*` or `*/` will potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". You could mitigate this edge case by escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
-
-#### Comment String Character Restrictions
-
-The following characters are explicitly allowed:
-
- * Horizontal Tab (u+0009)
- * Linefeed (u+000a) - discarded in single line comments
- * Carriage Return (u+000d) - discarded in single line comments
-
-The following characters are disallowed if they aren't in the above allowed section:
-
- * Control characters (such as u+0000 to u+001f, u+007f to u+009f).
- * Line breaking characters (such as u+2028, u+2029).
- * Byte order mark.
-
-The following characters are allowed if they aren't in the above disallowed section:
-
- * UTF-8 printable characters
- * UTF-8 whitespace characters
+Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
 
 **Example**:
 
@@ -802,16 +796,15 @@ Null is encoded as `@null`
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, except in the following cases:
+A CTE document must be entirely in lower case, except in the following situations:
 
  * String, string-like array, and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \1d"`
- * URI contents.
- * [Time zones](#time-zones) are case sensitive, and contain uppercase characters.
+ * [Time zones](#time-zones) are case sensitive, and can contain uppercase characters.
  * [Marker ID](ce-structure.md#marker-id) case must be preserved.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
-A decoder must accept uppercase letters for case-insensitive data, because humans will do this regardless of the rules.
+A decoder must accept data regardless of letter-case because humans won't follow the rules.
 
 An encoder must output letter case in accordance with this specification.
 
@@ -820,12 +813,12 @@ An encoder must output letter case in accordance with this specification.
 Whitespace
 ----------
 
-Whitespace characters outside of strings and comments must be ignored by a CTE parser. Any number of whitespace characters can occur in a sequence.
+Structural whitespace (whitespace not encoded into a string or string-like object) must be ignored by a CTE parser. Any number of structural whitespace characters can occur in a sequence.
 
 
 ### Valid Whitespace Characters
 
-While there are many characters classified as "whitespace" within the Unicode set, only the following are valid whitespace characters in a CTE document:
+While there are many characters classified as "whitespace" within the Unicode set, only the following are valid structural whitespace characters:
 
 | Code Point | Name            |
 | ---------- | --------------- |
@@ -874,12 +867,12 @@ Examples:
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out whitespace in a CTE document so that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
+Pretty printing is the act of laying out structural whitespace in a CTE document so that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
 
 
 #### Right Margin
 
-The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define for CTE documents because it depends in part on the kind of data the document contains, and the container depth.
+The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define because it depends in part on the kind of data the document contains, and the container depth.
 
 In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data.
 
@@ -933,7 +926,7 @@ Small maps containing small objects may be placed entirely on one line. In such 
 
 #### Metadata Map
 
-The object that the metadata map refers to should follow it after a space, or possibly on a separate line if it's not breaking up a key-value pair.
+The object that the metadata map refers to should follow it after a space.
 ```
 {
     (x=y) a = b
@@ -944,8 +937,7 @@ The object that the metadata map refers to should follow it after a space, or po
         x = 1
         y = 2
         z = 3
-    )
-    e = f
+    ) e = f
 
     g = (
         x = 1
@@ -962,7 +954,7 @@ The closing `>` should only be on a different line if there are contents.
 ```
 <a>
 
-<a;
+<a:
     contents
 >
 ```
@@ -971,12 +963,12 @@ The attributes section should be entirely on the same line as the tag name if it
 ```
 <a x=y>
 
-<a x=y;
+<a x=y:
     contents
 >
 ```
 
-If the attributes section is too long, the overflow should be indented.
+If the attributes section is too long, the overflow should be broken up into multiple lines, indented.
 ```
 <img src=|u http://somereallylongdomainname.likereallylong.com/images/2.jpg|
     width=50 height=50 border-left=10 units=px>
@@ -987,19 +979,21 @@ If the attributes section is too long, the overflow should be indented.
 
 Strings should use [continuations](#continuation) if the line is getting too long.
 ```
-"All that most maddens and torments; all that stirs up the lees of things; \
-all truth with malice in it; all that cracks the sinews and cakes the brain; \
-all the subtle demonisms of life and thought; all evil, to crazy Ahab, were \
-visibly personified, and made practically assailable in Moby Dick. He piled \
-upon the whale's white hump the sum of all the general rage and hate felt by \
-his whole race from Adam down; and then, as if his chest had been a mortar, \
-he burst his hot heart's shell upon it."
+[
+    "All that most maddens and torments; all that stirs up the lees of things; \
+    all truth with malice in it; all that cracks the sinews and cakes the brain; \
+    all the subtle demonisms of life and thought; all evil, to crazy Ahab, were \
+    visibly personified, and made practically assailable in Moby Dick. He piled \
+    upon the whale's white hump the sum of all the general rage and hate felt by \
+    his whole race from Adam down; and then, as if his chest had been a mortar, \
+    he burst his hot heart's shell upon it."
+]
 ```
 
 
 #### Typed Arrays
 
-Typed arrays should have newlines inserted if the line is getting too long.
+Typed arrays should be broken up into multiple lines at the next level of indentation if the line is getting too long.
 ```
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
       bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
@@ -1016,6 +1010,15 @@ Comments should have one space (u+0020) after the comment opening sequence. `/* 
 /* abc */
 ```
 
+Long comments should be broken up to fit within the right margin.
+```
+{
+    /* When a comment gets too long to fit within the right margin, place
+       the overflow on a separate lines, adjusting the indent to keep
+       everything aligned. */
+}
+```
+
 The object following a comment should be on a different line.
 ```
 {
@@ -1029,7 +1032,10 @@ The object following a comment should be on a different line.
 Version History
 ---------------
 
-July 22, 2018: First draft
+| Date          | Version   |
+| ------------- | --------- |
+| July 22, 2018 | Draft     |
+| TBD           | Version 1 |
 
 
 
