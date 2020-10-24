@@ -280,7 +280,7 @@ The exponential portion of a base-10 number is denoted by the lowercase characte
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits.
+There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits and an exponent range roughly equivalent to decimal -307 to +307.
 
 #### Base-16 Notation
 
@@ -289,7 +289,7 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
 
-To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used represent values up to 64-bit ieee754 binary floats.
+To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used represent binary float values that are supported by CBE. A decoder must truncate binary float data that is too big to be represented in a CBE document, and inform the user about it.
 
 #### Special Floating Point Values
 
@@ -535,7 +535,7 @@ Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
 **Example**:
 
     |cb 04 f6 28 3c 40 00 00 40 40|
-    = binary data representing a custom "cplx" struct
+    = binary data representing an imaginary custom "cplx" struct
       {
           type:uint8 = 4
           real:float32 = 2.94

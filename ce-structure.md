@@ -373,7 +373,7 @@ A uint8 array value representing a user-defined custom data type. The interpreta
 **Example**:
 
     [93 12 04 f6 28 3c 40 00 00 40 40]
-    = binary data representing a custom "cplx" struct
+    = binary data representing an imaginary custom "cplx" struct
       {
           type:uint8 = 4
           real:float32 = 2.94
