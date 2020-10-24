@@ -3,9 +3,9 @@ Concise Text Encoding
 
 Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
-The text format aims to present data in a human friendly way, while the 1:1 compatible [binary format](cbe-specification.md) aims for compactness and machine processing efficiency.
+The text format aims to present data in a human friendly way, encoding data in a manner that can be easily and unambiguously edited in a UTF-8 capable text editor while maintaining 1:1 compatibility with the [binary format](cbe-specification.md) (which aims for compactness and machine processing efficiency).
 
-CTE documents must follow the [Concise Encoding structural rules](ce-structure.md).
+CTE documents must follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
 
 
 
@@ -680,7 +680,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](ce-structure.md#marker-id)
+ * A [marker ID](ce-structure.md#marker-id) (unquoted if a string)
  * `:` (the marker separator)
  * The marked value
 
@@ -757,7 +757,7 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
+**Note**: Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
 
 **Example**:
 
@@ -805,7 +805,7 @@ A CTE document must be entirely in lower case, except in the following situation
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
-A decoder must accept data regardless of letter-case because humans won't follow these rules.
+A decoder must accept data regardless of letter-case because humans will inevitably break these rules, and rejecting a document on such grounds would result in poor UX.
 
 An encoder must output letter case in accordance with this specification.
 
@@ -831,7 +831,7 @@ While there are many characters classified as "whitespace" within the Unicode se
 
 ### Whitespace **can** occur:
 
- * Before and after an object.
+ * Around an object.
  * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `:`, `>`)
 
 Examples:

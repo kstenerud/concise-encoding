@@ -3,9 +3,11 @@ Concise Binary Encoding
 
 Concise Binary Encoding (CBE) is the binary variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
-The binary format aims for compactness and machine processing efficiency, while the 1:1 compatible [text format](cte-specification.md) aims to present data in a human friendly way.
+The binary format aims for compactness and machine processing efficiency while maintaining 1:1 compatibility with the [text format](cte-specification.md) (which aims to present data in a human friendly way).
 
-CBE documents must follow the [Concise Encoding structural rules](ce-structure.md).
+CBE documents must follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
+
+**Note**: CBE examples will be represented as series of hex encoded byte values enclosed within square brackets. For example, `[00 01 fe ff]` represents the four byte sequence 0x00, 0x01, 0xfe, 0xff.
 
 
 
@@ -329,11 +331,13 @@ In this case, the first chunk is 14 elements long and has a continuation bit of 
 
 ### String
 
-Strings are encoded with different type fields, depending on the length. The length is in octets, NOT characters.
+Strings are encoded in UTF-8 with different type fields depending on the length. The length is in octets, NOT characters.
+
+The general string encoding:
 
     [90] [Length+continuation] [Octet 0] ... [Octet (Length-1)]
 
-For byte lengths from 0 to 15, there are special top-level inferred-length string types (0x80 - 0x8f) that contain only a single array chunk. For longer strings, use the general (0x90) string type.
+For byte lengths from 0 to 15, there are special fixed-length string types (0x80 - 0x8f) that contain only a single array chunk with an implied length. For longer strings, use the general (0x90) string type.
 
     [80]
     [81] [octet 0]
@@ -364,7 +368,7 @@ URIs are encoded with the type 0x92. The length is in octets, NOT characters.
 
 #### Custom Type (Binary Encoding)
 
-Custom binary types are encoded with the type 0x93. The length is the number of octets used by the data.
+Custom binary types are encoded as binary data with the type 0x93. The length is the number of octets used by the data.
 
 **Example**:
 
@@ -379,7 +383,7 @@ Custom binary types are encoded with the type 0x93. The length is the number of 
 
 #### Custom Type (Text Encoding)
 
-Custom text types are encoded with the type 0x94. The length is in octets, NOT characters.
+Custom text types are encoded as UTF-8 strings representing the data, with the type 0x94. The length is in octets, NOT characters.
 
 **Example**:
 

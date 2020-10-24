@@ -677,7 +677,7 @@ c1
 
 ### Padding
 
-Padding is **non-referring** and **invisible**. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+Padding is **non-referring** and **invisible**. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a CBE type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Padding is only available for CBE documents.
 
@@ -701,8 +701,8 @@ In certain contexts, string data must be restricted to characters that are safe 
 
 An unquoted-safe string must adhere to the following rules:
 
- * The string must not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string must not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), and dot (`.`).
+ * The string must not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * The string must not contain line breaks, whitespace, control, reserved, unassigned, private, or unprintable characters.
  * The string must not be empty.
  * The string's CTE representation must not contain escape sequences.
