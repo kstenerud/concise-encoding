@@ -117,6 +117,7 @@ In the spirit of human editability:
 
  * Implementations should avoid outputting characters that editors tend to convert automatically.
  * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
+ * The canonical line ending is linefeed (u+000a)
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
  * If a certain character is likely to be confusing or problematic to a human reader or editor, it should be escaped.
 
@@ -130,24 +131,24 @@ Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to main
 
 In some contexts, escape sequences may be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data:
 
-| Sequence (`\` + ...)                        | Interpretation                          |
-| ------------------------------------------- | --------------------------------------- |
-| `t`                                         | horizontal tab (u+0009)                 |
-| `n`                                         | linefeed (u+000a)                       |
-| `r`                                         | carriage return (u+000d)                |
-| `"`                                         | double quote (u+0022)                   |
-| `*`                                         | asterisk (u+002a)                       |
-| `/`                                         | slash (u+002f)                          |
-| `<`                                         | less-than (u+003c)                      |
-| `>`                                         | greater-than (u+003e)                   |
-| `\`                                         | backslash (u+005c)                      |
-| `\|`                                        | pipe (u+007c)                           |
-| `_`                                         | non-breaking space (u+00a0)             |
-| `-`                                         | soft-hyphen (u+00ad)                    |
-| u+000a                                      | [continuation](#continuation)           |
-| u+000d                                      | [continuation](#continuation)           |
-| `0` - `9`                                   | [Unicode sequence](#unicode-sequence)   |
-| `.`                                         | [verbatim sequence](#verbatim-sequence) |
+| Sequence (`\` + ...) | Interpretation                          |
+| -------------------- | --------------------------------------- |
+| `t`                  | horizontal tab (u+0009)                 |
+| `n`                  | linefeed (u+000a)                       |
+| `r`                  | carriage return (u+000d)                |
+| `"`                  | double quote (u+0022)                   |
+| `*`                  | asterisk (u+002a)                       |
+| `/`                  | slash (u+002f)                          |
+| `<`                  | less-than (u+003c)                      |
+| `>`                  | greater-than (u+003e)                   |
+| `\`                  | backslash (u+005c)                      |
+| `\|`                 | pipe (u+007c)                           |
+| `_`                  | non-breaking space (u+00a0)             |
+| `-`                  | soft-hyphen (u+00ad)                    |
+| u+000a               | [continuation](#continuation)           |
+| u+000d               | [continuation](#continuation)           |
+| `0` - `9`            | [Unicode sequence](#unicode-sequence)   |
+| `.`                  | [verbatim sequence](#verbatim-sequence) |
 
 **Note**: The `*` and `/` escape sequences can help to avoid edge cases when [commenting out](#comment) big chunks of a document.
 
@@ -273,13 +274,13 @@ A floating point number is composed of a whole part and a fractional part, separ
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using `+` for positive and `-` for negative). The exponent's sign character can be omitted if it's positive. The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using optional `+` for positive and mandatory `-` for negative). The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can store up to 16 significant digits.
+There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits.
 
 #### Base-16 Notation
 
@@ -288,7 +289,7 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
  * `0x1.0p0` = 1
 
-Base-10 floating point notation should be preferred over base-16 notation unless your use case requires specific binary floating point values. Decimal floating point values tend to be smaller, and also avoid the false precision of binary floating point values. [More info](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
+To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used represent values up to 64-bit ieee754 binary floats.
 
 #### Special Floating Point Values
 
@@ -328,7 +329,7 @@ Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
  * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain numeric whitespace.
- * Numeric whitespace can only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on base).
+ * Numeric whitespace can only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters must be ignored when decoding numeric values.
 
 **Examples**:
@@ -443,7 +444,7 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a fractional separator.
+Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a fractional separator.
 
 **Examples**:
 
@@ -455,7 +456,7 @@ Global coordinates are written as latitude and longitude to hundredths of degree
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
+The standard array encoding format consists of a pipe character (`|`), followed by optional whitespace, the array type, mandatory whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
     |type contents-represented-as-a-string|
@@ -521,7 +522,7 @@ String-like array encodings are interpreted as a whole, and must encode control 
 
 ### URI
 
-A Concise Encoding implementation must not interpret percent escape sequences in URIs, and must not generate percent escape sequences; they must be passed untouched. [CTE escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
+A Concise Encoding implementation must not interpret or generate percent escape sequences in URIs; they must be passed untouched. [CTE escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
 
  * `|u http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
  * `|u http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
@@ -557,7 +558,7 @@ Strings can be quoted or unquoted.
 
 #### Quoted String
 
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences). Whitespace characters CR, LF, and TAB are allowed, but care must be taken, as different text editors may swap CRLF for CR, or tabs for spaces. See [human editability](cte-specification.md#human-editability)).
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences). Whitespace characters CR, LF, and TAB are allowed, but care should be taken as different text editors might swap LF / CRLF, or tabs / spaces. See [human editability](cte-specification.md#human-editability)).
 
 **Example**:
 
@@ -590,7 +591,7 @@ Container Types
 
 ### List
 
-A list begins with an opening square bracket `[`, contains whitespace separated contents, and finishes with a closing bracket `]`.
+A list begins with an opening square bracket `[`, contains whitespace separated contents, and finishes with a closing square bracket `]`.
 
 **Example**:
 
@@ -599,7 +600,7 @@ A list begins with an opening square bracket `[`, contains whitespace separated 
 
 ### Map
 
-A map begins with an opening curly brace `{`, contains whitespace separated key-value pairs, and finishes with a closing brace `}`.
+A map begins with an opening curly brace `{`, contains whitespace separated key-value pairs, and finishes with a closing curly brace `}`.
 
 Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
@@ -798,13 +799,13 @@ Letter Case
 
 A CTE document must be entirely in lower case, except in the following situations:
 
- * String, string-like array, and comment contents: `"A string can contain UPPER CASE. Escape sequences must be lower case: \1d"`
- * [Time zones](#time-zones) are case sensitive, and can contain uppercase characters.
- * [Marker ID](ce-structure.md#marker-id) case must be preserved.
+ * Strings, string-like arrays, and comments can contain uppercase characters. Case must be preserved.
+ * [Marker IDs](ce-structure.md#marker-id) can contain uppercase characters. Case must be preserved.
+ * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
 
-A decoder must accept data regardless of letter-case because humans won't follow the rules.
+A decoder must accept data regardless of letter-case because humans won't follow these rules.
 
 An encoder must output letter case in accordance with this specification.
 
@@ -830,10 +831,8 @@ While there are many characters classified as "whitespace" within the Unicode se
 
 ### Whitespace **can** occur:
 
- * Before an object.
- * After an object.
- * Between container delimiters: `[`, `]`, `{`, `}`, `<`, `;`, `>`
- * Between array delimiters `|`.
+ * Before and after an object.
+ * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `:`, `>`)
 
 Examples:
 
@@ -846,7 +845,7 @@ Examples:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
- * Between typed array element type specifiers and contents, and between typed array elements.
+ * Between a typed array element type specifier and the array contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
@@ -855,8 +854,7 @@ Examples:
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between a typed array initiator and the element type (`| u8|` is invalid).
- * Between a marker or reference initiator and its [marker ID](ce-structure.md#marker-id) (`& 1234` and `# |u mydoc.cbe|` are invalid).
+ * Between a marker or reference initiator and its [marker ID](ce-structure.md#marker-id) (`& 1234` and `$ |u mydoc.cbe|` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
@@ -874,7 +872,7 @@ Pretty printing is the act of laying out structural whitespace in a CTE document
 
 The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define because it depends in part on the kind of data the document contains, and the container depth.
 
-In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data.
+In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data the document is likely to contain.
 
 
 #### Indentation
@@ -968,7 +966,7 @@ The attributes section should be entirely on the same line as the tag name if it
 >
 ```
 
-If the attributes section is too long, the overflow should be broken up into multiple lines, indented.
+If the attributes section is too long, the overflow should be broken up into multiple indented lines.
 ```
 <img src=|u http://somereallylongdomainname.likereallylong.com/images/2.jpg|
     width=50 height=50 border-left=10 units=px>
@@ -993,7 +991,7 @@ Strings should use [continuations](#continuation) if the line is getting too lon
 
 #### Typed Arrays
 
-Typed arrays should be broken up into multiple lines at the next level of indentation if the line is getting too long.
+Typed arrays should be broken up into multiple indented lines if the line is getting too long.
 ```
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
       bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7

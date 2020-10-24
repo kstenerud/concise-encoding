@@ -82,15 +82,18 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by one object of any type. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container.
 
     [version specifier] [object]
+
+The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but must itself be a real object of any type.
 
 **Examples**:
 
  * Empty document (CTE version 1): `c1 @null`
- * Document (CTE version 1) containing the top-level integer value 1000: `c1 1000`
- * Document (CTE version 1) containing a top-level list: `c1 [string1 string2 string3]`
+ * Document containing the top-level integer value 1000: `c1 1000`
+ * Document containing a top-level list: `c1 [string1 string2 string3]`
+ * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
 
 
 
@@ -263,9 +266,9 @@ The following special pseudo-areas can also be used. They do not contain a locat
 
 #### Global Coordinates
 
-The global coordinates method uses the global position to hundredths of degrees, giving a resolution of about 1km at the equator. Locations are stored as latitude and longitude values representing global coordinates.
+The global coordinates method uses the global position to a precision of hundredths of degrees, giving a resolution of about 1km at the equator. Locations are stored as latitude and longitude values representing global coordinates.
 
-This method has the advantage of being temporally unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time. The disadvantage is that it's not as easily recognizable by humans.
+This method has the advantage of being temporally unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time such that area/location cannot be reliably determined. The disadvantage is that it's not as easily recognizable to humans.
 
 **Examples**:
 
@@ -310,13 +313,13 @@ Use whichever kind of time most succinctly and completely handles your time need
 Array Types
 -----------
 
-Array types represents a contiguous sequence of fixed length elements. The type of an array determines how its contents are interpreted.
+An array represents a contiguous sequence of fixed length elements. The type of the array determines how its contents are interpreted.
 
 There are three kinds of array representations in Concise Encoding:
 
  * String-like arrays, which contain UTF-8 data. String-like array lengths are counted in bytes.
- * [Typed arrays](#typed-array), which represent binary encoded elements. A typed array's length is counted according to the width of its elements.
- * Custom Types, which represent custom data as a sequence of bytes or UTF-8 characters. Custom type lengths are counted in bytes. Custom types are actually encoded using one of the other two representations, but have user-defined meanings.
+ * [Typed arrays](#typed-array), whose contents represent elements of a particular type. A typed array's length is counted in elements, not bytes.
+ * Custom types, which represent custom data that only a custom codec designed for them will understand. Custom type lengths are counted in bytes, and are encoded either in the style of a uint8 array for custom binary, or a string-like array for custom text.
 
 
 ### String-like Arrays
@@ -458,8 +461,8 @@ Illustration of markup encodings:
 | ---------- | -------- | ---------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                     |
 |     Y      |    N     | `<div id=fillme>`                                          |
-|     N      |    Y     | `<span;Some text here>`                                    |
-|     Y      |    Y     | `<ul id=mylist style=boring; <li;first> <li;second> >`     |
+|     N      |    Y     | `<span:Some text here>`                                    |
+|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >`     |
 
 ##### Content String
 
@@ -469,7 +472,7 @@ Implementations may alter whitespace in content strings for aesthetic reasons so
 
 ##### Entity Reference
 
-The Concise Encoding formats don't concern themselves with [entity references](https://en.wikipedia.org/wiki/SGML_entity), passing them transparently for higher layers to interpret if so desired.
+The Concise Encoding formats don't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are treated as regular text.
 
 #### Example
 
@@ -620,6 +623,8 @@ Comments do not support escape sequences. Character sequences that look like esc
 Whitespace in a comment string is treated the same as in [markup content strings](#content-string).
 
 Implementations must allow the user to choose whether to receive or ignore comments.
+
+**Note**: Comments cannot occur inside of [typed arrays](#type-array).
 
 #### Comment String Character Restrictions
 

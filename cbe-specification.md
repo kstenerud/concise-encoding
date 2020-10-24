@@ -284,9 +284,9 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 ### Chunking
 
-Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
+Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements (not necessarily bytes) in the chunk:
 
-    [chunk-length-1] [chunk-data-1] [chunk-length-2] [chunk-data-2] ...
+    [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
 
 There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
 
@@ -398,7 +398,7 @@ A typed array is structured as follows:
 | Elements     | The elements as a sequence of octets   |
 | ...          | Possibly more chunks                   |
 
-The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 2 octets for 16-bit elements, 8 for 64-bit elements, etc).
+The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
 
 The following element types are allowed:
 
@@ -422,7 +422,7 @@ Element byte ordering is according to the element type (big endian for UUID, lit
 
 #### Boolean Array
 
-In boolean arrays, the elements (bits) are encoded in 8-bit chunks, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
+In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
 
 For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
