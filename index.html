@@ -7,9 +7,7 @@
         <meta name="description" content="The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.">
         <title>Concise Encoding</title>
         <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css" />
+        <link rel="stylesheet" href="bulma.min.css" />
         <link rel="stylesheet" type="text/css" href="main.css">
     </head>
     <body>
@@ -36,7 +34,7 @@
                                     <span class="navbar-item">
                                         <a class="button is-white is-outlined" href="https://github.com/kstenerud/concise-encoding">
                                             <span class="icon">
-                                                <i class="fa fa-github"></i>
+                                                <img class="github" src="github.svg">
                                             </span>
                                             <span>Source</span>
                                         </a>
@@ -69,7 +67,7 @@
                 <div class="column is-4">
                     <div class="card is-shady">
                         <div class="card-image has-text-centered">
-                            <i class="fa fa-heart"></i>
+                            <img class="card-image2" src="heart.svg" alt="Heart">
                         </div>
                         <div class="card-content">
                             <div class="content">
@@ -82,7 +80,7 @@
                 <div class="column is-4">
                     <div class="card is-shady">
                         <div class="card-image has-text-centered">
-                            <i class="fa fa-magic"></i>
+                            <img class="card-image2" src="atom.svg" alt="Atom">
                         </div>
                         <div class="card-content">
                             <div class="content">
@@ -96,7 +94,7 @@
                 <div class="column is-4">
                     <div class="card is-shady">
                         <div class="card-image has-text-centered">
-                            <i class="fa fa-plug"></i>
+                            <img class="card-image2" src="plug.svg" alt="Plug">
                         </div>
                         <div class="card-content">
                             <div class="content">
@@ -242,14 +240,14 @@ c1
                         <pre class="scroll code">
 c1
 {
-    main-view = &lt;View:
+    main-view = &lt;View,
         &lt;Image src=|u images/avatar-image.jpg|&gt;
-        &lt;Text id=HelloText:
+        &lt;Text id=HelloText,
             Hello! Please choose a name!
         &gt;
         &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
             HelloText.SetText("Hello, " + NameInput.Text + "!")
-        @@":
+        @@",
             Name me!
         &gt;
     &gt;
@@ -350,19 +348,9 @@ c1
                             <span class="tag is-dark">Bulma Templates</span>
                         </div>
                     </a>
-                    <a href="https://fontawesome.com/">
-                        <div class="tags has-addons pr-1">
-                            <span class="tag is-dark">Font Awesome</span>
-                        </div>
-                    </a>
                     <a href="https://www.flaticon.com/authors/pixel-perfect">
                         <div class="tags has-addons pr-1">
                             <span class="tag is-dark">Pixel-Perfect Icons</span>
-                        </div>
-                    </a>
-                    <a href="https://www.flaticon.com/authors/freepik">
-                        <div class="tags has-addons pr-1">
-                            <span class="tag is-dark">Freepik Icons</span>
                         </div>
                     </a>
                 </div>
