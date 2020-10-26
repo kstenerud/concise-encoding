@@ -462,8 +462,8 @@ Illustration of markup encodings:
 | ---------- | -------- | ---------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                     |
 |     Y      |    N     | `<div id=fillme>`                                          |
-|     N      |    Y     | `<span:Some text here>`                                    |
-|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >`     |
+|     N      |    Y     | `<span,Some text here>`                                    |
+|     Y      |    Y     | `<ul id=mylist style=boring, <li,first> <li,second> >`     |
 
 ##### Content String
 
@@ -481,11 +481,11 @@ The Concise Encoding formats don't interpret [entity references](https://en.wiki
 c1
 <View;
     <Image src=|u images/avatar-image.jpg|>
-    <Text;
+    <Text,
         Hello! Please choose a name!
     >
     /* <HRule style=thin> */
-    <TextInput id=name style={height=40 borderColor=gray}; Name me! >
+    <TextInput id=name style={height=40 borderColor=gray}, Name me! >
 >
 ```
 

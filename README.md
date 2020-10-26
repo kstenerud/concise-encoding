@@ -194,10 +194,10 @@ func ToColumns(values ...interface{}) string {
     // The markup type is good for presentation data
     main-view       = <View:
                           <Image src=u"images/avatar-image.jpg">
-                          <Text:
+                          <Text,
                               Hello! Please choose a name!
                           >
-                          <TextInput id=name style={height=40 borderColor=gray}: Name me! >
+                          <TextInput id=name style={height=40 borderColor=gray}, Name me! >
                       >
 }
 ```

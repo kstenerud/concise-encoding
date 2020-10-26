@@ -618,7 +618,7 @@ Map entries are split into key-value pairs using the equals `=` character and op
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `:`, and end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `,`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
  * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
  * Non-string types can be used in tag names and attribute key-value pairs (under the same rules as [map](#map) keys and values).
@@ -629,7 +629,7 @@ The CTE encoding of a markup container is similar to XML, except:
 | ---------- | ---------- | ------------------------- | -------- |
 | Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
 | Attributes | whitespace | [Map](#map)               |          |
-| Contents   | `:`        | [List](#list)             |          |
+| Contents   | `,`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
 Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
@@ -640,8 +640,8 @@ Illustration of markup encodings:
 | ---------- | -------- | ------------------------------------------------------ |
 |     N      |    N     | `<br>`                                                 |
 |     Y      |    N     | `<div id=fillme>`                                      |
-|     N      |    Y     | `<span:Some text here>`                                |
-|     Y      |    Y     | `<ul id=mylist style=boring: <li:first> <li:second> >` |
+|     N      |    Y     | `<span,Some text here>`                                |
+|     Y      |    Y     | `<ul id=mylist style=boring, <li,first> <li,second> >` |
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
 
@@ -659,13 +659,13 @@ Content strings can contain [escape sequences](#escape-sequences), which must be
 c1
 <View:
     <Image src=|u images/avatar-image.jpg|>
-    <Text id=HelloText:
+    <Text id=HelloText,
         Hello! Please choose a name!
     >
     // <HRule style=thin>
     <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
         HelloText.SetText("Hello, " + NameInput.Text + "!")
-    @@":
+    @@",
         Name me!
     >
 >
@@ -851,7 +851,7 @@ While there are many characters classified as "whitespace" within the Unicode se
 ### Whitespace **can** occur:
 
  * Around an object.
- * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `:`, `>`)
+ * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `,`, `>`)
 
 Examples:
 
@@ -971,7 +971,7 @@ The closing `>` should only be on a different line if there are contents.
 ```
 <a>
 
-<a:
+<a,
     contents
 >
 ```
@@ -980,7 +980,7 @@ The attributes section should be entirely on the same line as the tag name if it
 ```
 <a x=y>
 
-<a x=y:
+<a x=y,
     contents
 >
 ```
