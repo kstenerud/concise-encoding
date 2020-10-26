@@ -111,11 +111,13 @@ html,body {
   border-left: none;
   border-right: none;
 }
-.card-image2 {
+.card-image {
   width: 30%;
   font-size: 8rem;
   padding-top: 2rem;
   color: #209cee;
+  margin-left: auto;
+  margin-right: auto;
 }
 .card-content .content {
   font-size: 14px;
