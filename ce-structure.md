@@ -50,6 +50,7 @@ Contents
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
   - [Padding](#padding)
+  - [Constant](#constant)
 * [Other Types](#other-types)
   - [Null](#null)
 * [Unquoted-Safe String](#unquoted-safe-string)
@@ -680,6 +681,16 @@ c1
 Padding is **non-referring** and **invisible**. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a CBE type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
 
 Padding is only available for CBE documents.
+
+
+
+### Constant
+
+Constants are named values that have been defined in a schema. Constants are **non-referring** and **visible**. A CTE decoder must look up the constant name in the schema and use the value it maps to. CTE encoders must use constant names where specified by the schema.
+
+A constant's name must be an [unquoted-safe string](#unquoted-safe-string).
+
+Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
 
 

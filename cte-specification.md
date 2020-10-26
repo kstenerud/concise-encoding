@@ -68,6 +68,8 @@ Contents
   - [Comment](#comment)
     - [Single Line Comment](#single-line-comment)
     - [Multiline Comment](#multiline-comment)
+  - [Constant](#constant)
+    - [Explicit Constant](#explicit-constant)
 * [Other Types](#other-types)
   - [Null](#null)
 * [Letter Case](#letter-case)
@@ -261,7 +263,6 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 |   8  | Octal       | 01234567         | `0o`   | `0o755`      | 493                |
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
-
 
 ### Floating Point
 
@@ -783,6 +784,24 @@ c1
     |u8x 01 02 03 04 05 06 07 08 09 0a|
 }
 ```
+
+
+### Constant
+
+A constant name begins with a hash `#` character, followed by an [unquoted-safe string](ce-structure.md#unquoted-safe-string) for the name.
+
+    #some_const // a const named "some_const", whose type and value are defined in a schema.
+
+#### Explicit Constant
+
+CTE documents containing constants cannot be decoded without a matching schema. For cases where this would be problematic, CTE encoders may opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
+
+An explicit constant begins with a hash `#` character, followed by an [unquoted-safe string](ce-structure.md#unquoted-safe-string) for the name, then a colon `:`, and finally the object's value.
+
+    #some_const:1 // a const named "some_const", which is the integer 1.
+
+If a decoder has access to the schema that defines a particular constant, the explicit value is ignored (the value from the schema is used).
+
 
 
 Other Types

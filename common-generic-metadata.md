@@ -64,6 +64,7 @@ TODO: `_schema_format` to specify the format of the schema?
 TODO: data type can also be a URI pointing to the definition.
 TODO: Data type at the top of the document defines the document type?
 TODO: `_dt` can be URI, string namespaced with `:`, otherwise it is IANA identifier. `_dt` should refer to a schema or well known type.
+TODO: Metadata specifying a schema - should include version as well, applies to following object in document.
 
 
 Definitions
