@@ -120,6 +120,7 @@ html,body {
   margin-right: auto;
 }
 .card-content .content {
+  text-align: center;
   font-size: 14px;
   margin: 1rem 1rem;
 }
