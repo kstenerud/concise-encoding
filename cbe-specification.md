@@ -57,7 +57,7 @@ Contents
   - [Comment](#comment)
   - [Padding](#padding)
 * [Other Types](#other-types)
-  - [Nil](#nil)
+  - [Null](#null)
   - [RESERVED](#reserved)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -134,7 +134,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  7b | 123 | End of Container          |                                               |
 |  7c | 124 | Boolean False             |                                               |
 |  7d | 125 | Boolean True              |                                               |
-|  7e | 126 | Nil (no data)             |                                               |
+|  7e | 126 | Null (no data)            |                                               |
 |  7f | 127 | Padding                   |                                               |
 |  80 | 128 | String: 0 bytes           |                                               |
 |  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                       |

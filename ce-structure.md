@@ -53,6 +53,7 @@ Contents
   - [Constant](#constant)
 * [Other Types](#other-types)
   - [Null](#null)
+* [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
   - [Confusable Characters](#confusable-characters)
 * [Equivalence](#equivalence)
@@ -83,7 +84,7 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an empty document, store null as the top-level object.
 
     [version specifier] [object]
 
@@ -91,7 +92,7 @@ The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but m
 
 **Examples**:
 
- * Empty document (CTE version 1): `c1 @null`
+ * Empty document (CTE version 1): `c1 @null` (in [CBE](cbe-specification.md): [`03 01 7e`])
  * Document containing the top-level integer value 1000: `c1 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
  * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
@@ -124,14 +125,17 @@ Integer values can be positive or negative, and can be represented in various ba
 
 ### Floating Point
 
-A floating point number is composed of a coefficient and an exponent, and can be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
+A floating point number is composed of a whole part, fractional part, and an exponent. Floating point numbers can be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
 
-Binary floating point values represent ieee754 binary floating point for 32-bit and 64-bit sizes, and [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) for 16-bit. Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+ * Decimal floating point number: 3.814 x 10⁵⁰
+ * Binary floating point number:  7.403 x 2¹⁵
+
+Binary floating point values in Concise Encoding adhere to the ieee754 binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) for 16-bit sizes. In [CBE](cbe-specification.md), they are directly stored in these formats. In [CTE](cte-specification.md), they are stored as textual representations that will ultimately be converted into these formats when evaluated by a machine. Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (binary float32)
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (binary float32)
 
-An implementation may discard NaN information other than its signaling/quiet status.
+An implementation must preserve the signaling/quiet status of a NaN, and may discard the rest of the NaN payload information.
 
 An implementation may alter the type and storage size of a floating point value when encoding/decoding as long as the final numeric value remains the same.
 
@@ -194,7 +198,7 @@ A time is made up of the following fields:
 
  * Hours are always according to the 24h clock (21:00, not 9:00 PM).
  * Seconds go to 60 to support leap seconds.
- * Since a time by itself has no date component, time zone data must be interpreted as if it were "today". This means that time zones which are not offsets (such as `Etc/GMT+1`) might be interpreted differently on different dates for political reasons (such as daylight savings).
+ * Since a time by itself has no date component, time zone data must be interpreted as if it were "today". This means that time zones which are not offsets like `Etc/GMT+1` might be interpreted differently on different dates for political reasons (for example daylight savings).
  * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
 **Examples**:
@@ -329,11 +333,11 @@ There are three kinds of array representations in Concise Encoding:
 
 An array of UTF-8 encoded bytes. The NUL character (u+0000) must be supported, but because NUL can be a troublesome character on many platforms, its use in documents is discouraged.
 
-Strings must always resolve to complete, valid UTF-8 sequences when fully decoded (in CTE, validation must occur after decoding all escape sequences).
+Strings must always resolve to complete, valid UTF-8 sequences when fully decoded (in CTE documents, such validation must occur after decoding all escape sequences).
 
 ##### Line Endings
 
-Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should only output LF when the destination is a foreign or unknown system.
+Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept both line ending types as input, but encoders should only output LF when the destination is a foreign or unknown system.
 
 #### URI
 
@@ -344,9 +348,9 @@ The Uniform Resource Identifier must be structured according to [RFC 3986](https
 
 A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
 
-Fixed width types boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
+Fixed width types such as boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
 
-Array elements can be any of the representations allowed for the specified type and size.
+Array elements can be written using any of the representations allowed for the specified type and size.
 
 **Examples**:
 
@@ -361,7 +365,7 @@ Array elements can be any of the representations allowed for the specified type 
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't recognize must report the problem to the user and substitute [null](#null).
+Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute [null](#null).
 
 Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
 
@@ -369,12 +373,12 @@ Custom type implementations should provide both a binary and a text encoding, wi
 
 #### Binary Custom Type
 
-A uint8 array value representing a user-defined custom data type. The interpretation of the octets is implementation defined, and must be understood by both sending and receiving parties. To reduce cross-platform confusion, data should be represented in little endian byte order.
+A uint8 array value representing a user-defined custom data type. The interpretation of the octets is implementation defined, and can only be decoded if the receiver knows how to decode it. To reduce cross-platform confusion, data should be represented in little endian byte order.
 
 **Example**:
 
     [93 12 04 f6 28 3c 40 00 00 40 40]
-    = binary data representing an imaginary custom "cplx" struct
+    = binary data representing a custom "cplx" struct
       {
           type:uint8 = 4
           real:float32 = 2.94
@@ -383,7 +387,7 @@ A uint8 array value representing a user-defined custom data type. The interpreta
 
 #### Text Custom Type
 
-A string-like array value representing a user-defined custom data type. The interpretation of the string is implementation defined, and must be understood by both sending and receiving parties.
+A string-like array value representing a user-defined custom data type. The interpretation of the string is implementation defined, and can only be decoded if the receiver knows how to decode it.
 
 **Example**:
 
@@ -475,19 +479,16 @@ Implementations may alter whitespace in content strings for aesthetic reasons so
 
 The Concise Encoding formats don't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are treated as regular text.
 
-#### Example
+**Example**:
 
-```
-c1
-<View;
-    <Image src=|u images/avatar-image.jpg|>
-    <Text,
-        Hello! Please choose a name!
+    <View;
+        <Image src=|u images/avatar-image.jpg|>
+        <Text,
+            Hello! Please choose a name!
+        >
+        /* <HRule style=thin> */
+        <TextInput id=name style={height=40 borderColor=gray}, Name me! >
     >
-    /* <HRule style=thin> */
-    <TextInput id=name style={height=40 borderColor=gray}, Name me! >
->
-```
 
 
 
@@ -520,13 +521,13 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
 2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 30 Unicode characters.
 
-#### Rules:
+#### Rules
 
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
  * Marker IDs must be compared case-insensitive.
 
-#### Example:
+**Example**:
 
     [
         &remember_me:"Pretend that this is a huge string"
@@ -538,11 +539,11 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 ### Reference
 
-A reference is a **non-referring**, **visible** pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid).
+A reference is a **non-referring**, **visible** pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid - provided the referenced object exists).
 
 A reference is followed by either a [marker ID](#marker-id) or a [URI](#uri).
 
-Rules:
+#### Rules
 
  * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference used as a map key must refer to a [keyable type](#keyable-types).
@@ -555,24 +556,24 @@ Rules:
 
 **Note**: Implementations should define security rules for following URI references; blindly following an unknown URI is dangerous.
 
-Example:
-
-    {
-        some_object = {
-            my_string = &big_string:"Pretend that this is a huge string"
-            my_map = &1:{
-                a = 1
-            }
+**Example**:
+```
+{
+    some_object = {
+        my_string = &big_string:"Pretend that this is a huge string"
+        my_map = &1:{
+            a = 1
         }
-
-        reference_to_string = $big_string
-        reference_to_map = $1
-        reference_to_local_doc = $|u common.cte|
-        reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
-        reference_to_local_doc_marker = $|u common.cte#legalese|
-        reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
     }
 
+    reference_to_string = $big_string
+    reference_to_map = $1
+    reference_to_local_doc = $|u common.cte|
+    reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
+    reference_to_local_doc_marker = $|u common.cte#legalese|
+    reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
+}
+```
 
 ### Metadata Map
 
@@ -580,7 +581,7 @@ A metadata map is a **referring**, **visible** pseudo-object containing keyed va
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. Implementations must allow the user to choose whether to receive or ignore metadata maps.
 
-Metadata can refer to other metadata (meta-metadata).
+A metadata map can refer to another metadata map (meta-metadata).
 
 #### Metadata Keys
 
@@ -588,30 +589,30 @@ Keys in metadata maps follow the same rules as for [regular maps](#map), except 
 
 Predefined metadata keys should be used where possible to maximize interoperability between systems.
 
-#### Metadata Example
-
-    c1
-    // Metadata for the entire document
-    (
-        _ct = 2017.01.14-15:22:41/Z
-        _mt = 2019.08.17-12:44:31/Z
-        _at = 2019.09.14-09:55:00/Z
-    )
-    {
-        records = [
-            // Metadata for "ABC Corp" record
-            (
-                _ct = 2019.05.14-10:22:55/Z
-                _t = [longtime_client big_purchases]
-            )
-            {
-                client = "ABC Corp"
-                amount = 10499.28
-                due = 2020.05.14
-            }
-        ]
-    }
-
+**Example**:
+```
+c1
+// Metadata for the entire document
+(
+    _ct = 2017.01.14-15:22:41/Z
+    _mt = 2019.08.17-12:44:31/Z
+    _at = 2019.09.14-09:55:00/Z
+)
+{
+    records = [
+        // Metadata for "ABC Corp" record
+        (
+            _ct = 2019.05.14-10:22:55/Z
+            _t = [longtime_client big_purchases]
+        )
+        {
+            client = "ABC Corp"
+            amount = 10499.28
+            due = 2020.05.14
+        }
+    ]
+}
+```
 
 ### Comment
 
@@ -628,6 +629,8 @@ Implementations must allow the user to choose whether to receive or ignore comme
 **Note**: Comments cannot occur inside of [typed arrays](#type-array).
 
 #### Comment String Character Restrictions
+
+Comments must contain only [text-safe](#text-safety) characters.
 
 The following characters are explicitly allowed:
 
@@ -650,8 +653,7 @@ The following character sequences must not be put into comment strings because t
 * `/*`
 * `*/`
 
-#### Example
-
+**Example**:
 ```
 c1
 // Comment before top level object
@@ -705,6 +707,25 @@ Denotes the absence of data.
 
 
 
+Text Safety
+-----------
+
+Because Concise Encoding is a twin format (text and binary), text sequences in some contexts must be restricted to text-safe codepoints. All text sequences must be encoded in UTF-8.
+
+The following are text-unsafe:
+
+* Unassigned characters
+* Reserved characters
+* Private characters
+* Unprintable characters
+* Surrogate pairs
+* Byte order mark
+* Zero-width characters
+* Line breaks
+* Control characters, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
+
+
+
 Unquoted-Safe String
 --------------------
 
@@ -712,11 +733,11 @@ In certain contexts, string data must be restricted to characters that are safe 
 
 An unquoted-safe string must adhere to the following rules:
 
+ * The string must not be empty.
+ * The string must be [text-safe](#text-safety).
+ * The string must not contain whitespace characters or control characters.
  * The string must not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), and dot (`.`).
  * The string must not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
- * The string must not contain line breaks, whitespace, control, reserved, unassigned, private, or unprintable characters.
- * The string must not be empty.
- * The string's CTE representation must not contain escape sequences.
  * Any characters that look [confusingly similar to printable characters from Unicode range 0000-007f](#confusable-characters) are subject to the same rules as their lookalikes (for example, u+ff15 `５` is disallowed as a first character, and u+2039 `‹` is disallowed entirely in an unquoted-safe string).
 
 **Examples**:
@@ -741,7 +762,7 @@ These are not unquoted-safe strings:
 
 ### Confusable Characters
 
-The following is a mostly complete list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
+The following is a non-exhaustive list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
 
 **Note**: This list is not guaranteed complete! Use it as a guide only.
 
@@ -799,11 +820,11 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
 
-**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Only the quiet bit is considered when comparing NaN values.
+**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet).
 
 #### Custom Types
 
-By default, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values cannot be compared with custom binary values unless additional contextual information is provided by the schema that the receiver can understand.
+Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values cannot be compared with custom binary values unless the receiver can understand the custom type.
 
 #### Strings
 
@@ -844,7 +865,7 @@ Padding is always ignored when testing for equivalence.
 
 Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
 
-* Comments are compared, but are trimmed of leading and trailing whitespace before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+* Comments are compared, but extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 * Keys mapping to null values are not equivalent to maps where the key is absent.
 * Arrays must be of the same type to be considered equivalent.
 

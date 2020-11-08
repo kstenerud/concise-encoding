@@ -101,6 +101,8 @@ General
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
+All characters in a CTE document must be [text-safe](ce-structure.md#text-safety). Text-unsafe characters can only be represented using [escape sequences](#escape-sequences) (where allowed). Validation of text-safety must occur before processing escape-sequences. All other validation of string-like values must occur **after** decoding any escape sequences contained within.
+
 Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace. Extraneous whitespace is ignored.
 
 **Examples**:
@@ -121,7 +123,7 @@ In the spirit of human editability:
  * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
  * The canonical line ending is linefeed (u+000a)
  * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
- * If a certain character is likely to be confusing or problematic to a human reader or editor, it should be escaped.
+ * If a certain character is likely to be confusing or problematic to a human reader or editor, it must be escaped.
 
 
 ### Line Endings
@@ -195,7 +197,7 @@ Unicode escape sequences begin with a backslash (`\`) character, followed by one
 Verbatim escape sequences work similarly to "here" documents in Bash. They're composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence identifier, which is a sequence of printable, non-control, non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
+ * An end-of-sequence identifier, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
  * A whitespace terminator to terminate the end-of-sequence identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence identifier (without whitespace terminator).
@@ -281,13 +283,13 @@ The exponential portion of a base-10 number is denoted by the lowercase characte
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits and an exponent range roughly equivalent to decimal -307 to +307.
+There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 #### Base-16 Notation
 
 Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character can be omitted if it's positive. Values should be normalized.
 
- * `0xa.3fb8p+42` = a.3fb8 x 2 ^ 42
+ * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
 To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used represent binary float values that are supported by CBE. A decoder must truncate binary float data that is too big to be represented in a CBE document, and inform the user about it.
@@ -369,7 +371,7 @@ Temporal Types
 
 Temporal types record time with varying degrees of precision.
 
-Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits for aesthetic reasons if desired.
+Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits.
 
 
 ### Date
@@ -439,6 +441,7 @@ An area/location time zone is written in the form `Area/Location`.
 
  * `E/Paris`
  * `America/Vancouver`
+ * `America/Indiana/Petersburg` (which has area `America` and location `Indiana/Petersburg`)
  * `Etc/UTC` == `Zero` == `Z`
  * `L`
 
@@ -496,16 +499,16 @@ For element array encodings, any valid representation of the element data type m
 
 Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
 
-| Suffix | Implied element prefix | Example                         |
-| ------ | ---------------------- | ------------------------------- |
-| `b`    | `0b`                   | `\|u8b 10011010 00010101\|`     |
-| `o`    | `0o`                   | `\|i16o -7445 644\|`            |
-| `x`    | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
+| Type Suffix | Implied element prefix | Example                         |
+| ----------- | ---------------------- | ------------------------------- |
+| `b`         | `0b`                   | `\|u8b 10011010 00010101\|`     |
+| `o`         | `0o`                   | `\|i16o -7445 644\|`            |
+| `x`         | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
 
 #### Special Rules
 
  * UUID array elements may optionally be represented without the initial `@` sentinel.
- * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`)
+ * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`). The boolean representations must not be mixed (e.g. `|b 101 true|` is invalid).
 
 **Examples**:
 
@@ -518,7 +521,7 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 ### String-Like Array Encodings
 
-String-like array encodings are interpreted as a whole, and must encode control characters, non-printable characters, pipe (`|`) and backslash (`\`) as [escape sequences](#escape-sequences).
+String-like array encodings are interpreted as a whole, and must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 
 ### URI
@@ -546,7 +549,7 @@ Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
 
 ### Custom Text
 
-Custom text data is encoded as a string-like array. Custom text can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
+Custom text data is encoded as a string-like array. Since custom text uses string-like encoding, it can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -559,7 +562,7 @@ Strings can be quoted or unquoted.
 
 #### Quoted String
 
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must not contain control characters, non-printable characters, double-quotes (`"`) or backslash (`\`) unless encoded as [escape sequences](#escape-sequences). Whitespace characters CR, LF, and TAB are allowed, but care should be taken as different text editors might swap LF / CRLF, or tabs / spaces. See [human editability](cte-specification.md#human-editability)).
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 **Example**:
 
