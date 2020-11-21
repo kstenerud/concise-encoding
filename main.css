@@ -3,6 +3,10 @@ html,body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
+.icon {
+  padding-right: 0.3rem;
+}
+
 .color-white {
   text-decoration: none;
   color: white;
