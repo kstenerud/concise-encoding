@@ -160,7 +160,7 @@ Escape sequences must be converted before any other processing occurs during the
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all whitespace characters until it encounters the next printable character. An escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all whitespace characters until it encounters the next printable character. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
 
 **Example**:
 
@@ -205,7 +205,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 **Example**:
 
 ```
-"Verbatim sequences can occur anywhere escapes are allowed.
+"Verbatim sequences can occur anywhere escapes are allowed.\n\
 \.@@@
 In verbatim sequences, everything is interpreted literally until the
 end-of-string identifier is encountered (in this case three @ characters).
@@ -214,9 +214,9 @@ Characters like ", [, <, \ and such can appear unescaped.
 Whitespace (including "leading" whitespace) is also read verbatim.
           For example, this line really is indented 10 spaces.
 
-@@@After a verbatim sequence, normal processing resumes, so '\t' and such are interpreted."
+@@@Normal processing resumes after the terminator, so '\n' and such are interpreted."
 ```
-Which is decoded to:
+Which decodes to:
 ```
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
@@ -226,7 +226,8 @@ Characters like ", [, <, \ and such can appear unescaped.
 Whitespace (including "leading" whitespace) is also read verbatim.
           For example, this line really is indented 10 spaces.
 
-After a verbatim sequence, normal processing resumes, so '  ' and such are interpreted.
+Normal processing resumes after the terminator, so '
+' and such are interpreted.
 ```
 
 
@@ -255,7 +256,7 @@ Represented by the values `@true` and `@false`.
 
 ### Integer
 
-Integer values can be positive or negative, and can be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. Values must be written in lower case.
+Integer values can be positive or negative, and can be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Values must be written in lower case.
 
 Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -268,7 +269,7 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 
 ### Floating Point
 
-A floating point number is composed of a whole part and a fractional part, separated by a dot `.`, with an optional exponential portion. Negative values are prefixed with a dash `-`.
+A floating point number is composed of a whole part and a fractional part separated by a dot `.`, with an optional exponential portion. Negative values are prefixed with a dash `-`.
 
 **Examples**:
 
@@ -277,13 +278,13 @@ A floating point number is composed of a whole part and a fractional part, separ
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using optional `+` for positive and mandatory `-` for negative). The exponent portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using optional `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-There is no technical maximum number of significant digits or exponent digits, but care should be taken to ensure that the receiving end will be able to store the value. 64-bit ieee754 floating point values, for example, can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 #### Base-16 Notation
 
@@ -292,7 +293,7 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
-To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used represent binary float values that are supported by CBE. A decoder must truncate binary float data that is too big to be represented in a CBE document, and inform the user about it.
+To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used to represent binary float values that are supported by CBE (16, 32, 64-bit). A decoder must truncate binary float data that is too big to be represented in a CBE document, and inform the user about it.
 
 #### Special Floating Point Values
 
@@ -460,7 +461,7 @@ Global coordinates are written as latitude and longitude to a precision of hundr
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by optional whitespace, the array type, mandatory whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
     |type contents-represented-as-a-string|
@@ -505,10 +506,10 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 | `o`         | `0o`                   | `\|i16o -7445 644\|`            |
 | `x`         | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
 
-#### Special Rules
+#### Special Array Element Rules
 
- * UUID array elements may optionally be represented without the initial `@` sentinel.
- * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`). The boolean representations must not be mixed (e.g. `|b 101 true|` is invalid).
+ * UUID and named array element values must be written without the initial `@` sentinel.
+ * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`). The boolean representations must not be mixed (e.g. `|b 1 0 1 true|` is invalid).
 
 **Examples**:
 
@@ -549,7 +550,7 @@ Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
 
 ### Custom Text
 
-Custom text data is encoded as a string-like array. Since custom text uses string-like encoding, it can contain [escape sequences](#escape-sequences), which must be processed before being passed to the custom decoder that will interpret it.
+Custom text data is encoded as a string-like array. Since custom text uses string-like encoding, it can contain [escape sequences](#escape-sequences), which must be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -570,7 +571,7 @@ A quoted string encloses the string contents within double-quote delimiters (for
 
 #### Unquoted String
 
-Strings must normally be double-quote delimited, but this rule can be relaxed if they are [unquoted-safe](ce-structure.md#unquoted-safe-string).
+Strings must normally be double-quote delimited, but this rule can be relaxed for [unquoted-safe strings](ce-structure.md#unquoted-safe-string).
 
 **Example**:
 
@@ -623,8 +624,7 @@ The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `,`, and end `>` characters.
  * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
- * [Unquoted strings](#unquoted-string) are allowed in markup names and attribute values.
- * Non-string types can be used in tag names and attribute key-value pairs (under the same rules as [map](#map) keys and values).
+ * [Unquoted strings](#unquoted-string) and non-string types can be used in tag names and attribute key-value pairs (under the same rules as [map](#map) keys and values).
 
 #### Markup Structure
 
@@ -684,7 +684,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](ce-structure.md#marker-id) (unquoted if a string)
+ * A [marker ID](ce-structure.md#marker-id) (unquoted)
  * `:` (the marker separator)
  * The marked value
 
@@ -695,7 +695,7 @@ Example:
         &1:{a = 1}
     ]
 
-The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
+The string `"Pretend that this is a huge string"` is marked with the string ID `remember_me`, and the map `{a=1}` is marked with the unsigned integer ID `1`.
 
 
 ### Reference
@@ -797,7 +797,7 @@ A constant name begins with a hash `#` character, followed by an [unquoted-safe 
 
 #### Explicit Constant
 
-CTE documents containing constants cannot be decoded without a matching schema. For cases where this would be problematic, CTE encoders may opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
+CTE documents containing constants cannot be decoded without a matching schema. For cases where this would be problematic, A CTE encoder may opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
 
 An explicit constant begins with a hash `#` character, followed by an [unquoted-safe string](ce-structure.md#unquoted-safe-string) for the name, then a colon `:`, and finally the object's value.
 
@@ -822,7 +822,7 @@ Letter Case
 A CTE document must be entirely in lower case, except in the following situations:
 
  * Strings, string-like arrays, and comments can contain uppercase characters. Case must be preserved.
- * [Marker IDs](ce-structure.md#marker-id) can contain uppercase characters. Case must be preserved.
+ * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) can contain uppercase characters. Case must be preserved.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
@@ -876,18 +876,18 @@ Examples:
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between a marker or reference initiator and its [marker ID](ce-structure.md#marker-id) (`& 1234` and `$ |u mydoc.cbe|` are invalid).
+ * Between a sentinel character and its associated value (`@ null`, `& 1234`, `$ |u mydoc.cbe|`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
- * Splitting a time value (`2018.07.01-10 :53:22.001481/Z` is invalid).
- * Splitting a numeric value (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the numeric whitespace character (`_`) instead.
- * Splitting named values: (`@t rue`, `@ null`, `@i nf`, `@ nan` are invalid).
+ * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
+ * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
+ * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 
 
 
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out structural whitespace in a CTE document so that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
+Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
 
 
 #### Right Margin
@@ -899,7 +899,7 @@ In general, 120 columns should always be considered reasonable, with larger marg
 
 #### Indentation
 
-The indentation string should be configurable, with a default of 4 spaces (u+0020).
+The indentation string should be configurable, with a default of 4 spaces (`    `).
 
 
 #### Lists
@@ -946,7 +946,7 @@ Small maps containing small objects may be placed entirely on one line. In such 
 
 #### Metadata Map
 
-The object that the metadata map refers to should follow it after a space.
+The object that the metadata map refers to should follow it after a space if it doesn't cause the line to become too long. Otherwise place it on the next line.
 ```
 {
     (x=y) a = b
@@ -1023,7 +1023,7 @@ Typed arrays should be broken up into multiple indented lines if the line is get
 
 #### Comments
 
-Comments should have one space (u+0020) after the comment opening sequence. `/* */` style comments should also have a space before the closing sequence.
+Comments should have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) should also have a space before the closing sequence.
 ```
 // abc
 

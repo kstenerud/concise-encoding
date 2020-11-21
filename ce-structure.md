@@ -521,7 +521,7 @@ A marker is a **referring**, **invisible** pseudo-object that tags the next obje
 A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be one of:
 
 1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
-2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 30 Unicode characters.
+2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters.
 
 #### Rules
 
@@ -692,7 +692,7 @@ Padding is only available for CBE documents.
 
 Constants are named values that have been defined in a schema. Constants are **non-referring** and **visible**. A CTE decoder must look up the constant name in the schema and use the value it maps to. CTE encoders must use constant names where specified by the schema.
 
-A constant's name must be an [unquoted-safe string](#unquoted-safe-string).
+A constant's name must be an [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters, and must be compared case-insensitive.
 
 Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
