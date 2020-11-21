@@ -80,7 +80,8 @@ html,body {
 }
 
 .hero-image {
-  width: 50px;
+  width: 45px;
+  margin: 5px;
 }
 
 .hero-underline {
