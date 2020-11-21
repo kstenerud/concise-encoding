@@ -68,6 +68,18 @@ Implementations
 
 
 
+Remaining Tasks
+---------------
+
+ * [Open comments](https://github.com/kstenerud/concise-encoding/issues) on the format itself (ongoing)
+ * Finish the [reference implementation](https://github.com/kstenerud/go-concise-encoding) (90%)
+ * ABNF/EBNF for the [CTE format](cte-specification.md) (0%)
+ * [Schema design](ces-specification.md) (2%)
+ * Schema reference implementation (0%)
+ * Release version 1
+
+
+
 Comparison to Other Formats
 ---------------------------
 
