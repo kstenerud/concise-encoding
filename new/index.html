@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="favicon.svg">
+    <link rel="stylesheet" href="./main.css">
+
+    <meta charset="utf-8">
+    <meta name="description" content="The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Concise Encoding</title>
+</head>
+
+<body>
+    <header>
+        <div>
+            <nav>
+            <a class="title-container" href="index.html">
+                <img class="title-logo" alt="Logo" src="img/ce-logo.svg">
+                <span class="title-text">Concise Encoding</span>
+            </a>
+            <ul>
+                <li><a class="nav-link" href="resources.html">Resources</a></li>
+                <li><a class="nav-link" href="https://github.com/kstenerud/concise-encoding">Source</a></li>
+            </ul>
+        </nav>
+        </div>
+        <br>
+        <p class="title-subtitle">The friendly data format for human &amp; machine</p>
+        <div class="title-bgimage">
+    </header>
+    <section class="updates-container">
+        <div>
+            <span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
+        </div>
+    </section>
+
+    <main>
+        <section>
+            <aside>
+                <img class="card-image" src="img/heart.svg">
+                <h3>Edit Text, Transmit Binary</h3>
+                <p>Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.</p>
+            </aside>
+            <aside>
+                <img class="card-image" src="img/atom.svg">
+                <h3>Rich Type Support</h3>
+                <p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</p>
+            </aside>
+            <aside>
+                <img class="card-image" src="img/plug.svg">
+                <h3>Plug and Play</h3>
+                <p>No schema needed. No special syntax files. No code generation. Just import and go.</p>
+            </aside>
+        </section>
+
+        <section class="blurb">
+            <h2>Another Encoding Format?</h2>
+            <p class="blurb-text">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?</p>
+        </section>
+
+        <article>
+            <h1>Twin Formats</h1>
+            <h3>Edit Text, Transmit Binary</h3>
+            <p>Encoded data should be easy to read, easy to edit, as well as low-cost to process and transmit.<p>
+            <p>Concise Encoding accomplishes this using 1:1 compatible twin formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#concise-binary-encoding">binary</a>.</p>
+            <p>Keep everything in binary while transmitting and storing on machines, then seamlessly convert to/from text only where a human needs to be involved.</p>
+        </article>
+
+        <article>
+            <h1>Rich Type Support</h1>
+            <h3>All the types you need</h3>
+            <p>Tired of coercing your data into strings? Concise Encoding supports these types natively:</p>
+            <ul>
+                <li>Bool</li>
+                <li>Integer (arbitrary size)</li>
+                <li>Float (binary, decimal, arbitrary size)</li>
+                <li>UUID</li>
+                <li>Time (date, time, timestamp)</li>
+                <li>URI</li>
+                <li>String</li>
+                <li>List</li>
+                <li>Map</li>
+                <li>Markup</li>
+                <li>Typed Arrays (bytes, ints, floats, etc)</li>
+                <li>Reference (for recursive/repetitive data)</li>
+                <li>Metadata</li>
+                <li>Comment</li>
+                <li>Constants</li>
+                <li>Null</li>
+                <li>Custom (encapsulate your own)</li>
+            </ul>
+        </article>
+
+        <section class="blurb extra-space">
+            <h2>Examples</h2>
+            <p class="blurb-text">All examples are valid <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#concise-binary-encoding">Concise Binary Encoding</a>.</p>
+        </section>
+
+        <article>
+            <h2>Numeric Types</h2>
+            <pre>
+                <code>
+c1
+{
+    boolean       = @true
+    binary-int    = -0b10001011
+    octal-int     = 0o644
+    decimal-int   = -10000000
+    hex-int       = 0xfffe0001
+    decimal-float = -14.125
+    hex-float     = 0x5.1ec4p20
+    not-a-number  = @nan
+    infinity      = @inf
+    n-infinity    = -@inf
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Strings & String-Like</h2>
+            <pre>
+                <code>
+c1
+{
+    unquoted-string = no-quotes-needed
+    quoted-string   = "A string delimited by quotes"
+    url             = |u https://example.com/|
+    email           = |u mailto:me@somewhere.com|
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Other Basic Types</h2>
+            <pre>
+                <code>
+c1
+{
+    uuid            = @f1ce4567-e89b-12d3-a456-426655440000
+    date            = 2019-7-1
+    time            = 18:04:00.940231541/E/Prague
+    timestamp       = 2010-7-15/13:28:15.415942344/Z
+    null            = @null
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Containers &amp; Arrays</h2>
+            <pre>
+                <code>
+c1
+{
+    list             = [1 2.5 "a string"]
+    map              = {one=1 2=two today=2020-09-10}
+    bytes            = |u8x 01 ff de ad be ef|
+    uint16-hex-array = |u16x 91fe 443a 9c15|
+    int16-array      = |i16 7374 17466 -9957|
+    float32-array    = |f32 1.5e10 -8.31e-12|
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Markup</h2>
+            <pre>
+                <code>
+c1
+{
+    main-view = &lt;View,
+        &lt;Image src=|u images/avatar-image.jpg|&gt;
+        &lt;Text id=HelloText,
+            Hello! Please choose a name!
+        &gt;
+        &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+            HelloText.SetText("Hello, " + NameInput.Text + "!")
+        @@",
+            Name me!
+        &gt;
+    &gt;
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>References</h2>
+            <pre>
+                <code>
+c1
+{
+    marked_object    = &id1:{
+        description = "This map will be referenced later as $id1"
+        value = -@inf
+        child_elements = @null
+        recursive = $id1
+    }
+    ref1             = $id1
+    ref2             = $id1
+    outside_ref      = $|u https://xyz.com/document.cte#some_id|
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Metadata &amp; Comments</h2>
+            <pre>
+                <code>
+c1
+// Metadata about the entire documents
+(
+    // _ct is the creation time, _d is description, _v is version.
+    // See common generic metadata spec.
+    _ct = 2019-9-1/22:14:01
+    _d = "Some description"
+    _v = "1.1.0"
+    whatever = "some arbitrary data"
+)
+{
+    /* Comments look very C-like, except:
+       /* Nested comments are allowed! */
+    */
+
+    // Double-slash comments are also possible.
+
+    (info = "something interesting about a_list")
+    a_list           = [1 2 3]
+}
+                </code>
+            </pre>
+        </article>
+
+        <article>
+            <h2>Custom Types</h2>
+            <pre>
+                <code>
+c1
+{
+    // Custom types are user-defined, with user-supplied codecs.
+    custom-text     = |ct cplx(2.94+3i)|
+    custom-binary   = |cb 04 f6 28 3c 40 00 00 40 40|
+}
+                </code>
+            </pre>
+        </article>
+
+        <section class="blurb extra-space">
+            <p class="blurb-text">See the <a href="resources.html">Resources</a> page or <a href="https://github.com/kstenerud/concise-encoding">Github</a> page for more information.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p class="copyright">Copyright &copy; 2020 Karl Stenerud</p>
+        <p>
+            <a class="badge-shoutout" href="https://danlam.net/">danlam.net</a>
+            <a class="badge-shoutout" href="https://github.com/andybrewer/mvp/">MVP</a>
+            <a class="badge-shoutout" href="https://www.flaticon.com/authors/pixel-perfect">Pixel-Perfect</a>
+        </p>
+    </footer>
+</body>
+
+</html>
