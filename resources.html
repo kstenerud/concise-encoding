@@ -1,225 +1,141 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="Concise Encoding specifications">
-        <title>Concise Encoding: Specifications</title>
-        <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
-        <link rel="stylesheet" href="bulma.min.css" />
-        <link rel="stylesheet" type="text/css" href="main.css">
-    </head>
-    <body>
-        <section class="hero is-info is-medium is-bold">
-            <div class="hero-head">
-                <nav class="navbar">
-                    <div class="container">
-                        <div class="navbar-brand is-size-2 has-text-weight-bold">
-                            <figure class="mr-2"><img class="hero-image" src="ce-logo.svg"/></figure>
-                            <span class="mt-2 is-size-3">Concise Encoding</span>
-                            <span class="navbar-burger burger" data-target="navbarMenu">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </span>
-                        </div>
-                        <div id="navbarMenu" class="navbar-menu">
-                            <div class="navbar-end">
-                                <div class="tabs is-right">
-                                    <ul>
-                                        <li><a href="index.html">Home</a></li>
-                                        <li class="is-active"><a>Resources</a></li>
-                                    </ul>
-                                    <span class="navbar-item">
-                                        <a class="button is-white is-outlined" href="https://github.com/kstenerud/concise-encoding">
-                                            <span class="icon">
-                                                <img class="github" src="github.svg">
-                                            </span>
-                                            <span>Source</span>
-                                        </a>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-            <div class="hero-body">
-                <div class="container has-text-centered">
-                    <h1 class="title">
-                    Resources
-                    </h1>
-                </div>
-            </div>
-            <div class="hero-bgimage">
-        </section>
+<html lang="en">
 
-        <div class="box cta">
-            <p class="has-text-centered">
-                <span class="tag is-warning">Relase Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
-            </p>
+<head>
+    <link rel="icon" href="favicon.svg">
+    <link rel="stylesheet" href="./main.css">
+
+    <meta charset="utf-8">
+    <meta name="description" content="Concise Encoding resources.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Concise Encoding: Resources</title>
+</head>
+
+<body>
+    <header>
+        <div>
+            <nav>
+            <a class="title-container" href="index.html">
+                <img class="title-logo" alt="Logo" src="img/ce-logo.svg">
+                <span class="title-text">Concise Encoding</span>
+            </a>
+            <ul>
+                <li><a class="nav-link" href="index.html">Home</a></li>
+                <li><a class="nav-link" href="https://github.com/kstenerud/concise-encoding">Source</a></li>
+            </ul>
+        </nav>
         </div>
+        <br>
+        <p class="title-subtitle">The friendly data format for human &amp; machine</p>
+        <div class="title-bgimage">
+    </header>
+    <section class="updates-container">
+        <div>
+            <span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
+        </div>
+    </section>
 
-        <section class="features container">
-
-            <div class="mid column is-8 is-offset-2">
-                <h2 class="title-mid">Specifications</h2><br>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64 spec-icon">
-                        <img src="structure.svg" alt="Structure">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Concise Encoding (Structual Specification)</span>
-                      <br>
-                      <span class="has-text-black">Both formats follow this structure.</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64 spec-icon">
-                        <img src="text.svg" alt="Text">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Concise Text Encoding</span>
-                      <br>
-                      <span class="has-text-black">Use this where humans are involved.</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64 spec-icon">
-                        <img src="binary.svg" alt="Binary">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Concise Binary Encoding</span>
-                      <br>
-                      <span class="has-text-black">Use this for data storage and transmission.</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/concise-encoding">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64 spec-icon">
-                        <img src="schema.svg" alt="Schema">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Concise Encoding Schema (TODO)</span>
-                      <br>
-                      <span class="has-text-black">Schema format for Concise Encoding.</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/common-generic-metadata.md">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64 spec-icon">
-                        <img src="metadata.svg" alt="Meta">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Common Generic Metadata</span>
-                      <br>
-                      <span class="has-text-black">A common set of metadata tags.</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="mid column is-8 is-offset-2">
-                <h2 class="title-mid">Implementations</h2><br>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/go-concise-encoding">
-              <article class="media">
-                    <div class="media-left">
-                      <figure class="image is-64x64">
-                        <img src="language-go.svg" alt="Text">
-                      </figure>
-                    </div>
-                    <div class="media-content">
-                      <span class="is-size-4">Golang</span>
-                      <br>
-                      <span class="has-text-black">Reference implementation</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
-            <div class="mid column is-8 is-offset-2">
-                <h2 class="title-mid">Tools</h2><br>
-            </div>
-
-            <div class="box">
-                <a href="https://github.com/kstenerud/enctool">
-              <article class="media">
-                    <div class="media-left">
-                        <figure class="image is-64x64 spec-icon">
-                            <img src="tool.svg" alt="Binary">
-                        </figure>
-                    </div>
-                    <div class="media-content">
-                        <span class="is-size-4">Enctool</span>
-                        <br>
-                        <span class="has-text-black">A tool for manipulating data in various encoding formats, including CBE and CTE</span>
-                    </div>
-              </article>
-                </a>
-            </div>
-
+    <main>
+        <section class="blurb">
+            <h2>Specifications</h2>
         </section>
-        <footer class="footer">
-            <div class="container">
-                <div class="columns">
-                    <h2 class="copyright">Copyright &copy; 2020 Karl Stenerud</h2>
-                </div>
 
-                <div class="columns content has-text-centered">
-                    <a href="https://danlam.net/">
-                        <div class="tags has-addons pr-1">
-                            <span class="tag is-dark">danlam.net</span>
-                        </div>
-                    </a>
-                    <a href="https://github.com/BulmaTemplates/bulma-templates">
-                        <div class="tags has-addons pr-1">
-                            <span class="tag is-dark">Bulma Templates</span>
-                        </div>
-                    </a>
-                    <a href="https://www.flaticon.com/authors/pixel-perfect">
-                        <div class="tags has-addons pr-1">
-                            <span class="tag is-dark">Pixel-Perfect Icons</span>
-                        </div>
-                    </a>
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/structure.svg" alt="Structure">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md">Concise Encoding (Structual Specification)</a>
+                  <br>
+                  <span>Both formats follow this structure.</span>
                 </div>
             </div>
-            <script src="bulma.js"></script>
-        </footer>
-    </body>
+        </article>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/text.svg" alt="Text">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a>
+                  <br>
+                  <span>Use this where humans are involved.</span>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/binary.svg" alt="Binary">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>
+                  <br>
+                  <span>Use this for data storage and transmission.</span>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/schema.svg" alt="Schema">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/ces-specification.mdd">Concise Encoding Schema (TODO)</a>
+                  <br>
+                  <span>Schema specification for Concise Encoding.</span>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/metadata.svg" alt="Metadata">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/common-generic-metadata.md">Common Generic Metadata</a>
+                  <br>
+                  <span>A common set of metadata tags.</span>
+                </div>
+            </div>
+        </article>
+
+        <section class="blurb extra-space">
+            <h2>Implementations</h2>
+        </section>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/language-go.svg" alt="Go language">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/go-concise-encoding">Golang</a>
+                  <br>
+                  <span>Reference implementation.</span>
+                </div>
+            </div>
+        </article>
+
+        <section class="blurb extra-space">
+            <h2>Tools</h2>
+        </section>
+
+        <article>
+            <div class="resource">
+                <img class="resource-img" src="img/tool.svg" alt="Tool">
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/enctool">Enctool</a>
+                  <br>
+                  <span>A tool for manipulating data in various encoding formats, including CBE and CTE.</span>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <footer>
+        <p class="copyright">Copyright &copy; 2020 Karl Stenerud</p>
+        <p>
+            <a class="badge-shoutout" href="https://danlam.net/">danlam.net</a>
+            <a class="badge-shoutout" href="https://github.com/andybrewer/mvp/">MVP</a>
+            <a class="badge-shoutout" href="https://www.flaticon.com/authors/pixel-perfect">Pixel-Perfect</a>
+        </p>
+    </footer>
+</body>
+
 </html>
