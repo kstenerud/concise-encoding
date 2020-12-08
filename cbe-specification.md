@@ -40,7 +40,7 @@ Contents
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
-  - [URI](#uri)
+  - [Resource Identifier](#resource-identifier)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
     - [Text Encoding](#custom-type-text-encoding)
@@ -50,6 +50,7 @@ Contents
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
+  - [Relationship](#relationship)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
@@ -58,6 +59,7 @@ Contents
   - [Padding](#padding)
 * [Other Types](#other-types)
   - [Null](#null)
+  - [Concatenation](#concatenation)
   - [RESERVED](#reserved)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -103,71 +105,71 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 
 #### Type Field
 
-| Hex | Dec | Type                      | Payload                                       |
-| --- | --- | ------------------------- | --------------------------------------------- |
-|  00 |   0 | Integer value 0           |                                               |
-|  01 |   1 | Integer value 1           |                                               |
-| ... | ... | ...                       |                                               |
-|  64 | 100 | Integer value 100         |                                               |
+| Hex | Dec | Type                      | Payload                                         |
+| --- | --- | ------------------------- | ----------------------------------------------- |
+|  00 |   0 | Integer value 0           |                                                 |
+|  01 |   1 | Integer value 1           |                                                 |
+| ... | ... | ...                       |                                                 |
+|  64 | 100 | Integer value 100         |                                                 |
 |  65 | 101 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  66 | 102 | Positive Integer          | [byte length] [little endian bytes]           |
-|  67 | 103 | Negative Integer          | [byte length] [little endian bytes]           |
-|  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                      |
-|  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                      |
-|  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]      |
-|  6b | 107 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]      |
-|  6c | 108 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]      |
-|  6d | 109 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]      |
-|  6e | 110 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]      |
-|  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]      |
+|  66 | 102 | Positive Integer          | [byte length] [little endian bytes]             |
+|  67 | 103 | Negative Integer          | [byte length] [little endian bytes]             |
+|  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                        |
+|  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                        |
+|  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]        |
+|  6b | 107 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]        |
+|  6c | 108 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]        |
+|  6d | 109 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]        |
+|  6e | 110 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]        |
+|  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]        |
 |  70 | 112 | Binary Float (16 bit)     | [16-bit [bfloat16](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf), little endian] |
-|  71 | 113 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]  |
-|  72 | 114 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]  |
-|  73 | 115 | UUID                      | [128 bits of data, big endian]                |
-|  74 | 116 | RESERVED                  |                                               |
-|  75 | 117 | RESERVED                  |                                               |
-|  76 | 118 | Comment                   | (String or sub-comment) ... End of Container  |
-|  77 | 119 | Metadata Map              | (Key, value) ... End of Container             |
-|  78 | 120 | Markup                    | Name, kv-pairs, contents                      |
-|  79 | 121 | Map                       | (Key, value) ... End of Container             |
-|  7a | 122 | List                      | Object ... End of Container                   |
-|  7b | 123 | End of Container          |                                               |
-|  7c | 124 | Boolean False             |                                               |
-|  7d | 125 | Boolean True              |                                               |
-|  7e | 126 | Null (no data)            |                                               |
-|  7f | 127 | Padding                   |                                               |
-|  80 | 128 | String: 0 bytes           |                                               |
-|  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                       |
-|  82 | 130 | String: 2 bytes           | [2 octets of UTF-8 data]                      |
-|  83 | 131 | String: 3 bytes           | [3 octets of UTF-8 data]                      |
-|  84 | 132 | String: 4 bytes           | [4 octets of UTF-8 data]                      |
-|  85 | 133 | String: 5 bytes           | [5 octets of UTF-8 data]                      |
-|  86 | 134 | String: 6 bytes           | [6 octets of UTF-8 data]                      |
-|  87 | 135 | String: 7 bytes           | [7 octets of UTF-8 data]                      |
-|  88 | 136 | String: 8 bytes           | [8 octets of UTF-8 data]                      |
-|  89 | 137 | String: 9 bytes           | [9 octets of UTF-8 data]                      |
-|  8b | 139 | String: 11 bytes          | [11 octets of UTF-8 data]                     |
-|  8a | 138 | String: 10 bytes          | [10 octets of UTF-8 data]                     |
-|  8c | 140 | String: 12 bytes          | [12 octets of UTF-8 data]                     |
-|  8d | 141 | String: 13 bytes          | [13 octets of UTF-8 data]                     |
-|  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                     |
-|  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                     |
-|  90 | 144 | String                    | [chunk length] [UTF-8 data] ...               |
-|  91 | 145 | URI                       | [chunk length] [[URI](https://tools.ietf.org/html/rfc3986) data] ... |
-|  92 | 146 | Custom (Binary)           | [chunk length] [data] ...                     |
-|  93 | 147 | Custom (Text)             | [chunk length] [UTF-8 data] ...               |
-|  94 | 148 | Typed Array               | [type] [chunk length] [elements] ...          |
-|  95 | 149 | RESERVED                  |                                               |
-|  96 | 150 | RESERVED                  |                                               |
-|  97 | 151 | Marker                    | Positive integer / string                     |
-|  98 | 152 | Reference                 | Positive integer / string / URI               |
+|  71 | 113 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]    |
+|  72 | 114 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]    |
+|  73 | 115 | UUID                      | [128 bits of data, big endian]                  |
+|  74 | 116 | RESERVED                  |                                                 |
+|  75 | 117 | Relationship              | Subject, Predicate, Object                      |
+|  76 | 118 | Comment                   | (String or sub-comment) ... End of Container    |
+|  77 | 119 | Metadata Map              | (Key, value) ... End of Container               |
+|  78 | 120 | Markup                    | Name, kv-pairs, contents                        |
+|  79 | 121 | Map                       | (Key, value) ... End of Container               |
+|  7a | 122 | List                      | Object ... End of Container                     |
+|  7b | 123 | End of Container          |                                                 |
+|  7c | 124 | Boolean False             |                                                 |
+|  7d | 125 | Boolean True              |                                                 |
+|  7e | 126 | Null (no data)            |                                                 |
+|  7f | 127 | Padding                   |                                                 |
+|  80 | 128 | String: 0 bytes           |                                                 |
+|  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                         |
+|  82 | 130 | String: 2 bytes           | [2 octets of UTF-8 data]                        |
+|  83 | 131 | String: 3 bytes           | [3 octets of UTF-8 data]                        |
+|  84 | 132 | String: 4 bytes           | [4 octets of UTF-8 data]                        |
+|  85 | 133 | String: 5 bytes           | [5 octets of UTF-8 data]                        |
+|  86 | 134 | String: 6 bytes           | [6 octets of UTF-8 data]                        |
+|  87 | 135 | String: 7 bytes           | [7 octets of UTF-8 data]                        |
+|  88 | 136 | String: 8 bytes           | [8 octets of UTF-8 data]                        |
+|  89 | 137 | String: 9 bytes           | [9 octets of UTF-8 data]                        |
+|  8b | 139 | String: 11 bytes          | [11 octets of UTF-8 data]                       |
+|  8a | 138 | String: 10 bytes          | [10 octets of UTF-8 data]                       |
+|  8c | 140 | String: 12 bytes          | [12 octets of UTF-8 data]                       |
+|  8d | 141 | String: 13 bytes          | [13 octets of UTF-8 data]                       |
+|  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                       |
+|  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                       |
+|  90 | 144 | String                    | [chunk length] [UTF-8 data] ...                 |
+|  91 | 145 | Resource Identifier       | [chunk length] [UTF-8 data] ...                 |
+|  92 | 146 | Custom (Binary)           | [chunk length] [data] ...                       |
+|  93 | 147 | Custom (Text)             | [chunk length] [UTF-8 data] ...                 |
+|  94 | 148 | Typed Array               | [type] [chunk length] [elements] ...            |
+|  95 | 149 | RESERVED                  |                                                 |
+|  96 | 150 | Concatenate               | String                                          |
+|  97 | 151 | Marker                    | Positive integer / string                       |
+|  98 | 152 | Reference                 | Positive integer / string / resource identifier |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  9c | 156 | Integer value -100        |                                               |
-| ... | ... | ...                       |                                               |
-|  fe | 254 | Integer value -2          |                                               |
-|  ff | 255 | Integer value -1          |                                               |
+|  9c | 156 | Integer value -100        |                                                 |
+| ... | ... | ...                       |                                                 |
+|  fe | 254 | Integer value -2          |                                                 |
+|  ff | 255 | Integer value -1          |                                                 |
 
 
 
@@ -351,9 +353,9 @@ For byte lengths from 0 to 15, there are special fixed-length string types (0x80
     [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
-### URI
+### Resource Identifier
 
-URIs are encoded with the type 0x92. The length is in octets, NOT characters.
+Resource identifiers are encoded with the type 0x92. The length is in octets, NOT characters.
 
 **Example**:
 
@@ -472,6 +474,17 @@ Unlike other containers, a markup container requires two end-of-container marker
     [78 84 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b;Some text>
 
 
+### Relationship
+
+A relationship always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
+
+    [77] [subject] [predicate] [object]
+
+**Example**:
+
+TODO
+
+
 
 Peudo-Objects
 -------------
@@ -491,7 +504,7 @@ A marker begins with the marker type (0x97), followed by a marker ID, and then t
 
 ### Reference
 
-A reference begins with the reference type (0x98), followed by either a marker ID or a [URI](#uri).
+A reference begins with the reference type (0x98), followed by either a marker ID or a [resource identifier](#resource-identifier).
 
 **Examples**:
 
@@ -546,6 +559,15 @@ Other Types
 ### Null
 
     [7e] = No data
+
+
+### Concatenation
+
+The concatenation operator concatenates the string following onto the previous resource identifier, effectively yielding a new resource identifier.
+
+**Example**:
+
+TODO
 
 
 ### RESERVED
