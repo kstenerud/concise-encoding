@@ -35,7 +35,7 @@ Contents
 * [Array Types](#array-types)
   - [String-like Arrays](#string-like-arrays)
     - [String](#string)
-    - [URI](#uri)
+    - [Resource Identifier](#resource-identifier)
   - [Typed Array](#typed-array)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#binary-custom-type)
@@ -44,6 +44,7 @@ Contents
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
+  - [Relationship](#relationship)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
@@ -53,6 +54,7 @@ Contents
   - [Constant](#constant)
 * [Other Types](#other-types)
   - [Null](#null)
+  - [Concatenation](#concatenation)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
   - [Confusable Characters](#confusable-characters)
@@ -341,9 +343,9 @@ Strings must always resolve to complete, valid UTF-8 sequences when fully decode
 
 Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept both line ending types as input, but encoders should only output LF when the destination is a foreign or unknown system.
 
-#### URI
+#### Resource Identifier
 
-The Uniform Resource Identifier must be structured according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
+A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). If unspecified by a schema, the default resource identifier type is IRI.
 
 
 ### Typed Array
@@ -356,11 +358,11 @@ Array elements can be written using any of the representations allowed for the s
 
 **Examples**:
 
-    |u8x 9f 47 cb 9a 3c|
-    |f32 1.5 0x4.f391p100 30 9.31e-30|
-    |i16 0b1001010 0o744 1000 0xffff|
-    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    |b 1 1 0 1 0|
+ * `|u8x 9f 47 cb 9a 3c|`
+ * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
+ * `|i16 0b1001010 0o744 1000 0xffff|`
+ * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
+ * `|b 1 1 0 1 0|`
 
 
 ### Custom Types
@@ -408,7 +410,15 @@ By default, a list is ordered and allows duplicate values. Different rules can b
 
 **Example**:
 
-    [1 two 3.1 {} @null]
+```cte
+c1 [
+    1
+    two
+    3.1
+    {}
+    @null
+]
+```
 
 
 ### Map
@@ -433,38 +443,39 @@ Only certain types can be used as keys in map-like containers:
 * [Numeric types](#numeric-types), except for NaN (not-a-number)
 * [Temporal types](#temporal-types)
 * [Strings](#string)
-* [URI](#uri)
+* [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
 
 Null must not be used as a key.
 
 **Example**:
 
-    {
-        1 = alpha
-        2 = beta
-        "a map" = {one=1 two=2}
-    }
+```cte
+c1 {
+    1 = alpha
+    2 = beta
+    "a map" = {one=1 two=2}
+    2000-01-01 = "New millenium"
+}
+```
 
 
 ### Markup
 
-A markup container stores data in a hierarchical style similar to XML. Each element is composed of a name, an optional map of attributes, and an optional list of contents.
+Markup is a specialized data structure composed of a name, a map (containing attributes), and a list of contents that can contain string data and child nodes (popularized in XML). Markup containers are generally best suited for presentation data. For regular data, maps and lists are usually better.
 
-    [name] [optional attributes] [optional contents]
+    [name] [attributes (optional)] [contents (optional)]
 
- * Name is a [keyable type](#keyable-types), and is case-insensitive if it's a string.
+ * Name is a [keyable type](#keyable-types).
  * Attributes behaves like a [map](#map)
  * The contents section behaves similarly to a [list](#list), except that it can only contain:
    - [Content strings](#content-string)
-   - [Comments](#markup-comment)
+   - [Comments](#comment)
    - Other markup containers
-
-Markup containers are best suited for presentation data. For regular data, maps and lists are better.
 
 Illustration of markup encodings:
 
-| Attributes | Contents | Example                                                    |
+| Attributes | Contents | Example (CTE format)                                       |
 | ---------- | -------- | ---------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                     |
 |     Y      |    N     | `<div id=fillme>`                                          |
@@ -477,20 +488,129 @@ In content strings, leading and trailing whitespace is not considered significan
 
 Implementations may alter whitespace in content strings for aesthetic reasons so long as at least one whitespace character remains between printable sequences.
 
-##### Entity Reference
-
-The Concise Encoding formats don't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are treated as regular text.
+**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are treated as regular text by decoders. Applications may interpret them as they wish.
 
 **Example**:
 
-    <View;
-        <Image src=|u images/avatar-image.jpg|>
-        <Text,
-            Hello! Please choose a name!
-        >
-        /* <HRule style=thin> */
-        <TextInput id=name style={height=40 borderColor=gray}, Name me! >
+```cte
+c1 <View;
+    <Image src=|r images/avatar-image.jpg|>
+    <Text,
+        Hello! Please choose a name!
     >
+    /* <HRule style=thin> */
+    <TextInput id=name style={height=40 borderColor=gray}, Name me! >
+>
+```
+
+
+### Relationship
+
+A relationship is a container-like structure for making statements about resources in the form of subject-predicate-object triples (like in [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework)). Relationships form edges between nodes ([resources](#resource) or values) to build a semantic graph. Local resources are anonymous by default, but can be made addressable by [marking them](#marker).
+
+A relationship is composed of the following three components (in order):
+
+ * Subject, which must be a [resource](#resource)
+ * Predicate, which must be a [resource identifier](#resource-identifier) that represents a semantic predicate
+ * Object, which can be a [resource](#resource) or a value.
+
+#### Maps as Relationships
+
+[Maps](#map) can also be used to represent relationships because they are natural relationship structures (where the map itself is the subject, the key is the predicate, and the value is the object). In Concise Encoding, the key-value pairs of a map are only considered [relationships](#relationship) if their types match the requirements for the predicate and object of a relationship.
+
+Using maps to represent relationships can make the document more concise and the graph structure easier to follow, but the relationships expressed as key-value pairs cannot be made addressable (and thus cannot be used as resources). This is generally not a problem because few relationships actually need to be used as resources in real-world applications.
+
+#### Resource
+
+A resource is one of:
+
+ * a [map](#map) (entity)
+ * a [relationship](#relationship)
+ * a [list](#list) (where each entry must be a [resource](#resource))
+ * a [resource identifier](#resource-identifier)
+
+
+**Examples**:
+
+At their most basic, relationships are simply 3-component statements containing a subject, a predicate, and an object:
+
+```cte
+c1 [
+    @[|r https://springfield.gov/people#homer_simpson| |r https://example.org/wife| |r https://springfield.gov/people#marge_simpson|]
+    @[|r https://springfield.gov/people#homer_simpson| |r https://example.org/employer| |r https://springfield.gov/employers/nuclear_power_plant|]
+]
+```
+
+Using the full resource identifier is tedious, but we can use [markers](#marker) and the [concatenation operator](#concatenation) to make things more manageable. In the following example, the marked [resource identifiers](#resource-identifier) are placed in a [list](#list) (arbitrarily named "rdf") in a top-level [metadata map](#metadata-map) so that they themselves don't constitute data, but can still be referenced from the data.
+
+```cte
+c1 (
+    rdf = [
+        &people:|r https://springfield.gov/people#|
+        &employers:|r https://springfield.gov/employers/|
+        &e:|r https://example.org/|
+    ]
+)[
+    @[$people:homer_simpson $e:wife $people:marge_simpson]
+    @[$people:homer_simpson $e:employer $employers:nuclear_power_plant]
+]
+```
+
+We can also use map syntax to model most relationships, which often makes the graph more clear to a human reader:
+
+```cte
+c1 (
+    rdf = [
+        &people:|r https://springfield.gov/people#|
+        &employers:|r https://springfield.gov/employers/|
+        &e:|r https://example.org/|
+    ]
+){
+    $people:homer_simpson = {
+        $e:wife = $people:marge_simpson
+        $e:employer = $employers:nuclear_power_plant
+    }
+}
+```
+
+With map syntax, relationships can't be marked. When relationship marking is needed, they must be written using standard relationship statements:
+
+```cte
+c1 (
+    rdf = [
+        &people:|r https://springfield.gov/people#|
+        &employers:|r https://springfield.gov/employers/|
+        &e:|r https://example.org/|
+    ]
+){
+    $people:homer_simpson = {
+        $e:wife = $people:marge_simpson
+        $e:prev_employer = $employers:nuclear_power_plant
+        $e:regrets = [
+            $firing
+            $forgotten_birthday
+        ]
+    }
+    rdf-statements = [
+        &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
+        &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
+        &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
+        @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
+    ]
+}
+```
+
+**Note**: If the previous document were published at `https://mysite.org/data.cte`, all [markers](#marker) would be accessible using fragments:
+
+ * `https://mysite.org/data.cte#marge_birthday`
+ * `https://mysite.org/data.cte#forgotten_birthday`
+ * `https://mysite.org/data.cte#firing`
+
+Technically, these would also be accessible, although they would only resolve to resource identifiers:
+
+ * `https://mysite.org/data.cte#people`
+ * `https://mysite.org/data.cte#employers`
+ * `https://mysite.org/data.cte#e`
 
 
 
@@ -527,14 +647,15 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
- * Marker IDs must be compared case-insensitive.
 
 **Example**:
 
-    [
-        &remember_me:"Pretend that this is a huge string"
-        &1:{a = 1}
-    ]
+```cte
+c1 [
+    &remember_me:"Pretend that this is a huge string"
+    &1:{a = 1}
+]
+```
 
 The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
 
@@ -543,24 +664,24 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 A reference is a **non-referring**, **visible** pseudo-object that acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data. Unlike other pseudo-objects, references can be used just like regular objects (for example, `(begin-map) ("a key") (reference) (end-container)` is valid - provided the referenced object exists).
 
-A reference is followed by either a [marker ID](#marker-id) or a [URI](#uri).
+A reference is followed by either a [marker ID](#marker-id) or a [resource identifier](#resource-identifier).
 
 #### Rules
 
  * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference used as a map key must refer to a [keyable type](#keyable-types).
- * A URI reference must not be used as a map key.
+ * A resource reference must not be used as a map key.
  * Forward references within a document are allowed.
  * Recursive references are allowed.
- * A reference with a URI must point to:
+ * A resource identifier reference must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A marker ID inside another CBE or CTE document, using the fragment section of the URI as an ID
+   - A marker ID inside another CBE or CTE document, using the fragment section of the resource identifier as an ID
 
-**Note**: Implementations should define security rules for following URI references; blindly following an unknown URI is dangerous.
+**Note**: Implementations should define security rules for following resource identifier references; blindly following an unknown resource identifier is dangerous.
 
 **Example**:
-```
-{
+```cte
+c1 {
     some_object = {
         my_string = &big_string:"Pretend that this is a huge string"
         my_map = &1:{
@@ -570,10 +691,10 @@ A reference is followed by either a [marker ID](#marker-id) or a [URI](#uri).
 
     reference_to_string = $big_string
     reference_to_map = $1
-    reference_to_local_doc = $|u common.cte|
-    reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
-    reference_to_local_doc_marker = $|u common.cte#legalese|
-    reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
+    reference_to_local_doc = $|r common.cte|
+    reference_to_remote_doc = $|r https://somewhere.com/my_document.cbe?format=long|
+    reference_to_local_doc_marker = $|r common.cte#legalese|
+    reference_to_remote_doc_marker = $|r https://somewhere.com/my_document.cbe?format=long#examples|
 }
 ```
 
@@ -592,7 +713,7 @@ Keys in metadata maps follow the same rules as for [regular maps](#map), except 
 Predefined metadata keys should be used where possible to maximize interoperability between systems.
 
 **Example**:
-```
+```cte
 c1
 // Metadata for the entire document
 (
@@ -656,7 +777,7 @@ The following character sequences must not be put into comment strings because t
 * `*/`
 
 **Example**:
-```
+```cte
 c1
 // Comment before top level object
 {
@@ -666,11 +787,11 @@ c1
 
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
-      |u mailto:joe@average.org|
+      |r mailto:joe@average.org|
       /* Unlike in C, nested multiline
          comments are allowed */
     */
-    |u mailto:someone@somewhere.com|
+    |r mailto:someone@somewhere.com|
 
     "data" // Comment after data
     =
@@ -692,7 +813,7 @@ Padding is only available for CBE documents.
 
 Constants are named values that have been defined in a schema. Constants are **non-referring** and **visible**. A CTE decoder must look up the constant name in the schema and use the value it maps to. CTE encoders must use constant names where specified by the schema.
 
-A constant's name must be an [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters, and must be compared case-insensitive.
+A constant's name must be an [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters.
 
 Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
@@ -708,6 +829,19 @@ Denotes the absence of data.
 **Note**: Null is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and should be used with caution.
 
 
+### Concatenation
+
+Concatenation is an operator that concatenates a [string](#string) onto a [resource identifier](#resource-identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
+
+ * A [resource identifier](#resource-identifier)
+ * The concatenation operator
+ * A [string](#string) or a positive integer (which is converted to a base-10 string representation)
+
+The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation. Any referring pseudo-objects preceding the initial resource identifier of a concatenation operation actually refers to the result of the operation, not the initial resource identifier.
+
+Chained concatenation operators (for example `|r https://example.com/|:b:l:a:h`, resulting in `|r https://example.com/blah|`) are not allowed.
+
+
 
 Text Safety
 -----------
@@ -716,15 +850,15 @@ Because Concise Encoding is a twin format (text and binary), text sequences in s
 
 The following are text-unsafe:
 
-* Unassigned characters
-* Reserved characters
-* Private characters
-* Unprintable characters
-* Surrogate pairs
-* Byte order mark
-* Zero-width characters
-* Line breaks
-* Control characters, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
+ * Unassigned characters
+ * Reserved characters
+ * Private characters
+ * Unprintable characters
+ * Surrogate pairs
+ * Byte order mark
+ * Zero-width characters
+ * Line breaks
+ * Control characters, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
 
 
 
@@ -738,7 +872,7 @@ An unquoted-safe string must adhere to the following rules:
  * The string must not be empty.
  * The string must be [text-safe](#text-safety).
  * The string must not contain whitespace characters or control characters.
- * The string must not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), dash (`-`), and dot (`.`).
+ * The string must not contain characters from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, numerals 0-9, underscore (`_`), and dash (`-`).
  * The string must not begin with a character from u+0000 to u+007f, with the exception of lowercase a-z, uppercase A-Z, and underscore (`_`).
  * Any characters that look [confusingly similar to printable characters from Unicode range 0000-007f](#confusable-characters) are subject to the same rules as their lookalikes (for example, u+ff15 `５` is disallowed as a first character, and u+2039 `‹` is disallowed entirely in an unquoted-safe string).
 
@@ -747,7 +881,7 @@ An unquoted-safe string must adhere to the following rules:
 These are unquoted-safe strings:
 
     twenty-five
-    value.next
+    value_next
     _underscore
     _150
     飲み物
@@ -758,8 +892,8 @@ These are not unquoted-safe strings:
     String with whitespace
     disallowed*symbol
     contains-star-＊-lookalike
-    .begins-with-a-dot
-    ．begins-with-a-dot-lookalike
+    has.dot
+    has．dot-lookalike
 
 
 ### Confusable Characters

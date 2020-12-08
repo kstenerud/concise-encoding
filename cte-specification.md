@@ -48,7 +48,7 @@ Contents
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
   - [String-Like Array Encodings](#string-like-array-encodings)
-  - [URI](#uri)
+  - [Resource Identifier](#resource-identifier)
   - [Custom Binary](#custom-binary)
   - [Custom Text](#custom-text)
   - [String](#string)
@@ -61,6 +61,7 @@ Contents
     - [Markup Structure](#markup-structure)
     - [Container End](#container-end)
     - [Content String](#content-string)
+  - [Relationship](#relationship)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
@@ -72,6 +73,7 @@ Contents
     - [Explicit Constant](#explicit-constant)
 * [Other Types](#other-types)
   - [Null](#null)
+  - [Concatenation](#concatenation)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
 * [Pretty Printing](#pretty-printing)
@@ -204,7 +206,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 
 **Example**:
 
-```
+```cte
 "Verbatim sequences can occur anywhere escapes are allowed.\n\
 \.@@@
 In verbatim sequences, everything is interpreted literally until the
@@ -472,24 +474,24 @@ An empty array has a type but no contents:
 
 The following array types are available:
 
-| Type   | Description                     | Encoding Kind |
-| ------ | ------------------------------- | ------------- |
-| `b`    | Boolean                         | Element       |
-| `u8`   | 8-bit unsigned integer          | Element       |
-| `u16`  | 16-bit unsigned integer         | Element       |
-| `u32`  | 32-bit unsigned integer         | Element       |
-| `u64`  | 64-bit unsigned integer         | Element       |
-| `i8`   | 8-bit signed integer            | Element       |
-| `i16`  | 16-bit signed integer           | Element       |
-| `i32`  | 32-bit signed integer           | Element       |
-| `i64`  | 64-bit signed integer           | Element       |
-| `f16`  | 16-bit floating point (bfloat)  | Element       |
-| `f32`  | 32-bit floating point (ieee754) | Element       |
-| `f64`  | 64-bit floating point (ieee754) | Element       |
-| `uu`   | 128-bit UUID                    | Element       |
-| `u`    | URI                             | String-Like   |
-| `ct`   | Custom Text                     | String-Like   |
-| `cb`   | Custom Binary                   | Element       |
+| Type   | Description                                 | Encoding Kind |
+| ------ | ------------------------------------------- | ------------- |
+| `b`    | Boolean                                     | Element       |
+| `u8`   | 8-bit unsigned integer                      | Element       |
+| `u16`  | 16-bit unsigned integer                     | Element       |
+| `u32`  | 32-bit unsigned integer                     | Element       |
+| `u64`  | 64-bit unsigned integer                     | Element       |
+| `i8`   | 8-bit signed integer                        | Element       |
+| `i16`  | 16-bit signed integer                       | Element       |
+| `i32`  | 32-bit signed integer                       | Element       |
+| `i64`  | 64-bit signed integer                       | Element       |
+| `f16`  | 16-bit floating point (bfloat)              | Element       |
+| `f32`  | 32-bit floating point (ieee754)             | Element       |
+| `f64`  | 64-bit floating point (ieee754)             | Element       |
+| `u`    | 128-bit UUID                                | Element       |
+| `r`    | [Resource Identifier](#resource-identifier) | String-Like   |
+| `ct`   | [Custom Text](#custom-text)                 | String-Like   |
+| `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
 
 ### Element Array Encodings
@@ -513,11 +515,11 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 **Examples**:
 
-    |u8x 9f 47 cb 9a 3c|
-    |f32 1.5 0x4.f391p100 30 9.31e-30|
-    |i16 0b1001010 0o744 1000 0xffff|
-    |uu 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    |b 11010|
+ * `|u8x 9f 47 cb 9a 3c|`
+ * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
+ * `|i16 0b1001010 0o744 1000 0xffff|`
+ * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
+ * `|b 11010|`
 
 
 ### String-Like Array Encodings
@@ -525,12 +527,12 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 String-like array encodings are interpreted as a whole, and must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 
-### URI
+### Resource Identifier
 
-A Concise Encoding implementation must not interpret or generate percent escape sequences in URIs; they must be passed untouched. [CTE escape sequences](#escape-sequences), however, must be interpreted and the converted string passed along.
+A Concise Encoding implementation must interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) must not be interpreted.
 
- * `|u http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
- * `|u http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
+ * `|r http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
+ * `|r http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
 
 
 ### Custom Binary
@@ -575,7 +577,7 @@ Strings must normally be double-quote delimited, but this rule can be relaxed fo
 
 **Example**:
 
-```
+```cte
 c1 [
   "some-text"
 ]
@@ -583,7 +585,7 @@ c1 [
 
 "some-text" is unquoted-safe, so this document could also be written as:
 
-```
+```cte
 c1 [
   some-text
 ]
@@ -600,7 +602,15 @@ A list begins with an opening square bracket `[`, contains whitespace separated 
 
 **Example**:
 
-    [1 two 3.1 {} @null]
+```cte
+c1 [
+    1
+    two
+    3.1
+    {}
+    @null
+]
+```
 
 
 ### Map
@@ -611,11 +621,13 @@ Map entries are split into key-value pairs using the equals `=` character and op
 
 **Example**:
 
-    {
-        1 = alpha
-        2 = beta
-        "a map" = {one=1 two=2}
-    }
+```cte
+c1 {
+    1 = alpha
+    2 = beta
+    "a map" = {one=1 two=2}
+}
+```
 
 
 ### Markup
@@ -658,10 +670,9 @@ Content strings can contain [escape sequences](#escape-sequences), which must be
 
 **Example**:
 
-```
-c1
-<View:
-    <Image src=|u images/avatar-image.jpg|>
+```cte
+c1 <View:
+    <Image src=|r images/avatar-image.jpg|>
     <Text id=HelloText,
         Hello! Please choose a name!
     >
@@ -673,6 +684,16 @@ c1
     >
 >
 ```
+
+
+### Relationship
+
+A relationship container is composed of the delimiters `@[` and `]`, containing the subject, predicate, and object.
+
+**Examples**:
+
+ * `@[|r https://springfield.gov/people#homer_simpson| |r https://example.org/wife| |r https://springfield.gov/people#marge_simpson|]`
+ * `@[|r https://springfield.gov/people#homer_simpson| |r https://example.org/employer| |r https://springfield.gov/employers/nuclear_power_plant|]`
 
 
 
@@ -690,35 +711,39 @@ A marker sequence consists of the following, with no whitespace in between:
 
 Example:
 
-    [
-        &remember_me:"Pretend that this is a huge string"
-        &1:{a = 1}
-    ]
+```cte
+c1 [
+    &remember_me:"Pretend that this is a huge string"
+    &1:{a = 1}
+]
+```
 
 The string `"Pretend that this is a huge string"` is marked with the string ID `remember_me`, and the map `{a=1}` is marked with the unsigned integer ID `1`.
 
 
 ### Reference
 
-A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](ce-structure.md#marker-id) or a [URI](#uri).
+A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](ce-structure.md#marker-id) or a [resource identifier](#resource-identifier).
 
 Example:
 
-    {
-        some_object = {
-            my_string = &big_string:"Pretend that this is a huge string"
-            my_map = &1:{
-                a = 1
-            }
+```cte
+c1 {
+    some_object = {
+        my_string = &big_string:"Pretend that this is a huge string"
+        my_map = &1:{
+            a = 1
         }
-
-        reference_to_string = $big_string
-        reference_to_map = $1
-        reference_to_local_doc = $|u common.cte|
-        reference_to_remote_doc = $|u https://somewhere.com/my_document.cbe?format=long|
-        reference_to_local_doc_marker = $|u common.cte#legalese|
-        reference_to_remote_doc_marker = $|u https://somewhere.com/my_document.cbe?format=long#examples|
     }
+
+    reference_to_string = $big_string
+    reference_to_map = $1
+    reference_to_local_doc = $|r common.cte|
+    reference_to_remote_doc = $|r https://somewhere.com/my_document.cbe?format=long|
+    reference_to_local_doc_marker = $|r common.cte#legalese|
+    reference_to_remote_doc_marker = $|r https://somewhere.com/my_document.cbe?format=long#examples|
+}
+```
 
 
 ### Metadata Map
@@ -727,26 +752,28 @@ Metadata maps are encoded in the same manner as [regular maps](#map), except tha
 
 **Example**:
 
-    c1
-    // Metadata for the entire document
-    (
-        _ct = 2017.01.14-15:22:41/Z
-        _mt = 2019.08.17-12:44:31/Z
-    )
-    {
-        records = [
-            // Metadata for "ABC Corp" record
-            (
-                _ct = 2019.05.14-10:22:55/Z
-                _t = [longtime_client big_purchases]
-            )
-            {
-                client = "ABC Corp"
-                amount = 10499.28
-                due = 2020.05.14
-            }
-        ]
-    }
+```cte
+c1
+// Metadata for the entire document
+(
+    _ct = 2017.01.14-15:22:41/Z
+    _mt = 2019.08.17-12:44:31/Z
+)
+{
+    records = [
+        // Metadata for "ABC Corp" record
+        (
+            _ct = 2019.05.14-10:22:55/Z
+            _t = [longtime_client big_purchases]
+        )
+        {
+            client = "ABC Corp"
+            amount = 10499.28
+            due = 2020.05.14
+        }
+    ]
+}
+```
 
 
 ### Comment
@@ -765,7 +792,7 @@ A multiline comment begins at the sequence `/*` and is terminated by the sequenc
 
 **Example**:
 
-```
+```cte
 c1
 // Comment before top level object
 {
@@ -775,11 +802,11 @@ c1
 
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
-      |u mailto:joe@average.org|
+      |r mailto:joe@average.org|
       /* Unlike in C, nested multiline
          comments are allowed */
     */
-    |u mailto:someone@somewhere.com|
+    |r mailto:someone@somewhere.com|
 
     "data" // Comment after data
     =
@@ -813,6 +840,38 @@ Other Types
 ### Null
 
 Null is encoded as `@null`
+
+
+### Concatenation
+
+The concatenation operator in CTE is `:`. There must be no whitespace between the concatenation operator and its operands. The first operand must be a [resource identifier](#resource-identifier) (or a [reference](#reference) to one), and the second operand must be either a string or a positive base-10 integer.
+
+
+**Examples**:
+
+```cte
+c1 {
+    refs = [
+        &ref1:|r https://example.com/|
+        &ref2:|r https://example.com/|:foo
+    ]
+
+    // https://example.com/foo
+    example_1 = |r https://example.com/|:foo
+
+    // https://example.com/foo
+    example_2 = $ref1:foo
+
+    // https://example.com/foo
+    example_3 = $ref2
+
+    // https://example.com/200
+    example_4 = $ref1:200
+
+    // https://example.com/foo/bar
+    example_5 = $ref1:"foo/bar"
+}
+```
 
 
 
@@ -876,7 +935,7 @@ Examples:
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between a sentinel character and its associated value (`@ null`, `& 1234`, `$ |u mydoc.cbe|`, `# Planck_Js` are invalid).
+ * Between a sentinel character and its associated value (`@ null`, `& 1234`, `$ |r mydoc.cbe|`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
@@ -905,20 +964,20 @@ The indentation string should be configurable, with a default of 4 spaces (`    
 #### Lists
 
 Objects in a list should be placed on separate lines.
-```
+```cte
 [
-    |u https://www.imdb.com/title/tt0090605/|
-    |u https://www.imdb.com/title/tt1029248/|
+    |r https://www.imdb.com/title/tt0090605/|
+    |r https://www.imdb.com/title/tt1029248/|
 ]
 ```
 
 If a list is empty, the closing `]` should be on the same line.
-```
+```cte
 []
 ```
 
 Short lists containing small objects may be placed entirely on one line.
-```
+```cte
 [a b c d]
 ```
 
@@ -926,20 +985,20 @@ Short lists containing small objects may be placed entirely on one line.
 #### Maps
 
 There should be a space between keys, values and the `=` in key-value pairs, and each key-value pair should be on a separate line.
-```
+```cte
 {
-    aliens = |u https://www.imdb.com/title/tt0090605/|
-    moribito = |u https://www.imdb.com/title/tt1029248/|
+    aliens = |r https://www.imdb.com/title/tt0090605/|
+    moribito = |r https://www.imdb.com/title/tt1029248/|
 }
 ```
 
 If a map is empty, the closing `}` should be on the same line.
-```
+```cte
 {}
 ```
 
 Small maps containing small objects may be placed entirely on one line. In such a case, omit the spaces around the `=`.
-```
+```cte
 {a=b c=d}
 ```
 
@@ -947,7 +1006,7 @@ Small maps containing small objects may be placed entirely on one line. In such 
 #### Metadata Map
 
 The object that the metadata map refers to should follow it after a space if it doesn't cause the line to become too long. Otherwise place it on the next line.
-```
+```cte
 {
     (x=y) a = b
 
@@ -971,26 +1030,30 @@ The object that the metadata map refers to should follow it after a space if it 
 #### Markup
 
 The closing `>` should only be on a different line if there are contents.
-```
+```cte
 <a>
+```
 
+```cte
 <a,
     contents
 >
 ```
 
 The attributes section should be entirely on the same line as the tag name if it's not too long.
-```
+```cte
 <a x=y>
+```
 
+```cte
 <a x=y,
     contents
 >
 ```
 
 If the attributes section is too long, the overflow should be broken up into multiple indented lines.
-```
-<img src=|u http://somereallylongdomainname.likereallylong.com/images/2.jpg|
+```cte
+<img src=|r http://somereallylongdomainname.likereallylong.com/images/2.jpg|
     width=50 height=50 border-left=10 units=px>
 ```
 
@@ -998,7 +1061,7 @@ If the attributes section is too long, the overflow should be broken up into mul
 #### Strings
 
 Strings should use [continuations](#continuation) if the line is getting too long.
-```
+```cte
 [
     "All that most maddens and torments; all that stirs up the lees of things; \
     all truth with malice in it; all that cracks the sinews and cakes the brain; \
@@ -1014,7 +1077,7 @@ Strings should use [continuations](#continuation) if the line is getting too lon
 #### Typed Arrays
 
 Typed arrays should be broken up into multiple indented lines if the line is getting too long.
-```
+```cte
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
       bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
       fb59 fdb0 1d93 5747 239d b16f 7d9c c48b 5581 13ba 19ca 6f3b 4ba9|
@@ -1024,14 +1087,14 @@ Typed arrays should be broken up into multiple indented lines if the line is get
 #### Comments
 
 Comments should have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) should also have a space before the closing sequence.
-```
+```cte
 // abc
 
 /* abc */
 ```
 
 Long comments should be broken up to fit within the right margin.
-```
+```cte
 {
     /* When a comment gets too long to fit within the right margin, place
        the overflow on a separate lines, adjusting the indent to keep
@@ -1040,7 +1103,7 @@ Long comments should be broken up to fit within the right margin.
 ```
 
 The object following a comment should be on a different line.
-```
+```cte
 {
     /* See list of request types in request-types.md */
     request-type = ping
