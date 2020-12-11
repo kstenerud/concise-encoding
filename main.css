@@ -390,9 +390,13 @@ pre code {
 
 /* Links */
 a {
-    color: #3273dc;
+    color: #1e55ae;
     display: inline-block;
     text-decoration: none;
+}
+
+a.type-link {
+    color: #0b2347;
 }
 
 a:hover {

@@ -73,23 +73,24 @@
             <h3>All the types you need</h3>
             <p>Tired of coercing your data into strings? Concise Encoding supports these types natively:</p>
             <ul>
-                <li>Bool</li>
-                <li>Integer (arbitrary size)</li>
-                <li>Float (binary, decimal, arbitrary size)</li>
-                <li>UUID</li>
-                <li>Time (date, time, timestamp)</li>
-                <li>URI</li>
-                <li>String</li>
-                <li>List</li>
-                <li>Map</li>
-                <li>Markup</li>
-                <li>Typed Arrays (bytes, ints, floats, etc)</li>
-                <li>Reference (for recursive/repetitive data)</li>
-                <li>Metadata</li>
-                <li>Comment</li>
-                <li>Constants</li>
-                <li>Null</li>
-                <li>Custom (encapsulate your own)</li>
+                <li><a class="type-link" href="#numeric_types">Bool</a></li>
+                <li><a class="type-link" href="#numeric_types">Integer (arbitrary size)</a></li>
+                <li><a class="type-link" href="#numeric_types">Float (binary, decimal, arbitrary size)</a></li>
+                <li><a class="type-link" href="#other_types">UUID</a></li>
+                <li><a class="type-link" href="#other_types">Time (date, time, timestamp)</a></li>
+                <li><a class="type-link" href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a></li>
+                <li><a class="type-link" href="#string_types">String</a></li>
+                <li><a class="type-link" href="#containers">List</a></li>
+                <li><a class="type-link" href="#containers">Map</a></li>
+                <li><a class="type-link" href="#containers">Markup</a></li>
+                <li><a class="type-link" href="#relationships">Relationship</a></li>
+                <li><a class="type-link" href="#containers">Typed Arrays (bytes, ints, floats, etc)</a></li>
+                <li><a class="type-link" href="#references">Reference (for recursive/repetitive data)</a></li>
+                <li><a class="type-link" href="#metadata">Metadata</a></li>
+                <li><a class="type-link" href="#metadata">Comment</a></li>
+                <li><a class="type-link" href="#constants">Constants</a></li>
+                <li><a class="type-link" href="#other_types">Null</a></li>
+                <li><a class="type-link" href="#custom_types">Custom (encapsulate your own)</a></li>
             </ul>
         </article>
 
@@ -98,7 +99,7 @@
             <p class="blurb-text">All examples are valid <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-condensed.md#concise-text-encoding-quick-description">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#concise-binary-encoding">Concise Binary Encoding</a>.</p>
         </section>
 
-        <article>
+        <article id="numeric_types">
             <h2>Numeric Types</h2>
             <pre>
                 <code>
@@ -113,44 +114,44 @@ c1
     hex-float     = 0x5.1ec4p20
     not-a-number  = @nan
     infinity      = @inf
-    n-infinity    = -@inf
+    neg-infinity  = -@inf
 }
                 </code>
             </pre>
         </article>
 
-        <article>
+        <article id="string_types">
             <h2>Strings & String-Like</h2>
             <pre>
                 <code>
 c1
 {
-    unquoted-string = no-quotes-needed
-    quoted-string   = "A string delimited by quotes"
-    url             = |u https://example.com/|
-    email           = |u mailto:me@somewhere.com|
+    unquoted-string = no_quotes-needed
+    quoted-string   = "Quoted strings support escapes: \n \t \27f"
+    url             = |r https://example.com/|
+    email           = |r mailto:me@somewhere.com|
 }
                 </code>
             </pre>
         </article>
 
-        <article>
+        <article id="other_types">
             <h2>Other Basic Types</h2>
             <pre>
                 <code>
 c1
 {
     uuid            = @f1ce4567-e89b-12d3-a456-426655440000
-    date            = 2019-7-1
+    date            = 2019-07-01
     time            = 18:04:00.940231541/E/Prague
-    timestamp       = 2010-7-15/13:28:15.415942344/Z
+    timestamp       = 2010-07-15/13:28:15.415942344/Z
     null            = @null
 }
                 </code>
             </pre>
         </article>
 
-        <article>
+        <article id="containers">
             <h2>Containers &amp; Arrays</h2>
             <pre>
                 <code>
@@ -167,14 +168,14 @@ c1
             </pre>
         </article>
 
-        <article>
+        <article id="markup">
             <h2>Markup</h2>
             <pre>
                 <code>
 c1
 {
     main-view = &lt;View,
-        &lt;Image src=|u images/avatar-image.jpg|&gt;
+        &lt;Image src=|r images/avatar-image.jpg|&gt;
         &lt;Text id=HelloText,
             Hello! Please choose a name!
         &gt;
@@ -189,7 +190,7 @@ c1
             </pre>
         </article>
 
-        <article>
+        <article id="references">
             <h2>References</h2>
             <pre>
                 <code>
@@ -203,18 +204,18 @@ c1
     }
     ref1             = $id1
     ref2             = $id1
-    outside_ref      = $|u https://xyz.com/document.cte#some_id|
+    outside_ref      = $|r https://xyz.com/document.cte#some_id|
 }
                 </code>
             </pre>
         </article>
 
-        <article>
+        <article id="metadata">
             <h2>Metadata &amp; Comments</h2>
             <pre>
                 <code>
 c1
-// Metadata about the entire documents
+// Metadata about the entire document
 (
     // _ct is the creation time, _d is description, _v is version.
     // See common generic metadata spec.
@@ -222,8 +223,7 @@ c1
     _d = "Some description"
     _v = "1.1.0"
     whatever = "some arbitrary data"
-)
-{
+){
     /* Comments look very C-like, except:
        /* Nested comments are allowed! */
     */
@@ -237,7 +237,58 @@ c1
             </pre>
         </article>
 
-        <article>
+        <article id="relationships">
+            <h2>Relationships &amp; Concatenation</h2>
+            <pre>
+                <code>
+c1 (
+    // Marked base resource identifiers used for concatenation.
+    // (Stored in metadata because they themselves aren't part of the data)
+    rdf = [
+        &people:|r https://springfield.gov/people#|
+        &e:|r https://example.org/|
+    ]
+){
+    // Map-encoded relationships (the map is the subject)
+    $people:homer_simpson = {
+        // $e refers to |r https://example.org/|
+        // $e:wife concatenates to |r https://example.org/wife|
+        $e:wife = $people:marge_simpson
+        // Multiple objects
+        $e:regrets = [
+            $firing
+            $forgotten_birthday
+        ]
+    }
+    // Relationship containers (@[subject predicate object])
+    rdf-statements = [
+        &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
+        &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
+        &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
+        // Multiple subjects
+        @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
+    ]
+}
+                </code>
+            </pre>
+        </article>
+
+        <article id="constants">
+            <h2>Constants</h2>
+            <pre>
+                <code>
+c1
+{
+    // Given: Actual type and value of "eggshell" and
+    //        "navy-blue" have been defined in a schema
+    wall_color = #eggshell
+    door_color = #navy-blue
+}
+                </code>
+            </pre>
+        </article>
+
+        <article id="custom_types">
             <h2>Custom Types</h2>
             <pre>
                 <code>
