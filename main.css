@@ -123,6 +123,7 @@ a.badge-shoutout:hover {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    padding-bottom: 1rem;
 }
 
 .blurb {
@@ -130,6 +131,7 @@ a.badge-shoutout:hover {
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 3rem;
 }
 
 .blurb-text {
@@ -154,6 +156,33 @@ a.badge-shoutout:hover {
     margin-top: auto;
     margin-bottom: auto;
     opacity: 0.7;
+}
+
+.horiz {
+    overflow: auto;
+    display: flex;
+    align-items:center;
+}
+
+.point-icon {
+    width: 3.5rem;
+    float: left;
+    margin-right: 1rem;
+}
+
+.example-icon {
+    width: 3rem;
+    float: left;
+    margin-right: 1rem;
+}
+
+.vert {
+    display: flex;
+    align-items:center;
+}
+
+.vertical-align {
+    vertical-align: middle;
 }
 
 .resource-desc {
@@ -364,6 +393,16 @@ h6 {
     text-align: center;
 }
 
+h2 {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+h3 {
+    margin: 0;
+    padding: 0;
+}
+
 ol li,
 ul li {
     padding: 0.2rem 0;
@@ -376,7 +415,7 @@ p {
 
 pre {
     max-width: var(--width-card-wide);
-    padding-top: 0;
+    padding-top: 1rem;
     margin-top: 0;
     padding-bottom: 0;
     margin-bottom: 0;
