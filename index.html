@@ -264,12 +264,9 @@ c1
 c1
 // Metadata about the entire document
 (
-    // _ct is the creation time, _d is description, _v is version.
-    // See common generic metadata spec.
-    _ct      = 2019-9-1/22:14:01
-    _d       = "Some description"
-    _v       = "1.1.0"
-    whatever = "some arbitrary data"
+    created     = 2019-9-1/22:14:01
+    description = "A demonstration"
+    version     = "1.1.0"
 ){
     /* Comments look very C-like, except:
        /* Nested comments are allowed! */
@@ -277,8 +274,8 @@ c1
 
     // Double-slash comments are also possible.
 
-    (info = "something interesting about a_list")
-    a_list = [1 2 3]
+    (description = "Homer's children")
+    children = [Bart Lisa Maggie]
 }
                 </code>
             </pre>
