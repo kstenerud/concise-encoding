@@ -150,10 +150,10 @@ c1
                 <code>
 c1
 {
-    unquoted-string = no_quotes-needed
-    quoted-string   = "Quoted strings support escapes: \n \t \27f"
-    url             = |r https://example.com/|
-    email           = |r mailto:me@somewhere.com|
+    unquoted-str = no_quotes-needed
+    quoted-str   = "Quoted strings support escapes: \n \t \27f"
+    url          = |r https://example.com/|
+    email        = |r mailto:me@somewhere.com|
 }
                 </code>
             </pre>
@@ -168,11 +168,11 @@ c1
                 <code>
 c1
 {
-    uuid            = @f1ce4567-e89b-12d3-a456-426655440000
-    date            = 2019-07-01
-    time            = 18:04:00.940231541/E/Prague
-    timestamp       = 2010-07-15/13:28:15.415942344/Z
-    null            = @null
+    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
+    date      = 2019-07-01
+    time      = 18:04:00.940231541/E/Prague
+    timestamp = 2010-07-15/13:28:15.415942344/Z
+    null      = @null
 }
                 </code>
             </pre>
@@ -189,12 +189,12 @@ c1
                 <code>
 c1
 {
-    list             = [1 2.5 "a string"]
-    map              = {one=1 2=two today=2020-09-10}
-    bytes            = |u8x 01 ff de ad be ef|
-    uint16-hex-array = |u16x 91fe 443a 9c15|
-    int16-array      = |i16 7374 17466 -9957|
-    float32-array    = |f32 1.5e10 -8.31e-12|
+    list          = [1 2.5 "a string"]
+    map           = {one=1 2=two today=2020-09-10}
+    bytes         = |u8x 01 ff de ad be ef|
+    int16-array   = |i16 7374 17466 -9957|
+    uint16-hex    = |u16x 91fe 443a 9c15|
+    float32-array = |f32 1.5e10 -8.31e-12|
 }
                 </code>
             </pre>
@@ -238,15 +238,15 @@ c1
                 <code>
 c1
 {
-    marked_object    = &id1:{
-        description = "This map will be referenced later as $id1"
-        value = -@inf
+    marked_object = &id1:{
+        description    = "Map will be referenced later as $id1"
+        value          = -@inf
         child_elements = @null
-        recursive = $id1
+        recursive      = $id1
     }
-    ref1             = $id1
-    ref2             = $id1
-    outside_ref      = $|r https://xyz.com/document.cte#some_id|
+    ref1        = $id1
+    ref2        = $id1
+    outside_ref = $|r https://xyz.com/document.cte#some_id|
 }
                 </code>
             </pre>
@@ -266,9 +266,9 @@ c1
 (
     // _ct is the creation time, _d is description, _v is version.
     // See common generic metadata spec.
-    _ct = 2019-9-1/22:14:01
-    _d = "Some description"
-    _v = "1.1.0"
+    _ct      = 2019-9-1/22:14:01
+    _d       = "Some description"
+    _v       = "1.1.0"
     whatever = "some arbitrary data"
 ){
     /* Comments look very C-like, except:
@@ -278,7 +278,7 @@ c1
     // Double-slash comments are also possible.
 
     (info = "something interesting about a_list")
-    a_list           = [1 2 3]
+    a_list = [1 2 3]
 }
                 </code>
             </pre>
@@ -303,21 +303,25 @@ c1 (
 ){
     // Map-encoded relationships (the map is the subject)
     $people:homer_simpson = {
+
         // $e refers to |r https://example.org/|
         // $e:wife concatenates to |r https://example.org/wife|
         $e:wife = $people:marge_simpson
-        // Multiple objects
+
+        // Multiple relationship objects
         $e:regrets = [
             $firing
             $forgotten_birthday
         ]
     }
+
     // Relationship containers (@[subject predicate object])
     rdf-statements = [
         &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
         &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
         &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
-        // Multiple subjects
+
+        // Multiple relationship subjects
         @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
     ]
 }
@@ -357,8 +361,8 @@ c1
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    custom-text     = |ct cplx(2.94+3i)|
-    custom-binary   = |cb 04 f6 28 3c 40 00 00 40 40|
+    custom-text   = |ct cplx(2.94+3i)|
+    custom-binary = |cb 04 f6 28 3c 40 00 00 40 40|
 }
                 </code>
             </pre>
