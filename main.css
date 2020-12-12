@@ -445,6 +445,10 @@ a:hover {
 }
 
 @media screen and (max-width: 450px) {
+    .title-text {
+        padding-left: 0;
+        font-size: 1.6rem;
+    }
     article h1 {
         font-size: 1.4rem;
     }
