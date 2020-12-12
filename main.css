@@ -443,3 +443,12 @@ a:hover {
     text-decoration: underline;
     color: #3273dc;
 }
+
+@media screen and (max-width: 450px) {
+    article h1 {
+        font-size: 1.4rem;
+    }
+    article h2 {
+        font-size: 1.4rem;
+    }
+}
