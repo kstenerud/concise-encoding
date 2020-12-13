@@ -30,24 +30,25 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 
 #### Supported Types
 
-| Type            | Description                                             |
-| --------------- | ------------------------------------------------------- |
-| **Nil**         | No data (NULL)                                          |
-| **Boolean**     | True or false                                           |
-| **Integer**     | Positive or negative, arbitrary size                    |
-| **Float**       | Binary or decimal floating point, arbitrary size        |
-| **UUID**        | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
-| **Time**        | Date, time, or timestamp, arbitrary size                |
-| **URI**         | [RFC-3986 URI](https://tools.ietf.org/html/rfc3986)     |
-| **String**      | UTF-8 string, arbitrary length                          |
-| **Typed Array** | Array of fixed-width type, arbitrary length             |
-| **List**        | List of objects                                         |
-| **Map**         | Mapping keyable objects to other objects                |
-| **Markup**      | Presentation data, similar to XML                       |
-| **Reference**   | Points to previously defined objects or other documents |
-| **Metadata**    | Data about data                                         |
-| **Comment**     | Arbitrary comments about anything, nesting supported    |
-| **Custom**      | User-defined data type                                  |
+| Type                                  | Description                                             |
+| ------------------------------------- | ------------------------------------------------------- |
+| [Nil](other-basic-types)              | No data (NULL)                                          |
+| [Boolean](numeric-types)              | True or false                                           |
+| [Integer](numeric-types)              | Positive or negative, arbitrary size                    |
+| [Float](numeric-types)                | Binary or decimal floating point, arbitrary size        |
+| [UUID](other-basic-types)             | [RFC-4122 UUID]()(https://tools.ietf.org/html/rfc4122)  |
+| [Time](other-basic-types)             | Date, time, or timestamp, arbitrary size                |
+| [Resource ID](string-and-string-like) | URL, URI, IRI, etc                                      |
+| [String](string-and-string-like)      | UTF-8 string, arbitrary length                          |
+| [Typed Array](containers)             | Array of fixed-width type, arbitrary length             |
+| [List](containers)                    | List of objects                                         |
+| [Map](containers)                     | Mapping keyable objects to other objects                |
+| [Markup](containers)                  | Presentation data, similar to XML                       |
+| [Relationship](relationships)         | Semantic relationship data compatible with [RDF]()(https://www.w3.org/2001/sw/wiki/RDF) |
+| [Reference](references)               | Points to previously defined objects or other documents |
+| [Metadata](metadata)                  | Data about data                                         |
+| [Comment](relationships)              | Arbitrary comments about anything, nesting supported    |
+| [Custom](custom-types)                | User-defined data type                                  |
 
 
 
@@ -101,11 +102,13 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |
 | List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |
+| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |
 | Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
 | Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
 | Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| URL           |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
 | Metadata      |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Custom        |    Y    |     |      |      |      |             |       |           |             |        |   Y   |
 
 #### Features
 
@@ -137,81 +140,182 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 
 
-Example
--------
+Examples
+--------
 
-Here's an example of the text format in action. Everything here is 1:1 compatible with the binary format.
+All examples are valid [Concise Text Encoding](https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md) documents that can be transparently 1:1 converted to/from [Concise Binary Encoding](https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md)
 
-```
+#### Numeric Types
+
+```cte
 c1
-// _ct is the creation time, in this case referring to the entire document
-(_ct = 2019-9-1/22:14:01)
 {
-    /* Comments look very C-like, except:
-       /* Nested comments are allowed! */
-    */
-    // Notice that there are no commas in maps and lists
-    (metadata_about_a_list = "something interesting about a_list")
-    a_list          = [1 2 "a string"]
-    map             = {2=two 3=3000 1=one}
-    string          = "A string value"
-    boolean         = @true
-    "binary int"    = -0b10001011
-    "octal int"     = 0o644
-    "regular int"   = -10_000_000
-    "hex int"       = 0xfffe0001
-    "decimal float" = -14.125
-    "hex float"     = 0x5.1ec4p20
-    uuid            = @f1ce4567-e89b-12d3-a456-426655440000
-    date            = 2019-7-1
-    time            = 18:04:00.940231541/E/Prague
-    timestamp       = 2010-7-15/13:28:15.415942344/Z
-    null            = @null
-    bytes           = |u8x 10 ff 38 9a dd 00 4f 4f 91|
-    "uint16 array"  = |u16x ff91 84c4 009f 3aa1|
-    url             = |u https://example.com/|
-    email           = |u mailto:me@somewhere.com|
-    1.5             = "Keys don't have to be strings"
-    verbatim-seq    = "For string data with many difficult to use characters, \
-        use a verbatim sequence. \.ZZ Chars like " and \ etcZZ can appear \
-        inside without needing individual escapes."
-    tabs.go         = "\.@@
-package tabs
-
-import (
-  "fmt"
-  "strings"
-)
-
-// Generate a tab-separated string representation of values
-func ToColumns(values ...interface{}) string {
-  var b strings.Builder
-  for i, v := range values {
-    if i > 0 {
-      b.WriteString("\t")
-    }
-    b.WriteString(fmt.Sprintf("%v", v))
-  }
-  return b.String()
+    boolean       = @true
+    binary-int    = -0b10001011
+    octal-int     = 0o644
+    decimal-int   = -10000000
+    hex-int       = 0xfffe0001
+    very-long-int = 100000000000000000000000000000000000009
+    decimal-float = -14.125
+    hex-float     = 0x5.1ec4p20
+    very-long-flt = 4.957234990634579394723460546348e1000000000
+    not-a-number  = @nan
+    infinity      = @inf
+    neg-infinity  = -@inf
 }
-@@"
-    marked_object   = &id1:{
-                               description = "This map will be referenced later using $id1"
-                               value = -@inf
-                               child_elements = @nil
-                               recursive = $id1
-                           }
-    ref1            = $id1
-    ref2            = $id1
-    outside_ref     = $|u https://somewhere.else.com/path/to/document.cte#some_id|
-    // The markup type is good for presentation data
-    main-view       = <View:
-                          <Image src=u"images/avatar-image.jpg">
-                          <Text,
-                              Hello! Please choose a name!
-                          >
-                          <TextInput id=name style={height=40 borderColor=gray}, Name me! >
-                      >
+```
+
+#### String and String-Like
+
+```cte
+c1
+{
+    unquoted-str = no_quotes-needed
+    quoted-str   = "Quoted strings support escapes: \n \t \27f"
+    url          = |r https://example.com/|
+    email        = |r mailto:me@somewhere.com|
+}
+```
+
+#### Other Basic Types
+
+```cte
+c1
+{
+    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
+    date      = 2019-07-01
+    time      = 18:04:00.940231541/E/Prague
+    timestamp = 2010-07-15/13:28:15.415942344/Z
+    null      = @null
+}
+```
+
+#### Containers
+
+```cte
+c1
+{
+    list          = [1 2.5 "a string"]
+    map           = {one=1 2=two today=2020-09-10}
+    bytes         = |u8x 01 ff de ad be ef|
+    int16-array   = |i16 7374 17466 -9957|
+    uint16-hex    = |u16x 91fe 443a 9c15|
+    float32-array = |f32 1.5e10 -8.31e-12|
+}
+```
+
+#### Markup
+
+```cte
+c1
+{
+    main-view = &lt;View,
+        &lt;Image src=|r images/avatar-image.jpg|&gt;
+        &lt;Text id=HelloText,
+            Hello! Please choose a name!
+        &gt;
+        &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+            HelloText.SetText("Hello, " + NameInput.Text + "!")
+        @@",
+            Name me!
+        &gt;
+    &gt;
+}
+```
+
+#### References
+
+```cte
+c1
+{
+    // Entire map will be referenced later as $id1
+    marked_object = &id1:{
+        recursive = $id1
+    }
+    ref1        = $id1
+    ref2        = $id1
+
+    // Reference pointing to part of another document.
+    outside_ref = $|r https://xyz.com/document.cte#some_id|
+}
+```
+
+#### Metadata
+
+```cte
+c1
+// Metadata about the entire document
+(
+    created     = 2019-9-1/22:14:01
+    description = "A demonstration"
+    version     = "1.1.0"
+){
+    children = (
+        // Metadata about the list of children
+        description = "Homer's children"
+    )[Bart Lisa Maggie]
+}
+```
+
+#### Relationships
+
+```cte
+c1 (
+    // Marked base resource identifiers used for concatenation.
+    // (Stored in metadata because they themselves aren't part of the data)
+    rdf = [
+        &people:|r https://springfield.gov/people#|
+        &e:|r https://example.org/|
+    ]
+){
+    // Map-encoded relationships (the map is the subject)
+    $people:homer_simpson = {
+
+        /* $e refers to |r https://example.org/|
+         * $e:wife concatenates to |r https://example.org/wife|
+         */
+        $e:wife = $people:marge_simpson
+
+        // Multiple relationship objects
+        $e:regrets = [
+            $firing
+            $forgotten_birthday
+        ]
+    }
+
+    // Relationship containers (@[subject predicate object])
+    rdf-statements = [
+        &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
+        &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
+        &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
+
+        // Multiple relationship subjects
+        @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
+    ]
+}
+```
+
+#### Constants
+
+```cte
+c1
+{
+    /* Given: Actual type and value of "eggshell" and
+     *        "navy-blue" have been defined in a schema
+     */
+    wall_color = #eggshell
+    door_color = #navy-blue
+}
+```
+
+#### Custom Types
+
+```cte
+c1
+{
+    // Custom types are user-defined, with user-supplied codecs.
+    custom-text   = |ct cplx(2.94+3i)|
+    custom-binary = |cb 04 f6 28 3c 40 00 00 40 40|
 }
 ```
 
