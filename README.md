@@ -30,8 +30,8 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 
 #### Supported Types
 
-| Type                                  | Description                                             |
-| ------------------------------------- | ------------------------------------------------------- |
+| Type                                   | Description                                             |
+| -------------------------------------- | ------------------------------------------------------- |
 | [Nil](#other-basic-types)              | No data (NULL)                                          |
 | [Boolean](#numeric-types)              | True or false                                           |
 | [Integer](#numeric-types)              | Positive or negative, arbitrary size                    |
