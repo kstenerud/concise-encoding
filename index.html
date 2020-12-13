@@ -101,7 +101,7 @@
                 <li><a class="type-link" href="#containers">Typed Arrays (bytes, ints, floats, etc)</a></li>
                 <li><a class="type-link" href="#references">Reference (for recursive/repetitive data)</a></li>
                 <li><a class="type-link" href="#metadata">Metadata</a></li>
-                <li><a class="type-link" href="#metadata">Comment</a></li>
+                <li><a class="type-link" href="#relationships">Comment</a></li>
                 <li><a class="type-link" href="#constants">Constants</a></li>
                 <li><a class="type-link" href="#other_types">Null</a></li>
                 <li><a class="type-link" href="#custom_types">Custom (encapsulate your own)</a></li>
@@ -238,14 +238,14 @@ c1
                 <code>
 c1
 {
+    // Entire map will be referenced later as $id1
     marked_object = &id1:{
-        description    = "Map will be referenced later as $id1"
-        value          = -@inf
-        child_elements = @null
-        recursive      = $id1
+        recursive = $id1
     }
     ref1        = $id1
     ref2        = $id1
+
+    // Reference pointing to part of another document.
     outside_ref = $|r https://xyz.com/document.cte#some_id|
 }
                 </code>
@@ -268,14 +268,10 @@ c1
     description = "A demonstration"
     version     = "1.1.0"
 ){
-    /* Comments look very C-like, except:
-       /* Nested comments are allowed! */
-    */
-
-    // Double-slash comments are also possible.
-
-    (description = "Homer's children")
-    children = [Bart Lisa Maggie]
+    children = (
+        // Metadata about the list of children
+        description = "Homer's children"
+    )[Bart Lisa Maggie]
 }
                 </code>
             </pre>
@@ -301,8 +297,9 @@ c1 (
     // Map-encoded relationships (the map is the subject)
     $people:homer_simpson = {
 
-        // $e refers to |r https://example.org/|
-        // $e:wife concatenates to |r https://example.org/wife|
+        /* $e refers to |r https://example.org/|
+         * $e:wife concatenates to |r https://example.org/wife|
+         */
         $e:wife = $people:marge_simpson
 
         // Multiple relationship objects
@@ -337,8 +334,9 @@ c1 (
                 <code>
 c1
 {
-    // Given: Actual type and value of "eggshell" and
-    //        "navy-blue" have been defined in a schema
+    /* Given: Actual type and value of "eggshell" and
+     *        "navy-blue" have been defined in a schema
+     */
     wall_color = #eggshell
     door_color = #navy-blue
 }
