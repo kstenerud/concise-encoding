@@ -824,7 +824,7 @@ Other Types
 
 ### Null
 
-Denotes the absence of data.
+Denotes the absence of data. "Absence of data" is not the same as "not present". To signal omission of a field in a map, simply do not include the key.
 
 **Note**: Null is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and should be used with caution.
 
@@ -986,7 +986,7 @@ Extraneous whitespace in a markup contents section is elided before comparison. 
 
 #### Null
 
-Two null values are considered equivalent.
+Null values are considered equivalent to each other.
 
 #### Comments
 
@@ -1002,7 +1002,6 @@ Padding is always ignored when testing for equivalence.
 Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
 
 * Comments are compared, but extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
-* Keys mapping to null values are not equivalent to maps where the key is absent.
 * Arrays must be of the same type to be considered equivalent.
 
 
