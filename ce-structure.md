@@ -352,7 +352,16 @@ A resource identifier is a text-based (UTF-8) globally unique identifier that ca
 
 A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
 
-Fixed width types such as boolean, signed/unsigned integer (8-64 bit), binary float (16-64 bit), and UUID can be stored in typed arrays. For other types, use a [list](#list).
+The following element types are supported in typed arrays. For other types, use a [list](#list).
+
+| Type                 | Element Sizes (bits) |
+| -------------------- | -------------------- |
+| Boolean              | 1                    |
+| Unsigned Int         | 8, 16, 32, 64        |
+| Signed Int           | 8, 16, 32, 64        |
+| BFloat               | 16                   |
+| IEEE754 Binary Float | 32, 64               |
+| UUID                 | 128                  |
 
 Array elements can be written using any of the representations allowed for the specified type and size.
 
