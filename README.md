@@ -16,7 +16,7 @@ Contents
 * [Implementations](#implementations)
 * [Remaining Tasks](#remaining-tasks)
 * [Comparison to Other Formats](#comparison-to-other-formats)
-* [Example](#example)
+* [Examples](#examples)
 * [License](#license)
 
 
@@ -32,11 +32,10 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 
 | Type                                   | Description                                             |
 | -------------------------------------- | ------------------------------------------------------- |
-| [Nil](#other-basic-types)              | No data (NULL)                                          |
 | [Boolean](#numeric-types)              | True or false                                           |
 | [Integer](#numeric-types)              | Positive or negative, arbitrary size                    |
 | [Float](#numeric-types)                | Binary or decimal floating point, arbitrary size        |
-| [UUID](#other-basic-types)             | [RFC-4122 UUID]()(https://tools.ietf.org/html/rfc4122)  |
+| [UUID](#other-basic-types)             | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
 | [Time](#other-basic-types)             | Date, time, or timestamp, arbitrary size                |
 | [Resource ID](#string-and-string-like) | URL, URI, IRI, etc                                      |
 | [String](#string-and-string-like)      | UTF-8 string, arbitrary length                          |
@@ -44,11 +43,12 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 | [List](#containers)                    | List of objects                                         |
 | [Map](#containers)                     | Mapping keyable objects to other objects                |
 | [Markup](#containers)                  | Presentation data, similar to XML                       |
-| [Relationship](#relationships)         | Semantic relationship data compatible with [RDF]()(https://www.w3.org/2001/sw/wiki/RDF) |
-| [Reference](#references)               | Points to previously defined objects or other documents |
+| [Relationship](#relationships)         | Semantic relationship data compatible with [RDF](https://www.w3.org/2001/sw/wiki/RDF) |
+| [Reference](#references)               | Points to objects defined elsewhere                     |
 | [Metadata](#metadata)                  | Data about data                                         |
 | [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
 | [Custom](#custom-types)                | User-defined data type                                  |
+| [Null](#other-basic-types)             | No data                                                 |
 
 
 
