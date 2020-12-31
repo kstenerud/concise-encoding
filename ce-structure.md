@@ -679,8 +679,8 @@ A reference is followed by either a [marker ID](#marker-id) or a [resource ident
 
  * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference used as a map key must refer to a [keyable type](#keyable-types).
- * A resource reference must not be used as a map key.
- * Forward references within a document are allowed.
+ * A resource reference must not be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
+ * References may refer to objects marked later in the document (forward references).
  * Recursive references are allowed.
  * A resource identifier reference must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
@@ -712,6 +712,8 @@ c1 {
 A metadata map is a **referring**, **visible** pseudo-object containing keyed values which are to be associated with the object following the metadata map.
 
 Metadata is data about the data, which might or might not be of interest to a consumer of the data. Implementations must allow the user to choose whether to receive or ignore metadata maps.
+
+**Note**: Regardless of user preference for receiving metadata events, metadata maps must still be examined by decoders because they might contain [marked objects](#marker) that are referenced in other parts of the document.
 
 A metadata map can refer to another metadata map (meta-metadata).
 
@@ -846,9 +848,9 @@ Concatenation is an operator that concatenates a [string](#string) onto a [resou
  * The concatenation operator
  * A [string](#string) or a positive integer (which is converted to a base-10 string representation)
 
-The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation. Any referring pseudo-objects preceding the initial resource identifier of a concatenation operation actually refers to the result of the operation, not the initial resource identifier.
+The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation.
 
-Chained concatenation operators (for example `|r https://example.com/|:b:l:a:h`, resulting in `|r https://example.com/blah|`) are not allowed.
+When a referring pseudo-object precedes the initial resource identifier of a concatenation operation, it actually refers to the result of the operation, not the initial resource identifier (for example, in `&ref:|r http://example.com/|:blah`, the marker `ref` refers to the concatenated resource `http://example.com/blah`, not `http://example.com/`).
 
 
 
@@ -857,7 +859,7 @@ Text Safety
 
 Because Concise Encoding is a twin format (text and binary), text sequences in some contexts must be restricted to text-safe codepoints. All text sequences must be encoded in UTF-8.
 
-The following are text-unsafe:
+The following Unicode codepoints are text-unsafe:
 
  * Unassigned characters
  * Reserved characters
@@ -866,7 +868,7 @@ The following are text-unsafe:
  * Surrogate pairs
  * Byte order mark
  * Zero-width characters
- * Line breaks
+ * Line breaks, except for LF (u+000a), and CR (u+000d)
  * Control characters, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
 
 
@@ -901,8 +903,8 @@ These are not unquoted-safe strings:
     String with whitespace
     disallowed*symbol
     contains-star-＊-lookalike
-    has.dot
-    has．dot-lookalike
+    contains.dot
+    contains．dot-lookalike
 
 
 ### Confusable Characters
@@ -963,7 +965,7 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 #### Numeric Types
 
-Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss, they are equivalent.
+Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss after type coercion, they are equivalent.
 
 **Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet).
 
@@ -985,7 +987,7 @@ The equivalence rules for numeric types also extends to numeric arrays. For exam
 
 Containers must be of the same type. For example, a map is never equivalent to a metadata map.
 
-Containers must contain the same number of elements, and their elements must be equivalent, with one exception: for map-like containers, keys mapping to null are considered equivalent to the same type of map where the key is not present.
+Containers must contain the same number of elements, and their elements must be equivalent.
 
 By default, list types must be compared ordered and map types unordered, unless their ordering was otherwise specified by the schema.
 
@@ -1010,8 +1012,8 @@ Padding is always ignored when testing for equivalence.
 
 Strict equivalence concerns itself with differences that can still technically have an impact on how the document is interpreted, even if the chances are low:
 
+* Objects must be of the same type and size.
 * Comments are compared, but extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
-* Arrays must be of the same type to be considered equivalent.
 
 
 
