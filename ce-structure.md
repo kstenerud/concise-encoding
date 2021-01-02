@@ -842,15 +842,40 @@ Denotes the absence of data. "Absence of data" is not the same as "not present".
 
 ### Concatenation
 
-Concatenation is an operator that concatenates a [string](#string) onto a [resource identifier](#resource-identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
+Concatenation is an operator that concatenates a [string](#string) onto a [resource identifier](#resource-identifier) (or [reference](#reference) to resource identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
 
  * A [resource identifier](#resource-identifier)
  * The concatenation operator
- * A [string](#string) or a positive integer (which is converted to a base-10 string representation)
+ * A [string](#string) or a [positive integer](#integer) (which is converted to a base-10 string representation)
 
 The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation.
 
-When a referring pseudo-object precedes the initial resource identifier of a concatenation operation, it actually refers to the result of the operation, not the initial resource identifier (for example, in `&ref:|r http://example.com/|:blah`, the marker `ref` refers to the concatenated resource `http://example.com/blah`, not `http://example.com/`).
+#### Limitations
+
+In order to keep implementation complexity down, concatenation has the following limitations:
+
+ * The left part of a concatenation must be a [resource ID](#resource-identifier) or a **local** [reference](#reference) to a [resource ID](#resource-identifier) (`$|r http://x.com/|:abcd` is invalid, but `|r http://x.com/|:abcd` is valid, and `$1:abcd` is valid if `&1:|r http://x.com/|` exists elsewhere in the document).
+ * The right part of a concatenation must be a [string](#string) (`|r http://x.com/|:1234` is invalid).
+ * The string portion must not be a [reference](#reference) (`|r http://x.com/|:$ref-to-string` is invalid).
+ * Concatenations must not be chained (`|r http://x.com/|:a:b` is invalid).
+ * When a referring pseudo-object precedes the initial resource identifier of a concatenation operation, it actually refers to the result of the operation, not the initial resource identifier (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not `http://x.com/`).
+
+**Example**:
+
+```cte
+c1 (
+    // Defined in metadata so that it doesn't become part of the data.
+    refs = [
+        &ex:|r http://example.com/|     // "ex" refers to http://example.com/
+    ]
+)[
+    |r http://example.com/|:path        // http://example.com/path
+    |r http://example.com/|:"long/path" // http://example.com/long/path
+    $ex:path                            // http://example.com/path
+    &long-path:$ex:"long/path"          // "long-path" refers to http://example.com/long/path
+    $long-path:"a/b/c/d"                // http://example.com/long/path/a/b/c/d
+]
+```
 
 
 
