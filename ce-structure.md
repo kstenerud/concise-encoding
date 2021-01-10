@@ -24,7 +24,7 @@ Contents
   - [Boolean](#boolean)
   - [Integer](#integer)
   - [Floating Point](#floating-point)
-  - [UUID](#uuid)
+  - [UID](#uid)
 * [Temporal Types](#temporal-types)
   - [Date](#date)
   - [Time](#time)
@@ -150,9 +150,9 @@ Both decimal and binary floating point numbers have representations for the foll
 * Two kinds of NaN (not-a-number): Signaling and quiet
 
 
-### UUID
+### UID
 
-The 128-bit universally unique identifier must be structured according to the [rfc4122](https://tools.ietf.org/html/rfc4122) definition of the UUID string representation (in CTE) or binary representation (in CBE).
+A unique identifier. Concise encoding version 1 uses [rfc4122 UUIDs](https://tools.ietf.org/html/rfc4122) as the unique ID type.
 
 
 
@@ -361,7 +361,7 @@ The following element types are supported in typed arrays. For other types, use 
 | Signed Int           | 8, 16, 32, 64        |
 | BFloat               | 16                   |
 | IEEE754 Binary Float | 32, 64               |
-| UUID                 | 128                  |
+| UID                  | 128                  |
 
 Array elements can be written using any of the representations allowed for the specified type and size.
 
@@ -654,7 +654,7 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
 #### Rules
 
- * A marker cannot mark a pseudo-object except for a reference or a constant.
+ * A marker ID cannot be followed by a comment, metadata, or another marker.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
 

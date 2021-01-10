@@ -37,7 +37,7 @@ Contents
     - [Special Floating Point Values](#special-floating-point-values)
     - [Floating Point Rules](#floating-point-rules)
   - [Numeric Whitespace](#numeric-whitespace)
-  - [UUID](#uuid)
+  - [UID](#uid)
 * [Temporal Types](#temporal-types)
   - [Date](#date)
   - [Time](#time)
@@ -359,9 +359,9 @@ Invalid:
  * `-0_xa.fee31p100`
 
 
-### UUID
+### UID
 
-The 128-bit universally unique identifier begins with an at (`@`) character, and must follow the UUID string representation defined in [rfc4122](https://tools.ietf.org/html/rfc4122).
+A unique identifier. CTE begins a unique identifier with an at (`@`) character, followed by an [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
 Example:
 
@@ -488,7 +488,7 @@ The following array types are available:
 | `f16`  | 16-bit floating point (bfloat)              | Element       |
 | `f32`  | 32-bit floating point (ieee754)             | Element       |
 | `f64`  | 64-bit floating point (ieee754)             | Element       |
-| `u`    | 128-bit UUID                                | Element       |
+| `u`    | 128-bit UID                                 | Element       |
 | `r`    | [Resource Identifier](#resource-identifier) | String-Like   |
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
@@ -510,7 +510,7 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 #### Special Array Element Rules
 
- * UUID and named array element values must be written without the initial `@` sentinel.
+ * UID and named array element values must be written without the initial `@` sentinel.
  * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`). The boolean representations must not be mixed (e.g. `|b 1 0 1 true|` is invalid).
 
 **Examples**:
