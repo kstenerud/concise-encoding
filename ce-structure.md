@@ -475,7 +475,7 @@ Markup is a specialized data structure composed of a name, a map (containing att
 
     [name] [attributes (optional)] [contents (optional)]
 
- * Name is a [keyable type](#keyable-types).
+ * Name is a [keyable type](#keyable-types). A markup name must not be preceded by metadata or comments.
  * Attributes behaves like a [map](#map)
  * The contents section behaves similarly to a [list](#list), except that it can only contain:
    - [Content strings](#content-string)
@@ -654,6 +654,7 @@ A marker ID is a unique (to the document) identifier for marked objects. A marke
 
 #### Rules
 
+ * A marker cannot mark a pseudo-object except for a reference or a constant.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
  * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
 
