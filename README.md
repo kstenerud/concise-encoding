@@ -48,7 +48,7 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 | [Metadata](#metadata)                  | Data about data                                         |
 | [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
 | [Custom](#custom-types)                | User-defined data type                                  |
-| [NA](#other-basic-types)               | Data missing                                            |
+| [NA](#other-basic-types)               | Not Available (data missing)                            |
 
 
 
@@ -128,7 +128,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
 
-* **Null**: Concise Encoding doesn't actually support null, but it has the related NA (not available) type.
+* **Null**: Concise Encoding doesn't actually support null, but it has the more restricted NA (not available) type.
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
 * **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
