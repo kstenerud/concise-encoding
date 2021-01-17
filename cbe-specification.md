@@ -58,7 +58,7 @@ Contents
   - [Comment](#comment)
   - [Padding](#padding)
 * [Other Types](#other-types)
-  - [Null](#null)
+  - [NA](#na)
   - [Concatenation](#concatenation)
   - [RESERVED](#reserved)
 * [Smallest Possible Size](#smallest-possible-size)
@@ -136,7 +136,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  7b | 123 | End of Container          |                                                 |
 |  7c | 124 | Boolean False             |                                                 |
 |  7d | 125 | Boolean True              |                                                 |
-|  7e | 126 | Null (no data)            |                                                 |
+|  7e | 126 | NA (data missing)         |                                                 |
 |  7f | 127 | Padding                   |                                                 |
 |  80 | 128 | String: 0 bytes           |                                                 |
 |  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                         |
@@ -556,9 +556,9 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 Other Types
 -----------
 
-### Null
+### NA
 
-    [7e] = No data
+    [7e] = Data missing
 
 
 ### Concatenation

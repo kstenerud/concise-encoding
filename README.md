@@ -48,7 +48,7 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 | [Metadata](#metadata)                  | Data about data                                         |
 | [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
 | [Custom](#custom-types)                | User-defined data type                                  |
-| [Null](#other-basic-types)             | No data                                                 |
+| [NA](#other-basic-types)               | Data missing                                            |
 
 
 
@@ -91,7 +91,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 | Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
-| Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
+| Null          |    Y*   |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
 | Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
@@ -128,6 +128,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
 
+* **Null**: Concise Encoding doesn't actually support null, but it has the related NA (not available) type.
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
 * **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
@@ -186,7 +187,7 @@ c1
     date      = 2019-07-01
     time      = 18:04:00.940231541/E/Prague
     timestamp = 2010-07-15/13:28:15.415942344/Z
-    null      = @null
+    na        = @na
 }
 ```
 

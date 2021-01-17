@@ -72,7 +72,7 @@ Contents
   - [Constant](#constant)
     - [Explicit Constant](#explicit-constant)
 * [Other Types](#other-types)
-  - [Null](#null)
+  - [NA](#na)
   - [Concatenation](#concatenation)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
@@ -109,7 +109,7 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 
 **Examples**:
 
- * CTE v1 empty document: `c1 @null`
+ * CTE v1 empty document: `c1 @na`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 [a b c]`
  * CTE v1 document containing a top-level map: `c1 {a=1 b=2 c=3}`
@@ -244,7 +244,7 @@ The version specifier and the top-level object must be separated by whitespace.
 **Example**:
 
 * Version specifier (CTE version 1): `c1`
-* Complete (and empty) document: `c1 @null`
+* Complete (and empty) document: `c1 @na`
 
 
 
@@ -608,7 +608,7 @@ c1 [
     two
     3.1
     {}
-    @null
+    @na
 ]
 ```
 
@@ -837,9 +837,9 @@ If a decoder has access to the schema that defines a particular constant, the ex
 Other Types
 -----------
 
-### Null
+### NA
 
-Null is encoded as `@null`
+NA is encoded as `@na`
 
 
 ### Concatenation
@@ -935,7 +935,7 @@ Examples:
 ### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between a sentinel character and its associated value (`@ null`, `& 1234`, `$ |r mydoc.cbe|`, `# Planck_Js` are invalid).
+ * Between a sentinel character and its associated value (`@ na`, `& 1234`, `$ |r mydoc.cbe|`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).

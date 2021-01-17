@@ -78,9 +78,9 @@ Containers can contain mixed types. Not all languages support this, but for such
 Containers are ordered by default. It's easier to start with tighter constraints and relax them on demand than to go the other way around.
 
 
-### Nil
+### NA
 
-The `nil` type perpetuates the null problem (null is a problematic type in general). However, it's ubiquitous enough that I felt compelled to include it.
+The NA type is designed to avoid the [null problem](https://en.wikipedia.org/wiki/Null_pointer) while still allowing for the very real possibility of missing data.
 
 
 ### Time

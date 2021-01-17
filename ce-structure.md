@@ -53,7 +53,7 @@ Contents
   - [Padding](#padding)
   - [Constant](#constant)
 * [Other Types](#other-types)
-  - [Null](#null)
+  - [NA](#na)
   - [Concatenation](#concatenation)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
@@ -86,7 +86,7 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an empty document, store null as the top-level object.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an empty document, store [NA](#na) as the top-level object.
 
     [version specifier] [object]
 
@@ -94,7 +94,7 @@ The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but m
 
 **Examples**:
 
- * Empty document (CTE version 1): `c1 @null` (in [CBE](cbe-specification.md): [`03 01 7e`])
+ * Empty document (CTE version 1): `c1 @na` (in [CBE](cbe-specification.md): [`03 01 7e`])
  * Document containing the top-level integer value 1000: `c1 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
  * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
@@ -378,7 +378,7 @@ Array elements can be written using any of the representations allowed for the s
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute [null](#null).
+Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute [NA](#na).
 
 Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
 
@@ -425,7 +425,7 @@ c1 [
     two
     3.1
     {}
-    @null
+    @na
 ]
 ```
 
@@ -455,7 +455,7 @@ Only certain types can be used as keys in map-like containers:
 * [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
 
-Null must not be used as a key.
+[NA](#na) must not be used as a key.
 
 **Example**:
 
@@ -834,11 +834,20 @@ Constants are only available in CTE documents; CBE documents aren't meant for hu
 Other Types
 -----------
 
-### Null
+### NA
 
-Denotes the absence of data. "Absence of data" is not the same as "not present". To signal omission of a field in a map, simply do not include the key.
+"Not Available"
 
-**Note**: Null is a [contentious value in computer science](https://en.wikipedia.org/wiki/Null_pointer), and should be used with caution.
+Denotes missing data (data that should be there but is not for some reason). A value of NA should be accompanied by an explanation as to why the data is missing.
+
+Some possible reasons for NA:
+
+ * The system doesn't have the data.
+ * Rules prevent the data from being provided.
+ * There was an error while fetching or computing the data.
+ * The data cannot be provided in the requested form.
+
+A value of NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in this case.
 
 
 ### Concatenation
@@ -1021,9 +1030,9 @@ By default, list types must be compared ordered and map types unordered, unless 
 
 Extraneous whitespace in a markup contents section is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 
-#### Null
+#### NA
 
-Null values are considered equivalent to each other.
+[NA](#na) values are considered equivalent to each other.
 
 #### Comments
 
