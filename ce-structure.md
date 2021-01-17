@@ -55,6 +55,7 @@ Contents
 * [Other Types](#other-types)
   - [NA](#na)
   - [Concatenation](#concatenation)
+* [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
   - [Confusable Characters](#confusable-characters)
@@ -86,7 +87,7 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an empty document, store [NA](#na) as the top-level object.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an [empty document](#empty-document), store [NA](#na) with reason NA as the top-level object.
 
     [version specifier] [object]
 
@@ -94,7 +95,7 @@ The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but m
 
 **Examples**:
 
- * Empty document (CTE version 1): `c1 @na` (in [CBE](cbe-specification.md): [`03 01 7e`])
+ * Empty document: `c1 @na:@na` (in [CBE](cbe-specification.md): [`03 01 7e 7e`])
  * Document containing the top-level integer value 1000: `c1 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
  * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
@@ -897,6 +898,15 @@ c1 (
     $long-path:"a/b/c/d"                // http://example.com/long/path/a/b/c/d
 ]
 ```
+
+
+Empty Document
+--------------
+
+An empty document is signified by using the [NA](#na) type with reason NA as the top-level object:
+
+* `c1 @na:@na` (in CTE: [`03 01 7e 7e`])
+* `c1 @na` Shorthand form (CTE only)
 
 
 

@@ -74,6 +74,7 @@ Contents
 * [Other Types](#other-types)
   - [NA](#na)
   - [Concatenation](#concatenation)
+* [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
 * [Pretty Printing](#pretty-printing)
@@ -878,6 +879,23 @@ c1 {
     // https://example.com/foo/bar
     example_5 = $ref1:"foo/bar"
 }
+```
+
+
+
+Empty Document
+--------------
+
+An empty document in CBE is signified by using the [NA](#na) type with reason NA as the top-level object:
+
+```cte
+c1 @na:@na
+```
+
+Or the shorthand form:
+
+```cte
+c1 @na
 ```
 
 

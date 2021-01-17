@@ -61,6 +61,7 @@ Contents
   - [NA](#na)
   - [Concatenation](#concatenation)
   - [RESERVED](#reserved)
+* [Empty Document](#empty-document)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
 * [Version History](#version-history)
@@ -575,6 +576,15 @@ TODO
 ### RESERVED
 
 This type is reserved for future expansion of the format, and must not be used.
+
+
+
+Empty Document
+--------------
+
+An empty document in CBE is signified by using the [NA](#na) type with reason NA as the top-level object:
+
+    [03 01 7e 7e]
 
 
 
