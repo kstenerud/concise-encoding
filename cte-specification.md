@@ -839,7 +839,14 @@ Other Types
 
 ### NA
 
-NA is encoded as `@na`
+NA is encoded as `@na:` followed immediately by the reason (no whitespace). There is also the special form `@na` (no colon), which is shorthand for `@na:@na` (not available with no reason given).
+
+**Examples**:
+
+ * `@na:"Insufficient privileges"` (not available, with an English language reason)
+ * `@na:404` (not available for reason code 404)
+ * `@na:@na` (not available, with no reason given)
+ * `@na` (shorthand for `@na:@na`)
 
 
 ### Concatenation

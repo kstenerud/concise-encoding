@@ -838,7 +838,9 @@ Other Types
 
 "Not Available"
 
-Denotes missing data (data that should be there but is not for some reason). A value of NA should be accompanied by an explanation as to why the data is missing.
+Denotes missing data (data that should be there but is not for some reason).
+
+A value of NA must be followed immediately by a "reason" value indicating the reason why the data is unavailable. Only real objects (or pseudo-objects that stand in for real objects such as references or constants) can fill the reason field (there must not be comments, metadata, or markers in between the NA and its reason).
 
 Some possible reasons for NA:
 
@@ -847,7 +849,16 @@ Some possible reasons for NA:
  * There was an error while fetching or computing the data.
  * The data cannot be provided in the requested form.
 
-A value of NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in this case.
+To specify NA without a reason, simply use NA followed by another NA. The second NA in this special case doesn't itself require another reason field.
+
+**Note**: A value of NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in this case.
+
+**Examples**:
+
+ * `@na:"Insufficient privileges"` (not available, with an English language reason)
+ * `@na:404` (not available for reason code 404)
+ * `@na:@na` (not available, with no reason given)
+ * `@na` (shorthand form in CTE for `@na:@na`)
 
 
 ### Concatenation
@@ -1032,7 +1043,7 @@ Extraneous whitespace in a markup contents section is elided before comparison. 
 
 #### NA
 
-[NA](#na) values are considered equivalent to each other.
+[NA](#na) values are always considered equivalent to each other regardless of the reasons.
 
 #### Comments
 
