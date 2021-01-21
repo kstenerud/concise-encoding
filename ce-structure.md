@@ -864,22 +864,22 @@ To specify NA without a reason, simply use NA followed by another NA. The second
 
 ### Concatenation
 
-Concatenation is an operator that concatenates a [string](#string) onto a [resource identifier](#resource-identifier) (or [reference](#reference) to resource identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
+Concatenation is an operator that concatenates a [string](#string) or a [numeric type](#numeric-types) onto a [resource identifier](#resource-identifier) (or [reference](#reference) to resource identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
 
  * A [resource identifier](#resource-identifier)
  * The concatenation operator
- * A [string](#string) or a [positive integer](#integer) (which is converted to a base-10 string representation)
+ * A [string](#string)
 
-The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation.
+The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects other than padding) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation.
 
 #### Limitations
 
 In order to keep implementation complexity down, concatenation has the following limitations:
 
  * The left part of a concatenation must be a [resource ID](#resource-identifier) or a **local** [reference](#reference) to a [resource ID](#resource-identifier) (`$|r http://x.com/|:abcd` is invalid, but `|r http://x.com/|:abcd` is valid, and `$1:abcd` is valid if `&1:|r http://x.com/|` exists elsewhere in the document).
- * The right part of a concatenation must be a [string](#string) (`|r http://x.com/|:1234` is invalid).
- * The string portion must not be a [reference](#reference) (`|r http://x.com/|:$ref-to-string` is invalid).
- * Concatenations must not be chained (`|r http://x.com/|:a:b` is invalid).
+ * The right part of a concatenation must be a [string](#string) (`|r http://x.com/|:1234` is invalid; use `|r http://x.com/|:"1234"` instead).
+ * The right-side portion must not be a [reference](#reference) (`|r http://x.com/|:$ref-to-string` is invalid).
+ * Concatenations cannot be chained (`|r http://x.com/|:a:b` is invalid).
  * When a referring pseudo-object precedes the initial resource identifier of a concatenation operation, it actually refers to the result of the operation, not the initial resource identifier (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not `http://x.com/`).
 
 **Example**:
@@ -900,13 +900,15 @@ c1 (
 ```
 
 
+
 Empty Document
 --------------
 
 An empty document is signified by using the [NA](#na) type with reason NA as the top-level object:
 
-* `c1 @na:@na` (in CTE: [`03 01 7e 7e`])
-* `c1 @na` Shorthand form (CTE only)
+* In CBE: [`03 01 7e 7e`]
+* In CTE: `c1 @na:@na`
+  * CTE also supports the shorthand `@na`, which is converted to `@na:@na`, thus `c1 @na` also works.
 
 
 

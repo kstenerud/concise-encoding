@@ -840,7 +840,7 @@ Other Types
 
 ### NA
 
-NA is encoded as `@na:` followed immediately by the reason (no whitespace). There is also the special form `@na` (no colon), which is shorthand for `@na:@na` (not available with no reason given).
+NA is encoded as `@na:` followed immediately by the reason (no whitespace). There is also the special CTE-only form `@na` (no colon), which is an alias to `@na:@na` (not available with no reason given).
 
 **Examples**:
 
@@ -895,7 +895,7 @@ c1 @na:@na
 Or the shorthand form:
 
 ```cte
-c1 @na
+c1 @na // @na is an alias to @na:na in CTE
 ```
 
 
