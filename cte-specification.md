@@ -511,15 +511,14 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 #### Special Array Element Rules
 
- * UID and named array element values must be written without the initial `@` sentinel.
- * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b true false false true|`). The boolean representations must not be mixed (e.g. `|b 1 0 1 true|` is invalid).
+ * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b @true @false @false @true|`). The boolean representations must not be mixed (e.g. `|b 1 0 1 @true|` is invalid).
 
 **Examples**:
 
  * `|u8x 9f 47 cb 9a 3c|`
  * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
  * `|i16 0b1001010 0o744 1000 0xffff|`
- * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
+ * `|u @3a04f62f-cea5-4d2a-8598-bc156b99ea3b @1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 11010|`
 
 
