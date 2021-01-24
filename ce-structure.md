@@ -841,7 +841,7 @@ Other Types
 
 Denotes missing data (data that should be there but is not for some reason).
 
-A value of NA must be followed immediately by a "reason" value indicating the reason why the data is unavailable. Only real objects (or pseudo-objects that stand in for real objects such as references or constants) can fill the reason field (there must not be comments, metadata, or markers in between the NA and its reason).
+A value of NA must be followed immediately by a "reason" value indicating the reason why the data is unavailable. Only real objects (or pseudo-objects that resolve to real objects such as markers, references, or constants) can fill the reason field (there must not be comments or metadata in between the NA and its reason).
 
 Some possible reasons for NA:
 
