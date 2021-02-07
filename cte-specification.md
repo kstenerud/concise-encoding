@@ -671,7 +671,7 @@ Content strings can contain [escape sequences](#escape-sequences), which must be
 **Example**:
 
 ```cte
-c1 <View:
+c1 <View,
     <Image src=|r images/avatar-image.jpg|>
     <Text id=HelloText,
         Hello! Please choose a name!
