@@ -1,126 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <link rel="icon" href="favicon.svg">
-    <link rel="stylesheet" href="./main.css">
-
-    <meta charset="utf-8">
-    <meta name="description" content="The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Concise Encoding</title>
-</head>
-
-<body>
-    <header>
-        <div>
-            <nav>
-            <a class="title-container" href="index.html">
-                <img class="title-logo" alt="Logo" src="img/ce-logo.svg">
-                <span class="title-text">Concise Encoding</span>
-            </a>
-            <ul>
-                <li><a class="nav-link" href="resources.html">Resources</a></li>
-                <li><a class="nav-link" href="https://github.com/kstenerud/concise-encoding">Source</a></li>
-            </ul>
-        </nav>
-        </div>
-        <br>
-        <p class="title-subtitle">The friendly data format for human &amp; machine</p>
-        <div class="title-bgimage">
-    </header>
-    <section class="updates-container">
-        <div>
-            <span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
-        </div>
-    </section>
-
-    <main>
-        <section>
-            <aside>
-                <img class="card-image" src="img/heart.svg">
-                <h3>Edit Text, Transmit Binary</h3>
-                <p>Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.</p>
-            </aside>
-            <aside>
-                <img class="card-image" src="img/atom.svg">
-                <h3>Rich Type Support</h3>
-                <p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</p>
-            </aside>
-            <aside>
-                <img class="card-image" src="img/plug.svg">
-                <h3>Plug and Play</h3>
-                <p>No schema needed. No special syntax files. No code generation. Just import and go.</p>
-            </aside>
-        </section>
-
-        <section class="blurb">
-            <h2>Another Encoding Format?</h2>
-            <p class="blurb-text">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?</p>
-        </section>
-
-        <article>
-            <div class="horiz">
-                <img class="point-icon" src="img/twin.svg">
-                <div class="vert">
-                    <div>
-                        <h1>Twin Formats</h1>
-                        <h3>Edit Text, Transmit Binary</h3>
-                    </div>
-                </div>
-            </div>
-            <p>Encoded data should be easy to read, easy to edit, as well as low-cost to process and transmit.<p>
-            <p>Concise Encoding accomplishes this using 1:1 compatible twin formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a>.</p>
-            <p>Keep everything in binary while transmitting and storing on machines, then seamlessly convert to/from text only where a human needs to be involved.</p>
-        </article>
-
-        <article>
-            <div class="horiz">
-                <img class="point-icon" src="img/atom.svg">
-                <div class="vert">
-                    <div>
-                        <h1>Types!</h1>
-                        <h3>All the types you need</h3>
-                    </div>
-                </div>
-            </div>
-            <p>Tired of coercing your data into strings? Concise Encoding supports these types natively:</p>
-            <ul>
-                <li><a class="type-link" href="#numeric_types">Bool</a></li>
-                <li><a class="type-link" href="#numeric_types">Integer (arbitrary size)</a></li>
-                <li><a class="type-link" href="#numeric_types">Float (binary, decimal, arbitrary size)</a></li>
-                <li><a class="type-link" href="#other_types">UUID</a></li>
-                <li><a class="type-link" href="#other_types">Time (date, time, timestamp)</a></li>
-                <li><a class="type-link" href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a></li>
-                <li><a class="type-link" href="#string_types">String</a></li>
-                <li><a class="type-link" href="#containers">List</a></li>
-                <li><a class="type-link" href="#containers">Map</a></li>
-                <li><a class="type-link" href="#containers">Markup</a></li>
-                <li><a class="type-link" href="#relationships">Relationship</a></li>
-                <li><a class="type-link" href="#containers">Typed Arrays (bytes, ints, floats, etc)</a></li>
-                <li><a class="type-link" href="#references">Reference (for recursive/repetitive data)</a></li>
-                <li><a class="type-link" href="#metadata">Metadata</a></li>
-                <li><a class="type-link" href="#relationships">Comment</a></li>
-                <li><a class="type-link" href="#constants">Constants</a></li>
-                <li><a class="type-link" href="#other_types">NA</a></li>
-                <li><a class="type-link" href="#custom_types">Custom (encapsulate your own)</a></li>
-            </ul>
-        </article>
-
-        <section class="blurb extra-space">
-            <h2>Examples</h2>
-            <p class="blurb-text">All examples are valid <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</p>
-        </section>
-
-        <article id="numeric_types">
-            <div class="horiz">
-                <img class="example-icon" src="img/sigma.svg">
-                <div class="vert">
-                    <h2>Numeric</h2>
-                </div>
-            </div>
-            <pre>
+<!doctypehtml><html lang="en"><link rel="icon"href="favicon.svg"><link rel="stylesheet"href="./main.css"><meta charset="utf-8"><meta name="description"content="The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support."><meta name="viewport"content="width=device-width,initial-scale=1"><title>Concise Encoding</title><header><div><nav><a class="title-container"href="index.html"><img class="title-logo"alt="Logo"src="img/ce-logo.svg"> <span class="title-text">Concise Encoding</span></a><ul><li><a class="nav-link"href="resources.html">Resources</a><li><a class="nav-link"href="https://github.com/kstenerud/concise-encoding">Source</a></ul></nav></div><br><p class="title-subtitle">The friendly data format for human &amp; machine<div class="title-bgimage"></div></header><section class="updates-container"><div><span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)</div></section><main><section><aside><img class="card-image"src="img/heart.svg"><h3>Edit Text, Transmit Binary</h3><p>Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.</aside><aside><img class="card-image"src="img/atom.svg"><h3>Rich Type Support</h3><p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</aside><aside><img class="card-image"src="img/plug.svg"><h3>Plug and Play</h3><p>No schema needed. No special syntax files. No code generation. Just import and go.</aside></section><section class="blurb"><h2>Another Encoding Format?</h2><p class="blurb-text">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?</section><article><div class="horiz"><img class="point-icon"src="img/twin.svg"><div class="vert"><div><h1>Twin Formats</h1><h3>Edit Text, Transmit Binary</h3></div></div></div><p>Encoded data should be easy to read, easy to edit, as well as low-cost to process and transmit.<p><p>Concise Encoding accomplishes this using 1:1 compatible twin formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a>.<p>Keep everything in binary while transmitting and storing on machines, then seamlessly convert to/from text only where a human needs to be involved.</article><article><div class="horiz"><img class="point-icon"src="img/atom.svg"><div class="vert"><div><h1>Types!</h1><h3>All the types you need</h3></div></div></div><p>Tired of coercing your data into strings? Concise Encoding supports these types natively:<ul><li><a class="type-link"href="#numeric_types">Bool</a><li><a class="type-link"href="#numeric_types">Integer (arbitrary size)</a><li><a class="type-link"href="#numeric_types">Float (binary, decimal, arbitrary size)</a><li><a class="type-link"href="#other_types">UUID</a><li><a class="type-link"href="#other_types">Time (date, time, timestamp)</a><li><a class="type-link"href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a><li><a class="type-link"href="#string_types">String</a><li><a class="type-link"href="#containers">List</a><li><a class="type-link"href="#containers">Map</a><li><a class="type-link"href="#containers">Markup</a><li><a class="type-link"href="#relationships">Relationship</a><li><a class="type-link"href="#containers">Typed Arrays (bytes, ints, floats, etc)</a><li><a class="type-link"href="#references">Reference (for recursive/repetitive data)</a><li><a class="type-link"href="#metadata">Metadata</a><li><a class="type-link"href="#relationships">Comment</a><li><a class="type-link"href="#constants">Constants</a><li><a class="type-link"href="#other_types">NA</a><li><a class="type-link"href="#custom_types">Custom (encapsulate your own)</a></ul></article><section class="blurb extra-space"><h2>Examples</h2><p class="blurb-text">All examples are valid <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</section><article id="numeric_types"><div class="horiz"><img class="example-icon"src="img/sigma.svg"><div class="vert"><h2>Numeric</h2></div></div><pre>
                 <code>
 c1
 {
@@ -138,17 +16,7 @@ c1
     neg-infinity  = -@inf
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="string_types">
-            <div class="horiz">
-                <img class="example-icon" src="img/quote.svg">
-                <div class="vert">
-                    <h2>String-Like</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="string_types"><div class="horiz"><img class="example-icon"src="img/quote.svg"><div class="vert"><h2>String-Like</h2></div></div><pre>
                 <code>
 c1
 {
@@ -158,15 +26,7 @@ c1
     email        = |r mailto:me@somewhere.com|
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="other_types">
-            <div class="horiz">
-                <img class="example-icon" src="img/clock.svg">
-                    <h2>Other Basic Types</h2>
-            </div>
-            <pre>
+            </pre></article><article id="other_types"><div class="horiz"><img class="example-icon"src="img/clock.svg"><h2>Other Basic Types</h2></div><pre>
                 <code>
 c1
 {
@@ -178,17 +38,7 @@ c1
     na2       = @na // Data not available (no reason given)
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="containers">
-            <div class="horiz">
-                <img class="example-icon" src="img/container.svg">
-                <div class="vert">
-                    <h2>Containers</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="containers"><div class="horiz"><img class="example-icon"src="img/container.svg"><div class="vert"><h2>Containers</h2></div></div><pre>
                 <code>
 c1
 {
@@ -200,17 +50,7 @@ c1
     float32-array = |f32 1.5e10 -8.31e-12|
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="markup">
-            <div class="horiz">
-                <img class="example-icon" src="img/markup.svg">
-                <div class="vert">
-                    <h2>Markup</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="markup"><div class="horiz"><img class="example-icon"src="img/markup.svg"><div class="vert"><h2>Markup</h2></div></div><pre>
                 <code>
 c1
 {
@@ -227,17 +67,7 @@ c1
     &gt;
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="references">
-            <div class="horiz">
-                <img class="example-icon" src="img/flag.svg">
-                <div class="vert">
-                    <h2>References</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="references"><div class="horiz"><img class="example-icon"src="img/flag.svg"><div class="vert"><h2>References</h2></div></div><pre>
                 <code>
 c1
 {
@@ -252,17 +82,7 @@ c1
     outside_ref = $|r https://xyz.com/document.cte#some_id|
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="metadata">
-            <div class="horiz">
-                <img class="example-icon" src="img/metadata-example.svg">
-                <div class="vert">
-                    <h2>Metadata</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="metadata"><div class="horiz"><img class="example-icon"src="img/metadata-example.svg"><div class="vert"><h2>Metadata</h2></div></div><pre>
                 <code>
 c1
 // Metadata about the entire document
@@ -277,17 +97,7 @@ c1
     )[Bart Lisa Maggie]
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="relationships">
-            <div class="horiz">
-                <img class="example-icon" src="img/handshake.svg">
-                <div class="vert">
-                    <h2>Relationships</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="relationships"><div class="horiz"><img class="example-icon"src="img/handshake.svg"><div class="vert"><h2>Relationships</h2></div></div><pre>
                 <code>
 c1 (
     // Marked base resource identifiers used for concatenation.
@@ -323,17 +133,7 @@ c1 (
     ]
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="constants">
-            <div class="horiz">
-                <img class="example-icon" src="img/constant.svg">
-                <div class="vert">
-                    <h2>Constants</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="constants"><div class="horiz"><img class="example-icon"src="img/constant.svg"><div class="vert"><h2>Constants</h2></div></div><pre>
                 <code>
 c1
 {
@@ -344,17 +144,7 @@ c1
     door_color = #navy-blue
 }
                 </code>
-            </pre>
-        </article>
-
-        <article id="custom_types">
-            <div class="horiz">
-                <img class="example-icon" src="img/custom.svg">
-                <div class="vert">
-                    <h2>Custom Types</h2>
-                </div>
-            </div>
-            <pre>
+            </pre></article><article id="custom_types"><div class="horiz"><img class="example-icon"src="img/custom.svg"><div class="vert"><h2>Custom Types</h2></div></div><pre>
                 <code>
 c1
 {
@@ -363,23 +153,4 @@ c1
     custom-binary = |cb 04 f6 28 3c 40 00 00 40 40|
 }
                 </code>
-            </pre>
-        </article>
-
-        <section class="blurb">
-            <p class="blurb-text">See the <a href="resources.html">Resources</a> page or <a href="https://github.com/kstenerud/concise-encoding">Github</a> page for more information.</p>
-        </section>
-
-    </main>
-
-    <footer>
-        <p class="copyright">Copyright &copy; 2020 <a href="https://github.com/kstenerud">Karl Stenerud</a></p>
-        <p>
-            <a class="badge-shoutout" href="https://danlam.net/">danlam.net</a>
-            <a class="badge-shoutout" href="https://github.com/andybrewer/mvp/">MVP</a>
-            <a class="badge-shoutout" href="https://icon54.com/">Icon54</a>
-        </p>
-    </footer>
-</body>
-
-</html>
+            </pre></article><section class="blurb"><p class="blurb-text">See the <a href="resources.html">Resources</a> page or <a href="https://github.com/kstenerud/concise-encoding">Github</a> page for more information.</section></main><footer><p class="copyright">Copyright &copy; 2020 <a href="https://github.com/kstenerud">Karl Stenerud</a><p><a class="badge-shoutout"href="https://danlam.net/">danlam.net</a> <a class="badge-shoutout"href="https://github.com/andybrewer/mvp/">MVP</a> <a class="badge-shoutout"href="https://icon54.com/">Icon54</a></footer>
