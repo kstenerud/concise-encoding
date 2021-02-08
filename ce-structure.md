@@ -969,7 +969,9 @@ These are not unquoted-safe strings:
 
 The following is a non-exhaustive list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
 
-**Note**: This list is not guaranteed complete! Use it as a guide only.
+In [CTE](cte-specification.md) documents, confusable characters must not be present unescaped where they could be confused by a human reader for structural or numeric characters (for exmaple `[`, `"`, `:`, `@`, `>`, `0`, `.` etc).
+
+**Note**: This list is not guaranteed complete! Use it as a guide only. The [Unicode character set](https://unicode.org/charts) will change at times in the future, so it's on you to keep up.
 
 | Character | Lookalikes (codepoints)                                                 |
 | --------- | ----------------------------------------------------------------------- |

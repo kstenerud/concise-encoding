@@ -524,7 +524,7 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 ### String-Like Array Encodings
 
-String-like array encodings are interpreted as a whole, and must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+String-like array encodings are interpreted as a whole, and must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 
 ### Resource Identifier
@@ -565,7 +565,7 @@ Strings can be quoted or unquoted.
 
 #### Quoted String
 
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 **Example**:
 
