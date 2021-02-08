@@ -211,17 +211,20 @@ c1
 ```cte
 c1
 {
-    main-view = &lt;View,
-        &lt;Image src=|r images/avatar-image.jpg|&gt;
-        &lt;Text id=HelloText,
+    main-view = <View,
+        <Image src=|r images/avatar-image.jpg|>
+        <Text id=HelloText,
             Hello! Please choose a name!
-        &gt;
-        &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+        >
+        // OnChange contains code which might have problematic characters.
+        // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
+        <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+            NameInput.parent.InsertRawAfter(NameInput, "<Image src=|r images/checkmark.svg|>")
             HelloText.SetText("Hello, " + NameInput.Text + "!")
-        @@",
+            @@",
             Name me!
-        &gt;
-    &gt;
+        >
+    >
 }
 ```
 

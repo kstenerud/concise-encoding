@@ -970,7 +970,9 @@ Examples:
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. This section specifies how CTE documents should be pretty printed.
+Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. CTE documents should always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
+
+This section specifies how CTE documents should be pretty printed.
 
 
 #### Right Margin
@@ -982,7 +984,7 @@ In general, 120 columns should always be considered reasonable, with larger marg
 
 #### Indentation
 
-The indentation string should be configurable, with a default of 4 spaces (`    `).
+The canonical indentation is 4 spaces (`    `).
 
 
 #### Lists
