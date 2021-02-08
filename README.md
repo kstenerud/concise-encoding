@@ -212,14 +212,14 @@ c1
 c1
 {
     main-view = <View,
-        <Image src=|r images/avatar-image.jpg|>
+        <Image src=|r img/avatar-image.jpg|>
         <Text id=HelloText,
             Hello! Please choose a name!
         >
         // OnChange contains code which might have problematic characters.
         // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
         <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
-            NameInput.parent.InsertRawAfter(NameInput, "<Image src=|r images/checkmark.svg|>")
+            NameInput.parent.InsertRawAfter(NameInput, "<Image src=|r img/check.svg|>")
             HelloText.SetText("Hello, " + NameInput.Text + "!")
             @@",
             Name me!
