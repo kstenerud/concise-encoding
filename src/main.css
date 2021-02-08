@@ -280,7 +280,7 @@ section aside img {
 
 article {
     text-align: left;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     border: 1px solid var(--c-bg-2nd);
     border-radius: var(--brdr-rad);
     margin: 1rem auto 0 auto;
