@@ -183,11 +183,12 @@ c1
 ```cte
 c1
 {
-    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
-    date      = 2019-07-01
-    time      = 18:04:00.940231541/E/Prague
-    timestamp = 2010-07-15/13:28:15.415942344/Z
-    na        = @na
+    uuid          = @f1ce4567-e89b-12d3-a456-426655440000
+    date          = 2019-07-01
+    time          = 18:04:00.940231541/E/Prague
+    timestamp     = 2010-07-15/13:28:15.415942344/Z
+    na            = @na
+    na_for_reason = @na:"file not found"
 }
 ```
 
