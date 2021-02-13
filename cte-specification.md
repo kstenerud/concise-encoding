@@ -830,6 +830,8 @@ An explicit constant begins with a hash `#` character, followed by an [unquoted-
 
     #some_const:1 // a const named "some_const", which is the integer 1.
 
+The explicit value must be a real object (not a pseudo-object).
+
 If a decoder has access to the schema that defines a particular constant, the explicit value is ignored (the value from the schema is used).
 
 
