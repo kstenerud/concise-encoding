@@ -247,6 +247,7 @@ footer {
 header {
     color: var(--c-hdr-txt);
     background-color: var(--c-bg-hdr);
+    background: linear-gradient(180deg, rgba(45,137,199,1) 0%, rgba(46,144,208,1) 35%, rgba(50,152,220,1) 100%);
     padding: 0 1rem;
 }
 
