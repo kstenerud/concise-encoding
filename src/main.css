@@ -71,7 +71,7 @@ body {
 }
 
 .updates-container {
-    filter: drop-shadow(0rem 0.5rem 0.2rem rgba(0, 0, 0, 0.2));
+    box-shadow: 0rem 0.5rem 0.2rem rgba(0, 0, 0, 0.2);
     background-color: var(--c-bg-updt);
     color: var(--c-txt-updt);
     margin: auto;
