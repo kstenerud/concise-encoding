@@ -46,6 +46,7 @@ Contents
     - [Text Encoding](#custom-type-text-encoding)
   - [Typed Array](#typed-array)
   - [Boolean Array](#boolean-array)
+  - [File](#file)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -409,21 +410,22 @@ The length in each array chunk header represents the number of elements in the c
 
 The following element types are allowed:
 
-| Type Code                      | Actual Type               | Element Size (bits) |
-| ------------------------------ | ------------------------- | ------------------- |
-| 0x68 (8-bit positive integer)  | Unsigned int              | 8                   |
-| 0x6a (16-bit positive integer) | Unsigned int              | 16                  |
-| 0x6c (32-bit positive integer) | Unsigned int              | 32                  |
-| 0x6e (64-bit positive integer) | Unsigned int              | 64                  |
-| 0x69 (8-bit negative integer)  | 2's complement signed int | 8                   |
-| 0x6b (16-bit negative integer) | 2's complement signed int | 16                  |
-| 0x6d (32-bit negative integer) | 2's complement signed int | 32                  |
-| 0x6f (64-bit negative integer) | 2's complement signed int | 64                  |
-| 0x70 (16-bit binary float)     | Bfloat16                  | 16                  |
-| 0x71 (32-bit binary float)     | IEEE754 binary float      | 32                  |
-| 0x72 (64-bit binary float)     | IEEE754 binary float      | 64                  |
-| 0x73 (UID)                     | RFC4122 UUID              | 128                 |
-| 0x7d (Boolean true)            | Boolean (0=false, 1=true) | 1                   |
+| Type Code | Array Type                | Element Size (bits) |
+| --------- | ------------------------- | ------------------- |
+|    0x68   | Unsigned int              | 8                   |
+|    0x6a   | Unsigned int              | 16                  |
+|    0x6c   | Unsigned int              | 32                  |
+|    0x6e   | Unsigned int              | 64                  |
+|    0x69   | 2's complement signed int | 8                   |
+|    0x6b   | 2's complement signed int | 16                  |
+|    0x6d   | 2's complement signed int | 32                  |
+|    0x6f   | 2's complement signed int | 64                  |
+|    0x70   | Bfloat16                  | 16                  |
+|    0x71   | IEEE754 binary float      | 32                  |
+|    0x72   | IEEE754 binary float      | 64                  |
+|    0x73   | RFC4122 UUID              | 128                 |
+|    0x7d   | Boolean (0=false, 1=true) | 1                   |
+|    0x80   | File                      | 8                   |
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
@@ -438,6 +440,45 @@ For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to
     [95 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
     [95 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
     [95 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+
+#### File
+
+A file is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the file contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
+
+| Field        | Description                              |
+| ------------ | ---------------------------------------- |
+| Type         | The type code 0x95 (typed array)         |
+| Element Type | The type code 0x80 (file)                |
+| Chunk Header | The number of media type bytes following |
+| Elements     | The characters as a sequence of octets   |
+| ...          | Possibly more chunks                     |
+| Chunk Header | The number of file bytes following       |
+| Elements     | The bytes as a sequence of octets        |
+| ...          | Possibly more chunks                     |
+
+**Example**:
+
+    [95 80 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
+     *1 *2 *3 *4                                              *5 *6                                                                                  
+
+Points of interest:
+
+| Point | Description                                      |
+| ----- | ------------------------------------------------ |
+|  *1   | Type (0x95 = typed array)                        |
+|  *2   | Element type (0x80 = file)                       |
+|  *3   | Chunk Header (0x20 = length 16, no continuation) |
+|  *4   | String Data `application/x-sh`                   |
+|  *5   | Chunk Header (0x38 = length 28, no continuation) |
+|  *6   | File bytes                                       |
+
+Which is the shell script (media type "application/x-sh"):
+
+```sh
+#!/bin/sh
+
+echo hello world
+```
 
 
 

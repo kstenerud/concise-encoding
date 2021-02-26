@@ -37,6 +37,7 @@ Contents
     - [String](#string)
     - [Resource Identifier](#resource-identifier)
   - [Typed Array](#typed-array)
+    - [File](#file)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#binary-custom-type)
     - [Text Encoding](#text-custom-type)
@@ -373,6 +374,28 @@ Array elements can be written using any of the representations allowed for the s
  * `|i16 0b1001010 0o744 1000 0xffff|`
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 1 1 0 1 0|`
+
+#### File
+
+A file encapsulates a complete computer file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
+
+A decoder must not attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is not a decoding error.
+
+**Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as they cannot be unambiguously represented as a single byte stream.
+
+**Example**:
+
+```cte
+|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+```
+
+Which is the shell script:
+
+```sh
+#!/bin/sh
+
+echo hello world
+```
 
 
 ### Custom Types

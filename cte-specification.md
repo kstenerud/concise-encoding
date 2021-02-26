@@ -47,6 +47,7 @@ Contents
     - [Global Coordinates](#global-coordinates)
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
+  - [File](#file)
   - [String-Like Array Encodings](#string-like-array-encodings)
   - [Resource Identifier](#resource-identifier)
   - [Custom Binary](#custom-binary)
@@ -494,6 +495,7 @@ The following array types are available:
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
+**Note**: If an unrecognized array type is encountered, a decoder must assume that it is a [file](#file) array type.
 
 ### Element Array Encodings
 
@@ -520,6 +522,25 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
  * `|i16 0b1001010 0o744 1000 0xffff|`
  * `|u @3a04f62f-cea5-4d2a-8598-bc156b99ea3b @1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 11010|`
+
+
+### File
+
+A file is a specialization of the typed array. The array type field contains the file's [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
+
+**Example**:
+
+```cte
+|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+```
+
+Which is the shell script:
+
+```sh
+#!/bin/sh
+
+echo hello world
+```
 
 
 ### String-Like Array Encodings
