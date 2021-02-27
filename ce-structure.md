@@ -42,6 +42,7 @@ Contents
     - [Binary Encoding](#binary-custom-type)
     - [Text Encoding](#text-custom-type)
 * [Container Types](#container-types)
+  - [Container Properties](#container-properties)
   - [List](#list)
   - [Map](#map)
   - [Markup](#markup)
@@ -116,6 +117,11 @@ The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x03
 
 Numeric Types
 -------------
+
+The Concise Encoding format itself places no bounds on the range of numeric types, but implementations (being bound by language, platform, and physical limitations) must decide which ranges to accept (as a library limitation and via schemas). Any numeric value that exceeds those ranges must be converted to positive or negative infinity. Infinity replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties). Applications must be prepared to receive such values and deal with them according to their security practices (including rejecting the document if necessary).
+
+Decoders must provide an option to automatically reject documents containing out-of-range values. This option must default to enabled for better security.
+
 
 ### Boolean
 
@@ -326,6 +332,8 @@ Array Types
 
 An array represents a contiguous sequence of fixed length elements. The type of the array determines how its contents are interpreted.
 
+The Concise Encoding formats place no limitation on how long an array can be, but implementations will have to choose a pragmatic limit (as a library and via schemas). Decoders must provide an option to automatically reject documents containing too-long values. This option must default to enabled for better security.
+
 There are three kinds of array representations in Concise Encoding:
 
  * String-like arrays, which contain UTF-8 data. String-like array lengths are counted in bytes.
@@ -335,11 +343,17 @@ There are three kinds of array representations in Concise Encoding:
 
 ### String-like Arrays
 
+String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays must always resolve to complete, valid UTF-8 sequences when fully decoded (in CTE documents, such validation must occur after decoding all escape sequences). All invalid characters must be replaced with the Unicode replacement character (U+FFFD) as a security measure (they must NOT be truncated). Invalid character replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties).
+
+#### NUL
+
+The NUL character (U+0000) must be supported if the type allows it, but because NUL can be a troublesome character on many platforms, its use in documents is discouraged.
+
+Decoders must provide the option to automatically replace NUL with the Unicode replacement character (U+FFFD) as a security measure for environments that never use NUL. This option must default to enabled, because that's the most common and safest setting. NUL replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties).
+
 #### String
 
-An array of UTF-8 encoded bytes. The NUL character (u+0000) must be supported, but because NUL can be a troublesome character on many platforms, its use in documents is discouraged.
-
-Strings must always resolve to complete, valid UTF-8 sequences when fully decoded (in CTE documents, such validation must occur after decoding all escape sequences).
+A basic UTF-8 string. There are no additional requirements or restrictions beyond those of string-like arrays.
 
 ##### Line Endings
 
@@ -434,6 +448,26 @@ A string-like array value representing a user-defined custom data type. The inte
 
 Container Types
 ---------------
+
+Container types hold collections of other objects. 
+
+The Concise Encoding formats place no limitation on how many objects a container may contain, but implementations will have to choose a pragmatic limit (as a library and via schemas). Decoders must provide an option to automatically reject documents containing too many objects. This option must default to enabled for better security.
+
+
+### Container Properties
+
+#### Ordering
+
+If a container is ordered, the order in which objects are placed in the container matters. Ordered containers that contain equivalent objects but in a different order are NOT equivalent.
+
+#### Duplicates
+
+For list-like containers, a duplicate means any object that is equivalent to another object already present in the list.
+
+For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
+
+If a container disallows duplicates, all duplicate entries encountered must be discarded as they are decoded (they must not halt decoding; the decoder must present the result as if the duplicate entries were never in the document to begin with).
+
 
 ### List
 
@@ -1050,7 +1084,9 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can resolve to the same value without data loss after type coercion, they are equivalent.
 
-**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet).
+Infinities with the same sign are considered equivalent.
+
+**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN so long as they are both the same kind of NaN (signaling or quiet).
 
 #### Custom Types
 
@@ -1112,7 +1148,7 @@ Implementations should enforce limits to the documents they'll accept in order t
  * Maximum container depth (from the top level to the most deeply nested container)
  * Maximum coefficient size in integer and fp numbers (significant digits)
 
-It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. Decoders must either make known what their limits are, or provide the user with a way to configure them (with reasonable defaults). A decoder is free to discard documents that threaten to exceed its resources.
+It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. Decoders must either make known what their limits are, or provide the user with a way to configure them (with reasonable defaults). Implementations must provide the option to automatically reject documents that exceed these limits, and default to the option being enabled for better security.
 
 As an illustration, for a general purpose decoder the following default limits should give a reasonable balance (in 2020):
 
