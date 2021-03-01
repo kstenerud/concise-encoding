@@ -46,7 +46,7 @@ Contents
     - [Text Encoding](#custom-type-text-encoding)
   - [Typed Array](#typed-array)
   - [Boolean Array](#boolean-array)
-  - [File](#file)
+  - [Media](#media)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -425,7 +425,7 @@ The following element types are allowed:
 |    0x72   | IEEE754 binary float      | 64                  |
 |    0x73   | RFC4122 UUID              | 128                 |
 |    0x7d   | Boolean (0=false, 1=true) | 1                   |
-|    0x80   | File                      | 8                   |
+|    0x80   | Media                     | 8                   |
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
@@ -441,18 +441,18 @@ For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to
     [95 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
     [95 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
-#### File
+#### Media
 
-A file is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the file contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
+The media array is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
 
 | Field        | Description                              |
 | ------------ | ---------------------------------------- |
 | Type         | The type code 0x95 (typed array)         |
-| Element Type | The type code 0x80 (file)                |
+| Element Type | The type code 0x80 (media)               |
 | Chunk Header | The number of media type bytes following |
 | Elements     | The characters as a sequence of octets   |
 | ...          | Possibly more chunks                     |
-| Chunk Header | The number of file bytes following       |
+| Chunk Header | The number of media bytes following      |
 | Elements     | The bytes as a sequence of octets        |
 | ...          | Possibly more chunks                     |
 
@@ -466,11 +466,11 @@ Points of interest:
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
 |  *1   | Type (0x95 = typed array)                        |
-|  *2   | Element type (0x80 = file)                       |
+|  *2   | Element type (0x80 = media)                      |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
-|  *6   | File bytes                                       |
+|  *6   | Media bytes                                      |
 
 Which is the shell script (media type "application/x-sh"):
 

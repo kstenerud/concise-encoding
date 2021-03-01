@@ -47,7 +47,7 @@ Contents
     - [Global Coordinates](#global-coordinates)
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
-  - [File](#file)
+  - [Media](#media)
   - [String-Like Array Encodings](#string-like-array-encodings)
   - [Resource Identifier](#resource-identifier)
   - [Custom Binary](#custom-binary)
@@ -495,7 +495,7 @@ The following array types are available:
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
-**Note**: If an unrecognized array type is encountered, a decoder must assume that it is a [file](#file) array type.
+**Note**: If an unrecognized array type is encountered, a decoder must assume that it is a [media](#media) array type.
 
 ### Element Array Encodings
 
@@ -524,9 +524,9 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
  * `|b 11010|`
 
 
-### File
+### Media
 
-A file is a specialization of the typed array. The array type field contains the file's [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
+A media object is a specialization of the typed array. The array type field contains its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
 
 **Example**:
 

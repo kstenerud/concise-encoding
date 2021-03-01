@@ -37,7 +37,7 @@ Contents
     - [String](#string)
     - [Resource Identifier](#resource-identifier)
   - [Typed Array](#typed-array)
-    - [File](#file)
+    - [Media](#media)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#binary-custom-type)
     - [Text Encoding](#text-custom-type)
@@ -389,9 +389,9 @@ Array elements can be written using any of the representations allowed for the s
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 1 1 0 1 0|`
 
-#### File
+#### Media
 
-A file encapsulates a complete computer file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
+The media object encapsulates a foreign media object/file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml). The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees its data as a sequence of bytes, and passes it along as such.
 
 A decoder must not attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is not a decoding error.
 
