@@ -431,7 +431,7 @@ Element byte ordering is according to the element type (big endian for UUID, lit
 
 #### Boolean Array
 
-In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
+In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
 
 For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 

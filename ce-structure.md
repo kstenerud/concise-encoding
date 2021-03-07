@@ -114,6 +114,11 @@ The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x03
  * CTE version 1: `c1`
 
 
+### Prerelease Version
+
+During the pre-release phase, all documents should use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired, and considered invalid (there shall be no backwards compatibility to the prerelease spec).
+
+
 
 Numeric Types
 -------------
