@@ -912,7 +912,7 @@ Some possible reasons for NA:
  * There was an error while fetching or computing the data.
  * The data cannot be provided in the requested form.
 
-To specify NA without a reason, simply use NA followed by another NA. The second NA in this special case doesn't itself require another reason field.
+To specify NA without a known reason, simply use NA followed by another NA (`@na:@na`). The second NA in this special case must not contain a reason field (e.g. chains of reason fields such as `@na:@na:@na` are invalid). In CTE, you may also use the special form `@na` (with no reason field) as a shorthand for `@na:@na`.
 
 **Note**: A value of NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in this case.
 
@@ -921,7 +921,6 @@ To specify NA without a reason, simply use NA followed by another NA. The second
  * `@na:"Insufficient privileges"` (not available, with an English language reason)
  * `@na:404` (not available for reason code 404)
  * `@na:@na` (not available, with no reason given)
- * `@na` (shorthand form in CTE for `@na:@na`)
 
 
 ### Concatenation
