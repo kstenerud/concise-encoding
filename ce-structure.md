@@ -901,20 +901,26 @@ Other Types
 
 "Not Available"
 
-Denotes missing data (data that should be there but is not for some reason).
+Denotes missing data (data that should be there but is not for some reason). An NA value is composed of the NA itself, followed by a "reason" field that explains why the data is unavailable.
 
-A value of NA must be followed immediately by a "reason" value indicating the reason why the data is unavailable. Only real objects (or pseudo-objects that resolve to real objects such as markers, references, or constants) can fill the reason field (there must not be comments or metadata in between the NA and its reason).
+    [NA] [Reason]
+
+NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in that case.
+
+#### Reason Field
+
+To avoid a potential explosion of data combinations and difficult recursions, the "reason" value must be a real object, not a pseudo-object (e.g. `@na:$reason` is invalid). As well, pseudo-objects (excepting [padding](#padding)) must not precede the reason object (e.g. `@na:/* a comment */"the reason"` and `@na:&some_tag:"the reason"` are invalid).
 
 Some possible reasons for NA:
 
- * The system doesn't have the data.
+ * The system doesn't have the requested data.
  * Rules prevent the data from being provided.
  * There was an error while fetching or computing the data.
  * The data cannot be provided in the requested form.
 
-To specify NA without a known reason, simply use NA followed by another NA (`@na:@na`). The second NA in this special case must not contain a reason field (e.g. chains of reason fields such as `@na:@na:@na` are invalid). In CTE, you may also use the special form `@na` (with no reason field) as a shorthand for `@na:@na`.
+To specify NA without a known reason, simply use NA followed by another NA (`@na:@na`). The second NA in this special case is simply the NA code, not a full NA object (i.e. it does not itself contain a reason field, so chains of reason fields such as `@na:@na:@na` are invalid).
 
-**Note**: A value of NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in this case.
+**Note**: CTE also supports the special form `@na` as a shorthand for `@na:@na`. Decoders must interpret both CTE's `@na` and `@na:@na` as the equivalent of CBE's `[7e 7e]`.
 
 **Examples**:
 
@@ -929,9 +935,9 @@ Concatenation is an operator that concatenates a [string](#string) or a [numeric
 
  * A [resource identifier](#resource-identifier)
  * The concatenation operator
- * A [string](#string)
+ * A [string](#string) or [numeric type](#numeric-types)
 
-The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenation operation represents a single object, and so nothing (not even pseudo-objects other than padding) must be placed between the `[resource-identifier concatenate-operator string]` components of the operation.
+The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenated object is part of what it was concatenated with, and so nothing (not even pseudo-objects other than [padding](#padding)) must be placed between the `[resource-identifier concatenate-operator object]` components of the construct.
 
 #### Limitations
 
