@@ -56,7 +56,7 @@ Contents
   - [Constant](#constant)
 * [Other Types](#other-types)
   - [NA](#na)
-  - [Concatenation](#concatenation)
+* [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
@@ -97,7 +97,7 @@ The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but m
 
 **Examples**:
 
- * Empty document: `c1 @na:@na` (in [CBE](cbe-specification.md): [`03 01 7e 7e`])
+ * Empty document: `c1 @na` (in [CBE](cbe-specification.md): [`03 01 7e`])
  * Document containing the top-level integer value 1000: `c1 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
  * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
@@ -368,6 +368,14 @@ Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to main
 
 A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). If unspecified by a schema, the default resource identifier type is IRI.
 
+Resource IDs support [concatenation](#concatenation) where the right-side is a [string](#string) or [integer](#integer). Right-side values are converted to strings and appended to the resource ID. Numeric values must be interpreted as decimal for string conversion.
+
+**Examples**:
+
+    |r https://x.com/|             // = https://x.com/
+    |r https://x.com/|:something   // = https://x.com/something
+    |r https://x.com/|:1234        // = https://x.com/1234
+
 
 ### Typed Array
 
@@ -421,7 +429,7 @@ echo hello world
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute [NA](#na).
+Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute an [NA](#na) value.
 
 Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
 
@@ -429,7 +437,7 @@ Custom type implementations should provide both a binary and a text encoding, wi
 
 #### Binary Custom Type
 
-A uint8 array value representing a user-defined custom data type. The interpretation of the octets is implementation defined, and can only be decoded if the receiver knows how to decode it. To reduce cross-platform confusion, data should be represented in little endian byte order.
+A uint8 array value representing a user-defined custom data type. The interpretation of the octets is user-defined, and can only be decoded if the receiver knows how to decode it. To reduce cross-platform confusion, data should be represented in little endian byte order.
 
 **Example**:
 
@@ -443,7 +451,7 @@ A uint8 array value representing a user-defined custom data type. The interpreta
 
 #### Text Custom Type
 
-A string-like array value representing a user-defined custom data type. The interpretation of the string is implementation defined, and can only be decoded if the receiver knows how to decode it.
+A string-like array value representing a user-defined custom data type. The interpretation of the string is user-defined, and can only be decoded if the receiver knows how to decode it.
 
 **Example**:
 
@@ -901,15 +909,16 @@ Other Types
 
 "Not Available"
 
-Denotes missing data (data that should be there but is not for some reason). An NA value is composed of the NA itself, followed by a "reason" field that explains why the data is unavailable.
+Denotes missing data (data that should be there but is not for some reason). NA supports a standalone form, as well as a form with a "reason" field to explain why the data is not available.
 
-    [NA] [Reason]
+    [NA]           (not available for unknown reason)
+    [NA] [Reason]  (not available because of Reason)
 
 NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in that case.
 
 #### Reason Field
 
-To avoid a potential explosion of data combinations and difficult recursions, the "reason" value must be a real object, not a pseudo-object (e.g. `@na:$reason` is invalid). As well, pseudo-objects (excepting [padding](#padding)) must not precede the reason object (e.g. `@na:/* a comment */"the reason"` and `@na:&some_tag:"the reason"` are invalid).
+The optional reason field is implemented as a [concatenation](#concatenation). All non-pseudo types except NA can be used as the right-side of the concatenation.
 
 Some possible reasons for NA:
 
@@ -918,36 +927,31 @@ Some possible reasons for NA:
  * There was an error while fetching or computing the data.
  * The data cannot be provided in the requested form.
 
-To specify NA without a known reason, simply use NA followed by another NA (`@na:@na`). The second NA in this special case is simply the NA code, not a full NA object (i.e. it does not itself contain a reason field, so chains of reason fields such as `@na:@na:@na` are invalid).
-
-**Note**: CTE also supports the special form `@na` as a shorthand for `@na:@na`. Decoders must interpret both CTE's `@na` and `@na:@na` as the equivalent of CBE's `[7e 7e]`.
-
 **Examples**:
 
  * `@na:"Insufficient privileges"` (not available, with an English language reason)
  * `@na:404` (not available for reason code 404)
- * `@na:@na` (not available, with no reason given)
+ * `@na` (not available for unknown reason)
 
 
-### Concatenation
 
-Concatenation is an operator that concatenates a [string](#string) or a [numeric type](#numeric-types) onto a [resource identifier](#resource-identifier) (or [reference](#reference) to resource identifier) in order to cut down on repetition where many resource identifiers with the same base are used in a document. A concatenation operation is composed of 3 parts (in order):
+Concatenation
+-------------
 
- * A [resource identifier](#resource-identifier)
- * The concatenation operator
- * A [string](#string) or [numeric type](#numeric-types)
+Concatenation is an operation that concatenates one object onto another to produce a new object.
 
-The result of this operation is a resource identifier, which functions like any other resource identifier. A concatenated object is part of what it was concatenated with, and so nothing (not even pseudo-objects other than [padding](#padding)) must be placed between the `[resource-identifier concatenate-operator object]` components of the construct.
+    [left-side] concatenated-with [right-side]
 
-#### Limitations
+### Limitations
 
-In order to keep implementation complexity down, concatenation has the following limitations:
+Concatenation is artificially limited in many ways to prevent the explosion of complexity that operators tend to bring.
 
- * The left part of a concatenation must be a [resource ID](#resource-identifier) or a **local** [reference](#reference) to a [resource ID](#resource-identifier) (`$|r http://x.com/|:abcd` is invalid, but `|r http://x.com/|:abcd` is valid, and `$1:abcd` is valid if `&1:|r http://x.com/|` exists elsewhere in the document).
- * The right part of a concatenation must be a [string](#string) (`|r http://x.com/|:1234` is invalid; use `|r http://x.com/|:"1234"` instead).
- * The right-side portion must not be a [reference](#reference) (`|r http://x.com/|:$ref-to-string` is invalid).
- * Concatenations cannot be chained (`|r http://x.com/|:a:b` is invalid).
- * When a referring pseudo-object precedes the initial resource identifier of a concatenation operation, it actually refers to the result of the operation, not the initial resource identifier (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not `http://x.com/`).
+ * Only the [resource ID](#resource-identifier) and [NA](#na) types support concatenation (left-side types).
+ * Supported types have their own limitations on what types they can be concatenated with (right-side types).
+ * The result of a concatenation is indivisible. Any preceding referring pseudo-objects refer to the finished, concatenated object (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not the left-side `http://x.com/`).
+ * Concatenated objects cannot be used in further concatenation operations (`|r http://x.com/|:string:string` is invalid).
+ * [Pseudo-objects](#pseudo-objects) (except padding) must not be placed between the left-side and right-side of a concatenation (`@na:/*comment*/string` is invalid).
+ * The right-side cannot be a [pseudo-object](#pseudo-objects) (`|r http://x.com/|:$ref-to-string` is invalid).
 
 **Example**:
 
@@ -963,6 +967,7 @@ c1 (
     $ex:path                            // http://example.com/path
     &long-path:$ex:"long/path"          // "long-path" refers to http://example.com/long/path
     $long-path:"a/b/c/d"                // http://example.com/long/path/a/b/c/d
+    @na:404                             // Not available for reason 404
 ]
 ```
 
@@ -971,11 +976,10 @@ c1 (
 Empty Document
 --------------
 
-An empty document is signified by using the [NA](#na) type with reason NA as the top-level object:
+An empty document is signified by using the [NA](#na) type with no reason as the top-level object:
 
-* In CBE: [`03 01 7e 7e`]
-* In CTE: `c1 @na:@na`
-  * CTE also supports the shorthand `@na`, which is converted to `@na:@na`, thus `c1 @na` also works.
+* In CBE: [`03 01 7e`]
+* In CTE: `c1 @na`
 
 
 

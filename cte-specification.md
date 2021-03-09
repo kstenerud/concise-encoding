@@ -74,7 +74,7 @@ Contents
     - [Explicit Constant](#explicit-constant)
 * [Other Types](#other-types)
   - [NA](#na)
-  - [Concatenation](#concatenation)
+* [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
@@ -555,6 +555,19 @@ A Concise Encoding implementation must interpret only [CTE escape sequences](#es
  * `|r http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
  * `|r http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
 
+Resource IDs support [concatenation](#concatenation):
+
+    |r http://x.com/|:my-suffix // = http://x.com/my-suffix
+
+    c1 (
+        refs = [
+            &query|r https://some-really-long-url-thats-annoying-to-type.com/query?ref-id=|
+        ]
+    ){
+        query-1 = $query:1
+        query-5000 = $query:5000
+    }
+
 
 ### Custom Binary
 
@@ -862,19 +875,20 @@ Other Types
 
 ### NA
 
-NA is encoded as `@na:` followed immediately by the reason (no whitespace). There is also the special CTE-only form `@na` (no colon), which is an alias to `@na:@na` (not available with no reason given).
+NA is encoded as `@na`, and supports [concatenation](#concatenation) for the optional reason field.
 
 **Examples**:
 
  * `@na:"Insufficient privileges"` (not available, with an English language reason)
  * `@na:404` (not available for reason code 404)
- * `@na:@na` (not available, with no reason given)
- * `@na` (shorthand for `@na:@na`)
+ * `@na` (not available for unknown reason)
 
 
-### Concatenation
 
-The concatenation operator in CTE is `:`. There must be no whitespace between the concatenation operator and its operands. The first operand must be a [resource identifier](#resource-identifier) (or a [reference](#reference) to one), and the second operand must be either a string or a positive base-10 integer.
+Concatenation
+-------------
+
+The concatenation operator in CTE is `:`. There must be no whitespace between the concatenation operator and its operands.
 
 
 **Examples**:
@@ -900,6 +914,14 @@ c1 {
 
     // https://example.com/foo/bar
     example_5 = $ref1:"foo/bar"
+
+    // NA for reasons
+    example_6 = @na:"Insufficient privileges"
+    example_7 = @na:{
+        code = 409
+        en = "database error"
+        jp = "データベースエラー"
+    }
 }
 ```
 
@@ -908,16 +930,10 @@ c1 {
 Empty Document
 --------------
 
-An empty document in CBE is signified by using the [NA](#na) type with reason NA as the top-level object:
+An empty document in CTE is signified by using the [NA](#na) type with no reason as the top-level object:
 
 ```cte
-c1 @na:@na
-```
-
-Or the shorthand form:
-
-```cte
-c1 @na // @na is an alias to @na:na in CTE
+c1 @na
 ```
 
 

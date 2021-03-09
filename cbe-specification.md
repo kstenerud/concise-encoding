@@ -44,7 +44,7 @@ Contents
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
     - [Text Encoding](#custom-type-text-encoding)
-  - [Typed Array](#typed-array)
+  - [Typed Arrays](#typed-arrays)
   - [Boolean Array](#boolean-array)
   - [Media](#media)
 * [Container Types](#container-types)
@@ -60,8 +60,8 @@ Contents
   - [Padding](#padding)
 * [Other Types](#other-types)
   - [NA](#na)
-  - [Concatenation](#concatenation)
   - [RESERVED](#reserved)
+* [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -102,7 +102,7 @@ The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128)
 Encoding
 --------
 
-A CBE document is byte-oriented. All objects are composed of an 8-bit type field and a possible payload that will always end on an 8-bit boundary.
+A CBE document is byte-oriented. All objects are composed of a type field and a possible payload that will always end on an 8-bit boundary.
 
 
 #### Type Field
@@ -138,7 +138,7 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  7b | 123 | End of Container          |                                                 |
 |  7c | 124 | Boolean False             |                                                 |
 |  7d | 125 | Boolean True              |                                                 |
-|  7e | 126 | NA (data missing)         | Reason why the data is missing                  |
+|  7e | 126 | NA (reason unknown)       |                                                 |
 |  7f | 127 | Padding                   |                                                 |
 |  80 | 128 | String: 0 bytes           |                                                 |
 |  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                         |
@@ -160,9 +160,9 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 |  91 | 145 | Resource Identifier       | [chunk length] [UTF-8 data] ...                 |
 |  92 | 146 | Custom (Binary)           | [chunk length] [data] ...                       |
 |  93 | 147 | Custom (Text)             | [chunk length] [UTF-8 data] ...                 |
-|  94 | 148 | Typed Array               | [type] [chunk length] [elements] ...            |
+|  94 | 158 | Plane 2                   | (See [Plane 2](#type-field-plane-2))            |
 |  95 | 149 | RESERVED                  |                                                 |
-|  96 | 150 | Concatenate               | String                                          |
+|  96 | 150 | RESERVED                  |                                                 |
 |  97 | 151 | Marker                    | Positive integer / string                       |
 |  98 | 152 | Reference                 | Positive integer / string / resource identifier |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
@@ -172,6 +172,43 @@ A CBE document is byte-oriented. All objects are composed of an 8-bit type field
 | ... | ... | ...                       |                                                 |
 |  fe | 254 | Integer value -2          |                                                 |
 |  ff | 255 | Integer value -1          |                                                 |
+
+
+### Type Field (Plane 2)
+
+Types from plane 2 are represented using two bytes instead of one, using the prefix `[94]`. For example, the type encoding for unsigned 8-bit array is `[94 68]`, and the type encoding for media is `[94 80]`.
+
+| Hex | Dec | Type                      | Payload                                         |
+| --- | --- | ------------------------- | ----------------------------------------------- |
+|  00 |   0 | RESERVED                  |                                                 |
+| ... | ... | ...                       |                                                 |
+|  67 | 103 | RESERVED                  |                                                 |
+|  68 | 104 | Array (Unsigned Int8)     | [chunk length] [8-bit elements] ...             |
+|  69 | 105 | Array (Signed Int8)       | [chunk length] [8-bit elements] ...             |
+|  6a | 106 | Array (Unsigned Int16)    | [chunk length] [16-bit L-E elements] ...        |
+|  6b | 107 | Array (Signed Int16)      | [chunk length] [16-bit L-E elements] ...        |
+|  6c | 108 | Array (Unsigned Int32)    | [chunk length] [32-bit L-E elements] ...        |
+|  6d | 109 | Array (Signed Int32)      | [chunk length] [32-bit L-E elements] ...        |
+|  6e | 110 | Array (Unsigned Int64)    | [chunk length] [64-bit L-E elements] ...        |
+|  6f | 111 | Array (Signed Int64)      | [chunk length] [64-bit L-E elements] ...        |
+|  70 | 112 | Array (BFloat16)          | [chunk length] [16-bit L-E elements] ...        |
+|  71 | 113 | Array (Binary Float32)    | [chunk length] [32-bit L-E elements] ...        |
+|  72 | 114 | Array (Binary Float64)    | [chunk length] [64-bit L-E elements] ...        |
+|  73 | 115 | Array (RFC4122 UUID)      | [chunk length] [128-bit B-E elements] ...       |
+|  74 | 116 | RESERVED                  |                                                 |
+| ... | ... | ...                       |                                                 |
+|  7c | 124 | RESERVED                  |                                                 |
+|  7d | 125 | Array (Boolean)           | [chunk length] [1-bit elements] ...             |
+|  7e | 126 | NA with reason            | [reason object]                                 |
+|  7f | 127 | RESERVED                  |                                                 |
+|  80 | 128 | Media                     | [media type (string)] [8-bit data]              |
+|  81 | 129 | RESERVED                  |                                                 |
+| ... | ... | ...                       |                                                 |
+|  90 | 144 | RESERVED                  |                                                 |
+|  91 | 145 | Resource ID Concatenated  | [ressource id] [concatenated object]            |
+|  92 | 146 | RESERVED                  |                                                 |
+| ... | ... | ...                       |                                                 |
+|  ff | 255 | RESERVED                  |                                                 |
 
 
 
@@ -357,26 +394,30 @@ For byte lengths from 0 to 15, there are special fixed-length string types (0x80
 
 ### Resource Identifier
 
-Resource identifiers are encoded with the type 0x92. The length is in octets, NOT characters.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 91]` for the [concatenated](#concatenation) form. The length is in octets, NOT characters.
 
-**Example**:
+**Examples**:
 
-    [92 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+    [91 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
+
+    [94 91 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
+     3f 6f 72 64 65 72 69 64 3d 2a]
+    = https://example.com/?orderid=42 (where int value 42 is concatenated)
 
 
 ### Custom Types
 
 #### Custom Type (Binary Encoding)
 
-Custom binary types are encoded as binary data with the type 0x93. The length is the number of octets used by the data.
+Custom binary types are encoded as binary data with the type 0x92. The length is the number of octets used by the data.
 
 **Example**:
 
-    [93 12 04 f6 28 3c 40 00 00 40 40]
+    [92 12 04 f6 28 3c 40 00 00 40 40]
     = binary data representing an imaginary custom "cplx" struct
       {
           type:uint8 = 4
@@ -391,41 +432,40 @@ Custom text types are encoded as UTF-8 strings representing the data, with the t
 
 **Example**:
 
-    [94 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
+    [93 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
 
 
-### Typed Array
+### Typed Arrays
 
 A typed array is structured as follows:
 
-| Field        | Description                            |
-| ------------ | -------------------------------------- |
-| Type         | The type code 0x95 (typed array)       |
-| Element Type | The type of the elements in this array |
-| Chunk Header | The number of elements following       |
-| Elements     | The elements as a sequence of octets   |
-| ...          | Possibly more chunks                   |
+| Field        | Description                               |
+| ------------ | ----------------------------------------- |
+| Type         | 0x94, [plane 2 type](#type-field-plane-2) |
+| Chunk Header | The number of elements following          |
+| Elements     | The elements as a sequence of octets      |
+| ...          | Possibly more chunks                      |
 
-The length in each array chunk header represents the number of elements in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
+The length in each array chunk header represents the number of elements (not bytes) in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 1 octet for 8-bit elements, 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
 
-The following element types are allowed:
+The following array types are supported:
 
-| Type Code | Array Type                | Element Size (bits) |
-| --------- | ------------------------- | ------------------- |
-|    0x68   | Unsigned int              | 8                   |
-|    0x6a   | Unsigned int              | 16                  |
-|    0x6c   | Unsigned int              | 32                  |
-|    0x6e   | Unsigned int              | 64                  |
-|    0x69   | 2's complement signed int | 8                   |
-|    0x6b   | 2's complement signed int | 16                  |
-|    0x6d   | 2's complement signed int | 32                  |
-|    0x6f   | 2's complement signed int | 64                  |
-|    0x70   | Bfloat16                  | 16                  |
-|    0x71   | IEEE754 binary float      | 32                  |
-|    0x72   | IEEE754 binary float      | 64                  |
-|    0x73   | RFC4122 UUID              | 128                 |
-|    0x7d   | Boolean (0=false, 1=true) | 1                   |
-|    0x80   | Media                     | 8                   |
+| Plane 2 | Array Type                | Element Size (bits) |
+| ------- | ------------------------- | ------------------- |
+|   0x68  | Unsigned int              | 8                   |
+|   0x6a  | Unsigned int              | 16                  |
+|   0x6c  | Unsigned int              | 32                  |
+|   0x6e  | Unsigned int              | 64                  |
+|   0x69  | 2's complement signed int | 8                   |
+|   0x6b  | 2's complement signed int | 16                  |
+|   0x6d  | 2's complement signed int | 32                  |
+|   0x6f  | 2's complement signed int | 64                  |
+|   0x70  | Bfloat16                  | 16                  |
+|   0x71  | IEEE754 binary float      | 32                  |
+|   0x72  | IEEE754 binary float      | 64                  |
+|   0x73  | RFC4122 UUID              | 128                 |
+|   0x7d  | Boolean (0=false, 1=true) | 1                   |
+|   0x80  | Media                     | 8                   |
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
@@ -437,9 +477,9 @@ For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to
 
 **Examples**:
 
-    [95 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
-    [95 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
-    [95 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+    [94 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
+    [94 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
+    [94 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 #### Media
 
@@ -458,15 +498,15 @@ The media array is composed of two sub-arrays: an implied string containing the 
 
 **Example**:
 
-    [95 80 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
+    [94 80 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
      *1 *2 *3 *4                                              *5 *6                                                                                  
 
 Points of interest:
 
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
-|  *1   | Type (0x95 = typed array)                        |
-|  *2   | Element type (0x80 = media)                      |
+|  *1   | Type (0x94 = plane 2)                            |
+|  *2   | Plane 2 type (0x80 = media)                      |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
@@ -600,18 +640,11 @@ Other Types
 
 ### NA
 
-    [7e 84 67 6f 6e 65] = Not available for reason "gone"
-    [7e 6a 94 01] = Not available for reason 404
-    [7e 7e] = Not available with no reason given
+NA can be encoded with a reason (`[94 7e]` + reason) or without a reason (`[7e]`).
 
-
-### Concatenation
-
-The concatenation operator concatenates the string following onto the previous resource identifier, effectively yielding a new resource identifier.
-
-**Example**:
-
-TODO
+    [94 7e 84 67 6f 6e 65] = Not available for reason "gone"
+    [94 7e 6a 94 01] = Not available for reason 404
+    [7e] = Not available for unknown reason
 
 
 ### RESERVED
@@ -620,12 +653,24 @@ This type is reserved for future expansion of the format, and must not be used.
 
 
 
+Concatenation
+-------------
+
+Concatenation in CBE is encoded using parallel types in [plane 2](#type-field-plane-2) to ensure that lookaheads aren't needed during decoding, and documents always end unambiguously.
+
+**Examples**:
+
+    [94 7e] (string data) = NA with a string value explaining the reason
+    [94 91] (RID data) (integer) = Resource ID with an integer concatenated
+
+
+
 Empty Document
 --------------
 
-An empty document in CBE is signified by using the [NA](#na) type with reason NA as the top-level object:
+An empty document in CBE is signified by using the [NA](#na) type with no reason as the top-level object:
 
-    [03 01 7e 7e]
+    [03 01 7e]
 
 
 
