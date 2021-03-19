@@ -45,6 +45,7 @@ Contents
   - [Time Zones](#time-zones)
     - [Area/Location](#arealocation)
     - [Global Coordinates](#global-coordinates)
+    - [Time Offset](#time-offset)
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
   - [Media](#media)
@@ -72,7 +73,6 @@ Contents
     - [Multiline Comment](#multiline-comment)
   - [Constant](#constant)
     - [Explicit Constant](#explicit-constant)
-* [Other Types](#other-types)
   - [NA](#na)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
@@ -450,7 +450,6 @@ An area/location time zone is written in the form `Area/Location`.
  * `Etc/UTC` == `Zero` == `Z`
  * `L`
 
-
 #### Global Coordinates
 
 Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a fractional separator.
@@ -459,6 +458,15 @@ Global coordinates are written as latitude and longitude to a precision of hundr
 
  * `51.60/11.11`
  * `-13.53/-172.37`
+
+#### Time Offset
+
+Time offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hh:mm`.
+
+**Examples**:
+
+ * `1985-10-26/01:20:01.105+07:00`
+ * `2000-01-14/10:22:00-02:00`
 
 
 
@@ -868,10 +876,6 @@ The explicit value must be a real object (not a pseudo-object).
 
 If a decoder has access to the schema that defines a particular constant, the explicit value is ignored (the value from the schema is used).
 
-
-
-Other Types
------------
 
 ### NA
 

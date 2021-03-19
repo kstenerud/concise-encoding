@@ -10,7 +10,7 @@ It is composed of 1:1 type compatible [text](cte-specification.md) and [binary](
 Version
 -------
 
-Version 1 (prerelease)
+Version 0 (prerelease)
 
 
 
@@ -32,6 +32,7 @@ Contents
   - [Time Zones](#time-zones)
     - [Area/Location](#arealocation)
     - [Global Coordinates](#global-coordinates)
+    - [Time Offset](#time-offset)
 * [Array Types](#array-types)
   - [String-like Arrays](#string-like-arrays)
     - [String](#string)
@@ -54,7 +55,6 @@ Contents
   - [Comment](#comment)
   - [Padding](#padding)
   - [Constant](#constant)
-* [Other Types](#other-types)
   - [NA](#na)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
@@ -62,7 +62,21 @@ Contents
 * [Unquoted-Safe String](#unquoted-safe-string)
   - [Confusable Characters](#confusable-characters)
 * [Equivalence](#equivalence)
-* [Document Limits](#document-limits)
+* [Security and Limits](#security-and-limits)
+  - [Attack Vectors](#attack-vectors)
+    - [Induced Data Loss](#induced-data-loss)
+    - [Default Type Conversions](#default-type-conversions)
+    - [Induced Omission](#induced-omission)
+    - [Key Collisions](#key-collisions)
+    - [Deserialization Complexity](#deserialization-complexity)
+    - [Other Vulnerabilities](#other-vulnerabilities)
+  - [Mitigations: Concise Encoding Codecs](#mitigations-concise-encoding-codecs)
+    - [Validation](#validation)
+    - [Data Validation Error Events](#data-validation-error-events)
+    - [User-Controllable Limits](#user-controllable-limits)
+    - [Automatic Rejection](#automatic-rejection)
+    - [Key Collision Behavior](#key-collision-behavior)
+  - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
 * [Version History](#version-history)
 * [License](#license)
 
@@ -123,9 +137,7 @@ During the pre-release phase, all documents should use version `0` so as not to 
 Numeric Types
 -------------
 
-The Concise Encoding format itself places no bounds on the range of numeric types, but implementations (being bound by language, platform, and physical limitations) must decide which ranges to accept (as a library limitation and via schemas). Any numeric value that exceeds those ranges must be converted to positive or negative infinity. Infinity replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties). Applications must be prepared to receive such values and deal with them according to their security practices (including rejecting the document if necessary).
-
-Decoders must provide an option to automatically reject documents containing out-of-range values. This option must default to enabled for better security.
+The Concise Encoding format itself places no bounds on the range of numeric types, but implementations (being bound by language, platform, and physical limitations) must [decide which ranges to accept](#user-controllable-limits).
 
 
 ### Boolean
@@ -296,6 +308,18 @@ This method has the advantage of being temporally unambiguous, which could be us
 
  * `51.60/11.11`
  * `-13.53/-172.37`
+
+
+#### Time Offset
+
+Time offset records only the offset from UTC rather than an actual location. It exists for historical reasons and is not recommended except as a means to interface with legacy systems.
+
+Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes.
+
+**Examples**:
+
+ * `+05:30`
+ * `-01:00`
 
 
 ### How to Record Time
@@ -891,7 +915,6 @@ Padding is **non-referring** and **invisible**. The padding type has no semantic
 Padding is only available for CBE documents.
 
 
-
 ### Constant
 
 Constants are named values that have been defined in a schema. Constants are **non-referring** and **visible**. A CTE decoder must look up the constant name in the schema and use the value it maps to. CTE encoders must use constant names where specified by the schema.
@@ -901,20 +924,16 @@ A constant's name must be an [unquoted-safe string](#unquoted-safe-string) with 
 Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
 
-
-Other Types
------------
-
 ### NA
 
 "Not Available"
 
-Denotes missing data (data that should be there but is not for some reason). NA supports a standalone form, as well as a form with a "reason" field to explain why the data is not available.
+NA is a **non-referring**, **visible** pseudo-object that denotes missing data (data that should be there but is not for some reason). NA supports a standalone form, as well as a form with a "reason" field to explain why the data is not available.
 
     [NA]           (not available for unknown reason)
     [NA] [Reason]  (not available because of Reason)
 
-NA should suggest an error or abnormal condition. Do not use NA to indicate optional data; simply omit the field in that case.
+NA indicates an error or abnormal condition, and may cause a decoder to halt processing. Do not use NA to indicate optional data; simply omit the field in that case.
 
 #### Reason Field
 
@@ -1150,28 +1169,161 @@ Strict equivalence concerns itself with differences that can still technically h
 
 
 
-Document Limits
----------------
+Security and Limits
+-------------------
 
-Implementations should enforce limits to the documents they'll accept in order to protect against malicious payloads. These may include things such as:
+Accepting data from an outside source is always a security risk. The safest approach is to always assume hostile intentions when ingesting data.
+
+Although Concise Encoding supports a wide range of data types and values, any given implementation will have limitations of some sort on their abilities due to the platform, language, system, and performance profiles. This will inevitably lead to subtle differences in CE implementations and applications that an attacker might be able to take advantage of if you're not careful.
+
+
+### Attack Vectors
+
+There are many vectors that attackers can take advantage of when they control the data your system is receiving, the most common of which are induced data loss, field omission, key collisions, and exploitation of algorithmic complexity.
+
+#### Induced Data Loss
+
+Once the characteristics of a system are known, an attacker can anticipate under what circumstances it will suffer data loss based on the language and technology used, the host it's running on, and the code itself.
+
+The most common sources of deserialization data loss are:
+
+ * Cutting off the upper part of an integer on overflow
+ * Rounding off the lower part of a binary float on overflow
+ * Rounding to infinity or converting to NaN
+ * Truncating long arrays/strings
+ * Erasing/replacing invalid characters in a string-like object
+
+Any point in your system that allows data loss is a potential security hole, because different parts of your system will likely handle the same loss-inducing data in different ways, and those differences can be exploited by an attacker using specially crafted documents.
+
+As a contrived example, consider a fictional system where the access control subsystem running on platform A leaves bad characters as-is or replaces them with u+fffd, and the storage subsystem running on platform B truncates bad characters. If an attacker is able to send a "create user" or "change user" command with a group of `admin\U+D800` (which would pass access control validation because `admin\U+D800` != `admin`), he could set up an admin user because the storage subsystem truncates bad characters and stores the group `admin\U+D800` as `admin`. The next time that user is loaded, it will be in group `admin`.
+
+Numbers can also suffer data loss depending on how the decoded values are stored internally. For example, attempting to load the value 0x123456789 into a 32-bit unsigned integer would in many languages silently overflow to a result of 0x23456789. Similarly, the value 0x87654321 (2271560481) stored in a 32-bit ieee754 binary float field would be silently truncated to 2271560448, losing precision and changing the effective value because it only has 24 bits available for the siginificand.
+
+#### Default Type Conversions
+
+Default type conversions are a form of data loss, and are specially cited here because they tend to happen silently as a result of how the language they're implemented in works. For example, PHP silently converts string values to 0 when comparing to a number. C and C++ treat all nonzero values as "true", including pointers. Other languages convert the numeric value to a string using the default format and then compare. These differing behaviors can potentially be exploited by an attacker.
+
+Default truncation is also a problem. For example, some systems will truncate out-of-range values to 0, meaning that if an attacker could somehow cause an out of range price (999999999999999999999999999999999999 or whatever), such a system would convert it to 0, giving it away for free!
+
+#### Induced Omission
+
+Omission occurs when a decoder decides to drop bad data rather than store a default value or attempt to "fix" it. When this occurs, the count of objects in containers will change, and critical information might now be missing. This could become a security hole if the fields are preserved by the decoders in some parts of your system but omitted in others.
+
+#### Key Collisions
+
+Key collisions occur when two or more identical keys are present in the same encoded map. Systems could potentially deal with this situation in a number of different ways:
+
+ * Take the initial key and reject all duplicate keys (choose the first instance)
+ * Replace the value for each duplicate encountered (choose the last instance)
+ * Reject the key and all associated values (choose nothing)
+ * Reject the entire document (abort processing)
+
+For example, given the map:
+
+```
+{
+    purchase-ids = [1004 102062 94112]
+    total = 91.44
+    total = 0
+}
+```
+
+As a seller, you'd want your billing system to choose the first instance of "total". As a buyer, you'd much prefer the second!
+
+**Note**: Key collisions can also occur as a result of [data loss](#data-loss) or even [default type conversions](#default-type-conversions):
+
+```
+{
+    purchase-ids = [1004 102062 94112]
+    total = 91.44
+    total\U+D800 = 0
+}
+```
+
+In this case, should the system truncate bad Unicode characters after checking for duplicate keys, it would be vulnerable to exploitation.
+
+#### Deserialization Complexity
+
+Depending on the implementation, some operations can get expensive very quickly the larger the object is, exhibiting O(n²) or sometimes even O(n³) behavior. This is particularly true of "big int" type structures in many languages. Even attempting to deserialize values as small as 10^1000 into a BigInt could DOS such systems.
+
+#### Other Vulnerabilities
+
+Attack documents can threaten a system in other ways, too. For example:
+
+ * Extremely large objects (for example a 1TB array).
+ * Documents with too many objects.
+ * Documents with too much container depth (attempting to overflow the decoder's stack).
+
+
+### Mitigations: Concise Encoding Codecs
+
+To mitigate these kinds of security issues, Concise Encoding codecs have the following additional requirements:
+
+#### Validation
+
+Values must be validated by the codec for:
+
+ * [Global limits](#user-controllable-limits)
+ * Content rules (based on type)
+ * Schema rules (if any)
+
+If an error is encountered while decoding, it must either generate an NA event (for data errors), or halt processing (for structural errors):
+
+| Error Type              | Procedure                                                 |
+| ----------------------- | --------------------------------------------------------- |
+| Structural errors       | Halt processing with a diagnostic                         |
+| Structural limit errors | Halt processing with a diagnostic                         |
+| Data validation errors  | Replace with @na event                                    |
+| Data limit errors       | Replace with @na event                                    |
+| Unsupported type        | Replace with @na event                                    |
+| Duplicate key           | Halt or replace ([user setting](#key-collision-behavior)) |
+
+#### Data Validation Error Events
+
+When a data validation error occurs, a decoder must inform the application by replacing the data event with an NA event containing a string reason describing the failure: `@na:"reason for the failure"`
+
+If an NA event is received in place of a map key, the entire key-value pair is effectively invalid.
+
+#### User-Controllable Limits
+
+The codec must allow the user to control various limits and ranges, with sane defaults to guard against DOS attacks:
 
  * Maximum object count overall
  * Maximum object count in a container
- * Maximum array length
+ * Maximum array length in bytes
  * Maximum total document size in bytes
- * Maximum container depth (from the top level to the most deeply nested container)
- * Maximum coefficient size in integer and fp numbers (significant digits)
+ * Maximum depth from the top level (1) to the most deeply nested object (inclusive)
+ * Maximum number of digits allowed in an integer value
+ * Maximum number of significant digits allowed in a floating point number
 
-It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. Decoders must either make known what their limits are, or provide the user with a way to configure them (with reasonable defaults). Implementations must provide the option to automatically reject documents that exceed these limits, and default to the option being enabled for better security.
-
-As an illustration, for a general purpose decoder the following default limits should give a reasonable balance (in 2020):
+It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. As an illustration, for a general purpose decoder the following defaults should give a reasonable balance in 2020:
 
 | Metric                 | Limit     |
 | ---------------------- | --------- |
-| Document size in bytes | 10GB      |
-| Overall object count   | 1 billion |
-| Container depth        | 1000      |
+| Document size in bytes | 5 GB      |
+| Overall object count   | 1 million |
+| Depth                  | 1000      |
 | Coefficient size       | 100       |
+
+#### Automatic Rejection
+
+The codec must allow the user to control whether the decoder automatically halts processing after it encounters or produces an `@na` event, with a default of true.
+
+#### Key Collision Behavior
+
+The codec must allow the user to control whether a duplicate key is treated as a structural error (which halts procesing) or a data error (which replaces the data event with an `@na` event).
+
+
+### Mitigations: Application Guidelines
+
+For application developers, security is a frame of mind. You must always be considering the risks of your architecture, and the size of your attack surface. Here are some general guidelines:
+
+ * Harmonize limits across your entire application surface (all subsystems). The most insidious exploits take advantage of differences in processing.
+ * Use a common schema to ensure that your validation rules are consistent across your infrastructure.
+ * Treat received values as all-or-nothing. If you can't store it in its entirety without data loss, it should be rejected. Allowing data loss means opening your system to key collisions and other exploits.
+ * Guard against unintentional default conversions (for example string values converting to 0 or true in comparisons).
+ * Never store @na or attempt to convert @na to a default value. Generate a diagnostic and move on.
+ * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise, either truncating or omitting data, which opens your system to exploitation.
 
 
 

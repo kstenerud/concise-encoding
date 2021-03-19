@@ -58,8 +58,8 @@ Contents
   - [Metadata Map](#metadata-map)
   - [Comment](#comment)
   - [Padding](#padding)
-* [Other Types](#other-types)
   - [NA](#na)
+* [Other Types](#other-types)
   - [RESERVED](#reserved)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
@@ -634,10 +634,6 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
     [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
-
-Other Types
------------
-
 ### NA
 
 NA can be encoded with a reason (`[94 7e]` + reason) or without a reason (`[7e]`).
@@ -646,6 +642,10 @@ NA can be encoded with a reason (`[94 7e]` + reason) or without a reason (`[7e]`
     [94 7e 6a 94 01] = Not available for reason 404
     [7e] = Not available for unknown reason
 
+
+
+Other Types
+-----------
 
 ### RESERVED
 
