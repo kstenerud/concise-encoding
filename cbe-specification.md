@@ -60,6 +60,7 @@ Contents
   - [Padding](#padding)
   - [NA](#na)
 * [Other Types](#other-types)
+  - [Nil](#nil)
   - [RESERVED](#reserved)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
@@ -138,7 +139,7 @@ A CBE document is byte-oriented. All objects are composed of a type field and a 
 |  7b | 123 | End of Container          |                                                 |
 |  7c | 124 | Boolean False             |                                                 |
 |  7d | 125 | Boolean True              |                                                 |
-|  7e | 126 | NA (reason unknown)       |                                                 |
+|  7e | 126 | Nil                       |                                                 |
 |  7f | 127 | Padding                   |                                                 |
 |  80 | 128 | String: 0 bytes           |                                                 |
 |  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                         |
@@ -199,7 +200,7 @@ Types from plane 2 are represented using two bytes instead of one, using the pre
 | ... | ... | ...                       |                                                 |
 |  7c | 124 | RESERVED                  |                                                 |
 |  7d | 125 | Array (Boolean)           | [chunk length] [1-bit elements] ...             |
-|  7e | 126 | NA with reason            | [reason object]                                 |
+|  7e | 126 | NA                        | [reason object]                                 |
 |  7f | 127 | RESERVED                  |                                                 |
 |  80 | 128 | Media                     | [media type (string)] [8-bit data]              |
 |  81 | 129 | RESERVED                  |                                                 |
@@ -636,16 +637,21 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 
 ### NA
 
-NA can be encoded with a reason (`[94 7e]` + reason) or without a reason (`[7e]`).
+NA is encoded as `[94 7e]` + reason.
 
     [94 7e 84 67 6f 6e 65] = Not available for reason "gone"
     [94 7e 6a 94 01] = Not available for reason 404
-    [7e] = Not available for unknown reason
+    [94 7e 7e] = Not available for unknown reason
 
 
 
 Other Types
 -----------
+
+### Nil
+
+Nil is encoded as `[7e]`.
+
 
 ### RESERVED
 
@@ -660,7 +666,7 @@ Concatenation in CBE is encoded using parallel types in [plane 2](#type-field-pl
 
 **Examples**:
 
-    [94 7e] (string data) = NA with a string value explaining the reason
+    [94 7e 81 41] = NA with a string value explaining the reason
     [94 91] (RID data) (integer) = Resource ID with an integer concatenated
 
 
@@ -668,7 +674,7 @@ Concatenation in CBE is encoded using parallel types in [plane 2](#type-field-pl
 Empty Document
 --------------
 
-An empty document in CBE is signified by using the [NA](#na) type with no reason as the top-level object:
+An empty document in CBE is signified by using the [Nil](#nil) type the top-level object:
 
     [03 01 7e]
 

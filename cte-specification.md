@@ -74,10 +74,14 @@ Contents
   - [Constant](#constant)
     - [Explicit Constant](#explicit-constant)
   - [NA](#na)
+* [Other Types](#other-types)
+  - [Nil](#nil)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
+  - [Structural Whitespace Characters](#structural-whitespace-characters)
+* [Confusable Characters](#confusable-characters)
 * [Pretty Printing](#pretty-printing)
 * [Version History](#version-history)
 * [License](#license)
@@ -889,6 +893,15 @@ NA is encoded as `@na`, and supports [concatenation](#concatenation) for the opt
 
 
 
+Other Types
+-----------
+
+### Nil
+
+Nil is encoded as `@nil`.
+
+
+
 Concatenation
 -------------
 
@@ -934,10 +947,10 @@ c1 {
 Empty Document
 --------------
 
-An empty document in CTE is signified by using the [NA](#na) type with no reason as the top-level object:
+An empty document in CTE is signified by using the [Nil](#nil) type as the top-level object:
 
 ```cte
-c1 @na
+c1 @nil
 ```
 
 
@@ -962,22 +975,52 @@ An encoder must output letter case in accordance with this specification.
 Whitespace
 ----------
 
-Structural whitespace (whitespace not encoded into a string or string-like object) must be ignored by a CTE parser. Any number of structural whitespace characters can occur in a sequence.
+Whitespace is defined as any character marked as whitespace in the [Unicode](https://unicode.org) database. As of 2021, these characters are:
+
+| Code Point | Name                      |
+| ---------- | ------------------------- |
+| U+0009     | character tabulation      |
+| U+000A     | line feed                 |
+| U+000B     | line tabulation           |
+| U+000C     | form feed                 |
+| U+000D     | carriage return           |
+| U+0020     | space                     |
+| U+0085     | next line                 |
+| U+00A0     | no-break space            |
+| U+1680     | ogham space mark          |
+| U+2000     | en quad                   |
+| U+2001     | em quad                   |
+| U+2002     | en space                  |
+| U+2003     | em space                  |
+| U+2004     | three-per-em space        |
+| U+2005     | four-per-em space         |
+| U+2006     | six-per-em space          |
+| U+2007     | figure space              |
+| U+2008     | punctuation space         |
+| U+2009     | thin space                |
+| U+200A     | hair space                |
+| U+2028     | line separator            |
+| U+2029     | paragraph separator       |
+| U+202F     | narrow no-break space     |
+| U+205F     | medium mathematical space |
+| U+3000     | ideographic space         |
 
 
-### Valid Whitespace Characters
+### Structural Whitespace Characters
 
-While there are many characters classified as "whitespace" within the Unicode set, only the following are valid structural whitespace characters:
+Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document. Whitespace characters not intended to be structural will need to be quoted in most contexts to preserve their meaning.
 
-| Code Point | Name            |
-| ---------- | --------------- |
-| u+0009     | horizontal tab  |
-| u+000a     | line feed       |
-| u+000d     | carriage return |
-| u+0020     | space           |
+CTE decoders must accept all whitespace characters when decoding structural whitespace. CTE Encoders must produce only the following characters as structural whitespace:
+
+| Code Point | Name                      |
+| ---------- | ------------------------- |
+| U+0009     | character tabulation      |
+| U+000A     | line feed                 |
+| U+000D     | carriage return           |
+| U+0020     | space                     |
 
 
-### Whitespace **can** occur:
+#### Structural Whitespace **can** occur:
 
  * Around an object.
  * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `,`, `>`)
@@ -989,7 +1032,7 @@ Examples:
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 
-### Whitespace **must** occur:
+#### Structural Whitespace **must** occur:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
@@ -999,14 +1042,67 @@ Examples:
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
 
 
-### Whitespace **must not** occur:
+#### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`@ na`, `& 1234`, `$ |r mydoc.cbe|`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
+ * Between a [concatenation](#concatenation) operator and its operands (`|r http://x.com/| : 1` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
+
+
+
+Confusable Characters
+---------------------
+
+In [CTE](cte-specification.md) documents, confusable characters are characters that look confusingly similar to symbols and numerals from 0000-007f when viewed by a human. Strings containing such characters should be quoted or even escaped in cases where a human would likely confuse them for structural characters or objects of different types than they actually are. Although failure to do so would still produce documents that successfully parse, it makes for a VERY poor user experience and might even be exploited by an attacker. For example:
+
+| Confusing      | Fixed               |
+| -------------- | ------------------- |
+| `"A ” string"` | `"A \4201d string"` |
+| `（Ａ＝０）`     | `"（Ａ＝０）"`       |
+| `⒈`           | `"⒈"`              |
+| `𝟏𝟎𝟎𝟎𝟎`         | `"𝟏𝟎𝟎𝟎𝟎"`            |
+
+The following is a (non-exhaustive) list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
+
+| Character | Lookalikes (codepoints)                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
+| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
+| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
+| `#`       | fe5f, ff03                                                              |
+| `$`       | fe69, ff04                                                              |
+| `%`       | 2052, fe6a, ff05                                                        |
+| `&`       | fe60, ff06                                                              |
+| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
+| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
+| `)`       | fe5a, ff09                                                              |
+| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
+| `+`       | fe62, ff0b                                                              |
+| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
+| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
+| `.`       | fe52, ff0e                                                              |
+| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
+| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
+| `;`       | 037e, fe14, fe54, ff1b                                                  |
+| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
+| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
+| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
+| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
+| `@`       | fe6b, ff20                                                              |
+| `[`       | fe5d, ff3b, 1d115                                                       |
+| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
+| `]`       | fe5e, ff3d                                                              |
+| `^`       | ff3e                                                                    |
+| `_`       | 02cd, 23bd, ff3f                                                        |
+| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
+| `{`       | fe5b, ff5b, 1d114                                                       |
+| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
+| `}`       | fe5c, ff5d                                                              |
+| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
 
 
 

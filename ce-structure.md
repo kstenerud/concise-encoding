@@ -56,11 +56,12 @@ Contents
   - [Padding](#padding)
   - [Constant](#constant)
   - [NA](#na)
+* [Other Types](#other-types)
+  - [Nil](#nil)
 * [Concatenation](#concatenation)
 * [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
-  - [Confusable Characters](#confusable-characters)
 * [Equivalence](#equivalence)
 * [Security and Limits](#security-and-limits)
   - [Attack Vectors](#attack-vectors)
@@ -103,7 +104,7 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an [empty document](#empty-document), store [NA](#na) with reason NA as the top-level object.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an [empty document](#empty-document), store [nil](#nil) as the top-level object.
 
     [version specifier] [object]
 
@@ -111,7 +112,7 @@ The top-level object can be preceded by [pseudo-objects](#pseudo-objects), but m
 
 **Examples**:
 
- * Empty document: `c1 @na` (in [CBE](cbe-specification.md): [`03 01 7e`])
+ * Empty document: `c1 @nil` (in [CBE](cbe-specification.md): [`03 01 7e`])
  * Document containing the top-level integer value 1000: `c1 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
  * Document with metadata referring to the top-level object: `c1 (a=b) some-string-as-top-level-object`
@@ -314,12 +315,12 @@ This method has the advantage of being temporally unambiguous, which could be us
 
 Time offset records only the offset from UTC rather than an actual location. It exists for historical reasons and is not recommended except as a means to interface with legacy systems.
 
-Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes.
+Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes as `±hhmm`.
 
 **Examples**:
 
- * `+05:30`
- * `-01:00`
+ * `+0530`
+ * `-0100`
 
 
 ### How to Record Time
@@ -520,7 +521,7 @@ c1 [
     two
     3.1
     {}
-    @na
+    @nil
 ]
 ```
 
@@ -926,18 +927,9 @@ Constants are only available in CTE documents; CBE documents aren't meant for hu
 
 ### NA
 
-"Not Available"
+NA ("Not Available") is a **non-referring**, **visible** pseudo-object that indicates missing data (data that should be there but is not for some reason). The reason field, which can be any non-pseudo-object, describes why the data is missing.
 
-NA is a **non-referring**, **visible** pseudo-object that denotes missing data (data that should be there but is not for some reason). NA supports a standalone form, as well as a form with a "reason" field to explain why the data is not available.
-
-    [NA]           (not available for unknown reason)
-    [NA] [Reason]  (not available because of Reason)
-
-NA indicates an error or abnormal condition, and may cause a decoder to halt processing. Do not use NA to indicate optional data; simply omit the field in that case.
-
-#### Reason Field
-
-The optional reason field is implemented as a [concatenation](#concatenation). All non-pseudo types except NA can be used as the right-side of the concatenation.
+    [NA] [Reason]
 
 Some possible reasons for NA:
 
@@ -948,9 +940,20 @@ Some possible reasons for NA:
 
 **Examples**:
 
- * `@na:"Insufficient privileges"` (not available, with an English language reason)
+ * `@na:"Insufficient privileges"` (not available, with a text reason)
  * `@na:404` (not available for reason code 404)
- * `@na` (not available for unknown reason)
+ * `@na:@nil` (not available for unknown reason)
+
+
+
+Other Types
+------------
+
+### Nil
+
+Nil (also known as "Null") represents the absence of data. It is most commonly used in update operations to indicate the clearing of a field. For read and create operations, it's better to simply omit empty fields altogether.
+
+**Note**: Do not use nil to indicate an error condition; use [NA](#na) instead.
 
 
 
@@ -965,12 +968,18 @@ Concatenation is an operation that concatenates one object onto another to produ
 
 Concatenation is artificially limited in many ways to prevent the explosion of complexity that operators tend to bring.
 
- * Only the [resource ID](#resource-identifier) and [NA](#na) types support concatenation (left-side types).
- * Supported types have their own limitations on what types they can be concatenated with (right-side types).
- * The result of a concatenation is indivisible. Any preceding referring pseudo-objects refer to the finished, concatenated object (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not the left-side `http://x.com/`).
+The following types can be the left-side of a concatenation:
+
+| Left Side                   | Mandatory Right Side |
+| --------------------------- | -------------------- |
+| [NA](#na)                   | Yes                  |
+| [Resource ID](#resource-id) | No                   |
+| [Constant](#constant)       | No                   |
+
+ * Supported left-side types have their own limitations on what right-side types they can be concatenated with.
+ * The left and right side of a concatenation are considered parts of a single object. Any preceding referring [pseudo-objects](#pseudo-objects) refer to the combined object (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not the left-side `http://x.com/`).
  * Concatenated objects cannot be used in further concatenation operations (`|r http://x.com/|:string:string` is invalid).
- * [Pseudo-objects](#pseudo-objects) (except padding) must not be placed between the left-side and right-side of a concatenation (`@na:/*comment*/string` is invalid).
- * The right-side cannot be a [pseudo-object](#pseudo-objects) (`|r http://x.com/|:$ref-to-string` is invalid).
+ * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a concatenation. (`|r http://x.com/|:$ref-to-string` and `@na:/*comment*/string` are invalid). The only exception to this is [padding](#padding) (so long as a real object follows).
 
 **Example**:
 
@@ -995,10 +1004,10 @@ c1 (
 Empty Document
 --------------
 
-An empty document is signified by using the [NA](#na) type with no reason as the top-level object:
+An empty document is signified by using the [Nil](#nil) type with no reason as the top-level object:
 
 * In CBE: [`03 01 7e`]
-* In CTE: `c1 @na`
+* In CTE: `c1 @nil`
 
 
 
@@ -1053,51 +1062,6 @@ These are not unquoted-safe strings:
     contains-star-＊-lookalike
     contains.dot
     contains．dot-lookalike
-
-
-### Confusable Characters
-
-The following is a non-exhaustive list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
-
-In [CTE](cte-specification.md) documents, confusable characters must not be present unescaped where they could be confused by a human reader for structural or numeric characters (for exmaple `[`, `"`, `:`, `@`, `>`, `0`, `.` etc).
-
-**Note**: This list is not guaranteed complete! Use it as a guide only. The [Unicode character set](https://unicode.org/charts) will change at times in the future, so it's on you to keep up.
-
-| Character | Lookalikes (codepoints)                                                 |
-| --------- | ----------------------------------------------------------------------- |
-| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
-| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
-| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
-| `#`       | fe5f, ff03                                                              |
-| `$`       | fe69, ff04                                                              |
-| `%`       | 2052, fe6a, ff05                                                        |
-| `&`       | fe60, ff06                                                              |
-| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
-| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
-| `)`       | fe5a, ff09                                                              |
-| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
-| `+`       | fe62, ff0b                                                              |
-| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
-| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
-| `.`       | fe52, ff0e                                                              |
-| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
-| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
-| `;`       | 037e, fe14, fe54, ff1b                                                  |
-| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
-| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
-| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
-| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
-| `@`       | fe6b, ff20                                                              |
-| `[`       | fe5d, ff3b, 1d115                                                       |
-| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
-| `]`       | fe5e, ff3d                                                              |
-| `^`       | ff3e                                                                    |
-| `_`       | 02cd, 23bd, ff3f                                                        |
-| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
-| `{`       | fe5b, ff5b, 1d114                                                       |
-| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
-| `}`       | fe5c, ff5d                                                              |
-| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
 
 
 
@@ -1261,7 +1225,7 @@ To mitigate these kinds of security issues, Concise Encoding codecs have the fol
 
 #### Validation
 
-Values must be validated by the codec for:
+All decoded values must be validated for the following before being passed to the application:
 
  * [Global limits](#user-controllable-limits)
  * Content rules (based on type)
