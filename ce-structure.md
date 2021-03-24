@@ -35,7 +35,7 @@ Contents
     - [Time Offset](#time-offset)
 * [Array Types](#array-types)
   - [String-like Arrays](#string-like-arrays)
-    - [String](#string)
+    - [String Type](#string-type)
     - [Resource Identifier](#resource-identifier)
   - [Typed Array](#typed-array)
     - [Media](#media)
@@ -56,13 +56,15 @@ Contents
   - [Padding](#padding)
   - [Constant](#constant)
   - [NA](#na)
+  - [Identifier](#identifier)
 * [Other Types](#other-types)
   - [Nil](#nil)
-* [Concatenation](#concatenation)
+* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
 * [Unquoted-Safe String](#unquoted-safe-string)
 * [Equivalence](#equivalence)
+* [Error Processing](#error-processing)
 * [Security and Limits](#security-and-limits)
   - [Attack Vectors](#attack-vectors)
     - [Induced Data Loss](#induced-data-loss)
@@ -73,10 +75,8 @@ Contents
     - [Other Vulnerabilities](#other-vulnerabilities)
   - [Mitigations: Concise Encoding Codecs](#mitigations-concise-encoding-codecs)
     - [Validation](#validation)
-    - [Data Validation Error Events](#data-validation-error-events)
     - [User-Controllable Limits](#user-controllable-limits)
     - [Automatic Rejection](#automatic-rejection)
-    - [Key Collision Behavior](#key-collision-behavior)
   - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
 * [Version History](#version-history)
 * [License](#license)
@@ -138,7 +138,7 @@ During the pre-release phase, all documents should use version `0` so as not to 
 Numeric Types
 -------------
 
-The Concise Encoding format itself places no bounds on the range of numeric types, but implementations (being bound by language, platform, and physical limitations) must [decide which ranges to accept](#user-controllable-limits).
+The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) must [decide which ranges to accept](#user-controllable-limits).
 
 
 ### Boolean
@@ -148,12 +148,12 @@ Supports the values true and false.
 
 ### Integer
 
-Integer values can be positive or negative, and can be represented in various bases and sizes. An implementation may alter base and size when encoding/decoding as long as the numeric value remains the same.
+Integer values can be positive or negative, and can be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation may alter base and size when encoding/decoding as long as the final numeric value remains the same.
 
 
 ### Floating Point
 
-A floating point number is composed of a whole part, fractional part, and an exponent. Floating point numbers can be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
+A floating point number is composed of a whole part, fractional part, and possible exponent. Floating point numbers can be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
 
  * Decimal floating point number: 3.814 x 10⁵⁰
  * Binary floating point number:  7.403 x 2¹⁵
@@ -360,30 +360,37 @@ Use whichever kind of time most succinctly and completely handles your time need
 Array Types
 -----------
 
-An array represents a contiguous sequence of fixed length elements. The type of the array determines how its contents are interpreted.
+An array represents a contiguous sequence of fixed length elements. The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
-The Concise Encoding formats place no limitation on how long an array can be, but implementations will have to choose a pragmatic limit (as a library and via schemas). Decoders must provide an option to automatically reject documents containing too-long values. This option must default to enabled for better security.
+There are three primary kinds of array representations in Concise Encoding:
 
-There are three kinds of array representations in Concise Encoding:
-
- * String-like arrays, which contain UTF-8 data. String-like array lengths are counted in bytes.
- * [Typed arrays](#typed-array), whose contents represent elements of a particular type. A typed array's length is counted in elements, not bytes.
- * Custom types, which represent custom data that only a custom codec designed for them will understand. Custom type lengths are counted in bytes, and are encoded either in the style of a uint8 array for custom binary, or a string-like array for custom text.
+ * String-like arrays, which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (the array length is in bytes, not characters).
+ * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
+ * Custom types, which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent), and are encoded either in the style of a uint8 array for custom binary, or a string-like array for custom text.
 
 
 ### String-like Arrays
 
-String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays must always resolve to complete, valid UTF-8 sequences when fully decoded (in CTE documents, such validation must occur after decoding all escape sequences). All invalid characters must be replaced with the Unicode replacement character (U+FFFD) as a security measure (they must NOT be truncated). Invalid character replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties).
+String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays must always resolve to complete, valid UTF-8 sequences when fully decoded. A string containing invalid UTF-8 sequences must be treated as a [data error](#error-processing).
+
+#### String Replacement
+
+In some contexts, string data must be interpreted and certain parts replaced in order to yield the final string. This processing must happen *before* any validation takes place.
+
+Text processing can occur:
+
+ * When escape sequences are encountered (CTE only)
+ * When a NUL character is encountered
 
 #### NUL
 
 The NUL character (U+0000) must be supported if the type allows it, but because NUL can be a troublesome character on many platforms, its use in documents is discouraged.
 
-Decoders must provide the option to automatically replace NUL with the Unicode replacement character (U+FFFD) as a security measure for environments that never use NUL. This option must default to enabled, because that's the most common and safest setting. NUL replacement must be done BEFORE other validation such as [duplicate checking in containers](#container-properties).
+Decoders must provide the option to automatically replace NUL with the Unicode replacement character (U+FFFD). This option must default to enabled.
 
-#### String
+#### String Type
 
-A basic UTF-8 string. There are no additional requirements or restrictions beyond those of string-like arrays.
+A basic UTF-8 string. There are no additional requirements or restrictions beyond those of string-like arrays. The string type supports NUL.
 
 ##### Line Endings
 
@@ -391,9 +398,14 @@ Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to main
 
 #### Resource Identifier
 
-A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). If unspecified by a schema, the default resource identifier type is IRI.
+A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
 
-Resource IDs support [concatenation](#concatenation) where the right-side is a [string](#string) or [integer](#integer). Right-side values are converted to strings and appended to the resource ID. Numeric values must be interpreted as decimal for string conversion.
+Resource IDs can also be [combined](#combined-objects) with a [string](#string) or [integer](#integer), where the right side is appended to the resource ID to create a final combined value. Numeric right-side values are converted as decimal to string before appending.
+
+When combination occurs, validation is done in two steps:
+
+* Each side of the combination is individually validated against invalid characters or ranges.
+* The combined value is validated for length maximums, as well as correct resource ID structure and contents according to its type.
 
 **Examples**:
 
@@ -411,8 +423,8 @@ The following element types are supported in typed arrays. For other types, use 
 | Type                 | Element Sizes (bits) |
 | -------------------- | -------------------- |
 | Boolean              | 1                    |
-| Unsigned Int         | 8, 16, 32, 64        |
-| Signed Int           | 8, 16, 32, 64        |
+| Unsigned Integer     | 8, 16, 32, 64        |
+| Signed Integer       | 8, 16, 32, 64        |
 | BFloat               | 16                   |
 | IEEE754 Binary Float | 32, 64               |
 | UID                  | 128                  |
@@ -429,7 +441,11 @@ Array elements can be written using any of the representations allowed for the s
 
 #### Media
 
-The media object encapsulates a foreign media object/file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml). The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees its data as a sequence of bytes, and passes it along as such.
+The media object encapsulates a foreign media object/file, along with its string [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
+
+    [media type] [data]
+
+The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees its data as a sequence of bytes, and passes it along as such.
 
 A decoder must not attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is not a decoding error.
 
@@ -454,7 +470,7 @@ echo hello world
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report the problem to the user and substitute an [NA](#na) value.
+Custom types restrict interoperability to implementations that understand the types, and should only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode must report it as a [data error](#error-processing).
 
 Custom type implementations should provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they must be 1:1 convertible to each other without data loss.
 
@@ -476,7 +492,7 @@ A uint8 array value representing a user-defined custom data type. The interpreta
 
 #### Text Custom Type
 
-A string-like array value representing a user-defined custom data type. The interpretation of the string is user-defined, and can only be decoded if the receiver knows how to decode it.
+A string-like array value representing a user-defined custom data type. The interpretation of the string is user-defined, and can only be decoded if the receiver knows how to decode it. The custom text type supports NUL.
 
 **Example**:
 
@@ -488,8 +504,6 @@ Container Types
 ---------------
 
 Container types hold collections of other objects. 
-
-The Concise Encoding formats place no limitation on how many objects a container may contain, but implementations will have to choose a pragmatic limit (as a library and via schemas). Decoders must provide an option to automatically reject documents containing too many objects. This option must default to enabled for better security.
 
 
 ### Container Properties
@@ -504,7 +518,9 @@ For list-like containers, a duplicate means any object that is equivalent to ano
 
 For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
 
-If a container disallows duplicates, all duplicate entries encountered must be discarded as they are decoded (they must not halt decoding; the decoder must present the result as if the duplicate entries were never in the document to begin with).
+The testing of integer and float values for duplicates transcends the data type when the value can be converted without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
+
+If a container disallows duplicates, duplicate entries are [structural errors](#security-and-limits).
 
 
 ### List
@@ -534,13 +550,6 @@ Map entries are stored as key-value pairs. A key without a paired value is inval
 
 By default, a map is unordered and does not allow duplicate keys. Different rules can be set using a schema.
 
-Keys must be unique across numeric data types. For example, the following keys are considered duplicates:
-
- * Integer value 2000
- * Floating point value 2000.0
-
-**Note**: The string value "2000" is not numeric, and would not be considered a duplicate of 2000 or 2000.0.
-
 #### Keyable types
 
 Only certain types can be used as keys in map-like containers:
@@ -551,7 +560,7 @@ Only certain types can be used as keys in map-like containers:
 * [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
 
-[NA](#na) must not be used as a key.
+[Nil](#nil) must not be used as a key.
 
 **Example**:
 
@@ -589,11 +598,23 @@ Illustration of markup encodings:
 
 ##### Content String
 
-In content strings, leading and trailing whitespace is not considered significant. Whitespace sequences between printable sequences in a content string are considered equivalent to a single space character (u+0020). Whitespace at the beginning or end of a string can be ignored (trimmed).
+Content strings behave much like regular strings, except that:
 
-Implementations may alter whitespace in content strings for aesthetic reasons so long as at least one whitespace character remains between printable sequences.
+ * Leading and trailing collapsible whitespace must be removed from each line in the string before being passed on from the decoder.
+ * If the last line ends in collapsible whitespace and is not otherwise empty, the collapsible whitespace at the end must be converted to a single space (U+0020).
 
-**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are treated as regular text by decoders. Applications may interpret them as they wish.
+For the purposes of this rule:
+
+ * Collapsible whitespace is a sequence containing only the TAB (U+0009) and SPACE (U+0020) characters.
+ * A line is a sequence of characters delimited by either a line breaking sequence [(Unicode classes BK, CR, LF, NL)](http://www.unicode.org/reports/tr14/#Table1), or the beginning or end of the content string.
+ * Leading collapsible whitespace is collapsible whitespace that occurs between the beginning of the line and the first non-collapsible whitespace character.
+ * Trailing collapsible whitespace is collapsible whitespace that occurs between the last non-collapsible whitespace character and the end of the line.
+
+CTE encoders may add leading collapsible whitespace to content strings for aesthetic purposes.
+
+**Note**: At the application level, content strings generally follow the same rules as [HTML content strings](https://www.w3.org/TR/html4/struct/text.html#h-9.1), but this is beyond the scope of Concise Encoding.
+
+**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they must be treated as regular text by decoders and never converted.
 
 **Example**:
 
@@ -646,7 +667,7 @@ c1 [
 ]
 ```
 
-Using the full resource identifier is tedious, but we can use [markers](#marker) and the [concatenation operator](#concatenation) to make things more manageable. In the following example, the marked [resource identifiers](#resource-identifier) are placed in a [list](#list) (arbitrarily named "rdf") in a top-level [metadata map](#metadata-map) so that they themselves don't constitute data, but can still be referenced from the data.
+Using the full resource identifier is tedious, but we can use [markers](#marker) and [combination](#combined-objects) to make things more manageable. In the following example, the marked [resource identifiers](#resource-identifier) are placed in a [list](#list) (arbitrarily named "rdf") in a top-level [metadata map](#metadata-map) so that they themselves don't constitute data, but can still be referenced from the data.
 
 ```cte
 c1 (
@@ -741,18 +762,12 @@ A marker is a **referring**, **invisible** pseudo-object that tags the next obje
 
     [marker id] [marked object]
 
-#### Marker ID
-
-A marker ID is a unique (to the document) identifier for marked objects. A marker ID can be one of:
-
-1. A positive integer from 0 to 18446744073709551615 (up to 64 bits)
-2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters.
+The marker ID must be an [identifier](#identifier).
 
 #### Rules
 
  * A marker ID cannot be followed by a comment, metadata, or another marker.
  * A marker cannot mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
- * Marker IDs must be unique in the document; duplicate marker IDs are invalid.
 
 **Example**:
 
@@ -774,11 +789,11 @@ A reference is followed by either a [marker ID](#marker-id) or a [resource ident
 
 #### Rules
 
+ * Recursive references are allowed.
+ * References may refer to objects marked later in the document (forward references).
  * A reference with a [local marker ID](#marker-id) must refer to another object marked elsewhere in the same document (local reference).
  * A reference used as a map key must refer to a [keyable type](#keyable-types).
- * A resource reference must not be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
- * References may refer to objects marked later in the document (forward references).
- * Recursive references are allowed.
+ * A resource identifier reference must not be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
  * A resource identifier reference must point to:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A marker ID inside another CBE or CTE document, using the fragment section of the resource identifier as an ID
@@ -855,29 +870,17 @@ Comments do not support escape sequences. Character sequences that look like esc
 
 Whitespace in a comment string is treated the same as in [markup content strings](#content-string).
 
-Implementations must allow the user to choose whether to receive or ignore comments.
-
-**Note**: Comments cannot occur inside of [typed arrays](#type-array).
+**Note**: Comments (like all pseudo-objects) cannot occur inside of [typed arrays](#type-array).
 
 #### Comment String Character Restrictions
 
-Comments must contain only [text-safe](#text-safety) characters.
-
-The following characters are explicitly allowed:
+The following characters are allowed in comments:
 
  * Horizontal Tab (u+0009)
- * Linefeed (u+000a) - discarded in single line comments
- * Carriage Return (u+000d) - discarded in single line comments
-
-The following characters are disallowed if they aren't in the above allowed section:
-
- * Control characters (such as u+0000 to u+001f, u+007f to u+009f).
- * Line breaking characters (such as u+2028, u+2029).
-
-The following characters are allowed if they aren't in the above disallowed section:
-
- * UTF-8 printable characters
- * UTF-8 whitespace characters
+ * Linefeed (u+000a)
+ * Carriage Return (u+000d)
+ * UTF-8 [text-safe](#text-safety) printable characters
+ * UTF-8 [text-safe](#text-safety) whitespace characters
 
 The following character sequences must not be put into comment strings because they are comment delimiters in CTE:
 
@@ -911,7 +914,9 @@ c1
 
 ### Padding
 
-Padding is **non-referring** and **invisible**. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a CBE type field. A decoder must read and discard padding types. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+Padding is **non-referring** and **invisible**. The padding type has no semantic meaning; its only purpose is for memory alignment. The padding type can occur any number of times before a CBE type field. A decoder must consume and discard padding. An encoder may add padding between objects to help larger data types fall on an aligned address for faster direct reads from the buffer on the receiving end.
+
+**Note**: Unlike the other pseudo-objects, padding is allowed on the right-side of [combinations](#combined-objects).
 
 Padding is only available for CBE documents.
 
@@ -920,14 +925,16 @@ Padding is only available for CBE documents.
 
 Constants are named values that have been defined in a schema. Constants are **non-referring** and **visible**. A CTE decoder must look up the constant name in the schema and use the value it maps to. CTE encoders must use constant names where specified by the schema.
 
-A constant's name must be an [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters.
+A constant's name must be an [identifier](#identifier).
+
+Constants also have a [combined form](#combined-objects), whereby the right-side is the value of the constant (so that it is still usable in cases where the decoder doesn't have access to the constant's definition).
 
 Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
 
 ### NA
 
-NA ("Not Available") is a **non-referring**, **visible** pseudo-object that indicates missing data (data that should be there but is not for some reason). The reason field, which can be any non-pseudo-object, describes why the data is missing.
+NA ("Not Available") is a **non-referring**, **visible** pseudo-object that indicates missing data (data that should be there but is not for some reason). The [combined](#combined-objects) reason field (which can be any non-pseudo-object) describes why the data is missing.
 
     [NA] [Reason]
 
@@ -945,6 +952,23 @@ Some possible reasons for NA:
  * `@na:@nil` (not available for unknown reason)
 
 
+### Identifier
+
+An identifier is not an actual type; it's a type and value restriction placed upon objects in contexts where they are used as unique identifiers.
+
+An identifier must be one of:
+
+1. A positive integer from 0 to 18446744073709551615 (up to 64 bits).
+2. An [unquoted-safe string](#unquoted-safe-string) with a max length of 50 Unicode characters.
+
+Identifiers must be unique to the document and namespace. The possible namespaces are:
+
+ * [Markers and references](#marker)
+ * [Constants](#constant)
+
+A duplicate identifier *definition* (not usage) within a particular namespace is a [structural error](#error-processing).
+
+
 
 Other Types
 ------------
@@ -957,29 +981,32 @@ Nil (also known as "Null") represents the absence of data. It is most commonly u
 
 
 
-Concatenation
--------------
+Combined Objects
+----------------
 
-Concatenation is an operation that concatenates one object onto another to produce a new object.
+Combined objects are objects composed of two sub-objects that make up a whole.
 
-    [left-side] concatenated-with [right-side]
+    [left-object] combined-with [right-object]
+
+The effect of this combination can be either to concatenate one object to another (for example [resource IDs](#resource-id)), or to clarify the meaning of the object (for example [NA](#na) or [constants](#constant)).
+
+**Note**: In CTE, combining is indicated by the `:` character. In CBE, the combination is implied by the type field.
 
 ### Limitations
 
-Concatenation is artificially limited in many ways to prevent the explosion of complexity that operators tend to bring.
+To keep the complexity down, there are limitations to combination:
 
-The following types can be the left-side of a concatenation:
+ * The left and right side of a combination are considered parts of a single object. Any preceding referring [pseudo-objects](#pseudo-objects) refer to the combined object (for example, in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not the left-side `http://x.com/`).
+ * Combined objects cannot be further combined (`|r http://x.com/|:string:string` is invalid).
+ * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a combination. (`|r http://x.com/|:$ref-to-string` and `@na:/*comment*/string` are invalid). The only exception to this is [padding](#padding) (so long as a real object follows to complete the combination).
+ * Only the following types can be the left-side of a combination:
 
-| Left Side                   | Mandatory Right Side |
-| --------------------------- | -------------------- |
-| [NA](#na)                   | Yes                  |
-| [Resource ID](#resource-id) | No                   |
-| [Constant](#constant)       | No                   |
-
- * Supported left-side types have their own limitations on what right-side types they can be concatenated with.
- * The left and right side of a concatenation are considered parts of a single object. Any preceding referring [pseudo-objects](#pseudo-objects) refer to the combined object (in `&ref:|r http://x.com/|:abcd`, the marker `ref` refers to the concatenated resource `http://x.com/abcd`, not the left-side `http://x.com/`).
- * Concatenated objects cannot be used in further concatenation operations (`|r http://x.com/|:string:string` is invalid).
- * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a concatenation. (`|r http://x.com/|:$ref-to-string` and `@na:/*comment*/string` are invalid). The only exception to this is [padding](#padding) (so long as a real object follows).
+| Left Type                   | Allowed Right Side Types   | Grouping is Mandatory |
+| --------------------------- | -------------------------- | --------------------- |
+| [Marker](#marker)           | Any                        | Yes                   |
+| [NA](#na)                   | Any                        | Yes                   |
+| [Resource ID](#resource-id) | String or positive integer | No                    |
+| [Constant](#constant)       | Any                        | No                    |
 
 **Example**:
 
@@ -1115,6 +1142,10 @@ Extraneous whitespace in a markup contents section is elided before comparison. 
 
 [NA](#na) values are always considered equivalent to each other regardless of the reasons.
 
+#### Nil
+
+[Nil](#nil) values are always considered equivalent to each other.
+
 #### Comments
 
 Comments are ignored when testing for relaxed equivalence.
@@ -1130,6 +1161,35 @@ Strict equivalence concerns itself with differences that can still technically h
 
 * Objects must be of the same type and size.
 * Comments are compared, but extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
+
+
+
+Error Processing
+----------------
+
+Errors are an inevitable part of the decoding process. This section lays out how errors must be handled. There are two major kinds of decoding errors:
+
+### Structural Errors
+
+Structural errors are the kinds of errors that imply or cause a malformed document structure, affect lookups, or hit a limit that stops the object from being ingested. This can be due to things such as:
+
+ * Improper document structure (mismatched container start/end, etc).
+ * Incorrect data types for the current context (map keys, object combinations, etc).
+ * Malformed identifiers.
+ * Failed reference lookup.
+ * Failed [global limit checks](#user-controllable-limits).
+
+A decoder must stop processing and issue a diagnostic when a structural error occurs.
+
+### Data Errors
+
+Data errors affect the reliability of a particular object, but don't compromise confidence in the decoder's ability to continue decoding the rest of the document. Some examples are:
+
+ * Failed string-like object validation.
+ * Failed value constraint validation.
+ * Unrecognized custom data.
+
+A decoder must allow the user or schema to decide what to do when a data error occurs.
 
 
 
@@ -1208,7 +1268,7 @@ In this case, should the system truncate bad Unicode characters after checking f
 
 #### Deserialization Complexity
 
-Depending on the implementation, some operations can get expensive very quickly the larger the object is, exhibiting O(n²) or sometimes even O(n³) behavior. This is particularly true of "big int" type structures in many languages. Even attempting to deserialize values as small as 10^1000 into a BigInt could DOS such systems.
+Depending on the implementation, some operations can get expensive very quickly the larger the object is, exhibiting O(n²) or sometimes even O(n³) behavior. This is particularly true of "big int" type structures in many languages. Even attempting to deserialize values as small as 10^1000 into a BigInt could DOS some systems.
 
 #### Other Vulnerabilities
 
@@ -1231,22 +1291,7 @@ All decoded values must be validated for the following before being passed to th
  * Content rules (based on type)
  * Schema rules (if any)
 
-If an error is encountered while decoding, it must either generate an NA event (for data errors), or halt processing (for structural errors):
-
-| Error Type              | Procedure                                                 |
-| ----------------------- | --------------------------------------------------------- |
-| Structural errors       | Halt processing with a diagnostic                         |
-| Structural limit errors | Halt processing with a diagnostic                         |
-| Data validation errors  | Replace with @na event                                    |
-| Data limit errors       | Replace with @na event                                    |
-| Unsupported type        | Replace with @na event                                    |
-| Duplicate key           | Halt or replace ([user setting](#key-collision-behavior)) |
-
-#### Data Validation Error Events
-
-When a data validation error occurs, a decoder must inform the application by replacing the data event with an NA event containing a string reason describing the failure: `@na:"reason for the failure"`
-
-If an NA event is received in place of a map key, the entire key-value pair is effectively invalid.
+If an error is encountered while decoding, the decoder must either halt processing or allow the user to decide (depending on the [kind of error](#error-processing)).
 
 #### User-Controllable Limits
 
@@ -1271,11 +1316,7 @@ It's impossible to prescribe what limits should be reasonable for all decoders, 
 
 #### Automatic Rejection
 
-The codec must allow the user to control whether the decoder automatically halts processing after it encounters or produces an `@na` event, with a default of true.
-
-#### Key Collision Behavior
-
-The codec must allow the user to control whether a duplicate key is treated as a structural error (which halts procesing) or a data error (which replaces the data event with an `@na` event).
+The codec must allow the user to control whether the decoder automatically halts processing after it encounters an `@na` event, with a default of true.
 
 
 ### Mitigations: Application Guidelines
@@ -1286,7 +1327,7 @@ For application developers, security is a frame of mind. You must always be cons
  * Use a common schema to ensure that your validation rules are consistent across your infrastructure.
  * Treat received values as all-or-nothing. If you can't store it in its entirety without data loss, it should be rejected. Allowing data loss means opening your system to key collisions and other exploits.
  * Guard against unintentional default conversions (for example string values converting to 0 or true in comparisons).
- * Never store @na or attempt to convert @na to a default value. Generate a diagnostic and move on.
+ * Never store @na or attempt to convert @na to a default value. Generate a diagnostic and either store a consistent, deterministic replacement, or more preferably halt processing.
  * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise, either truncating or omitting data, which opens your system to exploitation.
 
 
