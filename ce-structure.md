@@ -560,7 +560,7 @@ Only certain types can be used as keys in map-like containers:
 * [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
 
-[Nil](#nil) must not be used as a key.
+[Nil](#nil) and [NA](#na) must not be used as a key.
 
 **Example**:
 
@@ -927,7 +927,7 @@ Constants are named values that have been defined in a schema. Constants are **n
 
 A constant's name must be an [identifier](#identifier).
 
-Constants also have a [combined form](#combined-objects), whereby the right-side is the value of the constant (so that it is still usable in cases where the decoder doesn't have access to the constant's definition).
+Constants also have a [combined form](#combined-objects), whereby the right-side is the explicit value of the constant (so that it is still usable in cases where the decoder doesn't have access to the constant's definition).
 
 Constants are only available in CTE documents; CBE documents aren't meant for human consumption, and store the actual value only.
 
@@ -937,6 +937,17 @@ Constants are only available in CTE documents; CBE documents aren't meant for hu
 NA ("Not Available") is a **non-referring**, **visible** pseudo-object that indicates missing data (data that should be there but is not for some reason). The [combined](#combined-objects) reason field (which can be any non-pseudo-object) describes why the data is missing.
 
     [NA] [Reason]
+
+NA must not be used as:
+
+ * A [map key](#map).
+ * An [identifier](#identifier).
+ * The media type field in a [media object](#media).
+ * The name field in a [markup container](#markup).
+ * A content string in a [markup container](#markup) or [comment](#comment).
+ * The predicate in a [relationship](#relationship).
+ * The explicit value of a [constant](#constant).
+ * The resource ID to a [reference](#reference).
 
 Some possible reasons for NA:
 
