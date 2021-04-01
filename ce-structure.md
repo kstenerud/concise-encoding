@@ -533,7 +533,7 @@ For map-like containers, a duplicate means any key-value pair whose key is equiv
 
 The testing of integer and float values for duplicates transcends the data type when the value can be converted without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
 
-If a container disallows duplicates, duplicate entries are [structural errors](#security-and-limits).
+If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
 
 ### List
@@ -990,7 +990,7 @@ Identifiers must be unique to the document and namespace. The possible namespace
  * [Markers and references](#marker)
  * [Constants](#constant)
 
-A duplicate identifier *definition* (not usage) within a particular namespace is a [structural error](#error-processing).
+A duplicate identifier *definition* (not usage) within a particular namespace is a [structural error](#structural-errors).
 
 
 
