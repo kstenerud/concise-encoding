@@ -951,7 +951,11 @@ NA ("Not Available") is a **non-referring**, **visible** pseudo-object that indi
 
     [NA] [Reason]
 
-NA must not be used as:
+NA implies an error condition. For intentional "no-data", use [nil](#nil).
+
+Decoders must provide a configuration option to allow the user to decide how NA is handled. By default, when a decoder receives an NA, it is a [structural error](#structural-error). If the user has elected to allow NA, the NA event and reason must be passed to the user for them to deal with as they choose.
+
+**NA must not be used as**:
 
  * A [map key](#map).
  * An [identifier](#identifier).
@@ -962,7 +966,7 @@ NA must not be used as:
  * The explicit value of a [constant](#constant).
  * The resource ID to a [reference](#reference).
 
-Some possible reasons for NA:
+**Some possible reasons for NA**:
 
  * The system doesn't have the requested data.
  * Rules prevent the data from being provided.
