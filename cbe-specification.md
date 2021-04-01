@@ -274,7 +274,7 @@ Binary floating point values are stored in 32 or 64-bit ieee754 binary floating 
 
 **Examples**:
 
-    [70 af 44] = 0x1.5e4p+10
+    [70 af 44] = 0x1.5ep+10
     [71 00 e2 af 44] = 0x1.5fc4p+10
     [72 00 10 b4 3a 99 8f 32 46] = 0x1.28f993ab41p+100
 
