@@ -158,8 +158,8 @@ c1
     hex-int       = 0xfffe0001
     very-long-int = 100000000000000000000000000000000000009
     decimal-float = -14.125
-    hex-float     = 0x5.1ec4p20
-    very-long-flt = 4.957234990634579394723460546348e1000000000
+    hex-float     = 0x5.1ec4p+20
+    very-long-flt = 4.957234990634579394723460546348e+100000
     not-a-number  = @nan
     infinity      = @inf
     neg-infinity  = -@inf
@@ -183,12 +183,13 @@ c1
 ```cte
 c1
 {
-    uuid          = @f1ce4567-e89b-12d3-a456-426655440000
-    date          = 2019-07-01
-    time          = 18:04:00.940231541/E/Prague
-    timestamp     = 2010-07-15/13:28:15.415942344/Z
-    na            = @na
-    na_for_reason = @na:"file not found"
+    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
+    date      = 2019-07-01
+    time      = 18:04:00.940231541/E/Prague
+    timestamp = 2010-07-15/13:28:15.415942344/Z
+    na        = @na:"database is offline"
+    nil       = @nil
+    media     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
 ```
 
@@ -219,7 +220,7 @@ c1
         // OnChange contains code which might have problematic characters.
         // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
         <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
-            NameInput.parent.InsertRawAfter(NameInput, "<Image src=|r img/check.svg|>")
+            NameInput.Parent.InsertRawAfter(NameInput, "<Image src=|r img/check.svg|>")
             HelloText.SetText("Hello, " + NameInput.Text + "!")
             @@",
             Name me!
@@ -265,7 +266,8 @@ c1
 #### Relationships
 
 ```cte
-c1 (
+c1
+(
     // Marked base resource identifiers used for concatenation.
     // (Stored in metadata because they themselves aren't part of the data)
     rdf = [
