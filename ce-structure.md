@@ -167,6 +167,19 @@ An implementation must preserve the signaling/quiet status of a NaN, and may dis
 
 An implementation may alter the type and storage size of a floating point value when encoding/decoding as long as the final numeric value remains the same.
 
+#### Value Ranges
+
+Floating point types support the following ranges:
+
+| Type    | Significant Digits | Exponent Min | Exponent Max |
+| ------- | ------------------ | ------------ | ------------ |
+| Binary  | 15.95              | -1022        | 1023         |
+| Decimal | unlimited          | unlimited    | unlimited    |
+
+Binary floats are limited to what can be represented by 64-bit ieee754 binary float.
+
+Although decimal floats technically have unlimited range, most implementations will have performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
+
 #### Special Floating Point Values
 
 Both decimal and binary floating point numbers have representations for the following special values:
@@ -1315,6 +1328,7 @@ The codec must allow the user to control various limits and ranges, with sane de
  * Maximum depth from the top level (1) to the most deeply nested object (inclusive)
  * Maximum number of digits allowed in an integer value
  * Maximum number of significant digits allowed in a floating point number
+ * Maximum exponent size (in digits) in a floating point number
 
 It's impossible to prescribe what limits should be reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. As an illustration, for a general purpose decoder the following defaults should give a reasonable balance in 2020:
 
