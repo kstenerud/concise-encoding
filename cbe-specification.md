@@ -265,7 +265,7 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 **Examples**:
 
     [65 07 4b] = -7.5
-    [65 ac 02 d0 9e 38] = 9.21424e80
+    [65 ac 02 d0 9e 38] = 9.21424e+80
 
 
 ### Binary Floating Point
@@ -307,7 +307,7 @@ Time values are stored in [compact time](https://github.com/kstenerud/compact-ti
 
 **Example**:
 
-    [9a f7 58 74 fc f6 a7 01 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
+    [9a f7 58 74 fc f6 a7 fd 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
 
 
 ### Timestamp
@@ -480,7 +480,7 @@ For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to
 
     [94 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
     [94 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
-    [94 7d 16 e6 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+    [94 7d 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 #### Media
 
@@ -554,7 +554,7 @@ Unlike other containers, a markup container requires two end-of-container marker
 
 **Example**:
 
-    [78 84 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b;Some text>
+    [78 84 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b,Some text>
 
 
 ### Relationship
@@ -595,10 +595,10 @@ A reference begins with the reference type (0x98), followed by either a marker I
 
     [98 81 61] = reference to the object marked with ID "a"
 
-    [98 93 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
-    = reference to relative file "common.ce", ID "legalese"
+    [98 91 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [98 93 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [98 91 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
