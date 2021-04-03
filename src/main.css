@@ -81,6 +81,33 @@ body {
     text-align: center;
 }
 
+.badge-donate {
+    background-color: #ffac2d;
+    color: #073663;
+    border-radius: 1em;
+    align-items: center;
+    display: inline-flex;
+    font-size: 1.5em;
+    font-style: italic;
+    font-weight: 500;
+    height: 1.4em;
+    justify-content: center;
+    line-height: 1.5;
+    padding: 0 0.7em 0 0.7em;
+    white-space: nowrap;
+    border: none;
+    /*box-shadow: 0px -0.5px 0px 1px #ffc439;*/
+}
+
+.badge-donate:hover {
+    color: #073663;
+    text-decoration: underline;
+}
+
+input.badge-donate:hover {
+    background-color: #ffc439;
+}
+
 .badge-shoutout {
     background-color: var(--c-bg-shout);
     color: var(--c-txt-badge);
@@ -129,6 +156,13 @@ a.badge-shoutout:hover {
     margin-left: auto;
     margin-right: auto;
     padding-bottom: 1rem;
+}
+
+.donate {
+    width: 80%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .blurb {
