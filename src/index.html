@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="./main.css">
 
     <meta charset="utf-8">
-    <meta name="description" content="The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats, and rich type support.">
+    <meta name="description" content="The friendly data format for human and machine. Ad-hoc, secure, with 1:1 compatible twin binary and text formats and rich type support.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Concise Encoding</title>
@@ -39,19 +39,19 @@
     <main>
         <section>
             <aside>
-                <img class="card-image" src="img/heart.svg">
+                <img class="card-image" src="img/twin.svg">
                 <h3>Edit Text, Transmit Binary</h3>
                 <p>Humans love text. Machines love binary. Now you can seamlessly convert 1:1 between them!</p>
+            </aside>
+            <aside>
+                <img class="card-image" src="img/lock.svg">
+                <h3>Secure By Design</h3>
+                <p>Precise decoding behavior means no poisoned data, no privilege escalations, and no DOSing!</p>
             </aside>
             <aside>
                 <img class="card-image" src="img/atom.svg">
                 <h3>Rich Type Support</h3>
                 <p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</p>
-            </aside>
-            <aside>
-                <img class="card-image" src="img/plug.svg">
-                <h3>Plug and Play</h3>
-                <p>No schema needed. No special syntax files. No code generation. Just import and go!</p>
             </aside>
         </section>
 
@@ -137,6 +137,19 @@
             </div>
             <p>No specification is impervious to errors-in-specification, or the need to change to meet a new reality. Changing a specification leads to all sorts of incompatibilities and mismatched implementations <strong>UNLESS</strong> you version both the spec <strong>AND</strong> the documents.</p>
             <p>In Concise Encoding, both specs and documents are <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#version-specifier">versioned</a>, so you can rest secure in the knowledge that a CE decoder will properly handle your CE document forever.</p>
+        </article>
+
+        <article>
+            <div class="horiz">
+                <img class="point-icon" src="img/plug.svg">
+                <div class="vert">
+                    <div>
+                        <h1>Plug and Play</h1>
+                        <h3>Extra steps suck</h3>
+                    </div>
+                </div>
+            </div>
+            <p>Concise Encoding can be used with or without a schema. There are no extra compilation phases, and no complicated definition files or code generation required to use it. Just import the library and go!</p>
         </article>
 
         <section class="blurb extra-space">
