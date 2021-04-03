@@ -104,10 +104,6 @@ body {
     text-decoration: underline;
 }
 
-input.badge-donate:hover {
-    background-color: #ffc439;
-}
-
 .badge-shoutout {
     background-color: var(--c-bg-shout);
     color: var(--c-txt-badge);
