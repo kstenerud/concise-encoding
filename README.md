@@ -1,11 +1,11 @@
 [Concise Encoding](https://concise-encoding.org/)
 =================================================
 
-The friendly data format for human and machine. Think JSON, but with 1:1 compatible twin binary and text formats and rich type support.
+The friendly data format for human and machine. Ad-hoc, secure, with 1:1 compatible twin binary and text formats and rich type support.
 
  * **Edit text, transmit binary.** Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.
+ * **Secure By Design.** Precise decoding behavior means no poisoned data, no privilege escalations, and no DOSing!
  * **Rich type support.** Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!
- * **Plug and play.** No schema needed. No special syntax files. No code generation. Just import and go.
 
 
 Contents
@@ -24,9 +24,9 @@ Contents
 Introduction
 ------------
 
-Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both, and none of the drawbacks?
+Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both and the drawbacks of neither?
 
-**Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to represent data in a power, bandwidth, and human friendly way.
+**Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to represent data securely in a power, bandwidth, and human friendly way.
 
 #### Supported Types
 
@@ -39,16 +39,19 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 | [Time](#other-basic-types)             | Date, time, or timestamp, arbitrary size                |
 | [Resource ID](#string-and-string-like) | URL, URI, IRI, etc                                      |
 | [String](#string-and-string-like)      | UTF-8 string, arbitrary length                          |
-| [Typed Array](#containers)             | Array of fixed-width type, arbitrary length             |
 | [List](#containers)                    | List of objects                                         |
 | [Map](#containers)                     | Mapping keyable objects to other objects                |
 | [Markup](#containers)                  | Presentation data, similar to XML                       |
 | [Relationship](#relationships)         | Semantic relationship data compatible with [RDF](https://www.w3.org/2001/sw/wiki/RDF) |
+| [Typed Array](#containers)             | Array of fixed-width type, arbitrary length             |
 | [Reference](#references)               | Points to objects defined elsewhere                     |
 | [Metadata](#metadata)                  | Data about data                                         |
 | [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
+| [Constants](#relationships)            | Symbolic value that has been defined in a schema        |
+| [Nil](#other-basic-types)              | No data                                                 |
+| [NA](#other-basic-types)               | Not Available (data missing with a reason why)          |
+| [Media](#other-basic-types)            | Images, videos, documents, files, etc                   |
 | [Custom](#custom-types)                | User-defined data type                                  |
-| [NA](#other-basic-types)               | Not Available (data missing)                            |
 
 
 
@@ -91,23 +94,27 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 | Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
 | ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
-| Null          |    Y*   |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
-| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |
 | UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |
 | Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |
-| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
 | String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |
+| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |
-| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |
-| Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
 | Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |
+| Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |
+| Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
 | Metadata      |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Nil           |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
+| NA            |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Media         |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Custom        |    Y    |     |      |      |      |             |       |           |             |        |   Y   |
 
 #### Features
@@ -128,7 +135,6 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
 
-* **Null**: Concise Encoding doesn't actually support null, but it has the more restricted NA (not available) type.
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
 * **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
@@ -189,7 +195,8 @@ c1
     timestamp = 2010-07-15/13:28:15.415942344/Z
     na        = @na:"database is offline"
     nil       = @nil
-    media     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+    media     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+                 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
 ```
 
