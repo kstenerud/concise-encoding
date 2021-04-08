@@ -66,10 +66,6 @@ Not
 
 If: true path, false path
 
-Metadata:
-- title
-- description
-
 -------------------------------------------------
 
 Types:
@@ -86,7 +82,6 @@ Types:
 - Map        
 - Markup     
 - Reference  
-- Metadata   
 - Comment    
 - Custom     
 
@@ -250,7 +245,6 @@ Markup:
 
 Not allowed:
 - Reference
-- Metadata
 - Comment
 - Custom
 
@@ -394,12 +388,9 @@ doesn't work. How to get list of map key validators?
 
 ---------------------------------
 
-CE metadata rules? ordered vs unordered, etc.
-
 .csb, .cst
 .cbs, .cts
 
-Or just use CE metadata document/data type. (_dt=ce:schema _v="1.0")
 - or dt=u"https://concise-encoding.org/schema/v1.0"
 ------------------------------------------------------------
 

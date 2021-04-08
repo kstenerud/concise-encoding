@@ -50,12 +50,10 @@ Contents
   - [Element Array Encodings](#element-array-encodings)
   - [Media](#media)
   - [String-Like Array Encodings](#string-like-array-encodings)
+  - [String](#string)
   - [Resource Identifier](#resource-identifier)
   - [Custom Binary](#custom-binary)
   - [Custom Text](#custom-text)
-  - [String](#string)
-    - [Quoted String](#quoted-string)
-    - [Unquoted String](#unquoted-string)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -64,19 +62,19 @@ Contents
     - [Container End](#container-end)
     - [Content String](#content-string)
   - [Relationship](#relationship)
+* [Other Types](#other-types)
+  - [Identifier](#identifier)
+  - [Nil](#nil)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
-  - [Metadata Map](#metadata-map)
   - [Comment](#comment)
     - [Single Line Comment](#single-line-comment)
     - [Multiline Comment](#multiline-comment)
   - [Constant](#constant)
     - [Explicit Constant](#explicit-constant)
   - [NA](#na)
-* [Other Types](#other-types)
-  - [Nil](#nil)
-* [Concatenation](#concatenation)
+* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
@@ -95,12 +93,13 @@ The following terms have specific meanings in this specification:
 
 | Term         | Meaning                                                                                                               |
 | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Must (not)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
-| Should (not) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
-| May (not)    | It is up to the implementation to decide whether to do something or not.                                              |
-| Can (not)    | Refers to a possibility or constraint which must be accommodated by the implementation.                               |
-| Optional     | The implementation must support both the existence and the absence of the specified item.                             |
-| Recommended  | Refers to a "best practice", which should be followed if possible.                                                    |
+| MUST (NOT)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| SHOULD (NOT) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| MAY (NOT)    | It is up to the implementation to decide whether to do something or not.                                              |
+| CAN          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| CANNOT       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+| OPTIONAL     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| RECOMMENDED  | Refers to a "best practice", which **SHOULD** be followed if possible.                                                |
 
 
 
@@ -109,13 +108,13 @@ General
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-All characters in a CTE document must be [text-safe](ce-structure.md#text-safety). Text-unsafe characters can only be represented using [escape sequences](#escape-sequences) (where allowed). Validation of text-safety must occur before processing escape-sequences. All other validation of string-like values must occur **after** decoding any escape sequences contained within.
+All characters in a CTE document **MUST** be [text-safe](ce-structure.md#text-safety). Text-unsafe characters **MUST** only be represented using [escape sequences](#escape-sequences) (where allowed). Validation of text-safety **MUST** occur before processing escape-sequences. All other validation of string-like values **MUST** occur **after** decoding any escape sequences contained within.
 
 Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace. Extraneous whitespace is ignored.
 
 **Examples**:
 
- * CTE v1 empty document: `c1 @na`
+ * CTE v1 empty document: `c1 na`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 [a b c]`
  * CTE v1 document containing a top-level map: `c1 {a=1 b=2 c=3}`
@@ -123,25 +122,25 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 
 ### Human Editability
 
-A CTE document must be editable by a human. This means that it must contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are reserved or permanently marked as non-characters, must not be present in the document.
+A CTE document **MUST** be editable by a human. This means that it **MUST** contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are reserved or permanently marked as non-characters, **MUST** not be present in the document.
 
 In the spirit of human editability:
 
- * Implementations should avoid outputting characters that editors tend to convert automatically.
- * Line lengths should be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
+ * Implementations **SHOULD** avoid outputting characters that editors tend to convert automatically.
+ * Line lengths **SHOULD** be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
  * The canonical line ending is linefeed (u+000a)
- * Implementations should convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
- * If a certain character is likely to be confusing or problematic to a human reader or editor, it must be escaped.
+ * Implementations **SHOULD** convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
+ * If a certain character is likely to be confusing or problematic to a human reader or editor, it **MUST** be escaped.
 
 
 ### Line Endings
 
-Line endings can be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders must accept all encodings as input, but encoders should output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders **MUST** accept all encodings as input, but encoders **SHOULD** output LF when the destination is a foreign or unknown system.
 
 
 ### Escape Sequences
 
-In some contexts, escape sequences may be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data:
+In some contexts, escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data:
 
 | Sequence (`\` + ...) | Interpretation                          |
 | -------------------- | --------------------------------------- |
@@ -162,9 +161,7 @@ In some contexts, escape sequences may be used to encode data that would otherwi
 | `0` - `9`            | [Unicode sequence](#unicode-sequence)   |
 | `.`                  | [verbatim sequence](#verbatim-sequence) |
 
-**Note**: The `*` and `/` escape sequences can help to avoid edge cases when [commenting out](#comment) big chunks of a document.
-
-Escape sequences must be converted before any other processing occurs during the decode process.
+Escape sequences **MUST** be converted before any other processing occurs during the decode process.
 
 #### Continuation
 
@@ -243,14 +240,14 @@ Normal processing resumes after the terminator, so '
 Version Specifier
 -----------------
 
-A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There must be no whitespace between the `c` and the version number.
+A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There **MUST** be no whitespace between the `c` and the version number.
 
-The version specifier and the top-level object must be separated by whitespace.
+The version specifier and the top-level object **MUST** be separated by whitespace.
 
 **Example**:
 
 * Version specifier (CTE version 1): `c1`
-* Complete (and empty) document: `c1 @na`
+* Complete (and empty) document: `c1 na`
 
 
 
@@ -259,14 +256,14 @@ Numeric Types
 
 ### Boolean
 
-Represented by the values `@true` and `@false`.
+Represented by the sequences `true` and `false`.
 
 
 ### Integer
 
-Integer values can be positive or negative, and can be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Values must be written in lower case.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Encoders **MUST** write values in lower case.
 
-Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
+Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
 | Base | Name        | Digits           | Prefix | Example      | Decimal Equivalent |
 | ---- | ----------- | ---------------- | ------ | ------------ | ------------------ |
@@ -277,7 +274,7 @@ Integers can be specified in base 2, 8, 10, or 16. Bases other than 10 require a
 
 ### Floating Point
 
-A floating point number is composed of a whole part and a fractional part separated by a dot `.`, with an optional exponential portion. Negative values are prefixed with a dash `-`.
+A floating point number is composed of a whole part and a fractional part separated by a dot `.`, with an **OPTIONAL** exponential portion. Negative values are prefixed with a dash `-`.
 
 **Examples**:
 
@@ -286,33 +283,33 @@ A floating point number is composed of a whole part and a fractional part separa
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using optional `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values should be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using **OPTIONAL** `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values **CAN** represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character can be omitted if it's positive. Values should be normalized.
+Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
-To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation can only be used to represent binary float values that are supported by CBE (16, 32, 64-bit). A decoder must truncate binary float data that is too big to be represented in a CBE document, and inform the user about it.
+To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation **CAN** only be used to represent binary float values that are supported by CBE (16, 32, 64-bit).
 
 #### Special Floating Point Values
 
- * `@inf`: Infinity
- * `-@inf`: Negative Infinity
- * `@nan`: Not a Number (quiet)
- * `@snan`: Not a Number (signaling)
+ * `inf`: Infinity
+ * `-inf`: Negative Infinity
+ * `nan`: Not a Number (quiet)
+ * `snan`: Not a Number (signaling)
 
 #### Floating Point Rules
 
-**There must be one (and only one) dot character:**
+**There MUST be one (and only one) dot character:**
 
 | Value          | Notes              |
 | -------------- | ------------------ |
@@ -323,26 +320,26 @@ To maintain compatibility with [CBE](cbe-specification.md), base-16 floating poi
 | `5e+11`        | Invalid            |
 | `10.4.5`       | Invalid            |
 
-**There must be at least one digit on each side of the dot character:**
+**There MUST be at least one digit on each side of the dot character:**
 
-| Invalid      | Valid     | Notes                                                |
-| ------------ | --------- | ---------------------------------------------------- |
-| `-1.`        | `-1.0`    | Or use integer value `-1`                            |
-| `.1`         | `0.1`     |                                                      |
-| `.218901e+2` | `21.8901` | Or `2.18901e+1`                                      |
-| `-0`         | `-0.0`    | Special case: -0 cannot be represented as an integer |
+| Invalid      | Valid     | Notes                                                    |
+| ------------ | --------- | -------------------------------------------------------- |
+| `-1.`        | `-1.0`    | Or use integer value `-1`                                |
+| `.1`         | `0.1`     |                                                          |
+| `.218901e+2` | `21.8901` | Or `2.18901e+1`                                          |
+| `-0`         | `-0.0`    | Special case: -0 **CANNOT** be represented as an integer |
 
 
 ### Numeric Whitespace
 
-The `_` character can be used as "numeric whitespace" when encoding certain numeric values. Other [whitespace](#whitespace) characters are not allowed.
+The `_` character **CAN** be used as "numeric whitespace" when encoding certain numeric values. Other [whitespace](#whitespace) characters are not allowed.
 
 Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
- * [Named values](#named-values) (such as `@nan` and `@inf`) must not contain numeric whitespace.
- * Numeric whitespace can only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
- * Numeric whitespace characters must be ignored when decoding numeric values.
+ * [Named values](#named-values) (such as `nan` and `inf`) **MUST NOT** contain numeric whitespace.
+ * Numeric whitespace **CAN** only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
+ * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
 
 **Examples**:
 
@@ -367,11 +364,11 @@ Invalid:
 
 ### UID
 
-A unique identifier. CTE begins a unique identifier with an at (`@`) character, followed by an [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
+An [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
 Example:
 
-    @123e4567-e89b-12d3-a456-426655440000
+    123e4567-e89b-12d3-a456-426655440000
 
 
 
@@ -380,7 +377,7 @@ Temporal Types
 
 Temporal types record time with varying degrees of precision.
 
-Fields other than year can be pre-padded with zeros (`0`) up to their maximum allowed digits.
+Fields other than year **CAN** be pre-padded with zeros (`0`) up to their maximum allowed digits.
 
 
 ### Date
@@ -440,7 +437,7 @@ A timestamp combines a date and a time, separated by a slash character (`/`).
 
 ### Time Zones
 
-The time zone is an optional field. If omitted, it is assumed to be `Zero` (UTC).
+The time zone is an **OPTIONAL** field. If omitted, it is assumed to be `Zero` (UTC).
 
 #### Area/Location
 
@@ -507,7 +504,7 @@ The following array types are available:
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
-**Note**: If an unrecognized array type is encountered, a decoder must assume that it is a [media](#media) array type.
+**Note**: If an unrecognized array type is encountered, a decoder **MUST** treat it as a [media](#media) array type.
 
 ### Element Array Encodings
 
@@ -515,7 +512,7 @@ For element array encodings, any valid representation of the element data type m
 
 #### Implied Prefix
 
-Optionally, a suffix can be appended to the type specifier (if the type supports it) to indicate that all values must be considered to have an implicit prefix.
+**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix.
 
 | Type Suffix | Implied element prefix | Example                         |
 | ----------- | ---------------------- | ------------------------------- |
@@ -525,14 +522,14 @@ Optionally, a suffix can be appended to the type specifier (if the type supports
 
 #### Special Array Element Rules
 
- * Boolean array elements may optionally be represented using `0` for false and `1` for true. Whitespace is optional when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|` = `|b @true @false @false @true|`). The boolean representations must not be mixed (e.g. `|b 1 0 1 @true|` is invalid).
+ * Boolean array elements are represented using `0` for false and `1` for true. Whitespace is **OPTIONAL** when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
 
 **Examples**:
 
  * `|u8x 9f 47 cb 9a 3c|`
  * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
  * `|i16 0b1001010 0o744 1000 0xffff|`
- * `|u @3a04f62f-cea5-4d2a-8598-bc156b99ea3b @1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
+ * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 11010|`
 
 
@@ -557,33 +554,45 @@ echo hello world
 
 ### String-Like Array Encodings
 
-String-like array encodings are interpreted as a whole, and must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+String-like array encodings are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+
+
+### String
+
+Strings are enclosed within double-quote (`"`) delimiters, and the elements are string-like. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+
+**Example**:
+
+    "Line 1\nLine 2\nLine 3"
 
 
 ### Resource Identifier
 
+A resource identifier is enclosed within the delimiters `@"` and `"`.
+
 A Concise Encoding implementation must interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) must not be interpreted.
 
- * `|r http://x.y.z?pipe=\||` decodes to `http://x.y.z?pipe=|`,  which the upper layers interpret as `http://x.y.z?pipe=|`
- * `|r http://x.y.z?pipe=%7c|` decodes to `http://x.y.z?pipe=%7c`,  which the upper layers interpret as `http://x.y.z?pipe=|`
+ * `@"http://x.y.z?quote=\""` decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
+ * `@"http://x.y.z?quote=%22"` decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
 
 Resource IDs support [concatenation](#concatenation):
 
-    |r http://x.com/|:my-suffix // = http://x.com/my-suffix
+    @"http://x.com/":"my-suffix" // = http://x.com/my-suffix
 
-    c1 (
-        refs = [
-            &query|r https://some-really-long-url-thats-annoying-to-type.com/query?ref-id=|
+    c1 {
+        resources = [
+            &query:@"https://some-really-long-url-thats-annoying-to-type.com/query?ref-id="
         ]
-    ){
-        query-1 = $query:1
-        query-5000 = $query:5000
+        queries = {
+            query-1 = $query:1
+            query-5000 = $query:5000
+        }
     }
 
 
 ### Custom Binary
 
-Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
+Custom binary data is encoded using standard typed array syntax with type identifier `cb`. Its elements are encoded like a u8x array (hex encoded byte elements).
 
 **Example**:
 
@@ -598,44 +607,11 @@ Custom binary data is encoded like a `u8x` array (as hex encoded byte elements).
 
 ### Custom Text
 
-Custom text data is encoded as a string-like array. Since custom text uses string-like encoding, it can contain [escape sequences](#escape-sequences), which must be processed before the converted string is passed to the custom decoder that will interpret it.
+Custom text data is encoded using standard typed array syntax with type identifier `ct`. Its elements are string-like, and it **CAN** contain [escape sequences](#escape-sequences) which must be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
     |ct cplx(2.94+3i)|
-
-
-### String
-
-Strings can be quoted or unquoted.
-
-#### Quoted String
-
-A quoted string encloses the string contents within double-quote delimiters (for example: `"a string"`). All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
-
-**Example**:
-
-    "Line 1\nLine 2\nLine 3"
-
-#### Unquoted String
-
-Strings must normally be double-quote delimited, but this rule can be relaxed for [unquoted-safe strings](ce-structure.md#unquoted-safe-string).
-
-**Example**:
-
-```cte
-c1 [
-  "some-text"
-]
-```
-
-"some-text" is unquoted-safe, so this document could also be written as:
-
-```cte
-c1 [
-  some-text
-]
-```
 
 
 
@@ -651,10 +627,10 @@ A list begins with an opening square bracket `[`, contains whitespace separated 
 ```cte
 c1 [
     1
-    two
+    "two"
     3.1
     {}
-    @na
+    na
 ]
 ```
 
@@ -663,15 +639,15 @@ c1 [
 
 A map begins with an opening curly brace `{`, contains whitespace separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and optional whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
 
 **Example**:
 
 ```cte
 c1 {
-    1 = alpha
-    2 = beta
-    "a map" = {one=1 two=2}
+    1 = "alpha"
+    2 = "beta"
+    "a map" = {"one"=1 "two"=2}
 }
 ```
 
@@ -681,28 +657,27 @@ c1 {
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `,`, and end `>` characters.
- * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and can be nested.
- * [Unquoted strings](#unquoted-string) and non-string types can be used in tag names and attribute key-value pairs (under the same rules as [map](#map) keys and values).
+ * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and **CAN** be nested.
 
 #### Markup Structure
 
 | Section    | Delimiter  | Type                      | Required |
 | ---------- | ---------- | ------------------------- | -------- |
-| Tag name   | `<`        | [Keyable](#keyable-types) | Y        |
+| Tag name   | `<`        | [Identifier](#identifier) | Y        |
 | Attributes | whitespace | [Map](#map)               |          |
 | Contents   | `,`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
-Attributes and contents are optional. There must be whitespace between the container name and the attributes section (if present), and there can optionally be whitespace adjacent to the begin, contents, and end delimiters.
+Attributes and contents are **OPTIONAL**. There must be whitespace between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be whitespace adjacent to the begin, contents, and end delimiters.
 
 Illustration of markup encodings:
 
-| Attributes | Children | Example                                                |
-| ---------- | -------- | ------------------------------------------------------ |
-|     N      |    N     | `<br>`                                                 |
-|     Y      |    N     | `<div id=fillme>`                                      |
-|     N      |    Y     | `<span,Some text here>`                                |
-|     Y      |    Y     | `<ul id=mylist style=boring, <li,first> <li,second> >` |
+| Attributes | Children | Example                                                        |
+| ---------- | -------- | -------------------------------------------------------------- |
+|     N      |    N     | `<br>`                                                         |
+|     Y      |    N     | `<div "id"="fillme">`                                          |
+|     N      |    Y     | `<span,Some text here>`                                        |
+|     Y      |    Y     | `<ul "id"="mylist" "style"="boring", <li,first> <li,second> >` |
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
 
@@ -712,13 +687,13 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 ##### Content String
 
-Content strings can contain [escape sequences](#escape-sequences), which must be processed before applying the structural rules for content strings.
+Content strings **CAN** contain [escape sequences](#escape-sequences), which must be processed before applying the structural rules for content strings.
 
 **Example**:
 
 ```cte
 c1 <View,
-    <Image src=|r images/avatar-image.jpg|>
+    <Image src=@"images/avatar-image.jpg">
     <Text id=HelloText,
         Hello! Please choose a name!
     >
@@ -734,12 +709,33 @@ c1 <View,
 
 ### Relationship
 
-A relationship container is composed of the delimiters `@[` and `]`, containing the subject, predicate, and object.
+A relationship container is composed of the delimiters `(` and `)`, containing the subject, predicate, and object.
 
 **Examples**:
 
- * `@[|r https://springfield.gov/people#homer_simpson| |r https://example.org/wife| |r https://springfield.gov/people#marge_simpson|]`
- * `@[|r https://springfield.gov/people#homer_simpson| |r https://example.org/employer| |r https://springfield.gov/employers/nuclear_power_plant|]`
+ * `(@"https://springfield.gov/people#homer_simpson" @"https://example.org/wife" @"https://springfield.gov/people#marge_simpson")`
+ * `(@"https://springfield.gov/people#homer_simpson" @"https://example.org/employer" @"https://springfield.gov/employers/nuclear_power_plant")`
+
+
+
+Other Types
+-----------
+
+### Identifier
+
+Identifiers are strings, but are written without double-quotes and don't support escape sequences.
+
+**Examples**:
+
+ * `123`
+ * `some_id`
+ * `25th`
+ * `猫`
+
+
+### Nil
+
+Nil is encoded as `nil`.
 
 
 
@@ -751,7 +747,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](ce-structure.md#marker-id) (unquoted)
+ * A marker ID ([identifier](#identifier))
  * `:` (the marker separator)
  * The marked value
 
@@ -784,47 +780,17 @@ c1 {
 
     reference_to_string = $big_string
     reference_to_map = $1
-    reference_to_local_doc = $|r common.cte|
-    reference_to_remote_doc = $|r https://somewhere.com/my_document.cbe?format=long|
-    reference_to_local_doc_marker = $|r common.cte#legalese|
-    reference_to_remote_doc_marker = $|r https://somewhere.com/my_document.cbe?format=long#examples|
-}
-```
-
-
-### Metadata Map
-
-Metadata maps are encoded in the same manner as [regular maps](#map), except that they are enclosed within parenthesis `(`, `)`.
-
-**Example**:
-
-```cte
-c1
-// Metadata for the entire document
-(
-    _ct = 2017.01.14-15:22:41/Z
-    _mt = 2019.08.17-12:44:31/Z
-)
-{
-    records = [
-        // Metadata for "ABC Corp" record
-        (
-            _ct = 2019.05.14-10:22:55/Z
-            _t = [longtime_client big_purchases]
-        )
-        {
-            client = "ABC Corp"
-            amount = 10499.28
-            due = 2020.05.14
-        }
-    ]
+    reference_to_local_doc = $@"common.cte"
+    reference_to_remote_doc = $@"https://somewhere.com/my_document.cbe?format=long"
+    reference_to_local_doc_marker = $@"common.cte#legalese"
+    reference_to_remote_doc_marker = $@"https://somewhere.com/my_document.cbe?format=long#examples"
 }
 ```
 
 
 ### Comment
 
-Comments can be written in single-line or multi-line form.
+Comments **CAN** be written in single-line or multi-line form.
 
 #### Single Line Comment
 
@@ -848,11 +814,11 @@ c1
 
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
-      |r mailto:joe@average.org|
+      @"mailto:joe@average.org"
       /* Unlike in C, nested multiline
          comments are allowed */
     */
-    |r mailto:someone@somewhere.com|
+    @"mailto:someone@somewhere.com"
 
     "data" // Comment after data
     =
@@ -864,15 +830,15 @@ c1
 
 ### Constant
 
-A constant name begins with a hash `#` character, followed by an [unquoted-safe string](ce-structure.md#unquoted-safe-string) for the name.
+A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
 
     #some_const // a const named "some_const", whose type and value are defined in a schema.
 
 #### Explicit Constant
 
-CTE documents containing constants cannot be decoded without a matching schema. For cases where this would be problematic, A CTE encoder may opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
+CTE documents containing constants normally cannot be decoded without a matching schema. For cases where this would be problematic, A CTE encoder **MAY** opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
 
-An explicit constant begins with a hash `#` character, followed by an [unquoted-safe string](ce-structure.md#unquoted-safe-string) for the name, then a colon `:`, and finally the object's value.
+An explicit constant begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier), then a colon `:`, and finally the object's value.
 
     #some_const:1 // a const named "some_const", which is the integer 1.
 
@@ -883,29 +849,20 @@ If a decoder has access to the schema that defines a particular constant, the ex
 
 ### NA
 
-NA is encoded as `@na`, and supports [concatenation](#concatenation) for the optional reason field.
+NA is encoded as `na`, and supports [concatenation](#concatenation) for the **OPTIONAL** reason field.
 
 **Examples**:
 
- * `@na:"Insufficient privileges"` (not available, with an English language reason)
- * `@na:404` (not available for reason code 404)
- * `@na` (not available for unknown reason)
+ * `na:"Insufficient privileges"` (not available, with an English language reason)
+ * `na:404` (not available for reason code 404)
+ * `na` (not available for unknown reason)
 
 
 
-Other Types
------------
+Combined Objects
+----------------
 
-### Nil
-
-Nil is encoded as `@nil`.
-
-
-
-Concatenation
--------------
-
-The concatenation operator in CTE is `:`. There must be no whitespace between the concatenation operator and its operands.
+The combine operator in CTE is `:`. There must be no whitespace between the combine operator and its operands.
 
 
 **Examples**:
@@ -913,12 +870,12 @@ The concatenation operator in CTE is `:`. There must be no whitespace between th
 ```cte
 c1 {
     refs = [
-        &ref1:|r https://example.com/|
-        &ref2:|r https://example.com/|:foo
+        &ref1:@"https://example.com/"
+        &ref2:@"https://example.com/":foo
     ]
 
     // https://example.com/foo
-    example_1 = |r https://example.com/|:foo
+    example_1 = @"https://example.com/":foo
 
     // https://example.com/foo
     example_2 = $ref1:foo
@@ -933,8 +890,8 @@ c1 {
     example_5 = $ref1:"foo/bar"
 
     // NA for reasons
-    example_6 = @na:"Insufficient privileges"
-    example_7 = @na:{
+    example_6 = na:"Insufficient privileges"
+    example_7 = na:{
         code = 409
         en = "database error"
         jp = "データベースエラー"
@@ -950,7 +907,7 @@ Empty Document
 An empty document in CTE is signified by using the [Nil](#nil) type as the top-level object:
 
 ```cte
-c1 @nil
+c1 nil
 ```
 
 
@@ -960,8 +917,8 @@ Letter Case
 
 A CTE document must be entirely in lower case, except in the following situations:
 
- * Strings, string-like arrays, and comments can contain uppercase characters. Case must be preserved.
- * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) can contain uppercase characters. Case must be preserved.
+ * Strings, string-like arrays, and comments **CAN** contain uppercase characters. Case must be preserved.
+ * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) **CAN** contain uppercase characters. Case must be preserved.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
@@ -1038,87 +995,57 @@ Examples:
  * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a typed array element type specifier and the array contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
- * Between key-value pairs in a [map](#map), [metadata map](#metadata-map), or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
+ * Between key-value pairs in a [map](#map) or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
 
 
 #### Whitespace **must not** occur:
 
  * Before the [version specifier](#version-specifier).
- * Between a sentinel character and its associated value (`@ na`, `& 1234`, `$ |r mydoc.cbe|`, `# Planck_Js` are invalid).
+ * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
- * Between a [concatenation](#concatenation) operator and its operands (`|r http://x.com/| : 1` is invalid).
+ * Between a [concatenation](#concatenation) operator and its operands (`@"http://x.com/" : 1` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 
 
 
-Confusable Characters
----------------------
+Lookalike Characters
+--------------------
 
-In [CTE](cte-specification.md) documents, confusable characters are characters that look confusingly similar to symbols and numerals from 0000-007f when viewed by a human. Strings containing such characters should be quoted or even escaped in cases where a human would likely confuse them for structural characters or objects of different types than they actually are. Although failure to do so would still produce documents that successfully parse, it makes for a VERY poor user experience and might even be exploited by an attacker. For example:
+Lookalike characters are characters that look confusingly similar to CTE structural symbol characters when viewed by a human. Such characters **MUST** be escaped in CTE documents where a human would likely confuse them for an escape sequence initiator (`\`) or a string object terminator.
 
-| Confusing      | Fixed               |
+| Lookalike      | Escaped             |
 | -------------- | ------------------- |
-| `"A ” string"` | `"A \4201d string"` |
-| `（Ａ＝０）`     | `"（Ａ＝０）"`       |
-| `⒈`           | `"⒈"`              |
-| `𝟏𝟎𝟎𝟎𝟎`         | `"𝟏𝟎𝟎𝟎𝟎"`            |
+| `"A” string"`  | `"A\4201d string"`  |
 
-The following is a (non-exhaustive) list of [Unicode characters](https://unicode.org/charts) found to be confusingly similar to symbols and numerals from 0000-007f.
+The following is a (as of 2021-03-01) complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation current with the latest lookalike characters.
 
-| Character | Lookalikes (codepoints)                                                 |
-| --------- | ----------------------------------------------------------------------- |
-| `0`-`9`   | 00b2, 00b3, 00b9, 2488-249b, ff10-ff19, 10931, 1d7ce-1d7ff, 1f100-1f10a |
-| `!`       | 01c3, 203c, 2048, 2049, 2d51, fe15, fe57, ff01                          |
-| `"`       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
-| `#`       | fe5f, ff03                                                              |
-| `$`       | fe69, ff04                                                              |
-| `%`       | 2052, fe6a, ff05                                                        |
-| `&`       | fe60, ff06                                                              |
-| `'`       | 00b4, 02b9, 02bb, 02bc, 02bd, 02ca, 02c8, 0374, 2018-201b, 2032, 2035, a78b, a78c, fe10, fe50, ff07, 10107, 1d112 |
-| `(`       | 2474-2487, 249c-24b5, fe59, ff08                                        |
-| `)`       | fe5a, ff09                                                              |
-| `*`       | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
-| `+`       | fe62, ff0b                                                              |
-| `,`       | 02cc, 02cf, 0375, ff0c, 10100                                           |
-| `-`       | 02c9, 2010-2015, 2212, 23af, 23bb, 23bc, 23e4, 23fd, fe58, fe63, ff0d, ff70, 10110, 10191, 1d116 |
-| `.`       | fe52, ff0e                                                              |
-| `/`       | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
-| `:`       | 02f8, 205a, 2236, a789, fe13, fe30, fe55, ff1a, 1d108                   |
-| `;`       | 037e, fe14, fe54, ff1b                                                  |
-| `<`       | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d       |
-| `=`       | a78a, fe66, ff1d, 10190, 16fe3                                          |
-| `>`       | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
-| `?`       | 2047-2049, fe16, fe56, ff1f                                             |
-| `@`       | fe6b, ff20                                                              |
-| `[`       | fe5d, ff3b, 1d115                                                       |
-| `\`       | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
-| `]`       | fe5e, ff3d                                                              |
-| `^`       | ff3e                                                                    |
-| `_`       | 02cd, 23bd, ff3f                                                        |
-| `` ` ``   | 02cb, fe11, fe45, fe46, fe51, ff40                                      |
-| `{`       | fe5b, ff5b, 1d114                                                       |
-| `\|`       | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
-| `}`       | fe5c, ff5d                                                              |
-| `~`       | 2053, 223c, 223f, 301c, ff5e                                            |
+| Character | Context             | Lookalikes (codepoints)                                                 |
+| --------- | ------------------- | ----------------------------------------------------------------------- |
+| `"`       | String, Resource ID | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
+| `*`       | Comment             | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
+| `/`       | Comment             | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
+| `>`       | Markup Contents     | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
+| `\`       | Escapable Content   | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
+| `\|`      | Custom Text         | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
 
 
 
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. CTE documents should always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
+Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
 
-This section specifies how CTE documents should be pretty printed.
+This section specifies how to pretty-print CTE documents.
 
 
 #### Right Margin
 
-The right margin (maximum column before breaking an object into multiple lines) should be kept "reasonable". "Reasonable" is difficult to define because it depends in part on the kind of data the document contains, and the container depth.
+The right margin (maximum column before breaking an object into multiple lines) **SHOULD** be kept "reasonable". "Reasonable" is difficult to define because it depends in part on the kind of data the document contains, and the container depth.
 
-In general, 120 columns should always be considered reasonable, with larger margins depending on the kind and depth of data the document is likely to contain.
+In general, 120 columns **SHOULD** always be considered reasonable, with larger margins depending on the kind and depth of data the document is likely to contain.
 
 
 #### Indentation
@@ -1128,15 +1055,15 @@ The canonical indentation is 4 spaces (`    `).
 
 #### Lists
 
-Objects in a list should be placed on separate lines.
+Objects in a list **SHOULD** be placed on separate lines.
 ```cte
 [
-    |r https://www.imdb.com/title/tt0090605/|
-    |r https://www.imdb.com/title/tt1029248/|
+    @"https://www.imdb.com/title/tt0090605/"
+    @"https://www.imdb.com/title/tt1029248/"
 ]
 ```
 
-If a list is empty, the closing `]` should be on the same line.
+If a list is empty, the closing `]` **SHOULD** be on the same line.
 ```cte
 []
 ```
@@ -1149,15 +1076,15 @@ Short lists containing small objects may be placed entirely on one line.
 
 #### Maps
 
-There should be a space between keys, values and the `=` in key-value pairs, and each key-value pair should be on a separate line.
+There **SHOULD** be a space between keys, values and the `=` in key-value pairs, and each key-value pair **SHOULD** be on a separate line.
 ```cte
 {
-    aliens = |r https://www.imdb.com/title/tt0090605/|
-    moribito = |r https://www.imdb.com/title/tt1029248/|
+    aliens = @"https://www.imdb.com/title/tt0090605/"
+    moribito = @"https://www.imdb.com/title/tt1029248/"
 }
 ```
 
-If a map is empty, the closing `}` should be on the same line.
+If a map is empty, the closing `}` **SHOULD** be on the same line.
 ```cte
 {}
 ```
@@ -1168,33 +1095,9 @@ Small maps containing small objects may be placed entirely on one line. In such 
 ```
 
 
-#### Metadata Map
-
-The object that the metadata map refers to should follow it after a space if it doesn't cause the line to become too long. Otherwise place it on the next line.
-```cte
-{
-    (x=y) a = b
-
-    c = (x=y) d
-
-    (
-        x = 1
-        y = 2
-        z = 3
-    ) e = f
-
-    g = (
-        x = 1
-        y = 2
-        z = 3
-    ) h
-}
-```
-
-
 #### Markup
 
-The closing `>` should only be on a different line if there are contents.
+The closing `>` **SHOULD** only be on a different line if there are contents.
 ```cte
 <a>
 ```
@@ -1205,7 +1108,7 @@ The closing `>` should only be on a different line if there are contents.
 >
 ```
 
-The attributes section should be entirely on the same line as the tag name if it's not too long.
+The attributes section **SHOULD** be entirely on the same line as the tag name if it's not too long.
 ```cte
 <a x=y>
 ```
@@ -1216,16 +1119,16 @@ The attributes section should be entirely on the same line as the tag name if it
 >
 ```
 
-If the attributes section is too long, the overflow should be broken up into multiple indented lines.
+If the attributes section is too long, the overflow **SHOULD** be broken up into multiple indented lines.
 ```cte
-<img src=|r http://somereallylongdomainname.likereallylong.com/images/2.jpg|
+<img src=@"http://somereallylongdomainname.likereallylong.com/images/2.jpg"
     width=50 height=50 border-left=10 units=px>
 ```
 
 
 #### Strings
 
-Strings should use [continuations](#continuation) if the line is getting too long.
+Strings **SHOULD** use [continuations](#continuation) if the line is getting too long.
 ```cte
 [
     "All that most maddens and torments; all that stirs up the lees of things; \
@@ -1241,7 +1144,7 @@ Strings should use [continuations](#continuation) if the line is getting too lon
 
 #### Typed Arrays
 
-Typed arrays should be broken up into multiple indented lines if the line is getting too long.
+Typed arrays **SHOULD** be broken up into multiple indented lines if the line is getting too long.
 ```cte
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
       bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
@@ -1251,14 +1154,14 @@ Typed arrays should be broken up into multiple indented lines if the line is get
 
 #### Comments
 
-Comments should have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) should also have a space before the closing sequence.
+Comments **SHOULD** have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) **SHOULD** also have a space before the closing sequence.
 ```cte
 // abc
 
 /* abc */
 ```
 
-Long comments should be broken up to fit within the right margin.
+Long comments **SHOULD** be broken up to fit within the right margin.
 ```cte
 {
     /* When a comment gets too long to fit within the right margin, place
@@ -1267,7 +1170,7 @@ Long comments should be broken up to fit within the right margin.
 }
 ```
 
-The object following a comment should be on a different line.
+The object following a comment **SHOULD** be on a different line.
 ```cte
 {
     /* See list of request types in request-types.md */

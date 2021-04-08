@@ -5,7 +5,7 @@ Concise Binary Encoding (CBE) is the binary variant of Concise Encoding: a gener
 
 The binary format aims for compactness and machine processing efficiency while maintaining 1:1 compatibility with the [text format](cte-specification.md) (which aims to present data in a human friendly way).
 
-CBE documents must follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
+CBE documents **MUST** follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
 
 **Note**: CBE examples will be represented as series of hex encoded byte values enclosed within square brackets. For example, `[00 01 fe ff]` represents the four byte sequence 0x00, 0x01, 0xfe, 0xff.
 
@@ -52,17 +52,16 @@ Contents
   - [Map](#map)
   - [Markup](#markup)
   - [Relationship](#relationship)
-* [Peudo-Objects](#peudo-objects)
-  - [Marker](#marker)
-  - [Reference](#reference)
-  - [Metadata Map](#metadata-map)
-  - [Comment](#comment)
-  - [Padding](#padding)
-  - [NA](#na)
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [RESERVED](#reserved)
-* [Concatenation](#concatenation)
+* [Peudo-Objects](#peudo-objects)
+  - [Marker](#marker)
+  - [Reference](#reference)
+  - [Comment](#comment)
+  - [Padding](#padding)
+  - [NA](#na)
+* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -78,12 +77,13 @@ The following terms have specific meanings in this specification:
 
 | Term         | Meaning                                                                                                               |
 | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Must (not)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
-| Should (not) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
-| May (not)    | It is up to the implementation to decide whether to do something or not.                                              |
-| Can (not)    | Refers to a possibility or constraint which must be accommodated by the implementation.                               |
-| Optional     | The implementation must support both the existence and the absence of the specified item.                             |
-| Recommended  | Refers to a "best practice", which should be followed if possible.                                                    |
+| MUST (NOT)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| SHOULD (NOT) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| MAY (NOT)    | It is up to the implementation to decide whether to do something or not.                                              |
+| CAN          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| CANNOT       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+| OPTIONAL     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| RECOMMENDED  | Refers to a "best practice", which **SHOULD** be followed if possible.                                                |
 
 
 
@@ -130,9 +130,9 @@ A CBE document is byte-oriented. All objects are composed of a type field and a 
 |  72 | 114 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]    |
 |  73 | 115 | UID                       | [128 bits of data, big endian]                  |
 |  74 | 116 | RESERVED                  |                                                 |
-|  75 | 117 | Relationship              | Subject, Predicate, Object                      |
-|  76 | 118 | Comment                   | (String or sub-comment) ... End of Container    |
-|  77 | 119 | Metadata Map              | (Key, value) ... End of Container               |
+|  75 | 117 | RESERVED                  |                                                 |
+|  76 | 118 | Relationship              | Subject, Predicate, Object                      |
+|  77 | 119 | Comment                   | (String or sub-comment) ... End of Container    |
 |  78 | 120 | Markup                    | Name, kv-pairs, contents                        |
 |  79 | 121 | Map                       | (Key, value) ... End of Container               |
 |  7a | 122 | List                      | Object ... End of Container                     |
@@ -164,8 +164,8 @@ A CBE document is byte-oriented. All objects are composed of a type field and a 
 |  94 | 158 | Plane 2                   | (See [Plane 2](#type-field-plane-2))            |
 |  95 | 149 | RESERVED                  |                                                 |
 |  96 | 150 | RESERVED                  |                                                 |
-|  97 | 151 | Marker                    | Positive integer / string                       |
-|  98 | 152 | Reference                 | Positive integer / string / resource identifier |
+|  97 | 151 | Marker                    | string                                          |
+|  98 | 152 | Reference                 | string                                          |
 |  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -202,12 +202,14 @@ Types from plane 2 are represented using two bytes instead of one, using the pre
 |  7d | 125 | Array (Boolean)           | [chunk length] [1-bit elements] ...             |
 |  7e | 126 | NA                        | [reason object]                                 |
 |  7f | 127 | RESERVED                  |                                                 |
-|  80 | 128 | Media                     | [media type (string)] [8-bit data]              |
+|  80 | 128 | Media                     | [media type (string)] [data]                    |
 |  81 | 129 | RESERVED                  |                                                 |
 | ... | ... | ...                       |                                                 |
 |  90 | 144 | RESERVED                  |                                                 |
 |  91 | 145 | Resource ID Concatenated  | [ressource id] [concatenated object]            |
 |  92 | 146 | RESERVED                  |                                                 |
+| ... | ... | ...                       |                                                 |
+|  98 | 152 | Reference                 | resource identifier                             |
 | ... | ... | ...                       |                                                 |
 |  ff | 255 | RESERVED                  |                                                 |
 
@@ -395,9 +397,9 @@ For byte lengths from 0 to 15, there are special fixed-length string types (0x80
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 91]` for the [concatenated](#concatenation) form. The length is in octets, NOT characters.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 91]` for the [concatenated](#combined-objects) form. The length is in octets, NOT characters.
 
-**Examples**:
+**Example**:
 
     [91 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
      2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
@@ -405,9 +407,15 @@ Resource identifiers are encoded with type `[91]` for the normal form, or type `
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
+In concatenated form, the resource ID is followed by an implied string (where the string type field is omitted):
+
+    [94 91 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
+
+**Example**:
+
     [94 91 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
-     3f 6f 72 64 65 72 69 64 3d 2a]
-    = https://example.com/?orderid=42 (where int value 42 is concatenated)
+     3f 6f 72 64 65 72 69 64 3d 04 34 32]
+    = https://example.com/?orderid=42 (where "42" is concatenated)
 
 
 ### Custom Types
@@ -447,7 +455,7 @@ A typed array is structured as follows:
 | Elements     | The elements as a sequence of octets      |
 | ...          | Possibly more chunks                      |
 
-The length in each array chunk header represents the number of elements (not bytes) in the chunk. The number of octets in an array chunk must be the element count * the element width in octets (e.g. 1 octet for 8-bit elements, 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
+The length in each array chunk header represents the number of elements (not bytes) in the chunk. The number of octets in an array chunk **MUST** be the element count * the element width in octets (e.g. 1 octet for 8-bit elements, 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
 
 The following array types are supported:
 
@@ -472,7 +480,7 @@ Element byte ordering is according to the element type (big endian for UUID, lit
 
 #### Boolean Array
 
-In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk must be cleared to 0 by an encoder, and must be ignored by a decoder.
+In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
 
 For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -565,7 +573,24 @@ A relationship always consists of exactly three components, and therefore doesn'
 
 **Example**:
 
-TODO
+    [77 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
+     91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
+     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
+    = the relationship: (@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
+
+
+
+Other Types
+-----------
+
+### Nil
+
+Nil is encoded as `[7e]`.
+
+
+### RESERVED
+
+This type is reserved for future expansion of the format, and **MUST** not be used.
 
 
 
@@ -574,44 +599,37 @@ Peudo-Objects
 
 ### Marker
 
-A marker begins with the marker type (0x97), followed by a marker ID, and then the marked object.
+A marker begins with the marker type (0x97), followed by an implied string marker ID, and then the marked object.
 
-    [97] [ID] [marked object]
+    [97 (chunk header) (ID string data) (marked object)]
 
 **Example**:
 
-    [97 01 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
+    [97 02 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {some_value = "repeat this value"}, tagged with integer ID 1
+    = the map {some_value = "repeat this value"}, tagged with the ID "a".
 
 
 ### Reference
 
 A reference begins with the reference type (0x98), followed by either a marker ID or a [resource identifier](#resource-identifier).
 
+    [98 (chunk header) (ID string data)]
+
+    [94 98 (chunk header) (RID data)]
+
 **Examples**:
 
-    [98 01] = reference to the object marked with ID 1
+    [98 02 61] = reference to the object marked with ID "a"
 
-    [98 81 61] = reference to the object marked with ID "a"
-
-    [98 91 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [94 98 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [98 91 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [94 98 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
     = reference to entire document at https://somewhere.com/my_document.cbe?format=long
-
-
-### Metadata Map
-
-Metadata maps are encoded the same as [maps](#map), using the type 0x77.
-
-**Example**:
-
-    [77 82 5f 74 7a 85 61 5f 74 61 67 7b 7b] = metadata map: (_t = ["a_tag"])
 
 
 ### Comment
@@ -645,29 +663,15 @@ NA is encoded as `[94 7e]` + reason.
 
 
 
-Other Types
------------
+Combined Objects
+----------------
 
-### Nil
-
-Nil is encoded as `[7e]`.
-
-
-### RESERVED
-
-This type is reserved for future expansion of the format, and must not be used.
-
-
-
-Concatenation
--------------
-
-Concatenation in CBE is encoded using parallel types in [plane 2](#type-field-plane-2) to ensure that lookaheads aren't needed during decoding, and documents always end unambiguously.
+Combined objects in CBE are implied by the type field in order to avoid any need for lookaheads while decoding, and ensure that documents always end unambiguously.
 
 **Examples**:
 
     [94 7e 81 41] = NA with a string value explaining the reason
-    [94 91] (RID data) (integer) = Resource ID with an integer concatenated
+    [94 91 (chunk header) (string data)] = Resource ID with a string concatenated
 
 
 
@@ -683,9 +687,9 @@ An empty document in CBE is signified by using the [Nil](#nil) type the top-leve
 Smallest Possible Size
 ----------------------
 
-Preservation of the original numeric data type information is not considered important by default. Encoders should use the smallest encoding that stores a value without data loss.
+Preservation of the original numeric data type information is not considered important by default. Encoders **SHOULD** use the smallest encoding that stores a value without data loss.
 
-Specialized applications may wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
+Specialized applications **MAY** wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
 
 
 

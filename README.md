@@ -5,7 +5,7 @@ The friendly data format for human and machine. Ad-hoc, secure, with 1:1 compati
 
  * **Edit text, transmit binary.** Humans love text. Machines love binary. With Concise Encoding, conversion is 1:1 and seamless.
  * **Secure By Design.** Precise decoding behavior means no poisoned data, no privilege escalations, and no DOSing!
- * **Rich type support.** Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!
+ * **Rich type support.** Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, and more!
 
 
 Contents
@@ -45,7 +45,6 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 | [Relationship](#relationships)         | Semantic relationship data compatible with [RDF](https://www.w3.org/2001/sw/wiki/RDF) |
 | [Typed Array](#containers)             | Array of fixed-width type, arbitrary length             |
 | [Reference](#references)               | Points to objects defined elsewhere                     |
-| [Metadata](#metadata)                  | Data about data                                         |
 | [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
 | [Constants](#relationships)            | Symbolic value that has been defined in a schema        |
 | [Nil](#other-basic-types)              | No data                                                 |
@@ -61,7 +60,6 @@ Specifications
  * [Concise Encoding Structure](ce-structure.md)
  * [Concise Text Encoding (CTE)](cte-specification.md)
  * [Concise Binary Encoding (CBE)](cbe-specification.md)
- * [Common Generic Metadata](common-generic-metadata.md)
  * [Design Document](design.md)
 
 
@@ -109,7 +107,6 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |
 | Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
-| Metadata      |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
 | Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |
 | Nil           |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
@@ -157,18 +154,18 @@ All examples are valid [Concise Text Encoding](https://github.com/kstenerud/conc
 ```cte
 c1
 {
-    boolean       = @true
-    binary-int    = -0b10001011
-    octal-int     = 0o644
-    decimal-int   = -10000000
-    hex-int       = 0xfffe0001
-    very-long-int = 100000000000000000000000000000000000009
-    decimal-float = -14.125
-    hex-float     = 0x5.1ec4p+20
-    very-long-flt = 4.957234990634579394723460546348e+100000
-    not-a-number  = @nan
-    infinity      = @inf
-    neg-infinity  = -@inf
+    "boolean"       = true
+    "binary int"    = -0b10001011
+    "octal int"     = 0o644
+    "decimal int"   = -10000000
+    "hex int"       = 0xfffe0001
+    "very long int" = 100000000000000000000000000000000000009
+    "decimal float" = -14.125
+    "hex float"     = 0x5.1ec4p+20
+    "very long flt" = 4.957234990634579394723460546348e+100000
+    "not-a-number"  = nan
+    "infinity"      = inf
+    "neg infinity"  = -inf
 }
 ```
 
@@ -177,10 +174,9 @@ c1
 ```cte
 c1
 {
-    unquoted-str = no_quotes-needed
-    quoted-str   = "Quoted strings support escapes: \n \t \27f"
-    url          = |r https://example.com/|
-    email        = |r mailto:me@somewhere.com|
+    "string" = "Strings support escape sequences: \n \t \27f"
+    "url"    = @"https://example.com/"
+    "email"  = @"mailto:me@somewhere.com"
 }
 ```
 
@@ -189,14 +185,14 @@ c1
 ```cte
 c1
 {
-    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
-    date      = 2019-07-01
-    time      = 18:04:00.940231541/E/Prague
-    timestamp = 2010-07-15/13:28:15.415942344/Z
-    na        = @na:"database is offline"
-    nil       = @nil
-    media     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
-                 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+    "uuid"      = f1ce4567-e89b-12d3-a456-426655440000
+    "date"      = 2019-07-01
+    "time"      = 18:04:00.940231541/E/Prague
+    "timestamp" = 2010-07-15/13:28:15.415942344/Z
+    "na"        = na:"database is offline"
+    "nil"       = nil
+    "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+                  65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
 ```
 
@@ -205,12 +201,12 @@ c1
 ```cte
 c1
 {
-    list          = [1 2.5 "a string"]
-    map           = {one=1 2=two today=2020-09-10}
-    bytes         = |u8x 01 ff de ad be ef|
-    int16-array   = |i16 7374 17466 -9957|
-    uint16-hex    = |u16x 91fe 443a 9c15|
-    float32-array = |f32 1.5e10 -8.31e-12|
+    "list"          = [1 2.5 "a string"]
+    "map"           = {"one"=1 2="two" "today"=2020-09-10}
+    "bytes"         = |u8x 01 ff de ad be ef|
+    "int16 array"   = |i16 7374 17466 -9957|
+    "uint16 hex"    = |u16x 91fe 443a 9c15|
+    "float32 array" = |f32 1.5e10 -8.31e-12|
 }
 ```
 
@@ -220,14 +216,14 @@ c1
 c1
 {
     main-view = <View,
-        <Image src=|r img/avatar-image.jpg|>
-        <Text id=HelloText,
+        <Image "src"=@"img/avatar-image.jpg">
+        <Text "id"="HelloText",
             Hello! Please choose a name!
         >
         // OnChange contains code which might have problematic characters.
         // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
-        <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
-            NameInput.Parent.InsertRawAfter(NameInput, "<Image src=|r img/check.svg|>")
+        <TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
+            NameInput.Parent.InsertRawAfter(NameInput, '<Image "src"=@"img/check.svg">')
             HelloText.SetText("Hello, " + NameInput.Text + "!")
             @@",
             Name me!
@@ -242,31 +238,14 @@ c1
 c1
 {
     // Entire map will be referenced later as $id1
-    marked_object = &id1:{
-        recursive = $id1
+    "marked object" = &id1:{
+        "recursive" = $id1
     }
-    ref1        = $id1
-    ref2        = $id1
+    "ref1" = $id1
+    "ref2" = $id1
 
     // Reference pointing to part of another document.
-    outside_ref = $|r https://xyz.com/document.cte#some_id|
-}
-```
-
-#### Metadata
-
-```cte
-c1
-// Metadata about the entire document
-(
-    created     = 2019-9-1/22:14:01
-    description = "A demonstration"
-    version     = "1.1.0"
-){
-    children = (
-        // Metadata about the list of children
-        description = "Homer's children"
-    )[Bart Lisa Maggie]
+    "outside ref" = $@"https://xyz.com/document.cte#some_id"
 }
 ```
 
@@ -274,37 +253,36 @@ c1
 
 ```cte
 c1
-(
+{
     // Marked base resource identifiers used for concatenation.
-    // (Stored in metadata because they themselves aren't part of the data)
-    rdf = [
-        &people:|r https://springfield.gov/people#|
-        &e:|r https://example.org/|
+    "resources" = [
+        &people:@"https://springfield.gov/people#"
+        &mp:@"https://mypredicates.org/"
+        &mo:@"https://myobjects.org/"
     ]
-){
-    // Map-encoded relationships (the map is the subject)
-    $people:homer_simpson = {
 
-        /* $e refers to |r https://example.org/|
-         * $e:wife concatenates to |r https://example.org/wife|
+    // Map-encoded relationships (the map is the subject)
+    $people:"homer_simpson" = {
+
+        /* $mp refers to @"https://mypredicates.org/""
+         * $mp:"wife" concatenates to @"https://mypredicates.org/wife"
          */
-        $e:wife = $people:marge_simpson
+        $mp:"wife" = $people:"marge_simpson"
 
         // Multiple relationship objects
-        $e:regrets = [
+        $mp:"regrets" = [
             $firing
             $forgotten_birthday
         ]
     }
 
-    // Relationship containers (@[subject predicate object])
-    rdf-statements = [
-        &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
-        &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
-        &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
+    "relationship statements" = [
+        &marge_birthday:($people:"marge_simpson" $mp:"birthday" 1956-10-01)
+        &forgotten_birthday:($people:"homer_simpson" $mp:"forgot" $marge_birthday)
+        &firing:($people:"montgomery_burns" $mp:"fired" $people:"homer_simpson")
 
         // Multiple relationship subjects
-        @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
+        ([$firing $forgotten_birthday] $mp:"contribute" $mo:"marital_strife")
     ]
 }
 ```
@@ -317,8 +295,8 @@ c1
     /* Given: Actual type and value of "eggshell" and
      *        "navy-blue" have been defined in a schema
      */
-    wall_color = #eggshell
-    door_color = #navy-blue
+    "wall color" = #eggshell
+    "door color" = #navy-blue
 }
 ```
 
@@ -328,8 +306,8 @@ c1
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    custom-text   = |ct cplx(2.94+3i)|
-    custom-binary = |cb 04 f6 28 3c 40 00 00 40 40|
+    "custom text"   = |ct cplx(2.94+3i)|
+    "custom binary" = |cb 04 f6 28 3c 40 00 00 40 40|
 }
 ```
 

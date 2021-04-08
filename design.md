@@ -52,7 +52,6 @@ The biggest challenge of a text format is figuring out how to concisely and uniq
  * Map
  * Markup
  * Reference
- * Metadata
  * Comment
  * Custom
 
@@ -61,8 +60,6 @@ The most fundamental container types are the list and the map. Internally, almos
 URIs and references are important because linking amplifies the power and expressivity of any medium.
 
 Comments are necessary because people will build complicated data structures that need explanations.
-
-Metadata is important because we can't be sure that negotiations made prior to sending a document will provide enough context to make sense of the data.
 
 Markup is important because XML-style parent-child data structures have become the de-facto standard for storing presentation data.
 
@@ -96,15 +93,6 @@ Array types are limited to octet-based types because arrays are just an optimiza
 ### Float
 
 IEEE754 binary floating point is only supported for 32 and 64 bit sizes. This seems a good compromise, as most real-world values are in these sizes already. Decimal float supports arbitrary precision and length, and can often be stored in fewer bytes. See also: [how much precision do you need?](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md#how-much-precision-do-you-need)
-
-
-
-Predefined Metadata Keys
-------------------------
-
-The intent of predefined metadata keys is to codify a standard way of representing the most common types of metadata found in data structures. There are [so many metadata standards](https://en.wikipedia.org/wiki/Metadata_standard) that it's difficult to come up with a predefined set that is general enough for ad-hoc data formats like CBE and CTE. "Creation Time", for example, is a lot more generally useful than "Aspect Ratio". The question is where to draw the line. I doubt that we're ever going to be able to answer this to everyone's satisfaction, but it doesn't hurt to try.
-
-The current list is [here](common-generic-metadata.md)
 
 
 
