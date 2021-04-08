@@ -1,55 +1,54 @@
-<!doctypehtml><html lang="en"><link rel="icon"href="favicon.svg"><link rel="stylesheet"href="./main.css"><meta charset="utf-8"><meta name="description"content="The friendly data format for human and machine. Ad-hoc, secure, with 1:1 compatible twin binary and text formats and rich type support."><meta name="viewport"content="width=device-width,initial-scale=1"><title>Concise Encoding</title><header><div><nav><a class="title-container"href="index.html"><img class="title-logo"alt="Logo"src="img/ce-logo.svg"> <span class="title-text">Concise Encoding</span></a><ul><li><a class="nav-link"href="resources.html">Resources</a><li><a class="nav-link"href="https://github.com/kstenerud/concise-encoding">Source</a><li><a class="nav-link"href="support-ce.html">Support CE!</a></ul></nav></div><br><p class="title-subtitle">The friendly data format for human &amp; machine<div class="title-bgimage"></div></header><section class="updates-container"><div><span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)</div></section><main><section><aside><img class="card-image"src="img/twin.svg"><h3>Edit Text, Transmit Binary</h3><p>Humans love text. Machines love binary. Now you can seamlessly convert 1:1 between them!</aside><aside><img class="card-image"src="img/lock.svg"><h3>Secure By Design</h3><p>Precise decoding behavior means no poisoned data, no privilege escalations, and no DOSing!</aside><aside><img class="card-image"src="img/atom.svg"><h3>Rich Type Support</h3><p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, metadata, and more!</aside></section><section class="blurb"><h2>The Best of Both Worlds</h2><p class="blurb-text">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both and the drawbacks of neither?</section><article><div class="horiz"><img class="point-icon"src="img/twin.svg"><div class="vert"><div><h1>Twin Formats</h1><h3>Edit Text, Transmit Binary</h3></div></div></div><p>Encoded data should be easy to read and edit, but also low-cost to process and transmit. Concise Encoding has twin 1:1 compatible formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a>.<p class="subheading-text">Save CPU and bandwidth<p>Keep everything in binary while transmitting and storing, and seamlessly convert to/from text when a human is involved.</article><article><div class="horiz"><img class="point-icon"src="img/atom.svg"><div class="vert"><div><h1>Strongly Typed</h1><h3>All the common types you need</h3></div></div></div><p>Tired of coercing your data into strings? Concise Encoding supports these types natively:<ul><li><a class="type-link"href="#numeric_types">Bool</a><li><a class="type-link"href="#numeric_types">Integer (arbitrary size)</a><li><a class="type-link"href="#numeric_types">Float (binary, decimal, arbitrary size)</a><li><a class="type-link"href="#other_types">UUID</a><li><a class="type-link"href="#other_types">Time (date, time, timestamp)</a><li><a class="type-link"href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a><li><a class="type-link"href="#string_types">String</a><li><a class="type-link"href="#containers">List</a><li><a class="type-link"href="#containers">Map</a><li><a class="type-link"href="#containers">Markup</a><li><a class="type-link"href="#relationships">Relationship</a><li><a class="type-link"href="#containers">Typed Arrays (bytes, ints, floats, etc)</a><li><a class="type-link"href="#references">Reference (for recursive/repetitive data)</a><li><a class="type-link"href="#metadata">Metadata</a><li><a class="type-link"href="#relationships">Comment</a><li><a class="type-link"href="#constants">Constants</a><li><a class="type-link"href="#other_types">Nil</a><li><a class="type-link"href="#other_types">NA (not available)</a><li><a class="type-link"href="#other_types">Media</a><li><a class="type-link"href="#custom_types">Custom (encapsulate your own)</a></ul></article><article><div class="horiz"><img class="point-icon"src="img/lock.svg"><div class="vert"><div><h1>Secure</h1><h3>It's a hostile world!</h3></div></div></div><p>Did you know that many security breaches happen as a result of slightly different behaviors in parsers? A rounding or replacing Python parser at the access-control level, mixed with a truncating Go parser at the database level, could be exploited to poison your data and elevate privileges!<p>The Concise Encoding spec is built with <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#security-and-limits">security in mind</a>, ensuring consistent, reliable behavior among all codecs to keep your data and system safe.</article><article><div class="horiz"><img class="point-icon"src="img/version.svg"><div class="vert"><div><h1>Versioned</h1><h3>Because nobody's perfect</h3></div></div></div><p>No specification is impervious to errors-in-specification, or the need to change to meet a new reality. Changing a specification leads to all sorts of incompatibilities and mismatched implementations <strong>UNLESS</strong> you version both the spec <strong>AND</strong> the documents.<p>In Concise Encoding, both specs and documents are <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#version-specifier">versioned</a>, so you can rest secure in the knowledge that a CE decoder will properly handle your CE document forever.</article><article><div class="horiz"><img class="point-icon"src="img/plug.svg"><div class="vert"><div><h1>Plug and Play</h1><h3>Extra steps suck</h3></div></div></div><p>Concise Encoding can be used with or without a schema. There are no extra compilation phases, and no complicated definition files or code generation required to use it. Just import the library and go!</article><section class="blurb extra-space"><h2>Examples</h2><p class="blurb-text"><a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</section><article id="numeric_types"><div class="horiz"><img class="example-icon"src="img/sigma.svg"><div class="vert"><h2>Numeric</h2></div></div><pre>
+<!doctypehtml><html lang="en"><link rel="icon"href="favicon.svg"><link rel="stylesheet"href="./main.css"><meta charset="utf-8"><meta name="description"content="The friendly data format for human and machine. Ad-hoc, secure, with 1:1 compatible twin binary and text formats and rich type support."><meta name="viewport"content="width=device-width,initial-scale=1"><title>Concise Encoding</title><header><div><nav><a class="title-container"href="index.html"><img class="title-logo"alt="Logo"src="img/ce-logo.svg"> <span class="title-text">Concise Encoding</span></a><ul><li><a class="nav-link"href="resources.html">Resources</a><li><a class="nav-link"href="https://github.com/kstenerud/concise-encoding">Source</a><li><a class="nav-link"href="support-ce.html">Support CE!</a></ul></nav></div><br><p class="title-subtitle">The friendly data format for human &amp; machine<div class="title-bgimage"></div></header><section class="updates-container"><div><span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)</div></section><main><section><aside><img class="card-image"src="img/twin.svg"><h3>Edit Text, Transmit Binary</h3><p>Humans love text. Machines love binary. Now you can seamlessly convert 1:1 between them!</aside><aside><img class="card-image"src="img/lock.svg"><h3>Secure By Design</h3><p>Precise decoding behavior means no poisoned data, no privilege escalations, and no DOSing!</aside><aside><img class="card-image"src="img/atom.svg"><h3>Rich Type Support</h3><p>Boolean, integer, float, string, bytes, time, URI, UUID, list, map, markup, and more!</aside></section><section class="blurb"><h2>The Best of Both Worlds</h2><p class="blurb-text">Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both and the drawbacks of neither?</section><article><div class="horiz"><img class="point-icon"src="img/twin.svg"><div class="vert"><div><h1>Twin Formats</h1><h3>Edit Text, Transmit Binary</h3></div></div></div><p>Encoded data should be easy to read and edit, but also low-cost to process and transmit. Concise Encoding has twin 1:1 compatible formats: one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>, and one in <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a>.<p class="subheading-text">Save CPU and bandwidth<p>Keep everything in binary while transmitting and storing, and seamlessly convert to/from text when a human is involved.</article><article><div class="horiz"><img class="point-icon"src="img/atom.svg"><div class="vert"><div><h1>Strongly Typed</h1><h3>All the common types you need</h3></div></div></div><p>Tired of coercing your data into strings? Concise Encoding supports these types natively:<ul><li><a class="type-link"href="#numeric_types">Bool</a><li><a class="type-link"href="#numeric_types">Integer (arbitrary size)</a><li><a class="type-link"href="#numeric_types">Float (binary, decimal, arbitrary size)</a><li><a class="type-link"href="#other_types">UUID</a><li><a class="type-link"href="#other_types">Time (date, time, timestamp)</a><li><a class="type-link"href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a><li><a class="type-link"href="#string_types">String</a><li><a class="type-link"href="#containers">List</a><li><a class="type-link"href="#containers">Map</a><li><a class="type-link"href="#containers">Markup</a><li><a class="type-link"href="#relationships">Relationship</a><li><a class="type-link"href="#containers">Typed Arrays (bytes, ints, floats, etc)</a><li><a class="type-link"href="#references">Reference (for recursive/repetitive data)</a><li><a class="type-link"href="#relationships">Comment</a><li><a class="type-link"href="#constants">Constants</a><li><a class="type-link"href="#other_types">Nil</a><li><a class="type-link"href="#other_types">NA (not available)</a><li><a class="type-link"href="#other_types">Media</a><li><a class="type-link"href="#custom_types">Custom (encapsulate your own)</a></ul></article><article><div class="horiz"><img class="point-icon"src="img/lock.svg"><div class="vert"><div><h1>Secure</h1><h3>It's a hostile world!</h3></div></div></div><p>Did you know that many security breaches happen as a result of slightly different behaviors in parsers? A rounding or replacing Python parser at the access-control level, mixed with a truncating Go parser at the database level, could be exploited to poison your data and elevate privileges!<p>The Concise Encoding spec is built with <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#security-and-limits">security in mind</a>, ensuring consistent, reliable behavior among all codecs to keep your data and system safe.</article><article><div class="horiz"><img class="point-icon"src="img/version.svg"><div class="vert"><div><h1>Versioned</h1><h3>Because nobody's perfect</h3></div></div></div><p>No specification is impervious to errors-in-specification, or the need to change to meet a new reality. Changing a specification leads to all sorts of incompatibilities and mismatched implementations <strong>UNLESS</strong> you version both the spec <strong>AND</strong> the documents.<p>In Concise Encoding, both specs and documents are <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#version-specifier">versioned</a>, so you can rest secure in the knowledge that a CE decoder will properly handle your CE document forever.</article><article><div class="horiz"><img class="point-icon"src="img/plug.svg"><div class="vert"><div><h1>Plug and Play</h1><h3>Extra steps suck</h3></div></div></div><p>Concise Encoding can be used with or without a schema. There are no extra compilation phases, and no complicated definition files or code generation required to use it. Just import the library and go!</article><section class="blurb extra-space"><h2>Examples</h2><p class="blurb-text"><a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</section><article id="numeric_types"><div class="horiz"><img class="example-icon"src="img/sigma.svg"><div class="vert"><h2>Numeric</h2></div></div><pre>
                 <code>
 c1
 {
-    boolean       = @true
-    binary-int    = -0b10001011
-    octal-int     = 0o644
-    decimal-int   = -10000000
-    hex-int       = 0xfffe0001
-    very-long-int = 100000000000000000000000000000000000009
-    decimal-float = -14.125
-    hex-float     = 0x5.1ec4p+20
-    very-long-flt = 4.957234990634579394723460546348e+100000
-    not-a-number  = @nan
-    infinity      = @inf
-    neg-infinity  = -@inf
+    "boolean"       = true
+    "binary int"    = -0b10001011
+    "octal int"     = 0o644
+    "decimal int"   = -10000000
+    "hex int"       = 0xfffe0001
+    "very long int" = 100000000000000000000000000000000000009
+    "decimal float" = -14.125
+    "hex float"     = 0x5.1ec4p+20
+    "very long flt" = 4.957234990634579394723460546348e+100000
+    "not-a-number"  = nan
+    "infinity"      = inf
+    "neg infinity"  = -inf
 }
                 </code>
             </pre></article><article id="string_types"><div class="horiz"><img class="example-icon"src="img/quote.svg"><div class="vert"><h2>String-Like</h2></div></div><pre>
                 <code>
 c1
 {
-    unquoted-str = no_quotes-needed
-    quoted-str   = "Quoted strings support escapes: \n \t \27f"
-    url          = |r https://example.com/|
-    email        = |r mailto:me@somewhere.com|
+    "string" = "Strings support escape sequences: \n \t \27f"
+    "url"    = @"https://example.com/"
+    "email"  = @"mailto:me@somewhere.com"
 }
                 </code>
             </pre></article><article id="other_types"><div class="horiz"><img class="example-icon"src="img/clock.svg"><h2>Other Basic Types</h2></div><pre>
                 <code>
 c1
 {
-    uuid      = @f1ce4567-e89b-12d3-a456-426655440000
-    date      = 2019-07-01
-    time      = 18:04:00.940231541/E/Prague
-    timestamp = 2010-07-15/13:28:15.415942344/Z
-    na        = @na:"database is offline"
-    nil       = @nil
-    media     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
-                 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+    "uuid"      = f1ce4567-e89b-12d3-a456-426655440000
+    "date"      = 2019-07-01
+    "time"      = 18:04:00.940231541/E/Prague
+    "timestamp" = 2010-07-15/13:28:15.415942344/Z
+    "na"        = na:"database is offline"
+    "nil"       = nil
+    "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+                  65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
                 </code>
             </pre></article><article id="containers"><div class="horiz"><img class="example-icon"src="img/container.svg"><div class="vert"><h2>Containers</h2></div></div><pre>
                 <code>
 c1
 {
-    list          = [1 2.5 "a string"]
-    map           = {one=1 2=two today=2020-09-10}
-    bytes         = |u8x 01 ff de ad be ef|
-    int16-array   = |i16 7374 17466 -9957|
-    uint16-hex    = |u16x 91fe 443a 9c15|
-    float32-array = |f32 1.5e10 -8.31e-12|
+    "list"          = [1 2.5 "a string"]
+    "map"           = {"one"=1 2="two" "today"=2020-09-10}
+    "bytes"         = |u8x 01 ff de ad be ef|
+    "int16 array"   = |i16 7374 17466 -9957|
+    "uint16 hex"    = |u16x 91fe 443a 9c15|
+    "float32 array" = |f32 1.5e10 -8.31e-12|
 }
                 </code>
             </pre></article><article id="markup"><div class="horiz"><img class="example-icon"src="img/markup.svg"><div class="vert"><h2>Markup</h2></div></div><pre>
@@ -57,14 +56,14 @@ c1
 c1
 {
     main-view = &lt;View,
-        &lt;Image src=|r img/avatar-image.jpg|&gt;
-        &lt;Text id=HelloText,
+        &lt;Image "src"=@"img/avatar-image.jpg"&gt;
+        &lt;Text "id"="HelloText",
             Hello! Please choose a name!
         &gt;
         // OnChange contains code which might have problematic characters.
         // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
-        &lt;TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
-            NameInput.Parent.InsertRawAfter(NameInput, "&lt;Image src=|r img/check.svg|&gt;")
+        &lt;TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
+            NameInput.Parent.InsertRawAfter(NameInput, '&lt;Image "src"=@"img/check.svg"&gt;')
             HelloText.SetText("Hello, " + NameInput.Text + "!")
             @@",
             Name me!
@@ -77,65 +76,49 @@ c1
 c1
 {
     // Entire map will be referenced later as $id1
-    marked_object = &id1:{
-        recursive = $id1
+    "marked object" = &id1:{
+        "recursive" = $id1
     }
-    ref1        = $id1
-    ref2        = $id1
+    "ref1" = $id1
+    "ref2" = $id1
 
     // Reference pointing to part of another document.
-    outside_ref = $|r https://xyz.com/document.cte#some_id|
-}
-                </code>
-            </pre></article><article id="metadata"><div class="horiz"><img class="example-icon"src="img/metadata-example.svg"><div class="vert"><h2>Metadata</h2></div></div><pre>
-                <code>
-c1
-// Metadata about the entire document
-(
-    created     = 2019-9-1/22:14:01
-    description = "A demonstration"
-    version     = "1.1.0"
-){
-    children = (
-        // Metadata about the list of children
-        description = "Homer's children"
-    )[Bart Lisa Maggie]
+    "outside ref" = $@"https://xyz.com/document.cte#some_id"
 }
                 </code>
             </pre></article><article id="relationships"><div class="horiz"><img class="example-icon"src="img/handshake.svg"><div class="vert"><h2>Relationships</h2></div></div><pre>
                 <code>
 c1
-(
+{
     // Marked base resource identifiers used for concatenation.
-    // (Stored in metadata because they themselves aren't part of the data)
-    rdf = [
-        &people:|r https://springfield.gov/people#|
-        &e:|r https://example.org/|
+    "resources" = [
+        &amp;people:@"https://springfield.gov/people#"
+        &amp;mp:@"https://mypredicates.org/"
+        &amp;mo:@"https://myobjects.org/"
     ]
-){
-    // Map-encoded relationships (the map is the subject)
-    $people:homer_simpson = {
 
-        /* $e refers to |r https://example.org/|
-         * $e:wife concatenates to |r https://example.org/wife|
+    // Map-encoded relationships (the map is the subject)
+    $people:"homer_simpson" = {
+
+        /* $mp refers to @"https://mypredicates.org/""
+         * $mp:"wife" concatenates to @"https://mypredicates.org/wife"
          */
-        $e:wife = $people:marge_simpson
+        $mp:"wife" = $people:"marge_simpson"
 
         // Multiple relationship objects
-        $e:regrets = [
+        $mp:"regrets" = [
             $firing
             $forgotten_birthday
         ]
     }
 
-    // Relationship containers (@[subject predicate object])
-    rdf-statements = [
-        &marge_birthday:@[$people:marge_simpson $e:birthday 1956-10-01]
-        &forgotten_birthday:@[$people:homer_simpson $e:forgot $marge_birthday]
-        &firing:@[$people:montgomery_burns $e:fired $people:homer_simpson]
+    "relationship statements" = [
+        &amp;marge_birthday:($people:"marge_simpson" $mp:"birthday" 1956-10-01)
+        &amp;forgotten_birthday:($people:"homer_simpson" $mp:"forgot" $marge_birthday)
+        &amp;firing:($people:"montgomery_burns" $mp:"fired" $people:"homer_simpson")
 
         // Multiple relationship subjects
-        @[[$firing $forgotten_birthday] $e:contribute $e:marital_strife]
+        ([$firing $forgotten_birthday] $mp:"contribute" $mo:"marital_strife")
     ]
 }
                 </code>
@@ -146,8 +129,8 @@ c1
     /* Given: Actual type and value of "eggshell" and
      *        "navy-blue" have been defined in a schema
      */
-    wall_color = #eggshell
-    door_color = #navy-blue
+    "wall color" = #eggshell
+    "door color" = #navy-blue
 }
                 </code>
             </pre></article><article id="custom_types"><div class="horiz"><img class="example-icon"src="img/custom.svg"><div class="vert"><h2>Custom Types</h2></div></div><pre>
@@ -155,8 +138,8 @@ c1
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    custom-text   = |ct cplx(2.94+3i)|
-    custom-binary = |cb 04 f6 28 3c 40 00 00 40 40|
+    "custom text"   = |ct cplx(2.94+3i)|
+    "custom binary" = |cb 04 f6 28 3c 40 00 00 40 40|
 }
                 </code>
             </pre></article><section class="blurb"><p class="blurb-text">See the <a href="resources.html">Resources</a> page or <a href="https://github.com/kstenerud/concise-encoding">Github</a> page for more information.</section><section class="donate"><p><a class="badge-donate"href="https://www.paypal.com/donate?hosted_button_id=C9LH9G3JG8QJG">Donate</a></section></main><footer><p class="copyright">Copyright &copy; 2020 <a href="https://github.com/kstenerud">Karl Stenerud</a><p><a class="badge-shoutout"href="https://danlam.net/">danlam.net</a> <a class="badge-shoutout"href="https://github.com/andybrewer/mvp/">MVP</a> <a class="badge-shoutout"href="https://icon54.com/">Icon54</a></footer>
