@@ -766,7 +766,10 @@ Other Types
 
 An identifier is not directly a type per-se, but rather a restriction upon what types and ranges are allowed in certain contexts.  It is implemented as a case insensitive string, and has the following requirements:
 
- * An identifier **MUST ONLY** contain letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the underscore (`_`) character.
+ * An identifier **MUST ONLY** contain:
+   - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
+   - The underscore (`_`) character
+   - The dash (`-`) character.
  * The maximum length is 127 **bytes** (not characters).
  * Comparisons are case insensitive when doing lookups or testing for uniqueness.
  * In some contexts, the identifier **MUST** be unique (this is documented where it is required). A duplicate identifier in a context requiring uniqueness is a [structural error](#structural-errors).
