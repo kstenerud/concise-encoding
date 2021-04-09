@@ -39,6 +39,7 @@ Contents
     - [NUL](#nul)
     - [Line Endings](#line-endings)
     - [String](#string)
+    - [Identifier](#identifier)
     - [Resource Identifier](#resource-identifier)
   - [Typed Array](#typed-array)
   - [Media](#media)
@@ -52,7 +53,6 @@ Contents
   - [Markup](#markup)
   - [Relationship](#relationship)
 * [Other Types](#other-types)
-  - [Identifier](#identifier)
   - [Nil](#nil)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
@@ -413,6 +413,28 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 A basic UTF-8 string.
 
+#### Identifier
+
+An identifier is a string with the following additional requirements:
+
+ * An identifier **MUST ONLY** contain:
+   - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
+   - The underscore (`_`) character
+   - The dash (`-`) character.
+ * The maximum length is 127 **bytes** (not characters).
+ * Comparisons are case insensitive when doing lookups or testing for uniqueness.
+ * In some contexts, the identifier **MUST** be unique (this is documented where it is required). A duplicate identifier in a context requiring uniqueness is a [structural error](#structural-errors).
+ * An identifier **MUST NOT** be [marked](#marker).
+ * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
+ * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
+
+**Examples**:
+
+ * `123`
+ * `some_id`
+ * `25th`
+ * `猫`
+
 #### Resource Identifier
 
 A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
@@ -761,29 +783,6 @@ c1 {
 
 Other Types
 ------------
-
-### Identifier
-
-An identifier is not directly a type per-se, but rather a restriction upon what types and ranges are allowed in certain contexts.  It is implemented as a case insensitive string, and has the following requirements:
-
- * An identifier **MUST ONLY** contain:
-   - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
-   - The underscore (`_`) character
-   - The dash (`-`) character.
- * The maximum length is 127 **bytes** (not characters).
- * Comparisons are case insensitive when doing lookups or testing for uniqueness.
- * In some contexts, the identifier **MUST** be unique (this is documented where it is required). A duplicate identifier in a context requiring uniqueness is a [structural error](#structural-errors).
- * An identifier **MUST NOT** be [marked](#marker).
- * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
- * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
-
-**Examples**:
-
- * `123`
- * `some_id`
- * `25th`
- * `猫`
-
 
 ### Nil
 

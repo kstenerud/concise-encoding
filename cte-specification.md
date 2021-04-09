@@ -51,6 +51,7 @@ Contents
   - [Media](#media)
   - [String-Like Array Encodings](#string-like-array-encodings)
   - [String](#string)
+  - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
   - [Custom Binary](#custom-binary)
   - [Custom Text](#custom-text)
@@ -63,7 +64,6 @@ Contents
     - [Content String](#content-string)
   - [Relationship](#relationship)
 * [Other Types](#other-types)
-  - [Identifier](#identifier)
   - [Nil](#nil)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
@@ -566,6 +566,18 @@ Strings are enclosed within double-quote (`"`) delimiters, and the elements are 
     "Line 1\nLine 2\nLine 3"
 
 
+### Identifier
+
+Identifiers are implemented as strings, but are written without double-quotes and don't support escape sequences.
+
+**Examples**:
+
+ * `123`
+ * `some_id`
+ * `25th`
+ * `猫`
+
+
 ### Resource Identifier
 
 A resource identifier is enclosed within the delimiters `@"` and `"`.
@@ -720,18 +732,6 @@ A relationship container is composed of the delimiters `(` and `)`, containing t
 
 Other Types
 -----------
-
-### Identifier
-
-Identifiers are strings, but are written without double-quotes and don't support escape sequences.
-
-**Examples**:
-
- * `123`
- * `some_id`
- * `25th`
- * `猫`
-
 
 ### Nil
 
