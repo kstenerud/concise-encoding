@@ -193,7 +193,9 @@ Both decimal and binary floating point numbers have representations for the foll
 
 ### UID
 
-A unique identifier. Concise encoding version 1 uses [rfc4122 UUIDs](https://tools.ietf.org/html/rfc4122) as the unique ID type.
+A universal identifier. This identifier is designed to be unique across all identifiers in the universe.
+
+Concise encoding version 1 uses [rfc4122 UUIDs](https://tools.ietf.org/html/rfc4122) as the implementation type.
 
 
 
@@ -415,7 +417,7 @@ A basic UTF-8 string.
 
 #### Identifier
 
-An identifier is a string with the following additional requirements:
+An identifier is a type designed to be unique within a local context. It's implemented as a string with the following additional requirements:
 
  * An identifier **MUST ONLY** contain:
    - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
@@ -423,7 +425,7 @@ An identifier is a string with the following additional requirements:
    - The dash (`-`) character.
  * The maximum length is 127 **bytes** (not characters).
  * Comparisons are case insensitive when doing lookups or testing for uniqueness.
- * In some contexts, the identifier **MUST** be unique (this is documented where it is required). A duplicate identifier in a context requiring uniqueness is a [structural error](#structural-errors).
+ * All identifier declarations (not usages) **MUST** be unique within their context. A duplicate identifier declaration within a particular context is a [structural error](#structural-errors).
  * An identifier **MUST NOT** be [marked](#marker).
  * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
  * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
@@ -437,7 +439,7 @@ An identifier is a string with the following additional requirements:
 
 #### Resource Identifier
 
-A resource identifier is a text-based (UTF-8) globally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
+A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
 
 Resource IDs **CAN** also be [combined](#combined-objects) with a [string](#string), where the string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
 
@@ -477,6 +479,7 @@ Array elements **CAN** be written using any of the representations allowed for t
  * `|i16 0b1001010 0o744 1000 0xffff|`
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 1 1 0 1 0|`
+
 
 ### Media
 
@@ -812,7 +815,7 @@ A marker is a [combined](#combined-object) pseudo-object that assigns a marker I
 
     [marker id] [marked object]
 
-The marker ID is an [identifier](#identifier) that **MUST** be unique to all marker IDs in the current document.
+The marker ID is an [identifier declaration](#identifier), and **MUST** be unique to all marker IDs in the current document.
 
 #### Rules
 
