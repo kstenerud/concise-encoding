@@ -424,6 +424,7 @@ An identifier is a type designed to be unique within a local context. It's imple
    - The underscore (`_`) character
    - The dash (`-`) character.
  * The maximum length is 127 **bytes** (not characters).
+ * The minimum length is 1 **character** (identifiers **CANNOT** be empty strings).
  * Comparisons are case insensitive when doing lookups or testing for uniqueness.
  * All identifier declarations (not usages) **MUST** be unique within their context. A duplicate identifier declaration within a particular context is a [structural error](#structural-errors).
  * An identifier **MUST NOT** be [marked](#marker).
