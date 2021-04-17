@@ -215,7 +215,7 @@ c1
 ```cte
 c1
 {
-    main-view = <View,
+    "main-view" = <View,
         <Image "src"=@"img/avatar-image.jpg">
         <Text "id"="HelloText",
             Hello! Please choose a name!

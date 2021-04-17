@@ -423,6 +423,7 @@ An identifier is a type designed to be unique within a local context. It's imple
    - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
    - The underscore (`_`) character
    - The dash (`-`) character.
+ * The first character **MUST NOT** be a dash (`-`).
  * The maximum length is 127 **bytes** (not characters).
  * The minimum length is 1 **character** (identifiers **CANNOT** be empty strings).
  * Comparisons are case insensitive when doing lookups or testing for uniqueness.

@@ -416,12 +416,12 @@ A time is made up of the following mandatory and optional fields:
 
 **Examples**:
 
- * `9:04:21`: 9:04:21 UTC
+ * `09:04:21`: 9:04:21 UTC
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
  * `12:05:50.102/Z`: 12:05:50 and 102 milliseconds UTC
- * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
+ * `04:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
  * `17:41:03/-13.54/-172.36`: 17:41:03 Samoa time
- * `9:00:00/L`: 9:00:00 local time
+ * `09:00:00/L`: 9:00:00 local time
 
 
 ### Timestamp
