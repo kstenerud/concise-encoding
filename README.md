@@ -12,6 +12,7 @@ Contents
 --------
 
 * [Introduction](#introduction)
+* [Motivation](#motivation)
 * [Specifications](#specifications)
 * [Implementations](#implementations)
 * [Remaining Tasks](#remaining-tasks)
@@ -27,6 +28,26 @@ Introduction
 Today's data formats present us with a dilemma: Use text based formats that are bloated and slow, or use binary formats that humans can't read. Wouldn't it be nice to have the benefits of both and the drawbacks of neither?
 
 **Concise Encoding** is the next step in the evolution of ad-hoc hierarchical data formats, aiming to represent data securely in a power, bandwidth, and human friendly way.
+
+
+
+Motivation
+----------
+
+Text-based formats became popular in the mid-to-late 90s and were a breath of fresh air after the expensive, proprietary, complicated, difficult to use binary formats of the time. Text formats and protocols such as HTML, HTTP, XML, and JSON simplified data communications greatly, and contributed to the flourishing of the web ecosystem.
+
+But this simplicity came at a cost. Text encodings are bulky and CPU-intensive to parse compared to binary encodings. The simplicity of the formats themselves also gave rise to new problems due to their lack of types. When everyone has to come up with their own methods to shoehorn common types into the restricted types of these formats, interoperability is seriously impaired, mistakes are common, and security risks ever-present.
+
+These formats also played fast and loose in their specifications, resulting in much variance in implementation behaviors. This makes them inherently insecure, and although that wasn't such a problem in the 2000s, the hostile world of today is rife with exploits that take advantage of this.
+
+Lack of versioning is also a problem. Without a version specifier, changes to the specification range from difficult to impossible, leaving the format riddled with deprecation holes, and incapable of adapting to new security threats or industry changes.
+
+**Concise Encoding is designed to address these concerns:**
+
+ * As a twin binary/text format, it retains the text-based ease-of-use of JSON and friends, but is transmitted in binary form. This makes it easier on the energy bill and the planet.
+ * As a tightly specified format, it doesn't suffer from the security problems of most other formats.
+ * As a versioned format, Concise Encoding can respond to a changing world without resorting to deprecations and awkward encodings.
+ * Concise Encoding's supported types are designed with the 80% use case in mind, such that 80% of users should be able to employ it without resorting to custom type encoding (although custom types are also explicitly supported when needed).
 
 #### Supported Types
 
@@ -75,10 +96,10 @@ Remaining Tasks
 ---------------
 
  * [Open comments](https://github.com/kstenerud/concise-encoding/issues) on the format itself (ongoing)
- * Finish the [reference implementation](https://github.com/kstenerud/go-concise-encoding) (90%)
- * ABNF/EBNF for the [CTE format](cte-specification.md) (0%)
- * [Schema design](ces-specification.md) (2%)
- * Schema reference implementation (0%)
+ * Finish the [reference implementation](https://github.com/kstenerud/go-concise-encoding) (95%)
+ * ABNF/EBNF for the [CTE format](cte-specification.md)
+ * [Schema design](ces-specification.md)
+ * Schema reference implementation
  * Release version 1
 
 
@@ -90,7 +111,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 #### Natively supported types
 
-| Type          | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) |
 | ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
 | Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
 | Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
@@ -116,7 +137,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 #### Features
 
-| Type                    | Concise | XML | JSON | BSON | CBOR | Messagepack | Cap'n | Protobufs | Flatbuffers | Thrift | ASN.1 |
+| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) |
 | ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
 | Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
 | Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
