@@ -268,7 +268,7 @@ A timestamp combines a date and a time.
 
 ### Time Zones
 
-A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a constant state of flux, and could change at any time for many reasons. There are two ways to denote a time zone: by area/location, and by global coordinates.
+A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a continual state of flux, and could change at any time for many reasons. There are two ways to denote a time zone: by area/location, and by global coordinates.
 
 **Note**: If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
@@ -417,10 +417,10 @@ A basic UTF-8 string.
 
 #### Identifier
 
-An identifier is a type designed to be unique within a local context. It's implemented as a string with the following additional requirements:
+An identifier is a type designed to be unique within a local context. It's implemented as a string with the following additional requirements and restrictions:
 
  * An identifier **MUST ONLY** contain:
-   - Letter and numeric characters ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
+   - Letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
    - The underscore (`_`) character
    - The dash (`-`) character.
  * The first character **MUST NOT** be a dash (`-`).
@@ -431,6 +431,7 @@ An identifier is a type designed to be unique within a local context. It's imple
  * An identifier **MUST NOT** be [marked](#marker).
  * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
  * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
+ * The identifier is not a general type; it's only allowed where specifically noted in this document.
 
 **Examples**:
 
@@ -947,18 +948,15 @@ A CBE decoder **MUST** consume and discard padding. A CBE encoder **MAY** add pa
 
 ### Constant
 
-Constants are custom named values that have been defined in a schema, and can be used in the same fashion as the normal specification-defined values (such as `true`, `nan`, `nil`, etc). A constant **MUST** be defined to represent a real object, not a pseudo-object or pseudo-object combination.
+Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `nil`, etc). Constants are only available to CTE documents. CBE documents must store the actual value instead.
 
 A constant's name is an [identifier](#identifier).
 
-Constants have an **OPTIONAL** [combined form](#combined-objects), whereby the right-side is a cache of the explicit value of the constant (so that it is still usable in cases where the decoder doesn't have access to the constant's definition).
+A constant **MUST** be defined in a schema to represent a real object, **not** a pseudo-object or pseudo-object combination.
 
-A CTE decoder **MUST** attempt to look up the constant name in the schema and use the value it maps to. If the lookup fails, the decoder behavior depends on the form of the constant:
+CTE decoders **MUST** look up (in the schema) all constants encountered in a CTE document and use the values they refer to. A lookup failure is a [data error](#data-errors).
 
- * If it has an explicit constant value, use that.
- * If there's no explicit constant value, treat it as a [data error](#data-errors).
-
-**Note**: Constants are only available in CTE documents (CBE documents store the actual value instead). CTE encoders **MUST** use constant names where specified by the schema.
+CTE encoders **MUST** use constant names where required by the schema.
 
 
 ### NA
@@ -978,7 +976,6 @@ Decoders **MUST** provide a configuration option to choose whether NA is treated
  * The media type field in a [media object](#media).
  * A content string in a [markup container](#markup) or [comment](#comment).
  * The predicate in a [relationship](#relationship).
- * The explicit value of a [constant](#constant).
 
 **Some possible reasons for NA**:
 
@@ -1002,7 +999,7 @@ Combined objects are objects that are composed of two sub-objects.
 
     [left-object] combined-with [right-object]
 
-The effect of this combination could be to concatenate one object to another (for example [resource IDs](#resource-id)), assign metadata to an object (for example [markers](#marker), or to clarify meaning (for example [NA](#na) or [constants](#constant)).
+The effect of this combination could be to concatenate one object to another (for example [resource IDs](#resource-id)), assign metadata to an object (for example [markers](#marker), or to clarify meaning (for example [NA](#na)).
 
 **Note**: In CTE, combining is indicated by the `:` character. In CBE, the combination is implied by the type field.
 
@@ -1018,7 +1015,6 @@ To keep the complexity down, combined objects have the following rules:
 | Left Type                   | Allowed Right Side Types | Combining is Mandatory |
 | --------------------------- | ------------------------ | ---------------------- |
 | [Resource ID](#resource-id) | String                   | No                     |
-| [Constant](#constant)       | Any Real Object          | No                     |
 | [Marker](#marker)           | Any Real Object          | Yes                    |
 | [NA](#na)                   | Any Real Object          | Yes                    |
 

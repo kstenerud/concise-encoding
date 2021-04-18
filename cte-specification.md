@@ -72,7 +72,6 @@ Contents
     - [Single Line Comment](#single-line-comment)
     - [Multiline Comment](#multiline-comment)
   - [Constant](#constant)
-    - [Explicit Constant](#explicit-constant)
   - [NA](#na)
 * [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
@@ -834,18 +833,6 @@ A constant name begins with a hash `#` character, followed by an [identifier](ce
 
     #some_const // a const named "some_const", whose type and value are defined in a schema.
 
-#### Explicit Constant
-
-CTE documents containing constants normally cannot be decoded without a matching schema. For cases where this would be problematic, A CTE encoder **MAY** opt to encode explicit constants, which name the constant (to provide meaning for humans) and also provide its value (to support decoding without a schema).
-
-An explicit constant begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier), then a colon `:`, and finally the object's value.
-
-    #some_const:1 // a const named "some_const", which is the integer 1.
-
-The explicit value must be a real object (not a pseudo-object).
-
-If a decoder has access to the schema that defines a particular constant, the explicit value is ignored (the value from the schema is used).
-
 
 ### NA
 
@@ -1004,7 +991,6 @@ Examples:
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
- * Between an [explicit constant](#constant) name and its explicit value (`#Planck_Js: 6.62607015e-34` is invalid).
  * Between a [concatenation](#concatenation) operator and its operands (`@"http://x.com/" : 1` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
