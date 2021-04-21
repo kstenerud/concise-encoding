@@ -487,4 +487,7 @@ a:hover {
     article h2 {
         font-size: 1.4rem;
     }
+    #logo {
+        display: none;
+    }
 }
