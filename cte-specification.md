@@ -791,6 +791,8 @@ c1 {
 
 Comments **CAN** be written in single-line or multi-line form.
 
+Comments have the same placement requirements as regular objects. This means for example that butting up the comment against an object is not allowed (i.e. `"a"/* comment */` and `/ *comment */"a"` are not allowed).
+
 #### Single Line Comment
 
 A single line comment begins at the sequence `//` and continues until the next linefeed (u+000a) is encountered.
