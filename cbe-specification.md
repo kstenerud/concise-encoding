@@ -36,7 +36,8 @@ Contents
   - [Time](#time)
   - [Timestamp](#timestamp)
 * [Array Types](#array-types)
-  - [Chunking](#chunking)
+  - [Short Form](#short-form)
+  - [Chunked Form](#chunked-form)
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
@@ -45,8 +46,8 @@ Contents
     - [Binary Encoding](#custom-type-binary-encoding)
     - [Text Encoding](#custom-type-text-encoding)
   - [Typed Arrays](#typed-arrays)
-  - [Boolean Array](#boolean-array)
-  - [Media](#media)
+    - [Bit Array](#bit-array)
+    - [Media](#media)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -108,110 +109,129 @@ A CBE document is byte-oriented. All objects are composed of a type field and a 
 
 #### Type Field
 
-| Hex | Dec | Type                      | Payload                                         |
-| --- | --- | ------------------------- | ----------------------------------------------- |
-|  00 |   0 | Integer value 0           |                                                 |
-|  01 |   1 | Integer value 1           |                                                 |
-| ... | ... | ...                       |                                                 |
-|  64 | 100 | Integer value 100         |                                                 |
-|  65 | 101 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  66 | 102 | Positive Integer          | [byte length] [little endian bytes]             |
-|  67 | 103 | Negative Integer          | [byte length] [little endian bytes]             |
-|  68 | 104 | Positive Integer (8 bit)  | [8-bit unsigned integer]                        |
-|  69 | 105 | Negative Integer (8 bit)  | [8-bit unsigned integer]                        |
-|  6a | 106 | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]        |
-|  6b | 107 | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]        |
-|  6c | 108 | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]        |
-|  6d | 109 | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]        |
-|  6e | 110 | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]        |
-|  6f | 111 | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]        |
-|  70 | 112 | Binary Float (16 bit)     | [16-bit [bfloat16](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf), little endian] |
-|  71 | 113 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian]    |
-|  72 | 114 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian]    |
-|  73 | 115 | UID                       | [128 bits of data, big endian]                  |
-|  74 | 116 | RESERVED                  |                                                 |
-|  75 | 117 | RESERVED                  |                                                 |
-|  76 | 118 | Relationship              | Subject, Predicate, Object                      |
-|  77 | 119 | Comment                   | (String or sub-comment) ... End of Container    |
-|  78 | 120 | Markup                    | Name, kv-pairs, contents                        |
-|  79 | 121 | Map                       | (Key, value) ... End of Container               |
-|  7a | 122 | List                      | Object ... End of Container                     |
-|  7b | 123 | End of Container          |                                                 |
-|  7c | 124 | Boolean False             |                                                 |
-|  7d | 125 | Boolean True              |                                                 |
-|  7e | 126 | Nil                       |                                                 |
-|  7f | 127 | Padding                   |                                                 |
-|  80 | 128 | String: 0 bytes           |                                                 |
-|  81 | 129 | String: 1 byte            | [1 octet of UTF-8 data]                         |
-|  82 | 130 | String: 2 bytes           | [2 octets of UTF-8 data]                        |
-|  83 | 131 | String: 3 bytes           | [3 octets of UTF-8 data]                        |
-|  84 | 132 | String: 4 bytes           | [4 octets of UTF-8 data]                        |
-|  85 | 133 | String: 5 bytes           | [5 octets of UTF-8 data]                        |
-|  86 | 134 | String: 6 bytes           | [6 octets of UTF-8 data]                        |
-|  87 | 135 | String: 7 bytes           | [7 octets of UTF-8 data]                        |
-|  88 | 136 | String: 8 bytes           | [8 octets of UTF-8 data]                        |
-|  89 | 137 | String: 9 bytes           | [9 octets of UTF-8 data]                        |
-|  8b | 139 | String: 11 bytes          | [11 octets of UTF-8 data]                       |
-|  8a | 138 | String: 10 bytes          | [10 octets of UTF-8 data]                       |
-|  8c | 140 | String: 12 bytes          | [12 octets of UTF-8 data]                       |
-|  8d | 141 | String: 13 bytes          | [13 octets of UTF-8 data]                       |
-|  8e | 142 | String: 14 bytes          | [14 octets of UTF-8 data]                       |
-|  8f | 143 | String: 15 bytes          | [15 octets of UTF-8 data]                       |
-|  90 | 144 | String                    | [chunk length] [UTF-8 data] ...                 |
-|  91 | 145 | Resource Identifier       | [chunk length] [UTF-8 data] ...                 |
-|  92 | 146 | Custom (Binary)           | [chunk length] [data] ...                       |
-|  93 | 147 | Custom (Text)             | [chunk length] [UTF-8 data] ...                 |
-|  94 | 158 | Plane 2                   | (See [Plane 2](#type-field-plane-2))            |
-|  95 | 149 | RESERVED                  |                                                 |
-|  96 | 150 | RESERVED                  |                                                 |
-|  97 | 151 | Marker                    | string                                          |
-|  98 | 152 | Reference                 | string                                          |
-|  99 | 153 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
-|  9a | 154 | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
-|  9b | 155 | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
-|  9c | 156 | Integer value -100        |                                                 |
-| ... | ... | ...                       |                                                 |
-|  fe | 254 | Integer value -2          |                                                 |
-|  ff | 255 | Integer value -1          |                                                 |
+| Hex | Type                      | Payload                                      |
+| --- | ------------------------- | -------------------------------------------- |
+|  00 | Integer value 0           |                                              |
+|  01 | Integer value 1           |                                              |
+| ... | ...                       |                                              |
+|  64 | Integer value 100         |                                              |
+|  65 | Decimal Float             | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  66 | Positive Integer          | [byte length] [little endian bytes]          |
+|  67 | Negative Integer          | [byte length] [little endian bytes]          |
+|  68 | Positive Integer (8 bit)  | [8-bit unsigned integer]                     |
+|  69 | Negative Integer (8 bit)  | [8-bit unsigned integer]                     |
+|  6a | Positive Integer (16 bit) | [16-bit unsigned integer, little endian]     |
+|  6b | Negative Integer (16 bit) | [16-bit unsigned integer, little endian]     |
+|  6c | Positive Integer (32 bit) | [32-bit unsigned integer, little endian]     |
+|  6d | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]     |
+|  6e | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]     |
+|  6f | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]     |
+|  70 | Binary Float (16 bit)     | [16-bit [bfloat16](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf), little endian] |
+|  71 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian] |
+|  72 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian] |
+|  73 | UID                       | [128 bits of data, big endian]               |
+|  74 | RESERVED                  |                                              |
+|  75 | RESERVED                  |                                              |
+|  76 | Relationship              | Subject, Predicate, Object                   |
+|  77 | Comment                   | (String or sub-comment) ... End of Container |
+|  78 | Markup                    | Name, kv-pairs, contents                     |
+|  79 | Map                       | (Key, value) ... End of Container            |
+|  7a | List                      | Object ... End of Container                  |
+|  7b | End of Container          |                                              |
+|  7c | Boolean False             |                                              |
+|  7d | Boolean True              |                                              |
+|  7e | Nil                       |                                              |
+|  7f | Padding                   |                                              |
+|  80 | String: 0 bytes           |                                              |
+|  81 | String: 1 byte            | [1 octet of UTF-8 data]                      |
+|  82 | String: 2 bytes           | [2 octets of UTF-8 data]                     |
+|  83 | String: 3 bytes           | [3 octets of UTF-8 data]                     |
+|  84 | String: 4 bytes           | [4 octets of UTF-8 data]                     |
+|  85 | String: 5 bytes           | [5 octets of UTF-8 data]                     |
+|  86 | String: 6 bytes           | [6 octets of UTF-8 data]                     |
+|  87 | String: 7 bytes           | [7 octets of UTF-8 data]                     |
+|  88 | String: 8 bytes           | [8 octets of UTF-8 data]                     |
+|  89 | String: 9 bytes           | [9 octets of UTF-8 data]                     |
+|  8b | String: 11 bytes          | [11 octets of UTF-8 data]                    |
+|  8a | String: 10 bytes          | [10 octets of UTF-8 data]                    |
+|  8c | String: 12 bytes          | [12 octets of UTF-8 data]                    |
+|  8d | String: 13 bytes          | [13 octets of UTF-8 data]                    |
+|  8e | String: 14 bytes          | [14 octets of UTF-8 data]                    |
+|  8f | String: 15 bytes          | [15 octets of UTF-8 data]                    |
+|  90 | String                    | [chunk length] [UTF-8 data] ...              |
+|  91 | Resource Identifier       | [chunk length] [UTF-8 data] ...              |
+|  92 | Custom (Binary)           | [chunk length] [data] ...                    |
+|  93 | Custom (Text)             | [chunk length] [UTF-8 data] ...              |
+|  94 | Plane 2                   | (See [Plane 2](#type-field-plane-2))         |
+|  95 | Array: Unsigned Int8      | [chunk length] [8-bit elements] ...          |
+|  96 | Array: Bit                | [chunk length] [1-bit elements] ...          |
+|  97 | Marker                    | string                                       |
+|  98 | Reference                 | string                                       |
+|  99 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
+|  9a | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
+|  9b | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
+|  9c | Integer value -100        |                                              |
+| ... | ...                       |                                              |
+|  fe | Integer value -2          |                                              |
+|  ff | Integer value -1          |                                              |
 
 
 ### Type Field (Plane 2)
 
-Types from plane 2 are represented using two bytes instead of one, using the prefix `[94]`. For example, the type encoding for unsigned 8-bit array is `[94 68]`, and the type encoding for media is `[94 80]`.
+Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e3]`.
 
-| Hex | Dec | Type                      | Payload                                         |
-| --- | --- | ------------------------- | ----------------------------------------------- |
-|  00 |   0 | RESERVED                  |                                                 |
-| ... | ... | ...                       |                                                 |
-|  67 | 103 | RESERVED                  |                                                 |
-|  68 | 104 | Array (Unsigned Int8)     | [chunk length] [8-bit elements] ...             |
-|  69 | 105 | Array (Signed Int8)       | [chunk length] [8-bit elements] ...             |
-|  6a | 106 | Array (Unsigned Int16)    | [chunk length] [16-bit L-E elements] ...        |
-|  6b | 107 | Array (Signed Int16)      | [chunk length] [16-bit L-E elements] ...        |
-|  6c | 108 | Array (Unsigned Int32)    | [chunk length] [32-bit L-E elements] ...        |
-|  6d | 109 | Array (Signed Int32)      | [chunk length] [32-bit L-E elements] ...        |
-|  6e | 110 | Array (Unsigned Int64)    | [chunk length] [64-bit L-E elements] ...        |
-|  6f | 111 | Array (Signed Int64)      | [chunk length] [64-bit L-E elements] ...        |
-|  70 | 112 | Array (BFloat16)          | [chunk length] [16-bit L-E elements] ...        |
-|  71 | 113 | Array (Binary Float32)    | [chunk length] [32-bit L-E elements] ...        |
-|  72 | 114 | Array (Binary Float64)    | [chunk length] [64-bit L-E elements] ...        |
-|  73 | 115 | Array (RFC4122 UUID)      | [chunk length] [128-bit B-E elements] ...       |
-|  74 | 116 | RESERVED                  |                                                 |
-| ... | ... | ...                       |                                                 |
-|  7c | 124 | RESERVED                  |                                                 |
-|  7d | 125 | Array (Boolean)           | [chunk length] [1-bit elements] ...             |
-|  7e | 126 | NA                        | [reason object]                                 |
-|  7f | 127 | RESERVED                  |                                                 |
-|  80 | 128 | Media                     | [media type (string)] [data]                    |
-|  81 | 129 | RESERVED                  |                                                 |
-| ... | ... | ...                       |                                                 |
-|  90 | 144 | RESERVED                  |                                                 |
-|  91 | 145 | Resource ID Concatenated  | [ressource id] [concatenated object]            |
-|  92 | 146 | RESERVED                  |                                                 |
-| ... | ... | ...                       |                                                 |
-|  98 | 152 | Reference                 | resource identifier                             |
-| ... | ... | ...                       |                                                 |
-|  ff | 255 | RESERVED                  |                                                 |
+| Hex | Type                  | Elems | Payload                                   |
+| --- | --------------------- | ----- | ----------------------------------------- |
+|  00 | Array: Signed Int8    |    0  | [8-bit element] x0                        |
+| ... | ...                   |  ...  | ...                                       |
+|  0f | Array: Signed Int8    |   15  | [8-bit element] x15                       |
+|  10 | Array: Unsigned Int16 |    0  | [16-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  1f | Array: Unsigned Int16 |   15  | [16-bit little endian element] x15        |
+|  20 | Array: Signed Int16   |    0  | [16-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  2f | Array: Signed Int16   |   15  | [16-bit little endian element] x15        |
+|  30 | Array: Unsigned Int32 |    0  | [32-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  3f | Array: Unsigned Int32 |   15  | [32-bit little endian element] x15        |
+|  40 | Array: Signed Int32   |    0  | [32-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  4f | Array: Signed Int32   |   15  | [32-bit little endian element] x15        |
+|  50 | Array: Unsigned Int64 |    0  | [64-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  5f | Array: Unsigned Int64 |   15  | [64-bit little endian element] x15        |
+|  60 | Array: Signed Int64   |    0  | [64-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  6f | Array: Signed Int64   |   15  | [64-bit little endian element] x15        |
+|  70 | Array: BFloat16       |    0  | [16-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  7f | Array: BFloat16       |   15  | [16-bit little endian element] x15        |
+|  80 | Array: Binary Float32 |    0  | [32-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  8f | Array: Binary Float32 |   15  | [32-bit little endian element] x15        |
+|  90 | Array: Binary Float64 |    0  | [64-bit little endian element] x0         |
+| ... | ...                   |  ...  | ...                                       |
+|  9f | Array: Bin Float64    |   15  | [64-bit little endian element] x15        |
+|  a0 | Array: UID            |    0  | [128-bit big endian element] x0           |
+| ... | ...                   |  ...  | ...                                       |
+|  af | Array: UID            |   15  | [128-bit big endian element] x15          |
+| ... | RESERVED              |       |                                           |
+|  e0 | NA                    |    1  | [reason object]                           |
+|  e1 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
+|  e2 | Reference             |    1  | [resource id]                             |
+|  e3 | Media                 |    *  | [media type] [chunk length] [data] ...    |
+| ... | RESERVED              |       |                                           |
+|  f5 | Array: UID            |    *  | [chunk length] [128-bit B-E elements] ... |
+|  f6 | Array: Binary Float64 |    *  | [chunk length] [64-bit L-E elements] ...  |
+|  f7 | Array: Binary Float32 |    *  | [chunk length] [32-bit L-E elements] ...  |
+|  f8 | Array: BFloat16       |    *  | [chunk length] [16-bit L-E elements] ...  |
+|  f9 | Array: Signed Int64   |    *  | [chunk length] [64-bit L-E elements] ...  |
+|  fa | Array: Unsigned Int64 |    *  | [chunk length] [64-bit L-E elements] ...  |
+|  fb | Array: Signed Int32   |    *  | [chunk length] [32-bit L-E elements] ...  |
+|  fc | Array: Unsigned Int32 |    *  | [chunk length] [32-bit L-E elements] ...  |
+|  fd | Array: Signed Int16   |    *  | [chunk length] [16-bit L-E elements] ...  |
+|  fe | Array: Unsigned Int16 |    *  | [chunk length] [16-bit L-E elements] ...  |
+|  ff | Array: Signed Int8    |    *  | [chunk length] [8-bit elements] ...       |
 
 
 
@@ -327,14 +347,30 @@ Array Types
 
 An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted, and the size of each element.
 
+#### Array Elements
 
-### Chunking
+Arrays are composed of a series of adjacent elements of a fixed size. All array length fields represent the number of **elements**, not bytes.
 
-Array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements (not necessarily bytes) in the chunk:
+The number of octets following a length field **MUST** match the length * element size  (e.g. 1 octet * length for 8-bit elements, 2 octets * length for 16-bit elements, 8 octets * length for 64-bit elements, etc).
+
+
+### Short Form
+
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15. These convenience forms are supported in addition to the chunked form.
+
+**Examples**:
+
+ * `[83 61 62 63]` = the string "abc"
+ * `[94 12 01 00 02 00]` = unsigned 16-bit array with elements [1, 2]
+
+
+### Chunked Form
+
+In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
 
     [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common case would be to represent the array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
+There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
 
 #### Chunk Header
 
@@ -344,6 +380,11 @@ All array chunks are preceded by a header containing the chunk length and a cont
 | ------------ | ---- | ------------------------------------ |
 | Length       |   *  | Chunk length (in octets)             |
 | Continuation |   1  | If 1, another chunk follows this one |
+
+**Examples**:
+
+ * `[03]` = Chunk length 1 with the continuation bit set
+ * `[80 02]` = Chunk length 256 with the continuation bit cleared
 
 #### Zero Chunk
 
@@ -375,13 +416,13 @@ In this case, the first chunk is 14 elements long and has a continuation bit of 
 
 ### String
 
-Strings are encoded in UTF-8 with different type fields depending on the length. The length is in octets, NOT characters.
+Strings are encoded as UTF-8. The length is in **octets**, not characters.
 
-The general string encoding:
+The general string encoding form is:
 
-    [90] [Length+continuation] [Octet 0] ... [Octet (Length-1)]
+    [90] [chunk header] [Octet 0] ... [Octet (Length-1)]
 
-For byte lengths from 0 to 15, there are special fixed-length string types (0x80 - 0x8f) that contain only a single array chunk with an implied length. For longer strings, use the general (0x90) string type.
+Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
 
     [80]
     [81] [octet 0]
@@ -397,7 +438,7 @@ For byte lengths from 0 to 15, there are special fixed-length string types (0x80
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 91]` for the [concatenated](#combined-objects) form. The length is in octets, NOT characters.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#combined-objects) form. The length is in octets, NOT characters.
 
 **Example**:
 
@@ -409,11 +450,11 @@ Resource identifiers are encoded with type `[91]` for the normal form, or type `
 
 In concatenated form, the resource ID is followed by an implied string (where the string type field is omitted):
 
-    [94 91 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
+    [94 e1 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
 
 **Example**:
 
-    [94 91 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
+    [94 e1 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
      3f 6f 72 64 65 72 69 64 3d 04 34 32]
     = https://example.com/?orderid=42 (where "42" is concatenated)
 
@@ -437,7 +478,7 @@ Custom binary types are encoded as binary data with the type 0x92. The length is
 
 #### Custom Type (Text Encoding)
 
-Custom text types are encoded as UTF-8 strings representing the data, with the type 0x94. The length is in octets, NOT characters.
+Custom text types are encoded as UTF-8 strings representing the data, with the type 0x93. The length is in **octets**, not characters.
 
 **Example**:
 
@@ -446,49 +487,73 @@ Custom text types are encoded as UTF-8 strings representing the data, with the t
 
 ### Typed Arrays
 
-A typed array is structured as follows:
+The following types are supported:
 
-| Field        | Description                               |
-| ------------ | ----------------------------------------- |
-| Type         | 0x94, [plane 2 type](#type-field-plane-2) |
-| Chunk Header | The number of elements following          |
-| Elements     | The elements as a sequence of octets      |
-| ...          | Possibly more chunks                      |
-
-The length in each array chunk header represents the number of elements (not bytes) in the chunk. The number of octets in an array chunk **MUST** be the element count * the element width in octets (e.g. 1 octet for 8-bit elements, 2 octets for 16-bit elements, 8 octets for 64-bit elements, etc).
-
-The following array types are supported:
-
-| Plane 2 | Array Type                | Element Size (bits) |
-| ------- | ------------------------- | ------------------- |
-|   0x68  | Unsigned int              | 8                   |
-|   0x6a  | Unsigned int              | 16                  |
-|   0x6c  | Unsigned int              | 32                  |
-|   0x6e  | Unsigned int              | 64                  |
-|   0x69  | 2's complement signed int | 8                   |
-|   0x6b  | 2's complement signed int | 16                  |
-|   0x6d  | 2's complement signed int | 32                  |
-|   0x6f  | 2's complement signed int | 64                  |
-|   0x70  | Bfloat16                  | 16                  |
-|   0x71  | IEEE754 binary float      | 32                  |
-|   0x72  | IEEE754 binary float      | 64                  |
-|   0x73  | RFC4122 UUID              | 128                 |
-|   0x7d  | Boolean (0=false, 1=true) | 1                   |
-|   0x80  | Media                     | 8                   |
+| Array Type                | Element Size (bits) |
+| ------------------------- | ------------------- |
+| Unsigned int              | 8                   |
+| Unsigned int              | 16                  |
+| Unsigned int              | 32                  |
+| Unsigned int              | 64                  |
+| 2's complement signed int | 8                   |
+| 2's complement signed int | 16                  |
+| 2's complement signed int | 32                  |
+| 2's complement signed int | 64                  |
+| Bfloat16                  | 16                  |
+| IEEE754 binary float      | 32                  |
+| IEEE754 binary float      | 64                  |
+| RFC4122 UUID              | 128                 |
+| Bit (0=false, 1=true)     | 1                   |
+| Media                     | 8                   |
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
-#### Boolean Array
+Most typed arrays also have a [short form](#short-form). The media array type as well as array types in the [primary plane](#type-field) (other than [string](#string)) only have a [chunked form](#chunked-form).
 
-In boolean arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
+**Typed array format (primary plane)**:
 
-For example, the boolean array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
+| Field        | Bits | Description                            |
+| ------------ | ---- | -------------------------------------- |
+| Type         |   8  | Type in [primary plane](#type-field)   |
+| Chunk Header |   *  | The number of elements following       |
+| Elements     |   *  | The elements as a sequence of octets   |
+| ...          |   *  | Possibly more chunks                   |
+
+**Typed array format (plane 2)**:
+
+| Field        | Bits | Description                            |
+| ------------ | ---- | -------------------------------------- |
+| Type (plane) |   8  | 0x94 (plane 2)                         |
+| Type         |   8  | Type in [plane 2](#type-field-plane-2) |
+| Chunk Header |   *  | The number of elements following       |
+| Elements     |   *  | The elements as a sequence of octets   |
+| ...          |   *  | Possibly more chunks                   |
+
+**Typed array format (plane 2, short form)**:
+
+| Field        | Bits | Description                                    |
+| ------------ | ---- | ---------------------------------------------- |
+| Type (plane) |    8 | 0x94 (plane 2)                                 |
+| Type         |    4 | Upper 4 bits in [plane 2](#type-field-plane-2) |
+| Length       |    4 | Number of elements (0-15)                      |
+| Elements     |    * | The elements as a sequence of octets           |
+
+The length represents the number of **elements** (not bytes) in the array/chunk.
 
 **Examples**:
 
-    [94 68 0a 01 02 03 04 05] = byte (unsigned 8-bit) array {0x01, 0x02, 0x03, 0x04, 0x05}
-    [94 6c 04 80 84 1e 00 81 84 1e 00] = uint32 array {2000000, 2000001}
-    [94 7d 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+ * `[95 04 01 02]` = unsigned 8-bit array with elements 1, 2
+ * `[94 12 01 00 02 00]` = unsigned 16-bit array with elements 1, 2
+
+#### Bit Array
+
+In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
+
+For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
+
+**Example**:
+
+    [96 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 #### Media
 
@@ -496,8 +561,8 @@ The media array is composed of two sub-arrays: an implied string containing the 
 
 | Field        | Description                              |
 | ------------ | ---------------------------------------- |
-| Type         | The type code 0x95 (typed array)         |
-| Element Type | The type code 0x80 (media)               |
+| Plane 2      | The type code 0x94                       |
+| Type         | The type code 0xe3 (media)               |
 | Chunk Header | The number of media type bytes following |
 | Elements     | The characters as a sequence of octets   |
 | ...          | Possibly more chunks                     |
@@ -507,7 +572,7 @@ The media array is composed of two sub-arrays: an implied string containing the 
 
 **Example**:
 
-    [94 80 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
+    [94 e3 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
      *1 *2 *3 *4                                              *5 *6                                                                                  
 
 Points of interest:
@@ -515,7 +580,7 @@ Points of interest:
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
 |  *1   | Type (0x94 = plane 2)                            |
-|  *2   | Plane 2 type (0x80 = media)                      |
+|  *2   | Plane 2 type (0xe3 = media)                      |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
@@ -616,16 +681,16 @@ A reference begins with the reference type (0x98), followed by either a marker I
 
     [98 (chunk header) (ID string data)]
 
-    [94 98 (chunk header) (RID data)]
+    [94 e2 (chunk header) (RID data)]
 
 **Examples**:
 
     [98 02 61] = reference to the object marked with ID "a"
 
-    [94 98 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [94 e2 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [94 98 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
+    [94 e2 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
      68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
      6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
      6c 6f 6e 67]
@@ -655,11 +720,11 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 
 ### NA
 
-NA is encoded as `[94 7e]` + reason.
+NA is encoded as `[94 e0]` + reason.
 
-    [94 7e 84 67 6f 6e 65] = Not available for reason "gone"
-    [94 7e 6a 94 01] = Not available for reason 404
-    [94 7e 7e] = Not available for unknown reason
+    [94 e0 84 67 6f 6e 65] = Not available for reason "gone"
+    [94 e0 6a 94 01] = Not available for reason 404
+    [94 e0 7e] = Not available for unknown reason
 
 
 
@@ -670,8 +735,8 @@ Combined objects in CBE are implied by the type field in order to avoid any need
 
 **Examples**:
 
-    [94 7e 81 41] = NA with a string value explaining the reason
-    [94 91 (chunk header) (string data)] = Resource ID with a string concatenated
+    [94 e0 81 41] = NA with a string value explaining the reason
+    [94 e1 (chunk header) (string data)] = Resource ID with a string concatenated
 
 
 

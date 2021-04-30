@@ -18,8 +18,9 @@ Contents
 --------
 
 * [Terms](#terms)
+* [Versioning](#versioning)
 * [Structure](#structure)
-* [Version Specifier](#version-specifier)
+* [Document Version Specifier](#document-version-specifier)
 * [Numeric Types](#numeric-types)
   - [Boolean](#boolean)
   - [Integer](#integer)
@@ -101,6 +102,19 @@ The following terms have specific meanings in this specification:
 
 
 
+Versioning
+----------
+
+Concise Encoding is versioned, meaning that every Concise Encoding document contains the version of the Concise Encoding specification it adheres to. This ensures that any future incompatible changes to the format will not break existing implementations.
+
+The Concise Encoding version is a single positive integer value, starting at 1.
+
+#### Prerelease Version
+
+During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired and considered invalid (there shall be no backwards compatibility to the prerelease spec).
+
+
+
 Structure
 ---------
 
@@ -120,20 +134,15 @@ The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), b
 
 
 
-Version Specifier
------------------
+Document Version Specifier
+--------------------------
 
-The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x03 for CBE) followed by a version number, which is an unsigned integer representing which version of this specification the document adheres to.
+The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x03 for CBE) followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
 
 **Example**:
 
  * CTE version 1: `c1`
  * CBE version 1: [`03 01`]
-
-
-### Prerelease Version
-
-During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired, and considered invalid (there shall be no backwards compatibility to the prerelease spec).
 
 
 
@@ -466,7 +475,7 @@ The following element types are supported in typed arrays. For other types, use 
 
 | Type                 | Element Sizes (bits) |
 | -------------------- | -------------------- |
-| Boolean              | 1                    |
+| Bit                  | 1                    |
 | Unsigned Integer     | 8, 16, 32, 64        |
 | Signed Integer       | 8, 16, 32, 64        |
 | BFloat               | 16                   |

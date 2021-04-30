@@ -486,7 +486,7 @@ The following array types are available:
 
 | Type   | Description                                 | Encoding Kind |
 | ------ | ------------------------------------------- | ------------- |
-| `b`    | Boolean                                     | Element       |
+| `b`    | Bit                                         | Element       |
 | `u8`   | 8-bit unsigned integer                      | Element       |
 | `u16`  | 16-bit unsigned integer                     | Element       |
 | `u32`  | 32-bit unsigned integer                     | Element       |
@@ -521,7 +521,7 @@ For element array encodings, any valid representation of the element data type m
 
 #### Special Array Element Rules
 
- * Boolean array elements are represented using `0` for false and `1` for true. Whitespace is **OPTIONAL** when encoding a boolean array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
+ * Bit array elements are represented using `0` for false and `1` for true. Whitespace is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
 
 **Examples**:
 
