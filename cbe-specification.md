@@ -104,7 +104,9 @@ The version number is an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128)
 Encoding
 --------
 
-A CBE document is byte-oriented. All objects are composed of a type field and a possible payload that will always end on an 8-bit boundary.
+A CBE document is byte-oriented. All objects are composed of a type field and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required (A CBE document does not require a length envelope for decoding).
+
+The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy wherever possible on little endian systems.
 
 
 #### Type Field
@@ -407,7 +409,7 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
       notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
       next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
 
-**Example**:
+#### Chunking Example:
 
     [1d] (14 elements of data) [08] (4 elements of data)
 
@@ -559,16 +561,16 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 The media array is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
 
-| Field        | Description                              |
-| ------------ | ---------------------------------------- |
-| Plane 2      | The type code 0x94                       |
-| Type         | The type code 0xe3 (media)               |
-| Chunk Header | The number of media type bytes following |
-| Elements     | The characters as a sequence of octets   |
-| ...          | Possibly more chunks                     |
-| Chunk Header | The number of media bytes following      |
-| Elements     | The bytes as a sequence of octets        |
-| ...          | Possibly more chunks                     |
+| Field        | Description                                 |
+| ------------ | ------------------------------------------- |
+| Plane 2      | The type code 0x94                          |
+| Type         | The type code 0xe3 (media)                  |
+| Chunk Header | The number of media type bytes following    |
+| Elements     | The characters as a sequence of octets      |
+| ...          | Possibly more chunks until continuation = 0 |
+| Chunk Header | The number of media bytes following         |
+| Elements     | The bytes as a sequence of octets           |
+| ...          | Possibly more chunks until continuation = 0 |
 
 **Example**:
 
@@ -733,10 +735,15 @@ Combined Objects
 
 Combined objects in CBE are implied by the type field in order to avoid any need for lookaheads while decoding, and ensure that documents always end unambiguously.
 
-**Examples**:
+**Example**:
 
-    [94 e0 81 41] = NA with a string value explaining the reason
-    [94 e1 (chunk header) (string data)] = Resource ID with a string concatenated
+Resource ID (not combined):
+
+    [91 (chunk header) (resource id data)]
+
+Resource ID (combined form):
+
+    [94 e1 (chunk header) (resource id data) ... (chunk header) (string data)]
 
 
 
