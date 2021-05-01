@@ -41,6 +41,7 @@ Contents
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
   - [String](#string)
+  - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
   - [Custom Types](#custom-types)
     - [Binary Encoding](#custom-type-binary-encoding)
@@ -167,8 +168,8 @@ The types are structured such that the most commonly used types and values encod
 |  94 | Plane 2                   | (See [Plane 2](#type-field-plane-2))         |
 |  95 | Array: Unsigned Int8      | [chunk length] [8-bit elements] ...          |
 |  96 | Array: Bit                | [chunk length] [1-bit elements] ...          |
-|  97 | Marker                    | string                                       |
-|  98 | Reference                 | string                                       |
+|  97 | Marker                    | [length] [UTF-8 data]                        |
+|  98 | Reference                 | [length] [UTF-8 data]                        |
 |  99 | Date                      | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)] |
 |  9a | Time                      | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)] |
 |  9b | Timestamp                 | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -438,6 +439,18 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
     [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
 
 
+### Identifier
+
+Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers are always written as a 7-bit length (bit 8 is always cleared), followed by that many bytes of UTF-8 data.
+
+    [length] [UTF-8 data]
+
+**Examples**:
+
+    [07 73 6f 6d 65 5f 69 64] = some_id
+    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
+
+
 ### Resource Identifier
 
 Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#combined-objects) form. The length is in octets, NOT characters.
@@ -627,9 +640,11 @@ Unlike other containers, a markup container requires two end-of-container marker
 
     [78] [name] [attr-key-1] [attr-value-1] ... [7b] [contents-1] [contents-2] ... [7b]
 
+**Note**: Name is encoded as an [identifier](#identifier)
+
 **Example**:
 
-    [78 84 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b,Some text>
+    [78 04 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b,Some text>
 
 
 ### Relationship
@@ -666,28 +681,28 @@ Peudo-Objects
 
 ### Marker
 
-A marker begins with the marker type (0x97), followed by an implied string marker ID, and then the marked object.
+A marker begins with the marker type (0x97), followed by a marker ID (encoded as an [identifier](#identifier)), and then the marked object.
 
-    [97 (chunk header) (ID string data) (marked object)]
+    [97 (length) (ID string data) (marked object)]
 
 **Example**:
 
-    [97 02 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
+    [97 01 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {some_value = "repeat this value"}, tagged with the ID "a".
 
 
 ### Reference
 
-A reference begins with the reference type (0x98), followed by either a marker ID or a [resource identifier](#resource-identifier).
+A reference begins with the reference type (0x98), followed by either a marker ID (encoded as an [identifier](#identifier)), or a [resource identifier](#resource-identifier).
 
-    [98 (chunk header) (ID string data)]
+    [98 (length) (ID string data)]
 
     [94 e2 (chunk header) (RID data)]
 
 **Examples**:
 
-    [98 02 61] = reference to the object marked with ID "a"
+    [98 01 61] = reference to the object marked with ID "a"
 
     [94 e2 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)

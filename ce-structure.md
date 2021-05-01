@@ -827,6 +827,8 @@ A marker is a [combined](#combined-object) pseudo-object that assigns a marker I
 
     [marker id] [marked object]
 
+#### Marker ID
+
 The marker ID is an [identifier declaration](#identifier), and **MUST** be unique to all marker IDs in the current document.
 
 #### Rules
@@ -852,8 +854,8 @@ A reference acts as a stand-in for an object that has been [marked](#marker) els
 
 References can take one of two forms:
 
- * Local reference, where the reference is to an object marked by a [marker ID](#marker) elsewhere in the current document.
- * Remote reference, where the reference is a [resource ID](#resource-id) that points to another document or to a [marker ID](#marker) in another document.
+ * Local reference, where the [identifier](#identifier) is a reference to an object marked by a [marker ID](#marker) elsewhere in the current document.
+ * Remote reference, where the [resource ID](#resource-id) is a reference to another document or to a [marker ID](#marker) in another document.
 
 #### Rules
 

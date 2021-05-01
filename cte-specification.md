@@ -461,12 +461,12 @@ Global coordinates are written as latitude and longitude to a precision of hundr
 
 #### Time Offset
 
-Time offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hh:mm`.
+Time offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
 
 **Examples**:
 
- * `1985-10-26/01:20:01.105+07:00`
- * `2000-01-14/10:22:00-02:00`
+ * `1985-10-26/01:20:01.105+0700`
+ * `2000-01-14/10:22:00-0200`
 
 
 
