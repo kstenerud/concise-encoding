@@ -317,6 +317,11 @@ A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/r
 Temporal Types
 --------------
 
+Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
+
+**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed!
+
+
 ### Date
 
 Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
