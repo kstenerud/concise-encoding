@@ -355,16 +355,37 @@ Array Types
 
 An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted, and the size of each element.
 
-#### Array Elements
+### Array Elements
 
-Arrays are composed of a series of adjacent elements of a fixed size. All array length fields represent the number of **elements**, not bytes.
+Array elements have a fixed size determined by the array type. Length fields in arrays represent the number of *elements* rather than bytes, so for example a uin32 array chunk of length 3 contains 12 bytes of array data.
 
-The number of octets following a length field **MUST** match the length * element size  (e.g. 1 octet * length for 8-bit elements, 2 octets * length for 16-bit elements, 8 octets * length for 64-bit elements, etc).
+#### Element Sizes:
+
+| Array Type    | Element Size           | Byte Order    |
+| ------------- | ---------------------- | ------------- |
+| Int8          | 1 element per 1 byte   | -             |
+| Int16         | 1 element per 2 bytes  | Little Endian |
+| Int32         | 1 element per 4 bytes  | Little Endian |
+| Int64         | 1 element per 8 bytes  | Little Endian |
+| Uint8         | 1 element per 1 byte   | -             |
+| Uint16        | 1 element per 2 bytes  | Little Endian |
+| Uint32        | 1 element per 4 bytes  | Little Endian |
+| Uint64        | 1 element per 8 bytes  | Little Endian |
+| Float16       | 1 element per 2 bytes  | Little Endian |
+| Float32       | 1 element per 4 bytes  | Little Endian |
+| Float64       | 1 element per 8 bytes  | Little Endian |
+| UID           | 1 element per 16 bytes | Big Endian    |
+| Bit           | 8 elements per 1 byte  | -             |
+| String        | 1 element per 1 byte   | -             |
+| Resource ID   | 1 element per 1 byte   | -             |
+| Media         | 1 element per 1 byte   | -             |
+| Custom Binary | 1 element per 1 byte   | -             |
+| Custom Text   | 1 element per 1 byte   | -             |
 
 
 ### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15. These convenience forms are supported in addition to the chunked form.
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15. Many array types have both short and chunked forms.
 
 **Examples**:
 
@@ -386,13 +407,21 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 | Field        | Bits | Description                          |
 | ------------ | ---- | ------------------------------------ |
-| Length       |   *  | Chunk length (in octets)             |
+| Length       |   *  | Chunk length (element count)         |
 | Continuation |   1  | If 1, another chunk follows this one |
 
 **Examples**:
 
  * `[03]` = Chunk length 1 with the continuation bit set
  * `[80 02]` = Chunk length 256 with the continuation bit cleared
+
+#### Bit Array Chunks
+
+Bit array chunks with continuation bit = 1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on a byte boundary. Only the final chunk (continuation=0) of a bit array may be of arbitrary size.
+
+#### String-like Array Chunks
+
+Array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks). Decoders **MAY** validate string data on every chunk received, which will fail if a chunk ends on an incomplete character.
 
 #### Zero Chunk
 
@@ -424,7 +453,7 @@ In this case, the first chunk is 14 elements long and has a continuation bit of 
 
 ### String
 
-Strings are encoded as UTF-8. The length is in **octets**, not characters.
+Strings are encoded as UTF-8.
 
 The general string encoding form is:
 
@@ -446,9 +475,13 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 ### Identifier
 
-Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers are always written as a 7-bit length (bit 8 is always cleared), followed by that many bytes of UTF-8 data.
+Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (max length is 127). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
 
-    [length] [UTF-8 data]
+| Field        | Bits | Value             |
+| ------------ | ---- | ----------------- |
+| RESERVED     |   1  | 0                 |
+| Length       |   7  | 0-127             |
+| UTF-8 Data   |   *  | UTF-8 string data |
 
 **Examples**:
 
@@ -458,7 +491,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#combined-objects) form. The length is in octets, NOT characters.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#combined-objects) form.
 
 **Example**:
 
@@ -483,7 +516,7 @@ In concatenated form, the resource ID is followed by an implied string (where th
 
 #### Custom Type (Binary Encoding)
 
-Custom binary types are encoded as binary data with the type 0x92. The length is the number of octets used by the data.
+Custom binary types are encoded as binary data with the type 0x92.
 
 **Example**:
 
@@ -498,7 +531,7 @@ Custom binary types are encoded as binary data with the type 0x92. The length is
 
 #### Custom Type (Text Encoding)
 
-Custom text types are encoded as UTF-8 strings representing the data, with the type 0x93. The length is in **octets**, not characters.
+Custom text types are encoded as UTF-8 strings representing the data, with the type 0x93.
 
 **Example**:
 
@@ -528,7 +561,7 @@ The following types are supported:
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
-Most typed arrays also have a [short form](#short-form). The media array type as well as array types in the [primary plane](#type-field) (other than [string](#string)) only have a [chunked form](#chunked-form).
+Most typed arrays also have a [short form](#short-form). The media array type and array types in the [primary plane](#type-field) (other than [string](#string)) only have a [chunked form](#chunked-form).
 
 **Typed array format (primary plane)**:
 
@@ -567,7 +600,7 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
 
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in a chunk **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
+In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
