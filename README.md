@@ -34,44 +34,52 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 Motivation
 ----------
 
-Text-based formats became popular in the mid-to-late 90s and were a breath of fresh air after the expensive, proprietary, complicated, difficult to use binary formats of the time. Text formats and protocols such as HTML, HTTP, XML, and JSON simplified data communications greatly, and contributed to the flourishing of the web ecosystem.
+#### We Solved the Problems of the 90s
 
-But this simplicity came at a cost. Text encodings are bulky and CPU-intensive to parse compared to binary encodings. The simplicity of the formats themselves also gave rise to new problems due to their lack of types. When everyone has to come up with their own methods to shoehorn common types into the restricted types of these formats, interoperability is seriously impaired, mistakes are common, and security risks ever-present.
+The text-based formats that became popular in the mid-to-late 90s were a breath of fresh air after the expensive, proprietary, complicated, difficult to use binary formats of the time. Text formats and protocols such as HTML, HTTP, XML, and JSON simplified data communications greatly, and contributed to the flourishing of the web ecosystem.
 
-These formats also played fast and loose in their specifications, resulting in much variance in implementation behaviors. This makes them inherently insecure, and although that wasn't such a problem in the 2000s, the hostile world of today is rife with exploits that take advantage of this.
+#### But At What Cost?
 
-Lack of versioning is also a problem. Without a version specifier, changes to the specification range from difficult to impossible, leaving the format riddled with deprecation holes, and incapable of adapting to new security threats or industry changes.
+Unfortunately, the simplicity of text came at a cost. Text encodings are bulky and CPU-intensive compared to binary encodings, usually taking 10x longer to parse or produce. Text parsing is also inherently complex, and that complexity translates into more bugs in your data codec (including security issues).
 
-**Concise Encoding is designed to address these concerns:**
+These formats' lack of types gave rise to a new set of problems: When everyone has to come up with their own methods to shoehorn common data types into the restricted types of these formats, interoperability is seriously impaired, mistakes are common, and security risks ever-present.
 
- * As a twin binary/text format, it retains the text-based ease-of-use of JSON and friends, but is transmitted in binary form. This makes it easier on the energy bill and the planet.
- * As a tightly specified format, it doesn't suffer from the security problems of most other formats.
- * As a versioned format, Concise Encoding can respond to a changing world without resorting to deprecations and awkward encodings.
- * Concise Encoding's supported types are designed with the 80% use case in mind, such that 80% of users should be able to employ it without resorting to custom type encoding (although custom types are also explicitly supported when needed).
+These formats also played fast and loose in their specifications, resulting in much variance in implementation behaviors. This makes them inherently insecure, and although that wasn't such a problem in the first decade of the 2000s, the hostile world of today is full of highly motivated mercenary and state actors who will go to extreme lengths to [compromise your system](https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#security-and-limits). Can you afford the risk?
+
+Lack of versioning is also a problem. Without a version specifier, changes to the specification range from difficult to impossible, leaving the format riddled with deprecation holes, and incapable of adapting to industry changes or new security threats.
+
+#### Solving the Problems of Today
+
+The older formats can't be fixed or updated to deal with today's issues. We **need** a format designed for our modern world:
+
+ * **Secure**: As a tightly specified format, Concise Encoding doesn't suffer from the [security problems](https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#security-and-limits) that the other looser formats do. Also, everything is done **one** way only, leaving less of an attack surface.
+ * **Efficient**: As a twin binary/text format, Concise Encoding retains the text-based ease-of-use of JSON and friends, but is stored and transmitted in binary form, making it more secure, easier on the energy bill, and easier on the planet.
+ * **Versatile**: Concise Encoding's [supported types](#supported-types) are designed with the 80% use case in mind, meaning that 80% of users should be able to use it as-is without resorting to custom type encoding.
+ * **Future-proof**: As a versioned format, Concise Encoding can respond to a changing world without degenerating into deprecations and awkward encodings or painting itself into a corner.
 
 #### Supported Types
 
-| Type                                   | Description                                             |
-| -------------------------------------- | ------------------------------------------------------- |
-| [Boolean](#numeric-types)              | True or false                                           |
-| [Integer](#numeric-types)              | Positive or negative, arbitrary size                    |
-| [Float](#numeric-types)                | Binary or decimal floating point, arbitrary size        |
-| [UUID](#other-basic-types)             | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)    |
-| [Time](#other-basic-types)             | Date, time, or timestamp, arbitrary size                |
-| [Resource ID](#string-and-string-like) | URL, URI, IRI, etc                                      |
-| [String](#string-and-string-like)      | UTF-8 string, arbitrary length                          |
-| [List](#containers)                    | List of objects                                         |
-| [Map](#containers)                     | Mapping keyable objects to other objects                |
-| [Markup](#containers)                  | Presentation data, similar to XML                       |
+| Type                                   | Description                                               |
+| -------------------------------------- | --------------------------------------------------------- |
+| [Boolean](#numeric-types)              | True or false                                             |
+| [Integer](#numeric-types)              | Positive or negative, arbitrary size                      |
+| [Float](#numeric-types)                | Binary or decimal floating point, arbitrary size          |
+| [UUID](#other-basic-types)             | [RFC-4122 UUID](https://tools.ietf.org/html/rfc4122)      |
+| [Time](#other-basic-types)             | Date, time, or timestamp, arbitrary size                  |
+| [Resource ID](#string-and-string-like) | URL, URI, IRI, etc                                        |
+| [String](#string-and-string-like)      | UTF-8 string, arbitrary length                            |
+| [List](#containers)                    | List of objects                                           |
+| [Map](#containers)                     | Mapping keyable objects to other objects                  |
+| [Markup](#containers)                  | Presentation data, similar to XML                         |
 | [Relationship](#relationships)         | Semantic relationship data compatible with [RDF](https://www.w3.org/2001/sw/wiki/RDF) |
-| [Typed Array](#containers)             | Array of fixed-width type, arbitrary length             |
-| [Reference](#references)               | Points to objects defined elsewhere                     |
-| [Comment](#relationships)              | Arbitrary comments about anything, nesting supported    |
-| [Constants](#relationships)            | Symbolic value that has been defined in a schema        |
-| [Nil](#other-basic-types)              | No data                                                 |
-| [NA](#other-basic-types)               | Not Available (data missing with a reason why)          |
-| [Media](#other-basic-types)            | Images, videos, documents, files, etc                   |
-| [Custom](#custom-types)                | User-defined data type                                  |
+| [Typed Array](#containers)             | Array of fixed-width type, arbitrary length               |
+| [Reference](#references)               | Points to objects defined elsewhere                       |
+| [Comment](#relationships)              | Arbitrary comments about anything, nesting supported      |
+| [Constants](#relationships)            | Symbolic value that has been defined in a schema          |
+| [Nil](#other-basic-types)              | No data                                                   |
+| [NA](#other-basic-types)               | Not Available (data missing with a reason explaining why) |
+| [Media](#other-basic-types)            | Images, videos, documents, files, etc                     |
+| [Custom](#custom-types)                | User-defined data type                                    |
 
 
 
