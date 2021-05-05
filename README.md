@@ -34,11 +34,11 @@ Today's data formats present us with a dilemma: Use text based formats that are 
 Motivation
 ----------
 
-#### We Solved the Datacomm Problems of the 90s
+#### We solved the datacomm problems of the 90s
 
 The text-based formats that became popular in the mid-to-late 90s were a breath of fresh air after the expensive, proprietary, complicated, difficult to use binary formats of the time. Text formats and protocols such as HTML, HTTP, XML, and JSON simplified data communications greatly, and contributed to the flourishing of the web ecosystem.
 
-#### But At What Cost?
+#### But at what cost?
 
 Unfortunately, the simplicity of text came at a cost. Text encodings are bulky and CPU-intensive compared to binary encodings, usually taking 10x longer to parse or produce. Text parsing is also inherently complex, and that complexity translates into more bugs in your data codec (including security issues).
 
@@ -48,7 +48,7 @@ These formats also played fast and loose in their specifications, resulting in m
 
 Lack of versioning is also a problem. Without a version specifier, changes to the specification range from difficult to impossible, leaving the format riddled with deprecation holes, and incapable of adapting to industry changes or new security threats.
 
-#### Solving the Problems of Today
+#### Solving the problems of today
 
 The older formats can't be fixed or updated to deal with today's issues. We **need** a format designed for our modern world:
 
