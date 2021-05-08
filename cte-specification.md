@@ -113,10 +113,10 @@ Whitespace is used to separate elements in a container. In maps, the key and val
 
 **Examples**:
 
- * CTE v1 empty document: `c1 na`
+ * CTE v1 empty document: `c1 nil`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
- * CTE v1 document containing a top-level list: `c1 [a b c]`
- * CTE v1 document containing a top-level map: `c1 {a=1 b=2 c=3}`
+ * CTE v1 document containing a top-level list: `c1 ["a" "b" "c"]`
+ * CTE v1 document containing a top-level map: `c1 {"a"=1 "b"=2 "c"=3}`
 
 
 ### Human Editability
@@ -246,7 +246,7 @@ The version specifier and the top-level object **MUST** be separated by whitespa
 **Example**:
 
 * Version specifier (CTE version 1): `c1`
-* Complete (and empty) document: `c1 na`
+* Complete (and empty) document: `c1 nil`
 
 
 
@@ -643,7 +643,7 @@ c1 [
     "two"
     3.1
     {}
-    na
+    nil
 ]
 ```
 
@@ -706,12 +706,12 @@ Content strings **CAN** contain [escape sequences](#escape-sequences), which mus
 
 ```cte
 c1 <View,
-    <Image src=@"images/avatar-image.jpg">
-    <Text id=HelloText,
+    <Image "src"=@"images/avatar-image.jpg">
+    <Text "id"="HelloText",
         Hello! Please choose a name!
     >
     // <HRule style=thin>
-    <TextInput id=NameInput style={height=40 borderColor=gray} OnChange="\.@@
+    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"} "OnChange"="\.@@
         HelloText.SetText("Hello, " + NameInput.Text + "!")
     @@",
         Name me!
@@ -757,7 +757,7 @@ Example:
 ```cte
 c1 [
     &remember_me:"Pretend that this is a huge string"
-    &1:{a = 1}
+    &1:{"a" = 1}
 ]
 ```
 
@@ -772,19 +772,19 @@ Example:
 
 ```cte
 c1 {
-    some_object = {
-        my_string = &big_string:"Pretend that this is a huge string"
-        my_map = &1:{
-            a = 1
+    "some_object" = {
+        "my_string" = &big_string:"Pretend that this is a huge string"
+        "my_map" = &1:{
+            "a" = 1
         }
     }
 
-    reference_to_string = $big_string
-    reference_to_map = $1
-    reference_to_local_doc = $@"common.cte"
-    reference_to_remote_doc = $@"https://somewhere.com/my_document.cbe?format=long"
-    reference_to_local_doc_marker = $@"common.cte#legalese"
-    reference_to_remote_doc_marker = $@"https://somewhere.com/my_document.cbe?format=long#examples"
+    "reference_to_string" = $big_string
+    "reference_to_map" = $1
+    "reference_to_local_doc" = $@"common.cte"
+    "reference_to_remote_doc" = $@"https://somewhere.com/my_document.cbe?format=long"
+    "reference_to_local_doc_marker" = $@"common.cte#legalese"
+    "reference_to_remote_doc_marker" = $@"https://somewhere.com/my_document.cbe?format=long#examples"
 }
 ```
 
@@ -860,32 +860,32 @@ The combine operator in CTE is `:`. There must be no whitespace between the comb
 
 ```cte
 c1 {
-    refs = [
+    "refs" = [
         &ref1:@"https://example.com/"
         &ref2:@"https://example.com/":foo
     ]
 
     // https://example.com/foo
-    example_1 = @"https://example.com/":foo
+    "example_1" = @"https://example.com/":foo
 
     // https://example.com/foo
-    example_2 = $ref1:foo
+    "example_2" = $ref1:foo
 
     // https://example.com/foo
-    example_3 = $ref2
+    "example_3" = $ref2
 
     // https://example.com/200
-    example_4 = $ref1:200
+    "example_4" = $ref1:200
 
     // https://example.com/foo/bar
-    example_5 = $ref1:"foo/bar"
+    "example_5" = $ref1:"foo/bar"
 
     // NA for reasons
-    example_6 = na:"Insufficient privileges"
-    example_7 = na:{
-        code = 409
-        en = "database error"
-        jp = "データベースエラー"
+    "example_6" = na:"Insufficient privileges"
+    "example_7" = na:{
+        "code" = 409
+        "en" = "database error"
+        "jp" = "データベースエラー"
     }
 }
 ```
@@ -1060,7 +1060,7 @@ If a list is empty, the closing `]` **SHOULD** be on the same line.
 
 Short lists containing small objects may be placed entirely on one line.
 ```cte
-[a b c d]
+["a" "b" "c" "d"]
 ```
 
 
@@ -1069,8 +1069,8 @@ Short lists containing small objects may be placed entirely on one line.
 There **SHOULD** be a space between keys, values and the `=` in key-value pairs, and each key-value pair **SHOULD** be on a separate line.
 ```cte
 {
-    aliens = @"https://www.imdb.com/title/tt0090605/"
-    moribito = @"https://www.imdb.com/title/tt1029248/"
+    "aliens" = @"https://www.imdb.com/title/tt0090605/"
+    "moribito" = @"https://www.imdb.com/title/tt1029248/"
 }
 ```
 
@@ -1081,7 +1081,7 @@ If a map is empty, the closing `}` **SHOULD** be on the same line.
 
 Small maps containing small objects may be placed entirely on one line. In such a case, omit the spaces around the `=`.
 ```cte
-{a=b c=d}
+{"a"="b" "c"="d"}
 ```
 
 
@@ -1100,19 +1100,19 @@ The closing `>` **SHOULD** only be on a different line if there are contents.
 
 The attributes section **SHOULD** be entirely on the same line as the tag name if it's not too long.
 ```cte
-<a x=y>
+<a "x"="y">
 ```
 
 ```cte
-<a x=y,
+<a "x"="y",
     contents
 >
 ```
 
 If the attributes section is too long, the overflow **SHOULD** be broken up into multiple indented lines.
 ```cte
-<img src=@"http://somereallylongdomainname.likereallylong.com/images/2.jpg"
-    width=50 height=50 border-left=10 units=px>
+<img "src"=@"http://somereallylongdomainname.likereallylong.com/images/2.jpg"
+    "width"=50 "height"=50 "border-left"=10 "units"="px">
 ```
 
 
