@@ -840,13 +840,13 @@ A constant name begins with a hash `#` character, followed by an [identifier](ce
 
 ### NA
 
-NA is encoded as `na`, and supports [concatenation](#concatenation) for the **OPTIONAL** reason field.
+NA is encoded as `na`, and **MUST** always be [concatenated](#concatenation) with a reason field consisting of any real object (not a pseudo-object).
 
 **Examples**:
 
  * `na:"Insufficient privileges"` (not available, with an English language reason)
  * `na:404` (not available for reason code 404)
- * `na` (not available for unknown reason)
+ * `na:nil` (not available for unknown reason)
 
 
 
