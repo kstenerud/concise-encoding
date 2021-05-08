@@ -536,6 +536,8 @@ For element array encodings, any valid representation of the element data type m
 
 A media object is a specialization of the typed array. The array type field contains its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
 
+**Note**: The array type field supports [escape sequences](#escape-sequences).
+
 **Example**:
 
 ```cte
