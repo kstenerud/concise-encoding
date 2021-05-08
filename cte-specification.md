@@ -109,7 +109,7 @@ A CTE document is a UTF-8 encoded text document containing data arranged in an a
 
 All characters in a CTE document **MUST** be [text-safe](ce-structure.md#text-safety). Text-unsafe characters **MUST** only be represented using [escape sequences](#escape-sequences) (where allowed). Validation of text-safety **MUST** occur before processing escape-sequences. All other validation of string-like values **MUST** occur **after** decoding any escape sequences contained within.
 
-Whitespace is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible whitespace. The key-value pairs themselves are separated by whitespace. Extraneous whitespace is ignored.
+[Structural whitespace](#structural-whitespace-characters) is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace-characters). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace-characters). Extraneous [structural whitespace](#structural-whitespace-characters) is ignored.
 
 **Examples**:
 
@@ -164,7 +164,7 @@ Escape sequences **MUST** be converted before any other processing occurs during
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all whitespace characters until it encounters the next printable character. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace-characters) characters until it encounters the next printable character. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
 
 **Example**:
 
@@ -202,7 +202,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence identifier, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A whitespace terminator to terminate the end-of-sequence identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * A [structural whitespace](#structural-whitespace-characters) terminator to terminate the end-of-sequence identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence identifier (without whitespace terminator).
 
@@ -241,7 +241,7 @@ Version Specifier
 
 A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There **MUST** be no whitespace between the `c` and the version number.
 
-The version specifier and the top-level object **MUST** be separated by whitespace.
+The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace-characters).
 
 **Example**:
 
@@ -473,7 +473,7 @@ Time offsets are recorded by using a `+` or `-` character as the time zone separ
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory whitespace, the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as whitespace-separated elements, or as a string-like sequence representing the contents:
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace-characters), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace-characters) separated elements, or as a string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
     |type contents-represented-as-a-string|
@@ -521,7 +521,7 @@ For element array encodings, any valid representation of the element data type m
 
 #### Special Array Element Rules
 
- * Bit array elements are represented using `0` for false and `1` for true. Whitespace is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
+ * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
 
 **Examples**:
 
@@ -633,7 +633,7 @@ Container Types
 
 ### List
 
-A list begins with an opening square bracket `[`, contains whitespace separated contents, and finishes with a closing square bracket `]`.
+A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace-characters) separated contents, and finishes with a closing square bracket `]`.
 
 **Example**:
 
@@ -650,9 +650,9 @@ c1 [
 
 ### Map
 
-A map begins with an opening curly brace `{`, contains whitespace separated key-value pairs, and finishes with a closing curly brace `}`.
+A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace-characters) separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** whitespace. Key-value pairs must be separated from each other using whitespace. A key without a paired value is invalid.
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace-characters). Key-value pairs must be separated from each other using [structural whitespace](#structural-whitespace-characters). A key without a paired value is invalid.
 
 **Example**:
 
@@ -677,11 +677,11 @@ The CTE encoding of a markup container is similar to XML, except:
 | Section    | Delimiter  | Type                      | Required |
 | ---------- | ---------- | ------------------------- | -------- |
 | Tag name   | `<`        | [Identifier](#identifier) | Y        |
-| Attributes | whitespace | [Map](#map)               |          |
+| Attributes | [structural whitespace](#structural-whitespace-characters) | [Map](#map)               |          |
 | Contents   | `,`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
-Attributes and contents are **OPTIONAL**. There must be whitespace between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be whitespace adjacent to the begin, contents, and end delimiters.
+Attributes and contents are **OPTIONAL**. There must be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
 
 Illustration of markup encodings:
 
@@ -1026,7 +1026,7 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out structural whitespace in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
+Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
 
 This section specifies how to pretty-print CTE documents.
 
