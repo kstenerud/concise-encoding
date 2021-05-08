@@ -593,12 +593,12 @@ Resource IDs support [concatenation](#concatenation):
     @"http://x.com/":"my-suffix" // = http://x.com/my-suffix
 
     c1 {
-        resources = [
+        "resources" = [
             &query:@"https://some-really-long-url-thats-annoying-to-type.com/query?ref-id="
         ]
-        queries = {
-            query-1 = $query:1
-            query-5000 = $query:5000
+        "queries" = {
+            "query-1" = $query:1
+            "query-5000" = $query:5000
         }
     }
 
