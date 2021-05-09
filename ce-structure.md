@@ -692,8 +692,8 @@ A relationship is a container-like structure for making statements about resourc
 
 A relationship is composed of the following three components (in order):
 
- * Subject, which **MUST** be a [resource](#resource)
- * Predicate, which **MUST** be a [resource identifier](#resource-identifier) that represents a semantic predicate
+ * Subject, which **MUST** be a [resource](#resource), and **MUST NOT** be [nil](#nil) or [na](#na)
+ * Predicate, which **MUST** be a [resource identifier](#resource-identifier) that represents a semantic predicate, and **MUST NOT** be [nil](#nil) or [na](#na)
  * Object, which **CAN** be a [resource](#resource) or a value.
 
 #### Maps as Relationships
