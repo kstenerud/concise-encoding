@@ -288,7 +288,7 @@ The exponential portion of a base-10 number is denoted by the lowercase characte
  * `6.411e9` = 6411000000
  * `6.411e-9` = 0.000000006411
 
-Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values **CAN** represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 #### Base-16 Notation
 
@@ -405,7 +405,7 @@ A time is made up of the following mandatory and optional fields:
 
 | Field        | Mandatory | Separator | Min Value | Max Value | Min Digits | Max Digits |
 | ------------ | --------- | --------- | --------- | --------- | ---------- | ---------- |
-| Hour         |     Y     |           |         0 |        23 |          2 |          2 |
+| Hour         |     Y     |           |         0 |        23 |          1 |          2 |
 | Minute       |     Y     |    `:`    |         0 |        59 |          2 |          2 |
 | Second       |     Y     |    `:`    |         0 |        60 |          2 |          2 |
 | Subseconds   |     N     |    `.`    |         0 | 999999999 |          0 |          9 |
@@ -418,9 +418,9 @@ A time is made up of the following mandatory and optional fields:
  * `09:04:21`: 9:04:21 UTC
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
  * `12:05:50.102/Z`: 12:05:50 and 102 milliseconds UTC
- * `04:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
+ * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
  * `17:41:03/-13.54/-172.36`: 17:41:03 Samoa time
- * `09:00:00/L`: 9:00:00 local time
+ * `9:00:00/L`: 9:00:00 local time
 
 
 ### Timestamp
