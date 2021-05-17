@@ -73,6 +73,7 @@ Implementations
 ---------------
 
  * [Go](https://github.com/kstenerud/go-concise-encoding) (reference implementation)
+ * [Enctool](https://github.com/kstenerud/enctool) A tool for playing with and converting between formats
 
 
 
