@@ -44,7 +44,7 @@ Unfortunately, the simplicity of text came at a cost. Text encodings are bulky a
 
 These formats' lack of types gave rise to a new set of problems: When everyone has to come up with their own methods to shoehorn common data types into the restricted types of these formats, interoperability is seriously impaired, mistakes are common, and security risks ever-present.
 
-These formats also played fast and loose in their specifications, resulting in much variance in implementation behaviors. This makes them inherently insecure, and although that wasn't such a problem in the first decade of the 2000s, the hostile world of today is full of highly motivated mercenary and state actors who will go to extreme lengths to [compromise your system](ce-structure.md#security-and-limits). Can you afford the risk?
+These formats also played fast and loose in their specifications, resulting in much variance in implementation behaviors. This makes them inherently insecure, and although that wasn't such a problem in the first decade of the 2000s, the hostile world of today is full of highly motivated mercenary, ransomware, and state actors who will go to extreme lengths to [compromise your system](ce-structure.md#security-and-limits). Can you afford the risk?
 
 Lack of versioning is also a problem. Without a version specifier, changes to the specification range from difficult to impossible, leaving the format riddled with deprecation holes, and incapable of adapting to industry changes or new security threats.
 
