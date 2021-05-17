@@ -909,6 +909,8 @@ Also, like all objects, comments **CANNOT** be placed:
  * Before the [version specifier](#version-specifier) (`/* comment */ c1 {}` is invalid).
  * After the top-level object (`c1 {} /* comment */` is invalid).
 
+Implementations **MUST** provide a configuration option to ignore comments (meaning that comments will be skipped over without passing their contents along), and **MUST** default to ignoring.
+
 #### Comment String Character Restrictions
 
 The following characters are allowed in comments:
