@@ -52,9 +52,9 @@ Lack of versioning is also a problem. Without a version specifier, changes to th
 
 The older formats can't be fixed or updated to deal with today's issues. We **need** a format designed for our modern world:
 
- * **Secure**: As a tightly specified format, Concise Encoding doesn't suffer from the [security problems](ce-structure.md#security-and-limits) that the more loosely defined formats do. Also, everything is done **one** way only, leaving less of an attack surface.
- * **Efficient**: As a twin binary/text format, Concise Encoding retains the [text-based](cte-specification.md) ease-of-use of JSON and friends, but is stored and transmitted in the simpler and smaller [binary form](cbe-specification.md), making it more secure, easier on the energy bill, and easier on the planet.
- * **Versatile**: Concise Encoding's [supported types](#natively-supported-types) are designed with the 80% use case in mind, meaning that 80% of users should be able to use it as-is without resorting to custom type encoding (also, it supports custom type encoding).
+ * **Secure**: As a tightly specified format, Concise Encoding doesn't suffer from the [security problems](ce-structure.md#security-and-limits) that the more loosely defined formats do. Everything is done **one** way only, leaving less of an attack surface.
+ * **Efficient**: As a twin binary/text format, Concise Encoding retains the [text-based](cte-specification.md) ease-of-use of the old text formats, but is stored and transmitted in the simpler and smaller [binary form](cbe-specification.md), making it more secure, easier on the energy bill, and easier on the planet.
+ * **Versatile**: Supports [all common types](#natively-supported-types) natively. 90% of users won't need any form of customisation.
  * **Future-proof**: As a versioned format, Concise Encoding can respond to a changing world without degenerating into deprecations and awkward encodings or painting itself into a corner.
 
 
