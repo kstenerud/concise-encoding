@@ -95,47 +95,48 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 #### Natively supported types
 
-| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) |
-| ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
-| Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
-| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
-| Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
-| Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |
-| UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |
-| Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |
+| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) | [Ion](https://amzn.github.io/ion-docs) |
+| ------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- | --- |
+| Boolean       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
+| Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
+| Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
+| Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |  Y  |
+| NaN, Infinity |    Y    |     |      |      |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |     |
+| UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |     |
+| Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |  Y  |
 | Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |
-| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
-| List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |
-| Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |
-| Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |
-| Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |
-| Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |
-| Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
-| Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |
-| Nil           |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |
-| NA            |    Y    |     |      |      |      |             |       |           |             |        |       |
-| Media         |    Y    |     |      |      |      |             |       |           |             |        |       |
-| Custom        |    Y    |     |      |      |      |             |       |           |             |        |   Y   |
+| String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |  Y  |
+| Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
+| List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
+| Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |     |
+| Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
+| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |     |
+| Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |     |
+| Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |     |
+| Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
+| Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |     |
+| Nil           |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |  Y  |
+| NA            |    Y    |     |      |      |      |             |       |           |             |        |       |     |
+| Media         |    Y    |     |      |      |      |             |       |           |             |        |       |     |
+| Custom        |    Y    |     |      |      |      |             |       |           |             |        |   Y   |  Y  |
 
 #### Features
 
-| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) |
-| ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- |
-| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
-| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |
-| Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |       |    ns     |             |        |  ns   |
-| Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |
-| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |      Y      |        |       |
-| Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |       |     Y     |             |        |       |
-| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |    Y  |           |      Y      |        |   Y   |
-| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |    Y  |           |             |        |   Y   |
-| Cyclic References       |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
-| Time Zones              |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
-| Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |       |           |             |        |       |
-| 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |
-| Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |
+| Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) | [Ion](https://amzn.github.io/ion-docs) |
+| ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- | --- |
+| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |  64 |
+| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |  64 |
+| Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |       |    ns     |             |        |  ns   |  ns |
+| Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |  L  |
+| Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |      Y      |        |       |  Y  |
+| Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |       |     Y     |             |        |       |     |
+| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |    Y  |           |      Y      |        |   Y   |  Y  |
+| Size Optimization       |    Y    |     |      |      |   Y  |      Y      |    Y  |           |             |        |   Y   |     |
+| Cyclic References       |    Y    |     |      |      |   Y  |             |       |           |             |        |       |     |
+| Time Zones              |    Y    |     |      |      |   Y  |             |       |           |             |        |       |     |
+| Gregorian Time Fields   |    Y    |     |      |      |   Y  |             |       |           |             |        |       |  Y  |
+| 1:1 Bin/Txt Compatible  |    Y    |     |      |      |      |             |       |           |             |        |       |  Y  |
+| Versioning              |    Y    |     |      |      |      |             |       |           |             |        |       |  *  |
 
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
@@ -145,7 +146,26 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 * **Time Zones**: Timestamps support time zones.
 * **Gregorian Time Fields**: Time values use Gregorian fields rather than monotonic types like seconds.
 * **1:1 Bin/Txt Compatible**: All types in the binary format match 1:1 to the same type in the text format.
-* **Versioning**: Documents are versioned to match a specification version.
+* **Versioning**: Documents are versioned to match a specification version. Ion supports versioning in the binary format only.
+
+
+### Amazon Ion
+
+Amazon's [Ion](https://amzn.github.io/ion-docs) is the only other format that has twin text/binary variants. Unfortunately, it repeats a number of mistakes from the past:
+
+* The text format doesn't have a version specifier, so any future changes to the text format will break existing codecs and documents.
+* Uses ISO 8601, which has bad defaults (local timezone) and doesn't support real time zones (only offsets). ISO 8601 is also too big for what it does and non-free, resulting in inconsistent implementations (and thus security problems).
+* Doesn't support chunking (so you must always know the full length before you start encoding).
+* Lists must be prefixed with their length, so you must know the length before you start encoding. Converting a list from the text format to binary format would require loading the entire list into memory first.
+* Only supports "struct" encoding, so you can't have real maps (for example using integers or dates as keys).
+* Doesn't support arbitrarily long scalar values.
+* Doesn't support NaN or infinity.
+* Doesn't allow preserving comments when converting to binary.
+* Doesn't support arrays.
+* Doesn't support recursive data or references.
+* Doesn't have a URL or UUID or error type.
+* Integer, date, and decimal float encodings are inefficient.
+* Allows multiple sections, each with their own version declaration as a feature for mixing specification versions in the same document. This means that ALL codecs must support ALL versions forever, increasing bloat and attack surface.
 
 
 
