@@ -102,7 +102,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Integer       |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | Binary Float  |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | Decimal Float |    Y    |     |  Y   |  Y   |  Y   |             |       |           |             |        |       |  Y  |
-| NaN, Infinity |    Y    |     |      |      |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |     |
+| NaN, Infinity |    Y    |     |      |      |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |     |
 | Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |  Y  |
 | Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
@@ -125,8 +125,8 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 | Type | Concise | [XML](https://www.w3.org/XML) | [JSON](https://www.json.org) | [BSON](http://bsonspec.org) | [CBOR](https://cbor.io) | [Messagepack](https://msgpack.org) | [Cap'n](https://capnproto.org) | [Protobufs](https://developers.google.com/protocol-buffers) | [Flatbuffers](https://google.github.io/flatbuffers) | [Thrift](https://thrift.apache.org) | [ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx) | [Ion](https://amzn.github.io/ion-docs) |
 | ----------------------- | ------- | --- | ---- | ---- | ---- | ----------- | ----- | --------- | ----------- | ------ | ----- | --- |
-| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |  64 |
-| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   |  64 |
+| Int Max Size (bits)     |   inf   |     | inf  |  64  |  64  |     64      |   64  |    64     |     64      |   64   |  64   | inf |
+| Float Max Size (bits)   |   inf   |     | inf  | 128  |  64  |     64      |   64  |    64     |     64      |   64   |  64   | inf |
 | Subsecond Precision     |   ns    |     |      |  ns  |   *  |     ns      |       |    ns     |             |        |  ns   |  ns |
 | Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |  L  |
 | Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |      Y      |        |       |  Y  |
@@ -159,8 +159,6 @@ Amazon's [Ion](https://amzn.github.io/ion-docs) is the only other format that ha
 * Doesn't support chunking (so you must always know the full length before you start encoding).
 * Lists must be prefixed with their length, so you must know the length before you start encoding. Converting a list from the text format to binary format would require loading the entire list into memory first.
 * Only supports "struct" encoding, so you can't have real maps (for example using integers or dates as keys).
-* Doesn't support arbitrarily long scalar values.
-* Doesn't support NaN or infinity.
 * Doesn't allow preserving comments when converting to binary.
 * Doesn't support arrays.
 * Doesn't support recursive data or references.
