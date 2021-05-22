@@ -105,7 +105,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | NaN, Infinity |    Y    |     |      |      |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | UUID          |    Y    |     |      |  Y   |  Y   |             |       |           |             |        |   Y   |     |
 | Timestamp     |    Y    |     |      |  Y   |  Y   |      Y      |       |     Y     |             |        |   Y   |  Y  |
-| Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |
+| Resource ID   |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
 | String        |    Y    |  Y  |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |   Y   |  Y  |
 | Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |

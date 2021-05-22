@@ -692,15 +692,9 @@ A relationship is a container-like structure for making statements about resourc
 
 A relationship is composed of the following three components (in order):
 
- * Subject, which **MUST** be a [resource](#resource), and **MUST NOT** be [nil](#nil) or [na](#na)
+ * Subject, which **MUST** be a [resource](#resource) or a [list](#list) of [resources](#resource), and **MUST NOT** be [nil](#nil) or [na](#na)
  * Predicate, which **MUST** be a [resource identifier](#resource-identifier) that represents a semantic predicate, and **MUST NOT** be [nil](#nil) or [na](#na)
- * Object, which **CAN** be a [resource](#resource) or a value.
-
-#### Maps as Relationships
-
-[Maps](#map) **CAN** also be used to represent relationships because they are natural relationship structures (where the map itself is the subject, the key is the predicate, and the value is the object). In Concise Encoding, the key-value pairs of a map are only considered [relationships](#relationship) if their types match the requirements for the predicate and object of a relationship.
-
-Using maps to represent relationships is a common tactic to make the document more concise and the graph structure easier to follow, but there's no way to make relationships expressed as key-value pairs addressable (and thus they **MUST NOT** be used as resources). This is generally not a problem because few relationships actually need to be used as resources in real-world applications.
+ * Object, which **CAN** be any value.
 
 #### Resource
 
@@ -708,8 +702,13 @@ A resource is one of:
 
  * a [map](#map) (entity)
  * a [relationship](#relationship)
- * a [list](#list) (where each entry **MUST** be a [resource](#resource))
  * a [resource identifier](#resource-identifier)
+
+#### Maps as Relationships
+
+[Maps](#map) **CAN** also be used to represent relationships because they are natural relationship structures (where the map itself is the subject, the key is the predicate, and the value is the object). In Concise Encoding, the key-value pairs of a map are only considered [relationships](#relationship) if their types match the requirements for the predicate and object of a relationship.
+
+Using maps to represent relationships is a common tactic to make the document more concise and the graph structure easier to follow, but there's no way to make relationships expressed as key-value pairs addressable (and thus they **MUST NOT** be used as resources). This is generally not a problem because few relationships actually need to be used as resources in real-world applications.
 
 
 **Examples**:
