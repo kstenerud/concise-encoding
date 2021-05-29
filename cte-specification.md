@@ -239,7 +239,7 @@ Normal processing resumes after the terminator, so '
 Version Specifier
 -----------------
 
-A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. There **MUST** be no whitespace between the `c` and the version number.
+A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
 
 The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace-characters).
 
