@@ -710,6 +710,7 @@ A resource is one of:
 
 Using maps to represent relationships is a common tactic to make the document more concise and the graph structure easier to follow, but there's no way to make relationships expressed as key-value pairs addressable (and thus they **MUST NOT** be used as resources). This is generally not a problem because few relationships actually need to be used as resources in real-world applications.
 
+**Note**: Concise Encoding itself provides no mechanism to enforce the concept of a map specifically representing relationships. Such interpretations can only be enforced at the application or schema level.
 
 **Examples**:
 
