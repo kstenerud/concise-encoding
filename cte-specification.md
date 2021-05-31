@@ -20,7 +20,7 @@ Contents
 --------
 
 * [Terms](#terms)
-* [Geenral](#general)
+* [General](#general)
   - [Human Editability](#human-editability)
   - [Line Endings](#line-endings)
   - [Escape Sequences](#escape-sequences)
