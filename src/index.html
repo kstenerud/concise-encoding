@@ -86,8 +86,8 @@
                 </div>
             </div>
             <p>Our connected world demands more and more data each day, and that data comes at a cost. Data centers currently <a href="https://www.iea.org/reports/data-centres-and-data-transmission-networks" target=”_blank>consume 1% of the world's energy</a>, and the trend is for 3-8% within the next decade.</p>
-            <p>If you could cut your data costs in half by swiching your JSON/XML/HTML systems to a less costly format, would you?</p>
-            <p>What if you could cut the costs AND keep the human viewability/editability of your data?</p>
+            <p>What if you could cut your data costs significantly by swiching JSON/XML/HTML for a more efficient format?</p>
+            <p>What if you could cut your data costs AND keep the human viewability/editability of your data?</p>
             <p class="subheading-text">Save CPU and bandwidth</p>
             <p>Concise Encoding has twin 1:1 compatible formats. Store and transmit your data in the smaller, more efficient <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary format</a>, and only convert to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> in the rare cases where a human needs to read or edit.</p>
         </article>
@@ -102,12 +102,13 @@
                     </div>
                 </div>
             </div>
-            <p>Concise Encoding supports these types natively:</p>
+            <p>We've been conditioned over two decades into believing that data types other than numbers and strings must be "string encoded". This is nonsense! Our data <strong>models</strong> are type-rich, and so our data <strong>formats</strong> should support them!</p>
+            <p>Concise Encoding supports the most important types natively:</p>
             <ul>
-                <li><a class="type-link" href="#numeric_types">Bool</a></li>
+                <li><a class="type-link" href="#numeric_types">Boolean</a></li>
                 <li><a class="type-link" href="#numeric_types">Integer (arbitrary size)</a></li>
                 <li><a class="type-link" href="#numeric_types">Float (binary, decimal, arbitrary size)</a></li>
-                <li><a class="type-link" href="#other_types">UUID</a></li>
+                <li><a class="type-link" href="#other_types">Universal Identifier (UUID)</a></li>
                 <li><a class="type-link" href="#other_types">Time (date, time, timestamp)</a></li>
                 <li><a class="type-link" href="#string_types">Resource Identifier (URL, URI, IRI, etc)</a></li>
                 <li><a class="type-link" href="#string_types">String</a></li>
@@ -116,12 +117,12 @@
                 <li><a class="type-link" href="#containers">Markup</a></li>
                 <li><a class="type-link" href="#relationships">Relationship</a></li>
                 <li><a class="type-link" href="#containers">Typed Arrays (bytes, ints, floats, etc)</a></li>
+                <li><a class="type-link" href="#other_types">Media</a></li>
                 <li><a class="type-link" href="#references">Reference (for recursive/repetitive data)</a></li>
                 <li><a class="type-link" href="#relationships">Comment</a></li>
                 <li><a class="type-link" href="#constants">Constants</a></li>
                 <li><a class="type-link" href="#other_types">Nil</a></li>
                 <li><a class="type-link" href="#other_types">NA (not available)</a></li>
-                <li><a class="type-link" href="#other_types">Media</a></li>
                 <li><a class="type-link" href="#custom_types">Custom (encapsulate your own)</a></li>
             </ul>
         </article>
