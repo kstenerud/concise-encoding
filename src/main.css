@@ -26,6 +26,14 @@
     --w-content: 1296px;
     font-size: 120%;
 }
+@media screen and (max-width: 450px) {
+    :root {
+        --w-card: 270px;
+        --w-card-wide: 800px;
+        --w-content: 1080px;
+        font-size: 100%;
+    }
+}
 
 body {
     background: var(--c-bg);
@@ -70,6 +78,7 @@ body {
   background-position: center bottom;
   opacity: 50%;
   padding-bottom: 12rem;
+  margin-left: 60px;
 }
 
 .updates-container {
@@ -487,13 +496,13 @@ a:hover {
     color: #3273dc;
 }
 
-@media screen and (max-width: 450px) {
-    :root {
-        --w-card: 270px;
-        --w-card-wide: 800px;
-        --w-content: 1080px;
-        font-size: 100%;
+@media screen and (max-width: 690px) {
+    .title-bgimage {
+        margin-left: 0px;
     }
+}
+
+@media screen and (max-width: 450px) {
     .title-text {
         padding-left: 0;
         font-size: 1.6rem;
