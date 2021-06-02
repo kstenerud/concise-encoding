@@ -20,19 +20,9 @@
     --c-hdr-txt: #fff;
     --jst-imp: center;
     --line-h: 1.5;
-
-    --w-card: 324px;
-    --w-card-wide: 960px;
-    --w-content: 1296px;
-    font-size: 120%;
-}
-@media screen and (max-width: 450px) {
-    :root {
-        --w-card: 270px;
-        --w-card-wide: 800px;
-        --w-content: 1080px;
-        font-size: 100%;
-    }
+    --w-card: 270px;
+    --w-card-wide: 800px;
+    --w-content: 1080px;
 }
 
 body {
