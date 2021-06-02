@@ -20,9 +20,11 @@
     --c-hdr-txt: #fff;
     --jst-imp: center;
     --line-h: 1.5;
-    --w-card: 270px;
-    --w-card-wide: 800px;
-    --w-content: 1080px;
+
+    --w-card: 324px;
+    --w-card-wide: 960px;
+    --w-content: 1296px;
+    font-size: 120%;
 }
 
 body {
@@ -87,7 +89,7 @@ body {
     border-radius: 1em;
     align-items: center;
     display: inline-flex;
-    font-size: 1.5em;
+    font-size: 1.5rem;
     font-style: italic;
     font-weight: 500;
     height: 1.4em;
@@ -110,7 +112,7 @@ body {
     border-radius: 0.5em;
     align-items: center;
     display: inline-flex;
-    font-size: 0.7em;
+    font-size: 0.7rem;
     height: 2em;
     justify-content: center;
     line-height: 1.5;
@@ -128,7 +130,7 @@ a.badge-shoutout:hover {
     border-radius: 0.5em;
     align-items: center;
     display: inline-flex;
-    font-size: 0.8em;
+    font-size: 0.8rem;
     height: 2em;
     justify-content: center;
     line-height: 1.5;
@@ -199,8 +201,8 @@ a.badge-shoutout:hover {
 }
 
 .resource-img {
-    width: 64px;
-    height: 64px;
+    width: 4rem;
+    height: 4rem;
     margin-right: 1rem;
     float: left;
     margin-top: auto;
@@ -486,6 +488,12 @@ a:hover {
 }
 
 @media screen and (max-width: 450px) {
+    :root {
+        --w-card: 270px;
+        --w-card-wide: 800px;
+        --w-content: 1080px;
+        font-size: 100%;
+    }
     .title-text {
         padding-left: 0;
         font-size: 1.6rem;
