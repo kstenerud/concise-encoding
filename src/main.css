@@ -173,6 +173,15 @@ a.badge-shoutout:hover {
     opacity: 0.7;
 }
 
+.blurb-text-larger {
+    opacity: 0.7;
+    font-size: 120%;
+}
+
+.big-text {
+    font-size: 150%;
+}
+
 .subheading-text {
     opacity: 0.8;
     font-size: 120%;
