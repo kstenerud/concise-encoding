@@ -840,7 +840,9 @@ A marker is a [combined](#combined-object) pseudo-object that assigns a marker I
 
 #### Marker ID
 
-The marker ID is an [identifier declaration](#identifier), and **MUST** be unique to all marker IDs in the current document.
+The marker ID is an [identifier declaration](#identifier), except with the additional restriction that it cannot contain a colon (`:`) since it would clash with the id-value seprator in CTE.
+
+Marker IDs are declared identifiers, and therefore **MUST** be unique within the current document.
 
 #### Rules
 
