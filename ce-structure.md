@@ -428,11 +428,17 @@ A basic UTF-8 string.
 
 An identifier is a type designed to be unique within a local context. It's implemented as a string with the following additional requirements and restrictions:
 
- * An identifier **MUST ONLY** contain:
+ * It **MUST** begin with one of:
+   - A letter or numeric character ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
+   - `_` (underscore)
+ * It **MUST ONLY** contain:
    - Letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
-   - The underscore (`_`) character
-   - The dash (`-`) character.
- * The first character **MUST NOT** be a dash (`-`).
+   - `_` (underscore)
+   - `:` (colon)
+   - `-` (dash)
+   - `.` (period)
+ * It **MUST NOT** end with a colon (`:`).
+ * Colons **MUST NOT** must not be placed adjacent to each other (`a::b` is invalid).
  * The maximum length is 127 **bytes** (not characters).
  * The minimum length is 1 **character** (identifiers **CANNOT** be empty strings).
  * Comparisons are case insensitive when doing lookups or testing for uniqueness.
@@ -442,12 +448,17 @@ An identifier is a type designed to be unique within a local context. It's imple
  * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
  * The identifier is not a general type; it's only allowed where specifically noted in this document.
 
+The colon (`:`) character has a special purpose as a **namespace separator**. The exact meaning and function of a namespace is application-specific, however it is most commonly used to mark an identifier's provenance in order to prevent naming collisions. An identifier containing multiple colons is considered to be in a multi-level namespace. An identifier that does not contain any colon characters is considered to be in the *default* namespace.
+
+**Note**: Concise Encoding itself doesn't place any significance on namespaces; it only cares about the uniqueness of an identifier's string representation.
+
 **Examples**:
 
  * `123`
  * `some_id`
  * `25th`
  * `猫`
+ * `foo:bar`
 
 #### Resource Identifier
 
