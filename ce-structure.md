@@ -648,7 +648,7 @@ Markup is a specialized data structure composed of a name, a map (containing att
     [name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
 
  * Name is an [identifier](#identifier).
- * The attributes section behaves like a [map](#map)
+ * The attributes section behaves like a [map](#map). An attribute key **MUST NOT** be empty (string, resource ID).
  * The contents section behaves similarly to a [list](#list), except that it **MUST** only contain:
    - [Content strings](#content-string)
    - [Comments](#comment)
