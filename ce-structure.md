@@ -1080,15 +1080,8 @@ Because Concise Encoding is a twin format (text and binary), every character pri
 
 The following Unicode codepoints are text-unsafe:
 
- * Unassigned characters
- * Reserved characters
- * Private characters
- * Unprintable characters
- * Surrogate pairs
- * Byte order mark
- * Zero-width characters
- * Line breaks, except for LF (u+000a), and CR (u+000d)
- * Control characters, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
+ * Codepoints in general category `C`, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
+ * Codepoints in categories `Zl` and `Zp`
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
 
