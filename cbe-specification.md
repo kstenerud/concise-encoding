@@ -480,7 +480,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 | Field        | Bits | Value             |
 | ------------ | ---- | ----------------- |
 | RESERVED     |   1  | 0                 |
-| Length       |   7  | 0-127             |
+| Length       |   7  | 1-127             |
 | UTF-8 Data   |   *  | UTF-8 string data |
 
 **Examples**:
