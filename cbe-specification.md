@@ -475,7 +475,7 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 ### Identifier
 
-Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (max length is 127). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 character, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
 
 | Field        | Bits | Value             |
 | ------------ | ---- | ----------------- |

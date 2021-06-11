@@ -283,7 +283,7 @@ A time zone refers to the political designation of a location having a specific 
 
 #### Area/Location
 
-The area/location method is the more human-readable of the two, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a maximum length of 127 bytes, and are also case-sensitive because they tend to be implemented that way on most platforms.
+The area/location method is the more human-readable of the two, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 bytes, and are also case-sensitive because they tend to be implemented that way on most platforms.
 
 **Note**: Some older IANA time zones (mostly deprecated ones) don't follow the `Area/Location` format (for example `MST`, `PST8PDT`). These **MUST** be supported.
 
