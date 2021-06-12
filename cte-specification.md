@@ -499,7 +499,6 @@ The following array types are available:
 | `f32`  | 32-bit floating point (ieee754)             | Element       |
 | `f64`  | 64-bit floating point (ieee754)             | Element       |
 | `u`    | 128-bit UID                                 | Element       |
-| `r`    | [Resource Identifier](#resource-identifier) | String-Like   |
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
