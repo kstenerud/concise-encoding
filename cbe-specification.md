@@ -689,11 +689,11 @@ Unlike other containers, a markup container requires two end-of-container marker
 
 A relationship always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
 
-    [77] [subject] [predicate] [object]
+    [76] [subject] [predicate] [object]
 
 **Example**:
 
-    [77 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
+    [76 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
      91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
      91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
     = the relationship: (@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
@@ -754,11 +754,13 @@ A reference begins with the reference type (0x98), followed by either a marker I
 
 ### Comment
 
-Comments are encoded the same as [lists](#list), using the type 0x76.
+Comments are encoded the same as [lists](#list), using the type 0x77.
+
+    [77 (comment item) (comment item) ... 7b]
 
 **Example**:
 
-    [76 90 80 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
+    [77 90 80 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
      66 61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34
      20 75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
     = Bug #95512: System fails to start on arm64 unless B latch is set
