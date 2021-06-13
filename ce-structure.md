@@ -1230,12 +1230,14 @@ Omission occurs when a decoder decides to drop bad data rather than store a defa
 
 #### Key Collisions
 
-Key collisions occur when two or more identical keys are present in the same encoded map. Systems could potentially deal with this situation in a number of different ways:
+Key collisions occur when two or more identical keys are present in the same encoded map. The most common ways systems tend to handle key collisions are:
 
  * Take the initial key and reject all duplicate keys (choose the first instance)
  * Replace the value for each duplicate encountered (choose the last instance)
  * Reject the key and all associated values (choose nothing)
  * Reject the entire document (abort processing)
+
+The first three approaches are dangerous and lead to security issues. Only rejecting the document is safe (which is what Concise Encoding mandates).
 
 For example, given the map:
 
