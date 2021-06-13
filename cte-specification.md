@@ -510,7 +510,7 @@ For element array encodings, any valid representation of the element data type m
 
 #### Implied Prefix
 
-**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix.
+**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix (except for special values `nan`, `snan`, `inf` etc - see below).
 
 | Type Suffix | Implied element prefix | Example                         |
 | ----------- | ---------------------- | ------------------------------- |
@@ -521,7 +521,7 @@ For element array encodings, any valid representation of the element data type m
 #### Special Array Element Rules
 
  * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
- * Float array elements can be written using special float values such as `nan`, `snan`, `inf`.
+ * Float array elements can be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
 
 **Examples**:
 
