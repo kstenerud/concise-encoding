@@ -129,7 +129,7 @@ The types are structured such that the most commonly used types and values encod
 |  6d | Negative Integer (32 bit) | [32-bit unsigned integer, little endian]     |
 |  6e | Positive Integer (64 bit) | [64-bit unsigned integer, little endian]     |
 |  6f | Negative Integer (64 bit) | [64-bit unsigned integer, little endian]     |
-|  70 | Binary Float (16 bit)     | [16-bit [bfloat16](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf), little endian] |
+|  70 | Binary Float (16 bit)     | [16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
 |  71 | Binary Float (32 bit)     | [32-bit ieee754 binary float, little endian] |
 |  72 | Binary Float (64 bit)     | [64-bit ieee754 binary float, little endian] |
 |  73 | UID                       | [128 bits of data, big endian]               |
@@ -295,7 +295,7 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format, or in 16-bit [bfloat](https://software.intel.com/sites/default/files/managed/40/8b/bf16-hardware-numerics-definition-white-paper.pdf) format, in little endian byte order.
+Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format, or in 16-bit [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) format, in little endian byte order.
 
 **Examples**:
 
