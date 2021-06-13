@@ -521,6 +521,7 @@ For element array encodings, any valid representation of the element data type m
 #### Special Array Element Rules
 
  * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
+ * Float array elements can be written using special float values such as `nan`, `snan`, `inf`.
 
 **Examples**:
 
