@@ -5,7 +5,7 @@ Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general p
 
 The text format aims to present data in a human friendly way, encoding data in a manner that can be easily and unambiguously edited in a UTF-8 capable text editor while maintaining 1:1 compatibility with the [binary format](cbe-specification.md) (which aims for compactness and machine processing efficiency).
 
-CTE documents must follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
+CTE documents **MUST** follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
 
 
 
@@ -139,7 +139,7 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 ### Escape Sequences
 
-In some contexts, escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data:
+In some contexts, escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data (see [letter case rules](#letter-case)):
 
 | Sequence (`\` + ...) | Interpretation                          |
 | -------------------- | --------------------------------------- |
@@ -260,7 +260,7 @@ Represented by the sequences `true` and `false`.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Encoders **MUST** write values in lower case.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Encoders **MUST** write values in lower case (see [letter case rules](#letter-case)).
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -282,7 +282,7 @@ A floating point number is composed of a whole part and a fractional part separa
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e`, followed by the signed size of the exponent (using **OPTIONAL** `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
@@ -292,7 +292,7 @@ Although there is technically no maximum number of significant digits or exponen
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
+Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
@@ -502,6 +502,8 @@ The following array types are available:
 | `ct`   | [Custom Text](#custom-text)                 | String-Like   |
 | `cb`   | [Custom Binary](#custom-binary)             | Element       |
 
+Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
+
 **Note**: If an unrecognized array type is encountered, a decoder **MUST** treat it as a [media](#media) array type.
 
 ### Element Array Encodings
@@ -521,7 +523,7 @@ For element array encodings, any valid representation of the element data type m
 #### Special Array Element Rules
 
  * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
- * Float array elements can be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
+ * Float array elements **CAN** be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
 
 **Examples**:
 
@@ -560,7 +562,7 @@ String-like array encodings are interpreted as a whole, and **MUST** encode [tex
 
 ### String
 
-Strings are enclosed within double-quote (`"`) delimiters, and the elements are string-like. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string must encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+Strings are enclosed within double-quote (`"`) delimiters, and the elements are string-like. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
 
 **Example**:
 
@@ -583,7 +585,7 @@ Identifiers are implemented as strings, but are written without double-quotes an
 
 A resource identifier is enclosed within the delimiters `@"` and `"`.
 
-A Concise Encoding implementation must interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) must not be interpreted.
+A Concise Encoding implementation **MUST** interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) **MUST NOT** be interpreted.
 
  * `@"http://x.y.z?quote=\""` decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
  * `@"http://x.y.z?quote=%22"` decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
@@ -620,7 +622,7 @@ Custom binary data is encoded using standard typed array syntax with type identi
 
 ### Custom Text
 
-Custom text data is encoded using standard typed array syntax with type identifier `ct`. Its elements are string-like, and it **CAN** contain [escape sequences](#escape-sequences) which must be processed before the converted string is passed to the custom decoder that will interpret it.
+Custom text data is encoded using standard typed array syntax with type identifier `ct`. Its elements are string-like, and it **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -652,7 +654,7 @@ c1 [
 
 A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace-characters) separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace-characters). Key-value pairs must be separated from each other using [structural whitespace](#structural-whitespace-characters). A key without a paired value is invalid.
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace-characters). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace-characters). A key without a paired value is invalid.
 
 **Example**:
 
@@ -681,7 +683,7 @@ The CTE encoding of a markup container is similar to XML, except:
 | Contents   | `,`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
-Attributes and contents are **OPTIONAL**. There must be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
+Attributes and contents are **OPTIONAL**. There **MUST** be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
 
 Illustration of markup encodings:
 
@@ -700,7 +702,7 @@ The markup container ends when an unescaped `>` character is encountered while p
 
 ##### Content String
 
-Content strings **CAN** contain [escape sequences](#escape-sequences), which must be processed before applying the structural rules for content strings.
+Content strings **CAN** contain [escape sequences](#escape-sequences), which **MUST** be processed before applying the structural rules for content strings.
 
 **Example**:
 
@@ -801,7 +803,7 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 #### Multiline Comment
 
-A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that must also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
+A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
 **Note**: Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
 
@@ -853,7 +855,7 @@ NA is encoded as `na`, and **MUST** always be [concatenated](#concatenation) wit
 Combined Objects
 ----------------
 
-The combine operator in CTE is `:`. There must be no whitespace between the combine operator and its operands.
+The combine operator in CTE is `:`. There **MUST NOT** be whitespace between the combine operator and its operands.
 
 
 **Examples**:
@@ -906,17 +908,21 @@ c1 nil
 Letter Case
 -----------
 
-A CTE document must be entirely in lower case, except in the following situations:
+A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * Strings, string-like arrays, and comments **CAN** contain uppercase characters. Case must be preserved.
- * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) **CAN** contain uppercase characters. Case must be preserved.
- * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
+ * Strings, string-like arrays, and comments **CAN** contain uppercase characters. Case **MUST** be preserved.
+ * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) **CAN** contain uppercase characters. Case **MUST** be preserved.
+ * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters. Case **MUST** be preserved.
 
-Everything else, including hexadecimal digits, exponents, and escape sequences, must be lower case.
+Everything else, including hexadecimal digits, exponents, and escape sequences, **MUST** be lower case.
 
-A decoder must accept data regardless of letter-case because humans will inevitably break these rules, and rejecting a document on such grounds would result in poor UX.
+A CTE encoder **MUST** output letter case in accordance with this specification.
 
-An encoder must output letter case in accordance with this specification.
+### Overriding Rule for Decoders
+
+Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
+
+A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, exponents, and escape sequences, etc).
 
 
 
@@ -958,7 +964,7 @@ Whitespace is defined as any character marked as whitespace in the [Unicode](htt
 
 Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document. Whitespace characters not intended to be structural will need to be quoted in most contexts to preserve their meaning.
 
-CTE decoders must accept all whitespace characters when decoding structural whitespace. CTE Encoders must produce only the following characters as structural whitespace:
+CTE decoders **MUST** accept all whitespace characters when decoding structural whitespace. CTE Encoders **MUST** produce only the following characters as structural whitespace:
 
 | Code Point | Name                      |
 | ---------- | ------------------------- |
@@ -968,7 +974,7 @@ CTE decoders must accept all whitespace characters when decoding structural whit
 | U+0020     | space                     |
 
 
-#### Structural Whitespace **can** occur:
+#### Structural Whitespace **CAN** occur:
 
  * Around an object.
  * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `,`, `>`)
@@ -980,7 +986,7 @@ Examples:
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 
-#### Structural Whitespace **must** occur:
+#### Structural Whitespace **MUST** occur:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
@@ -990,7 +996,7 @@ Examples:
  * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
 
 
-#### Whitespace **must not** occur:
+#### Whitespace **MUST NOT** occur:
 
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
