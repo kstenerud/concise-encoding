@@ -795,17 +795,30 @@ c1 {
 
 Comments **CAN** be written in single-line or multi-line form.
 
-Comments have the same placement requirements as regular objects. This means for example that butting up the comment against an object is not allowed (i.e. `"a"/* comment */` and `/ *comment */"a"` are not allowed).
+Comments have the same placement requirements as regular objects. This means for example that butting up the comment against an object is not allowed (i.e. `"a"/* comment */` and `/* comment */"a"` are not allowed).
+
+The data inside of a comment has no restrictions besides the rules of [human editability](#human-editability). Specifically: there are no structural whitespace requirements inside of a comment or nested comment (i.e. `/*abc*/` is valid, and `/*abc/*xyz*//*123*/*/` is also valid).
 
 #### Single Line Comment
 
-A single line comment begins at the sequence `//` and continues until the next linefeed (u+000a) is encountered.
+A single line comment begins at the sequence `//` and continues until the next linefeed (u+000a) is encountered. No checks for nested comments are performed.
 
 #### Multiline Comment
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-**Note**: Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` that don't represent comment delimiters:
+**Note**: Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
+
+```cte
+c1
+{
+    // Pre-emptively escape the "*" to avoid a false nested comment begin
+    "comment begin" = "/\*"
+
+    // Pre-emptively escape the "/" to avoid a false nested comment end
+    "comment end" = "*\/"
+}
+```
 
 **Example**:
 
