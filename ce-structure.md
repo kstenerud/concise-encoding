@@ -128,7 +128,7 @@ The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), b
 
 **Examples**:
 
- * Empty document: `c1 nil` (in [CBE](cbe-specification.md): [`03 01 7e`])
+ * Empty document: `c1 nil` (in [CBE](cbe-specification.md): [`83 01 7e`])
  * Document containing a comment (pseudo-object) and the top-level integer value 1000: `c1 /* a comment */ 1000`
  * Document containing a top-level list: `c1 [string1 string2 string3]`
 
@@ -137,12 +137,12 @@ The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), b
 Document Version Specifier
 --------------------------
 
-The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x03 for CBE) followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
+The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x83 for CBE) followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
 
 **Example**:
 
  * CTE version 1: `c1`
- * CBE version 1: [`03 01`]
+ * CBE version 1: [`83 01`]
 
 
 
@@ -1068,7 +1068,7 @@ Empty Document
 
 An empty document is signified by using the [Nil](#nil) type as the top-level object:
 
-* In CBE: [`03 01 7e`]
+* In CBE: [`83 01 7e`]
 * In CTE: `c1 nil`
 
 
@@ -1292,7 +1292,7 @@ All decoded values **MUST** be validated for the following before being passed t
 
 #### User-Controllable Limits
 
-The codec **MUST** allow the user to control various limits and ranges, with sane defaults to guard against DOS attacks:
+The codec **MUST** allow the user to control the following limits and ranges, with sane defaults to guard against DOS attacks:
 
  * Maximum object count overall
  * Maximum object count in a container
@@ -1302,8 +1302,9 @@ The codec **MUST** allow the user to control various limits and ranges, with san
  * Maximum number of digits allowed in an integer value
  * Maximum number of significant digits allowed in a floating point number
  * Maximum exponent size (in digits) in a floating point number
+ * Maximum/minimum year in a time value
 
-It's impossible to prescribe what limits are reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
+It's impossible to prescribe what default limits are reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
 
 | Metric                 | Limit     |
 | ---------------------- | --------- |
@@ -1311,6 +1312,7 @@ It's impossible to prescribe what limits are reasonable for all decoders, becaus
 | Overall object count   | 1 million |
 | Depth                  | 1000      |
 | Coefficient size       | 100       |
+| Year size              | 32-bit    |
 
 
 ### Mitigations: Application Guidelines
