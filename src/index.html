@@ -76,8 +76,8 @@
             <p>
                 <ul>
                     <li>It's editable as plain text. Viewing and editing binary data is awful because it's so human-hostile. Concise Encoding solves this with twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats. <strong>Edit in text, transmit in binary.</strong></li>
-                    <li>It supports all basic types natively. Without this, you need schemes for interpreting strings as other types, which is complicated, causes incompatibilities, and opens security holes.</li>
-                    <li>It doesn't require extra steps to build. Just include the library and go.</li>
+                    <li>It supports all basic types natively. Without this, you'd need schemes for interpreting strings as other types, which is complicated, causes incompatibilities, and opens up security holes.</li>
+                    <li>It doesn't require extra steps to build. Just import the library and go.</li>
                     <li>It's be easy to debug: Seamlessly convert the <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> document to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> format and examine, modify, play.</li>
                 </ul>
             </p>
@@ -100,7 +100,7 @@
                     <li>It's tightly specified. Optional and ambiguous behaviors are kept to a minimum.</li>
                     <li>It has intelligent defaults. Doing the right thing happens almost automatically.</li>
                     <li>All documents are versioned, ensuring forward and backward compatibility forever.</li>
-                    <li>It can't be misinterpreted as text. All <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> documents begin with 0x83, which is guaranteed invalid in UTF-8, ISO-8859, and ASCII. This makes it safe for use in QR codes, for example.</li>
+                    <li>It can't be misinterpreted as text. <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#version-specifier">All binary documents begin with 0x83</a>, which is guaranteed invalid in UTF-8, ISO-8859, and ASCII. This makes it safe for use in QR codes, for example.</li>
                 </ul>
             </p>
         </article>
@@ -122,7 +122,7 @@
                     <li>The twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>/<a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> format means that you can transmit your data in efficient binary while keeping the convenience of text.</li>
                     <li>Streaming is efficient: You don't need to know the size of your data up front, avoiding the buffering bottlenecks.</li>
                     <li>The most common types and values are encoded in the smallest space.</li>
-                    <li>It's a byte-oriented format, keeping processor-intensive bitfield encodings to a minimum.</li>
+                    <li>It's a byte-oriented format, keeping complicated bitfield encodings to a minimum.</li>
                 </ul>
             </p>
         </article>
