@@ -76,7 +76,7 @@
             <p>
                 <ul>
                     <li>It's editable as plain text. Viewing and editing binary data is awful because it's so human-hostile. Concise Encoding solves this with twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats. <strong>Edit in text, transmit in binary.</strong></li>
-                    <li>All fundamental types are supported natively. Without this, you'd have to encode them into strings, which is complicated, slow, causes incompatibilities, and opens up security holes.</li>
+                    <li>All fundamental types are supported natively. When types are limited, you must encode data into strings, which is complicated, slow, causes incompatibilities, and opens up security holes.</li>
                     <li>There are no extra build steps. Just import the library and go.</li>
                     <li>Debugging is easy: Seamlessly convert the <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> document to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> format and examine, modify, play.</li>
                 </ul>
@@ -93,12 +93,12 @@
                     </div>
                 </div>
             </div>
-            <p>Text formats are convenient, but they're slow and bloated. Efficiency is the name of the game today.</p>
+            <p>Text formats are convenient, but they're slow and bloated. Efficiency is the name of the game nowadays.</p>
             <p><strong>Concise Encoding is designed for efficiency:</strong></p>
             <p>
                 <ul>
                     <li>With its twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>/<a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> format, you can transmit your data in efficient binary, and still edit in convenient text.</li>
-                    <li>Streaming is efficient: You don't need to know the size of your data up front, avoiding any buffering bottlenecks.</li>
+                    <li>Streaming is efficient: You don't need to know the size of your data up front, which avoids buffering bottlenecks.</li>
                     <li>The most common types and values are encoded in the smallest space.</li>
                     <li>It's a byte-oriented format, keeping complicated bitfield encodings to a minimum.</li>
                 </ul>
