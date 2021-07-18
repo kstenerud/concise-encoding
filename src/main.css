@@ -377,6 +377,10 @@ article ul {
     display: none;
 }
 
+aside h3 {
+    font-size: 130%;
+}
+
 /* Headers */
 header {
     text-align: var(--jst-imp);
