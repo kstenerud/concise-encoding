@@ -71,12 +71,12 @@
                     </div>
                 </div>
             </div>
-            <p>The more steps there are, and the more complicated the steps, the harder it is to develop and maintain. Simplicity is key to keeping costs down.</p>
+            <p>The more steps there are and the more complicated the steps, the harder it is to develop and maintain. Simplicity is key.</p>
             <p><strong>Concise Encoding is designed for ease-of-use:</strong></p>
             <p>
                 <ul>
                     <li>It's editable as plain text. Viewing and editing binary data is awful because it's so human-hostile. Concise Encoding solves this with twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats. <strong>Edit in text, transmit in binary.</strong></li>
-                    <li>It supports all basic types natively. Without this, you'd need schemes for interpreting strings as other types, which is complicated, causes incompatibilities, and opens up security holes.</li>
+                    <li>It supports all basic types natively. Without this, you'll need a scheme for interpreting strings as other types, which is complicated, slow, causes incompatibilities, and opens up security holes.</li>
                     <li>It doesn't require extra steps to build. Just import the library and go.</li>
                     <li>It's be easy to debug: Seamlessly convert the <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> document to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> format and examine, modify, play.</li>
                 </ul>
@@ -93,11 +93,11 @@
                     </div>
                 </div>
             </div>
-            <p>Text formats are convenient, but they introduce intolerable amounts of bloat. Efficiency is the name of the game now.</p>
+            <p>Text formats are convenient, but they're slow and bloated. Efficiency is the name of the game today.</p>
             <p><strong>Concise Encoding is designed for efficiency:</strong></p>
             <p>
                 <ul>
-                    <li>The twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>/<a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> format means that you can transmit your data in efficient binary while keeping the convenience of text.</li>
+                    <li>Its twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>/<a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> format allows you to transmit your data in efficient binary while keeping the convenience of text.</li>
                     <li>Streaming is efficient: You don't need to know the size of your data up front, avoiding the buffering bottlenecks.</li>
                     <li>The most common types and values are encoded in the smallest space.</li>
                     <li>It's a byte-oriented format, keeping complicated bitfield encodings to a minimum.</li>
