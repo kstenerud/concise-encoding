@@ -278,48 +278,80 @@ c1
             </pre>
         </article>
 
-        <article id="relationships">
+        <article id="edges">
             <div class="horiz">
-                <img class="example-icon" src="img/handshake.svg">
+                <img class="example-icon" src="img/graph.svg">
                 <div class="vert">
-                    <h2>Relationships</h2>
+                    <h2>Graphs</h2>
                 </div>
             </div>
             <pre>
                 <code>
 c1
+//
+// The weighted graph:
+//
+//     b
+//    /|\
+//   4 1 1
+//  /  |  \
+// a-3-c-4-d
+//
 {
-    // Marked base resource identifiers used for concatenation.
-    "resources" = [
-        &amp;people:@"https://springfield.gov/people#"
-        &amp;mp:@"https://mypredicates.org/"
-        &amp;mo:@"https://myobjects.org/"
+    "vertices" = [
+        &ampa:{}
+        &ampb:{}
+        &ampc:{}
+        &ampd:{}
     ]
-
-    // Map-encoded relationships (the map is the subject)
-    $people:"homer_simpson" = {
-
-        /* $mp refers to @"https://mypredicates.org/""
-         * $mp:"wife" concatenates to @"https://mypredicates.org/wife"
-         */
-        $mp:"wife" = $people:"marge_simpson"
-
-        // Multiple relationship objects
-        $mp:"regrets" = [
-            $firing
-            $forgotten_birthday
-        ]
-    }
-
-    "relationship statements" = [
-        &amp;marge_birthday:($people:"marge_simpson" $mp:"birthday" 1956-10-01)
-        &amp;forgotten_birthday:($people:"homer_simpson" $mp:"forgot" $marge_birthday)
-        &amp;firing:($people:"montgomery_burns" $mp:"fired" $people:"homer_simpson")
-
-        // Multiple relationship subjects
-        ([$firing $forgotten_birthday] $mp:"contribute" $mo:"marital_strife")
+    "edges" = [
+        @($a {"weight"=4 "direction"="both"} $b)
+        @($a {"weight"=3 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $d)
+        @($c {"weight"=4 "direction"="both"} $d)
     ]
 }
+                </code>
+            </pre>
+        </article>
+
+        <article id="nodes">
+            <div class="horiz">
+                <img class="example-icon" src="img/tree.svg">
+                <div class="vert">
+                    <h2>Trees</h2>
+                </div>
+            </div>
+            <pre>
+                <code>
+c1
+//
+// The tree:
+//
+//       2
+//      / \
+//     5   7
+//    /   /|\
+//   9   6 1 2
+//  /   / \
+// 4   8   5
+//
+(2
+    (7
+        2
+        1
+        (6
+            5
+            8
+        )
+    )
+    (5
+        (9
+            4
+        )
+    )
+)
                 </code>
             </pre>
         </article>
