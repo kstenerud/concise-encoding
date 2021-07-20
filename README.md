@@ -110,8 +110,9 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Bytes         |    Y    |     |      |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | List          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |      Y      |   Y    |   Y   |  Y  |
 | Map           |    Y    |     |  Y   |  Y   |  Y   |      Y      |       |     Y     |      Y      |   Y    |       |     |
+| Edge          |    Y    |     |      |      |      |             |       |           |             |        |       |     |
+| Node          |    Y    |     |      |      |      |             |       |           |             |        |       |     |
 | Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
-| Relationship  |    Y    |  Y  |  Y*  |      |      |             |       |           |             |        |       |     |
 | Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |     |
 | Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |     |
 | Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
@@ -131,7 +132,6 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Endianness              |    L    |     |      |   L  |   B  |      B      |    L  |     L     |      L      |    B   |   B   |  B  |
 | Ad-hoc                  |    Y    |  Y  |   Y  |   Y  |   Y  |      Y      |       |           |      Y      |        |       |  Y  |
 | Non-string map keys     |    Y    |     |      |   Y  |   Y  |      Y      |       |     Y     |             |        |       |     |
-| Zero-copy               |    Y    |     |      |      |   Y  |      Y      |    Y  |           |      Y      |        |   Y   |  Y  |
 | Size Optimization       |    Y    |     |      |      |   Y  |      Y      |    Y  |           |             |        |   Y   |     |
 | Cyclic References       |    Y    |     |      |      |   Y  |             |       |           |             |        |       |     |
 | Time Zones              |    Y    |     |      |      |   Y  |             |       |           |             |        |       |     |
@@ -141,7 +141,6 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 
 * **Endianness**: B=big, L=little. The most popular modern CPUs use little endian, and so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
-* **Zero-copy**: Supports [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) operations.
 * **Size Optimization**: Encoding is designed such that the more common types & values use less space.
 * **Cyclic References**: Cyclic (recursive) data structures can be represented using references.
 * **Time Zones**: Timestamps support time zones.

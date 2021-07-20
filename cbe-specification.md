@@ -40,6 +40,7 @@ Contents
   - [Chunked Form](#chunked-form)
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
+  - [Concatenation](#concatenation)
   - [String](#string)
   - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
@@ -52,18 +53,20 @@ Contents
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
+  - [Edge](#edge)
+  - [Node](#node)
   - [Markup](#markup)
-  - [Relationship](#relationship)
 * [Other Types](#other-types)
   - [Nil](#nil)
   - [RESERVED](#reserved)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
+  - [Constant](#constant)
+  - [NA](#na)
+* [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
-  - [NA](#na)
-* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Smallest Possible Size](#smallest-possible-size)
 * [Alignment](#alignment)
@@ -139,8 +142,8 @@ The types are structured such that the most commonly used types and values encod
 |  73 | UID                       | [128 bits of data, big endian]               |
 |  74 | RESERVED                  |                                              |
 |  75 | RESERVED                  |                                              |
-|  76 | Relationship              | Subject, Predicate, Object                   |
-|  77 | Comment                   | (String or sub-comment) ... End of Container |
+|  76 | Edge                      | Source, Description, Destination             |
+|  77 | Node                      | Value, Child Node ... End of Container       |
 |  78 | Markup                    | Name, kv-pairs, contents                     |
 |  79 | Map                       | (Key, value) ... End of Container            |
 |  7a | List                      | Object ... End of Container                  |
@@ -225,7 +228,7 @@ Types from plane 2 are represented using two bytes instead of one, with the pref
 | ... | RESERVED              |       |                                           |
 |  e0 | NA                    |    1  | [reason object]                           |
 |  e1 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
-|  e2 | Reference             |    1  | [resource id]                             |
+|  e2 | Resource ID Reference |    1  | [resource id]                             |
 |  e3 | Media                 |    *  | [media type] [chunk length] [data] ...    |
 | ... | RESERVED              |       |                                           |
 |  f5 | Array: UID            |    *  | [chunk length] [128-bit B-E elements] ... |
@@ -455,6 +458,21 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
 In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
 
 
+### Concatenation
+
+Some array types (currently only [resource ID](#resource-id)) have a special concatenated form, whereby extra array data is appended after the end of the array. This serves to provide a binary analogue to CTE's concatenation operator where needed.
+
+An array type in its concatenated form has a different type code from the regular form, and contains **two** array structures following the type (one for the base value, and one for the concatenated data):
+
+Regular form:
+
+    [type (chunk header) (data) ... (last chunk header) (data)]
+
+Concatenated form:
+
+    [type (chunk header) (data) ... (last chunk header) (data) (concat chunk header) (data) ... (last chunk header) (data)]
+
+
 ### String
 
 Strings are encoded as UTF-8.
@@ -495,7 +513,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#combined-objects) form.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#concatenation) form.
 
 **Example**:
 
@@ -505,7 +523,7 @@ Resource identifiers are encoded with type `[91]` for the normal form, or type `
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
 
-In concatenated form, the resource ID is followed by an implied string (where the string type field is omitted):
+In [concatenated](#concatenation) form, the resource ID is followed by an implied string (where the string type field is omitted):
 
     [94 e1 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
 
@@ -658,7 +676,7 @@ Container Types
 
 ### List
 
-A list begins with 0x7a, followed by a series of objects, and is terminated with 0x7b (end of container).
+A list begins with 0x7a, followed by a series of zero or more objects, and is terminated with 0x7b (end of container).
 
 **Example**:
 
@@ -667,13 +685,44 @@ A list begins with 0x7a, followed by a series of objects, and is terminated with
 
 ### Map
 
-A map begins with 0x79, followed by a series of key-value pairs, and is terminated with 0x7b (end of container).
+A map begins with 0x79, followed by a series of zero or more key-value pairs, and is terminated with 0x7b (end of container).
 
     [79] [key-1] [value-1] [key-2] [value-2] ... [7b]
 
 **Example**:
 
     [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
+
+
+### Edge
+
+An edge always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
+
+    [76] [source] [description] [destination]
+
+**Example**:
+
+    [76 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
+     91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
+     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
+    = the relationship: @(@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
+
+
+### Node
+
+A node begins with 0x77, followed by a value object and zero or more child nodes, and is terminated with 0x7b (end of container).
+
+    [77] [value] [node] ... [7b]
+
+**Example**:
+
+    [77 01 77 03 77 05 7b 77 04 7b 7b 77 02 7b 7b]
+    = the binary tree:
+      1
+     / \
+    2   3
+       / \
+      4   5
 
 
 ### Markup
@@ -688,19 +737,6 @@ Unlike other containers, a markup container requires two end-of-container marker
 
     [78 04 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b,Some text>
 
-
-### Relationship
-
-A relationship always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
-
-    [76] [subject] [predicate] [object]
-
-**Example**:
-
-    [76 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
-     91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
-     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
-    = the relationship: (@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
 
 
 
@@ -756,27 +792,9 @@ A reference begins with the reference type (0x98), followed by either a marker I
     = reference to entire document at https://somewhere.com/my_document.cbe?format=long
 
 
-### Comment
+### Constant
 
-Comments are encoded the same as [lists](#list), using the type 0x77.
-
-    [77 (comment item) (comment item) ... 7b]
-
-**Example**:
-
-    [77 90 80 01 42 75 67 20 23 39 35 35 31 32 3a 20 53 79 73 74 65 6d 20
-     66 61 69 6c 73 20 74 6f 20 73 74 61 72 74 20 6f 6e 20 61 72 6d 36 34
-     20 75 6e 6c 65 73 73 20 42 20 6c 61 74 63 68 20 69 73 20 73 65 74 7b]
-    = Bug #95512: System fails to start on arm64 unless B latch is set
-
-
-### Padding
-
-Padding is encoded as type 0x7f. Repeat as many times as needed.
-
-**Example**:
-
-    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+Constants are not supported in CBE. An encoder **MUST** encode the value the constant represents instead.
 
 
 ### NA
@@ -789,20 +807,21 @@ NA is encoded as `[94 e0]` + reason.
 
 
 
-Combined Objects
-----------------
+Invisible Objects
+-----------------
 
-Combined objects in CBE are implied by the type field in order to avoid any need for lookaheads while decoding, and ensure that documents always end unambiguously.
+### Comment
+
+Comments are not supported in CBE. An encoder **MUST** skip all comments when encoding to CBE.
+
+
+### Padding
+
+Padding is encoded as type 0x7f. Repeat as many times as needed.
 
 **Example**:
 
-Resource ID (not combined):
-
-    [91 (chunk header) (resource id data)]
-
-Resource ID (combined form):
-
-    [94 e1 (chunk header) (resource id data) ... (chunk header) (string data)]
+    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 

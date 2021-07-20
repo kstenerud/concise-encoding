@@ -51,17 +51,19 @@ Contents
   - [Container Properties](#container-properties)
   - [List](#list)
   - [Map](#map)
+  - [Edge](#edge)
+  - [Node](#node)
   - [Markup](#markup)
-  - [Relationship](#relationship)
 * [Other Types](#other-types)
   - [Nil](#nil)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
-  - [Comment](#comment)
-  - [Padding](#padding)
   - [Constant](#constant)
   - [NA](#na)
+* [Invisible Objects](#invisible-objects)
+  - [Comment](#comment)
+  - [Padding](#padding)
 * [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
@@ -128,9 +130,8 @@ The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), b
 
 **Examples**:
 
- * Empty document: `c1 nil` (in [CBE](cbe-specification.md): [`83 01 7e`])
- * Document containing a comment (pseudo-object) and the top-level integer value 1000: `c1 /* a comment */ 1000`
- * Document containing a top-level list: `c1 [string1 string2 string3]`
+ * Empty document: In CTE: `c1 nil`, in [CBE](cbe-specification.md): [`83 01 7e`]
+ * Document containing a top-level list: In CTE: `c1 [1 2 3]`, in [CBE](cbe-specification.md): [`83 01 7a 01 02 03 7b`]
 
 
 
@@ -437,7 +438,7 @@ An identifier is a type designed to be unique within a local context. It's imple
    - `:` (colon)
    - `-` (dash)
    - `.` (period)
- * It **MUST NOT** end with a colon (`:`).
+ * It **MUST NOT** begin or end with a colon (`:`).
  * Colons **MUST NOT** must not be placed adjacent to each other (`a::b` is invalid).
  * The maximum length is 127 **bytes** (not characters).
  * The minimum length is 1 **character** (identifiers **CANNOT** be empty strings).
@@ -445,7 +446,7 @@ An identifier is a type designed to be unique within a local context. It's imple
  * All identifier declarations (not usages) **MUST** be unique within their context. A duplicate identifier declaration within a particular context is a [structural error](#structural-errors).
  * An identifier **MUST NOT** be [marked](#marker).
  * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
- * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects) (for example, it must not be preceded by a [comment](#comment)).
+ * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects).
  * The identifier is not a general type; it's only allowed where specifically noted in this document.
 
 The colon (`:`) character has a special purpose as a **namespace separator**. The exact meaning and function of a namespace is application-specific, however it is most commonly used to mark an identifier's provenance in order to prevent naming collisions. An identifier containing multiple colons is considered to be in a multi-level namespace. An identifier that does not contain any colon characters is considered to be in the *default* namespace.
@@ -464,11 +465,13 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
 
-Resource IDs **CAN** also be [combined](#combined-objects) with a [string](#string), where the string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
+Resource IDs **CAN** also be [concatenated](#combined-objects) with a [string](#string), whereby the string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
 
-When combination occurs, validation **MUST** be done in two steps:
+**Note**: Concatenation is only allowed **once** per resource ID (for example, `@"a":"b":"c"` is not allowed)
 
-* Each side of the combination is individually validated as a string.
+When concatenation occurs, validation **MUST** be done in two steps:
+
+* Each side of the concatenation is individually validated as a string.
 * The combined value is validated as a resource ID.
 
 **Examples**:
@@ -641,14 +644,142 @@ c1 {
 ```
 
 
+### Edge
+
+An edge describes a relationship between vertices in a graph. It is composed of three parts:
+
+ * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier).
+ * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [nil](#nil).
+ * A **destination**, which is the second vertex of the edge being described.
+
+Directionality is from the source to the destination unless the description or schema specifies otherwise.
+
+Because graphs can take so many forms, there is no default interpretation for edges. Both sender and receiver **MUST** have a common understanding of what the graph edges represent, and how to interpret the data. For directed graphs with no edge descriptions, it's better to use [nodes](#node) instead.
+
+#### Example
+
+Edges can describe many kinds of graphs, even [RDF-style](https://en.wikipedia.org/wiki/Resource_Description_Framework) edges of a semantic graph (where the source, description and destination represent the subject, predicate and object of the semantic relationships):
+
+```cte
+c1 [
+    @(
+        @"https://springfield.gov/people#homer_simpson"
+        @"https://example.org/wife"
+        @"https://springfield.gov/people#marge_simpson"
+    )
+    @(
+        @"https://springfield.gov/people#homer_simpson"
+        @"https://example.org/employer"
+        @"https://springfield.gov/employers/nuclear_power_plant"
+    )
+]
+```
+
+From the above data, we understand that Homer Simpson's wife is Marge Simpson, and that Homer Simpson's employer is the nuclear power plant.
+
+More complex graph data can be succinctly represented by mixing in other CE features such as [references](#reference), [lists](#list), and [maps](#map).
+
+```cte
+c1 {
+    "resources" = [
+        &people:@"https://springfield.gov/people#"
+        &mp:@"https://mypredicates.org/"
+        &mo:@"https://myobjects.org/"
+    ]
+
+    $people:"homer_simpson" = {
+        $mp:"wife" = $people:"marge_simpson"
+        $mp:"regrets" = [
+            $firing
+            $forgotten_birthday
+        ]
+        $mp:"troubles" = $troubles
+    }
+
+    "graph edges" = [
+        &marge_birthday:@(
+            $people:"marge_simpson"
+            $mp:"birthday"
+            1956-10-01
+        )
+        &forgotten_birthday:@(
+            $people:"homer_simpson"
+            $mp:"forgot"
+            $marge_birthday
+        )
+        &firing:@(
+            $people:"montgomery_burns"
+            $mp:"fired"
+            $people:"homer_simpson"
+        )
+
+        // Multiple subjects
+        &troubles:@(
+            [$firing $forgotten_birthday]
+            $mp:"contribute"
+            $mo:"marital_strife"
+        )
+    ]
+}
+```
+
+
+### Node
+
+A node is the basic building block for unweighted directed graphs. It consists of:
+
+ * A value (any object).
+ * A collection of zero or more children (directionality is always from the node to its children).
+
+If a child is not of type node, it is treated as though it were the value portion of a node with no children.
+
+**Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
+
+Unless otherwise specified by a schema, the default interpretation of the data is a tree ordered using a **depth-first**, **node-right-left** order. This ensures that the pretty printed CTE representation looks like the actual tree structure it describes when rotated 90 degrees clockwise:
+
+```cte
+c1
+(2
+    (7
+        2
+        1
+        (6
+            5
+            8
+        )
+    )
+    (5
+        (9
+            4
+        )
+    )
+)
+
+```
+
+When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
+
+![tree rotated](tree-rotated.svg)
+
+```
+      2
+     / \
+    5   7
+   /   /|\
+  9   6 1 2
+ /   / \
+4   8   5
+```
+
+
 ### Markup
 
-Markup is a specialized data structure composed of a name, a map (containing attributes), and a list of contents that **CAN** contain string data and child nodes (popularized in XML). Markup containers are generally best suited for presentation data. For regular data, maps and lists are usually better.
+Markup is a specialized data structure (popularized in XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are generally best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
 
     [name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
 
  * Name is an [identifier](#identifier).
- * The attributes section behaves like a [map](#map). An attribute key **MUST NOT** be empty (string, resource ID).
+ * The attributes section behaves like a [map](#map), except that an attribute key **MUST NOT** be an empty string-like object
  * The contents section behaves similarly to a [list](#list), except that it **MUST** only contain:
    - [Content strings](#content-string)
    - [Comments](#comment)
@@ -691,119 +822,10 @@ c1 <View;
     <Text,
         Hello! Please choose a name!
     >
-    /* <HRule "style"="thin"> */
+    // <HRule "style"="thin">
     <TextInput "id"="name" "style"={"height"=40 "borderColor"="gray"}, Name me! >
 >
 ```
-
-
-### Relationship
-
-A relationship is a container-like structure for making statements about resources in the form of subject-predicate-object triples (like in [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework)). Relationships form edges between nodes ([resources](#resource) or values) to build a semantic graph. Local resources are anonymous by default, but **CAN** be made addressable by [marking them](#marker).
-
-A relationship is composed of the following three components (in order):
-
- * Subject, which **MUST** be a [resource](#resource) or a [list](#list) of [resources](#resource), and **MUST NOT** be [nil](#nil) or [na](#na)
- * Predicate, which **MUST** be a [resource identifier](#resource-identifier) that represents a semantic predicate, and **MUST NOT** be [nil](#nil) or [na](#na)
- * Object, which **CAN** be any value.
-
-#### Resource
-
-A resource is one of:
-
- * a [map](#map) (entity)
- * a [relationship](#relationship)
- * a [resource identifier](#resource-identifier)
-
-#### Maps as Relationships
-
-[Maps](#map) **CAN** also be used to represent relationships because they are natural relationship structures (where the map itself is the subject, the key is the predicate, and the value is the object). In Concise Encoding, the key-value pairs of a map are only considered [relationships](#relationship) if their types match the requirements for the predicate and object of a relationship.
-
-Using maps to represent relationships is a common tactic to make the document more concise and the graph structure easier to follow, but there's no way to make relationships expressed as key-value pairs addressable (and thus they **MUST NOT** be used as resources). This is generally not a problem because few relationships actually need to be used as resources in real-world applications.
-
-**Note**: Concise Encoding itself provides no mechanism to enforce the concept of a map specifically representing relationships. Such interpretations can only be enforced at the application or schema level.
-
-**Examples**:
-
-At their most basic, relationships are simply 3-component statements containing a subject, a predicate, and an object:
-
-```cte
-c1 [
-    (@"https://springfield.gov/people#homer_simpson" @"https://example.org/wife" @"https://springfield.gov/people#marge_simpson")
-    (@"https://springfield.gov/people#homer_simpson" @"https://example.org/employer" @"https://springfield.gov/employers/nuclear_power_plant")
-]
-```
-
-Using the full resource identifier is tedious, but we could use [markers](#marker) and [combination](#combined-objects) to make things more manageable:
-
-```cte
-c1 {
-    "resources" = [
-        &people:@"https://springfield.gov/people#"
-        &employers:@"https://springfield.gov/employers/"
-        &mp:@"https://mypredicates.org/"
-    ]
-    "statements" = [
-        ($people:"homer_simpson" $mp:"wife" $people:"marge_simpson")
-        ($people:"homer_simpson" $mp:"employer" $employers:"nuclear_power_plant")
-    ]
-}
-```
-
-We could also use map syntax to model most relationships, which often makes the graph more clear to a human reader:
-
-```cte
-c1 {
-    "resources" = [
-        &people:@"https://springfield.gov/people#"
-        &employers:@"https://springfield.gov/employers/"
-        &mp:@"https://mypredicates.org/"
-    ]
-    "relationships" = {
-        $people:"homer_simpson" = {
-            $mp:"wife" = $people:"marge_simpson"
-            $mp:"employer" = $employers:"nuclear_power_plant"
-        }
-    }
-}
-```
-
-With map syntax, there's no way to mark relationships. When relationship marking is needed, use standard relationship statements:
-
-```cte
-c1 {
-    "resources" = [
-        &people:@"https://springfield.gov/people#"
-        &mp:@"https://mypredicates.org/"
-        &mo:@"https://myobjects.org/"
-    ]
-
-    "relationships" = {
-        $people:"homer_simpson" = {
-            $mp:"wife" = $people:"marge_simpson"
-            $mp:"regrets" = [
-                $firing
-                $forgotten_birthday
-            ]
-        }
-    }
-
-    "relationship statements" = [
-        &marge_birthday:($people:"marge_simpson" $mp:"birthday" 1956-10-01)
-        &forgotten_birthday:($people:"homer_simpson" $mp:"forgot" $marge_birthday)
-        &firing:($people:"montgomery_burns" $mp:"fired" $people:"homer_simpson")
-
-        // Multiple relationship subjects
-        ([$firing $forgotten_birthday] $mp:"contribute" $mo:"marital_strife")
-    ]
-}
-```
-
-**Note**: If the previous document were published at `https://mysite.org/data.cte`, all [markers](#marker) would be accessible using fragments:
-
- * `https://mysite.org/data.cte#marge_birthday`
- * `https://mysite.org/data.cte#forgotten_birthday`
- * `https://mysite.org/data.cte#firing`
 
 
 
@@ -825,8 +847,8 @@ Pseudo-objects stand-in for real objects, add additional context or meaning to a
 
 Pseudo-objects **CAN** be placed anywhere a full object can be placed, with the following additional restrictions:
 
- * Pseudo-objects **MUST NOT** be placed before or used as an [identifier](#identifier) (for example, `&#myconst:"something"` and `&/*comment*/:"something"` are invalid).
- * Pseudo-objects **MUST NOT** be placed inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|`, `|u8x 11 22 $myref 44|`, and `|u8 1 2 /*comment*/ 3 4|` are invalid).
+ * Pseudo-objects **MUST NOT** be placed before or used as an [identifier](#identifier) (for example, `&#myconst:"something"` is invalid).
+ * Pseudo-objects **MUST NOT** be placed inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
  * Pseudo-objects **MUST NOT** be used as the right-side of [combined objects](#combined-objects) (for example, `#myconst:$myref`, `&myref1:$myref2`, and `@"http://x.com/":#myconst` are invalid).
 
 **Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the top-level object.
@@ -846,7 +868,7 @@ Marker IDs are declared identifiers, and therefore **MUST** be unique within the
 
 #### Rules
 
- * A marker construct **MUST NOT** contain other pseudo-objects (i.e. no markers-to-markers, markers-to-references, or comments between left-side and right-side).
+ * A marker construct **MUST NOT** contain other pseudo-objects (i.e. no markers-to-markers, markers-to-references, etc between left-side and right-side).
  * A marker **CANNOT** mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
 
 **Example**:
@@ -863,7 +885,7 @@ The string `"Pretend that this is a huge string"` is marked with the ID `remembe
 
 ### Reference
 
-A reference acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document. This could be useful for repeating or cyclic data.
+A reference acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document (it's basically a pointer). This could be useful for repeating or cyclic data.
 
 References can take one of two forms:
 
@@ -880,7 +902,7 @@ References can take one of two forms:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A marker ID inside another CBE or CTE document, using the fragment section of the resource identifier as the local marker ID
 
-A decoder **MUST NOT** automatically follow resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following resource identifier references.
+A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following resource identifier references.
 
 **Example**:
 ```cte
@@ -902,76 +924,6 @@ c1 {
 ```
 
 
-### Comment
-
-A comment is a list-style pseudo-object that **MUST** only contain strings or other comment containers (to support nested comments).
-
-Comments do not support escape sequences. Character sequences that look like escape sequences in comments **MUST NOT** be processed (they are passed through verbatim).
-
-Whitespace in a comment string is treated the same as in [markup content strings](#content-string).
-
-Comments are valid in places where a real object would be valid, but they are specifically disallowed:
-
- * Between the left object and the `=` in a key-value pair (`{ a /* comment */ = 1 }` is invalid).
- * Between left and right side of a [combined object](#combined-objects) (`@"http://x.com/"/*comment*/:1234` and `&1234:/*comment*/"something"` are invalid).
- * Before an [identifier](#identifier) (`&/*comment*/1234` and `</*comment*/View>` are invalid).
-
-Also, like all objects, comments **CANNOT** be placed:
-
- * Inside of typed arrays (`|u8x 11 22 /* comment */ 33 44|` is invalid).
- * Before the [version specifier](#version-specifier) (`/* comment */ c1 {}` is invalid).
- * After the top-level object (`c1 {} /* comment */` is invalid).
-
-Implementations **MUST** provide a configuration option to ignore comments (meaning that comments will be skipped over without passing their contents along), and **MUST** default to ignoring.
-
-#### Comment String Character Restrictions
-
-The following characters are allowed in comments:
-
- * Horizontal Tab (u+0009)
- * Linefeed (u+000a)
- * Carriage Return (u+000d)
- * UTF-8 [text-safe](#text-safety) printable characters
- * UTF-8 [text-safe](#text-safety) whitespace characters
-
-The following character sequences **MUST NOT** be put into comment strings because they are comment delimiters in CTE:
-
-* `/*`
-* `*/`
-
-**Example**:
-```cte
-c1
-// Comment before top level object
-{
-    // Comment before the "name" object.
-    // And another comment.
-    "name" = "Joe Average" // Comment after the "Joe Average" object.
-
-    "email" = // Comment after the "email" key.
-    /* Multiline comment with nested comment inside
-      @"mailto:joe@average.org"
-      /* Unlike in C, nested multiline
-         comments are allowed */
-    */
-    @"mailto:someone@somewhere.com"
-
-    "data" =
-    // Comment before some binary data (but not inside it)
-    |u8x 01 02 03 04 05 06 07 08 09 0a|
-}
-```
-
-
-### Padding
-
-Padding is a completely invisible type available only in CBE, whose sole purpose is data alignment.
-
-The padding type **CAN** occur any number of times where a CBE type field is valid (padding doesn't share the [additional restrictions of other pseudo-objects](#pseudo-objects)).
-
-A CBE decoder **MUST** consume and discard padding. A CBE encoder **MAY** add padding between objects to cause other data to fall on an aligned address for faster direct reads from the buffer on the receiving end.
-
-
 ### Constant
 
 Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `nil`, etc). Constants are only available to CTE documents. CBE documents must store the actual value instead.
@@ -987,7 +939,7 @@ CTE encoders **MUST** use constant names where required by the schema.
 
 ### NA
 
-NA ("Not Available") is a pseudo-object that indicates missing data (data that was expected be there but is not for some reason). The [combined](#combined-objects) reason field (which **MUST** be a real object) describes why the data is missing.
+NA ("Not Available") is a pseudo-object that indicates missing data (data that was expected be there but is not for some reason). This allows a service to return the available parts of a data structure even in the face of an error condition. The [combined](#combined-objects) reason field (which **MUST** be a real object) describes why the data is missing.
 
     [NA] [Reason]
 
@@ -1000,8 +952,8 @@ Decoders **MUST** provide a configuration option to choose whether NA is treated
  * A [map key](#map).
  * An [identifier](#identifier).
  * The media type field in a [media object](#media).
- * A content string in a [markup container](#markup) or [comment](#comment).
- * The predicate in a [relationship](#relationship).
+ * A content string in a [markup container](#markup).
+ * The vertex in an [edge](#edge).
 
 **Some possible reasons for NA**:
 
@@ -1018,31 +970,83 @@ Decoders **MUST** provide a configuration option to choose whether NA is treated
 
 
 
+Invisible Objects
+-----------------
+
+Invisible objects are objects that are not semantically relevant to the structure of the document. Their placement rules are not the same as for other objects or pseudo-objects, and they may not be available in both text and binary formats.
+
+Invisible objects **CANNOT** be used as real objects; they are completely invisible to the document structure.
+
+
+### Comment
+
+A comment is a string-like invisible object that provides extra information for human readers in CTE documents. CBE encoders **CANNOT** encode comments.
+
+CTE supports two forms of comments:
+
+ * Single-line comments, which end at the line end (`// a comment`).
+ * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment */`).
+
+Comments **MUST ONLY** contain [text-safe](#text-safety) characters.
+
+Comments are allowed anywhere in a CTE document except:
+
+ * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid)
+ * Inside of a string-like array type (strings, resource IDs, custom text) (`"/*comment*/"` would be interpreted as a string)
+ * After the top-level object (`c1 100 /*comment*/` is invalid)
+ * Between left and right side of a [combined object](#combined-objects) (`na:/*comment*/"IO Error"` and `@"http://x.com/"/*comment*/:"blah` are invalid)
+
+**Example**:
+```cte
+c1
+// Comment before top level object
+{
+    // Comment before the "name" object.
+    // And another comment.
+    "name" = "Joe Average" // Comment after the "Joe Average" object.
+
+    "email" = // Comment after the "email" key.
+    /* Multiline comment with nested comment inside
+      @"mailto:joe@average.org"
+      /* Nested multiline
+         comments are allowed */
+    */
+    @"mailto:someone@somewhere.com"
+
+    "data" =
+    // Comment before some binary data (but not inside it)
+    |u8x 01 02 03 04 05 06 07 08 09 0a|
+}
+```
+
+
+### Padding
+
+Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning. CTE encoders **CANNOT** encode padding.
+
+The padding type **CAN** occur any number of times where a CBE type field is valid.
+
+
+
 Combined Objects
 ----------------
 
-Combined objects are objects that are composed of two sub-objects.
+Combined objects are objects that are created by combining two sub-objects.
 
     [left-object] combined-with [right-object]
 
-The effect of this combination could be to concatenate one object to another (for example [resource IDs](#resource-id)), assign metadata to an object (for example [markers](#marker), or to clarify meaning (for example [NA](#na)).
+The effect of this combination could be to:
+
+ * Concatenate one object to another ([resource IDs](#resource-id))
+ * Assign metadata to an object ([markers](#marker))
+ * Clarify meaning ([NA](#na))
 
 **Note**: In CTE, combining is indicated by the `:` character. In CBE, the combination is implied by the type field.
 
 ### Rules
 
-To keep the complexity down, combined objects have the following rules:
-
  * Combined objects are considered a single object. This means for example that in `&123:@"http://example.com/":"999"`, the marker ID `123` refers to `http://example.com/999`, not `http://example.com/`.
- * Combined objects **MUST NOT** be further combined (`@"http://x.com/":string:string` is invalid).
- * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a combination. (`@"http://x.com/":$ref-to-string` and `na:/*comment*/string` are invalid).
- * Only the following types **CAN** be the left-side of a combination:
-
-| Left Type                   | Allowed Right Side Types | Combining is Mandatory |
-| --------------------------- | ------------------------ | ---------------------- |
-| [Resource ID](#resource-id) | String                   | No                     |
-| [Marker](#marker)           | Any Real Object          | Yes                    |
-| [NA](#na)                   | Any Real Object          | Yes                    |
+ * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a combination. (`@"http://x.com/":$ref-to-string` is invalid).
 
 **Example**:
 
@@ -1081,7 +1085,7 @@ Because Concise Encoding is a twin format (text and binary), every character pri
 The following Unicode codepoints are text-unsafe:
 
  * Codepoints in general category `C`, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
- * Codepoints in categories `Zl` and `Zp`
+ * Codepoints in categories `Zl` and `Zp` (basically u+2028 and u+2029)
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
 
@@ -1143,7 +1147,7 @@ Extraneous whitespace in a markup contents section is elided before comparison. 
 
 #### Comments
 
-Comments are ignored when testing for relaxed equivalence.
+Comments are always ignored when testing for equivalence.
 
 #### Padding
 
@@ -1155,7 +1159,6 @@ Padding is always ignored when testing for equivalence.
 Strict equivalence concerns itself with differences that could still technically have an impact on how the document is interpreted, even if the chances are low:
 
 * Objects **MUST** be of the same type and size.
-* Comments are compared, but extraneous whitespace is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 
 
 

@@ -58,21 +58,22 @@ Contents
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
+  - [Edge](#edge)
+  - [Node](#node)
   - [Markup](#markup)
     - [Markup Structure](#markup-structure)
     - [Container End](#container-end)
     - [Content String](#content-string)
-  - [Relationship](#relationship)
 * [Other Types](#other-types)
   - [Nil](#nil)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
-  - [Comment](#comment)
-    - [Single Line Comment](#single-line-comment)
-    - [Multiline Comment](#multiline-comment)
   - [Constant](#constant)
   - [NA](#na)
+* [Invisible Objects](#invisible-objects)
+  - [Comment](#comment)
+  - [Padding](#padding)
 * [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
@@ -667,12 +668,70 @@ c1 {
 ```
 
 
+### Edge
+
+An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
+
+**Examples**:
+
+Weighted graph edge:
+
+```cte
+@($a 200 $b)
+```
+
+Relationship graph edge:
+
+```cte
+@(
+    @"https://springfield.gov/people#homer_simpson"
+    @"https://example.org/wife"
+    @"https://springfield.gov/people#marge_simpson"
+)
+```
+
+
+### Node
+
+A node begins with an opening parenthesis `(`, contains a value (object) followed by zero or more whitespace separated child nodes, and is closed with a closing parenthesis `)`.
+
+**Example**:
+
+```cte
+c1
+// The tree structure:
+//       2
+//      / \
+//     7   5
+//    /|\   \
+//   2 1 6   9
+//  / \       \
+// 5   8       4
+//
+(2
+    (5
+        (9
+            (4)
+        )
+    )
+    (7
+        (6)
+        (1)
+        (2
+            (8)
+            (5)
+        )
+    )
+)
+```
+
+
 ### Markup
 
 The CTE encoding of a markup container is similar to XML, except:
 
  * There are no end tags. All data is contained within the begin `<`, content begin `,`, and end `>` characters.
- * Comments are encoded using `/*` and `*/` instead of `<!--` and `-->`, and **CAN** be nested.
+ * Comments are encoded using `//` or `/*` and `*/` instead of `<!--` and `-->`, and comments can be nested.
 
 #### Markup Structure
 
@@ -720,16 +779,6 @@ c1 <View,
     >
 >
 ```
-
-
-### Relationship
-
-A relationship container is composed of the delimiters `(` and `)`, containing the subject, predicate, and object.
-
-**Examples**:
-
- * `(@"https://springfield.gov/people#homer_simpson" @"https://example.org/wife" @"https://springfield.gov/people#marge_simpson")`
- * `(@"https://springfield.gov/people#homer_simpson" @"https://example.org/employer" @"https://springfield.gov/employers/nuclear_power_plant")`
 
 
 
@@ -791,13 +840,31 @@ c1 {
 ```
 
 
+### Constant
+
+A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
+
+    #some_const // a const named "some_const", whose type and value are defined in a schema.
+
+
+### NA
+
+NA is encoded as `na`, and **MUST** always be [concatenated](#concatenation) with a reason field consisting of any real object (not a pseudo-object).
+
+**Examples**:
+
+ * `na:"Insufficient privileges"` (not available, with an English language reason)
+ * `na:404` (not available for reason code 404)
+ * `na:nil` (not available for unknown reason)
+
+
+
+Invisible Objects
+-----------------
+
 ### Comment
 
-Comments **CAN** be written in single-line or multi-line form.
-
-Comments have the same placement requirements as regular objects. This means for example that butting up the comment against an object is not allowed (i.e. `"a"/* comment */` and `/* comment */"a"` are not allowed).
-
-The data inside of a comment has no restrictions besides the rules of [human editability](#human-editability). Specifically: there are no structural whitespace requirements inside of a comment or nested comment (i.e. `/*abc*/` is valid, and `/*abc/*xyz*//*123*/*/` is also valid).
+Comments **CAN** be written in single-line or multi-line form, and do not process escape sequences.
 
 #### Single Line Comment
 
@@ -846,22 +913,9 @@ c1
 ```
 
 
-### Constant
+### Padding
 
-A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
-
-    #some_const // a const named "some_const", whose type and value are defined in a schema.
-
-
-### NA
-
-NA is encoded as `na`, and **MUST** always be [concatenated](#concatenation) with a reason field consisting of any real object (not a pseudo-object).
-
-**Examples**:
-
- * `na:"Insufficient privileges"` (not available, with an English language reason)
- * `na:404` (not available for reason code 404)
- * `na:nil` (not available for unknown reason)
+Padding is not supported in CTE. Skip all padding when encoding to CTE.
 
 
 
@@ -1045,7 +1099,7 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When this is not the case, use [CBE](cbe-specification.md).
+Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When only machines will read the document, use [CBE](cbe-specification.md).
 
 This section specifies how to pretty-print CTE documents.
 
@@ -1104,6 +1158,18 @@ Small maps containing small objects may be placed entirely on one line. In such 
 ```
 
 
+#### Node
+
+In order to keep the tree as readable as possible to a human:
+
+* There **SHOULD NOT** be whitespace between the left `(` and the node value.
+* All child nodes **SHOULD** be on separate lines at the next indentation depth.
+* If the node has child nodes, the closing `)` **SHOULD** be on a separate line, at the same indentation depth as the `(`.
+* If the node has no children, the closing `)` **SHOULD** be on the same line.
+
+See the example in [node](#node).
+
+
 #### Markup
 
 The closing `>` **SHOULD** only be on a different line if there are contents.
@@ -1135,6 +1201,19 @@ If the attributes section is too long, the overflow **SHOULD** be broken up into
 ```
 
 
+#### Edge
+
+Edge components **SHOULD** be broken up into multiple lines if they're too long.
+
+```cte
+@[
+    @"https://springfield.gov/people#homer_simpson"
+    @"https://example.org/wife"
+    @"https://springfield.gov/people#marge_simpson"
+]
+```
+
+
 #### Strings
 
 Strings **SHOULD** use [continuations](#continuation) if the line is getting too long.
@@ -1163,6 +1242,8 @@ Typed arrays **SHOULD** be broken up into multiple indented lines if the line is
 
 #### Comments
 
+In the event that a machine generating CTE documents wants to also output comments, the following rules apply:
+
 Comments **SHOULD** have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) **SHOULD** also have a space before the closing sequence.
 ```cte
 // abc
@@ -1182,7 +1263,7 @@ Long comments **SHOULD** be broken up to fit within the right margin.
 The object following a comment **SHOULD** be on a different line.
 ```cte
 {
-    /* See list of request types in request-types.md */
+    // See list of request types in request-types.md
     request-type = ping
 }
 ```
