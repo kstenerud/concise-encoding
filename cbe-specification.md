@@ -97,7 +97,7 @@ Version Specifier
 
 A CBE document begins with a version specifier, which is composed of the octet `0x83`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
-**Note**: `0x83` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR code "binary" mode](https://en.wikipedia.org/wiki/QR_code#Storage)): after a failed decode attempt in the default format, implementations can safely try binary encodings that have deterministic signatures.
+**Note**: `0x83` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR code "binary" mode](https://en.wikipedia.org/wiki/QR_code#Storage)): after a failed decode attempt in their default format, implementations can safely try binary encodings that have deterministic signatures.
 
  * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
  * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
@@ -112,7 +112,7 @@ A CBE document begins with a version specifier, which is composed of the octet `
 Encoding
 --------
 
-A CBE document is byte-oriented. All objects are composed of a type field and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required (A CBE document does not require a length envelope for decoding).
+A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required (A CBE document does not require a length envelope for decoding).
 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy wherever possible on little endian systems.
 
@@ -229,19 +229,19 @@ Types from plane 2 are represented using two bytes instead of one, with the pref
 |  e0 | NA                    |    1  | [reason object]                           |
 |  e1 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
 |  e2 | Resource ID Reference |    1  | [resource id]                             |
-|  e3 | Media                 |    *  | [media type] [chunk length] [data] ...    |
+|  e3 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
 | ... | RESERVED              |       |                                           |
-|  f5 | Array: UID            |    *  | [chunk length] [128-bit B-E elements] ... |
-|  f6 | Array: Binary Float64 |    *  | [chunk length] [64-bit L-E elements] ...  |
-|  f7 | Array: Binary Float32 |    *  | [chunk length] [32-bit L-E elements] ...  |
-|  f8 | Array: BFloat16       |    *  | [chunk length] [16-bit L-E elements] ...  |
-|  f9 | Array: Signed Int64   |    *  | [chunk length] [64-bit L-E elements] ...  |
-|  fa | Array: Unsigned Int64 |    *  | [chunk length] [64-bit L-E elements] ...  |
-|  fb | Array: Signed Int32   |    *  | [chunk length] [32-bit L-E elements] ...  |
-|  fc | Array: Unsigned Int32 |    *  | [chunk length] [32-bit L-E elements] ...  |
-|  fd | Array: Signed Int16   |    *  | [chunk length] [16-bit L-E elements] ...  |
-|  fe | Array: Unsigned Int16 |    *  | [chunk length] [16-bit L-E elements] ...  |
-|  ff | Array: Signed Int8    |    *  | [chunk length] [8-bit elements] ...       |
+|  f5 | Array: UID            |    ∞  | [chunk length] [128-bit B-E elements] ... |
+|  f6 | Array: Binary Float64 |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  f7 | Array: Binary Float32 |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  f8 | Array: BFloat16       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  f9 | Array: Signed Int64   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  fa | Array: Unsigned Int64 |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  fb | Array: Signed Int32   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  fc | Array: Unsigned Int32 |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  fd | Array: Signed Int16   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  fe | Array: Unsigned Int16 |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  ff | Array: Signed Int8    |    ∞  | [chunk length] [8-bit elements] ...       |
 
 
 
@@ -268,13 +268,13 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 #### Fixed Width
 
-Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (stored in little endian byte order). The sign is encoded in the type field.
+Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (in little endian byte order). The sign is encoded in the type field.
 
     [type] [byte 1 (low)] ... [byte x (high)]
 
 #### Variable width
 
-Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
+Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
     [type] [length] [byte 1 (low)] ... [byte x (high)]
 
@@ -313,7 +313,9 @@ Binary floating point values are stored in 32 or 64-bit ieee754 binary floating 
 
 ### UID
 
-A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format (i.e. big endian).
+A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format.
+
+**Note**: This is the only data type that is stored in **big endian** byte order (as required by [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
 
 **Example**:
 
@@ -326,7 +328,7 @@ Temporal Types
 
 Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
 
-**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed!
+**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed! Use [nil](#nil) instead.
 
 
 ### Date
@@ -392,7 +394,7 @@ Array elements have a fixed size determined by the array type. Length fields in 
 
 ### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15. Many array types have both short and chunked forms.
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Many array types have both short and chunked forms.
 
 **Examples**:
 
@@ -414,7 +416,7 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 | Field        | Bits | Description                          |
 | ------------ | ---- | ------------------------------------ |
-| Length       |   *  | Chunk length (element count)         |
+| Length       |   ∞  | Chunk length (element count)         |
 | Continuation |   1  | If 1, another chunk follows this one |
 
 **Examples**:
@@ -460,7 +462,7 @@ In this case, the first chunk is 14 elements long and has a continuation bit of 
 
 ### Concatenation
 
-Some array types (currently only [resource ID](#resource-id)) have a special concatenated form, whereby extra array data is appended after the end of the array. This serves to provide a binary analogue to CTE's concatenation operator where needed.
+Some array types (currently only [resource ID](#resource-id)) have a special concatenated form, whereby extra array data is appended after the end of the array. This serves to provide a binary analogue to [CTE's combine operator](cte-specification.md#combined-objects) where needed.
 
 An array type in its concatenated form has a different type code from the regular form, and contains **two** array structures following the type (one for the base value, and one for the concatenated data):
 
@@ -503,7 +505,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 | ------------ | ---- | ----------------- |
 | RESERVED     |   1  | 0                 |
 | Length       |   7  | 1-127             |
-| UTF-8 Data   |   *  | UTF-8 string data |
+| UTF-8 Data   |   ∞  | UTF-8 string data |
 
 **Examples**:
 
@@ -590,9 +592,9 @@ Most typed arrays also have a [short form](#short-form). The media array type an
 | Field        | Bits | Description                            |
 | ------------ | ---- | -------------------------------------- |
 | Type         |   8  | Type in [primary plane](#type-field)   |
-| Chunk Header |   *  | The number of elements following       |
-| Elements     |   *  | The elements as a sequence of octets   |
-| ...          |   *  | Possibly more chunks                   |
+| Chunk Header |   ∞  | The number of elements following       |
+| Elements     |   ∞  | The elements as a sequence of octets   |
+| ...          |   ∞  | Possibly more chunks                   |
 
 **Typed array format (plane 2)**:
 
@@ -600,9 +602,9 @@ Most typed arrays also have a [short form](#short-form). The media array type an
 | ------------ | ---- | -------------------------------------- |
 | Type (plane) |   8  | 0x94 (plane 2)                         |
 | Type         |   8  | Type in [plane 2](#type-field-plane-2) |
-| Chunk Header |   *  | The number of elements following       |
-| Elements     |   *  | The elements as a sequence of octets   |
-| ...          |   *  | Possibly more chunks                   |
+| Chunk Header |   ∞  | The number of elements following       |
+| Elements     |   ∞  | The elements as a sequence of octets   |
+| ...          |   ∞  | Possibly more chunks                   |
 
 **Typed array format (plane 2, short form)**:
 
@@ -611,7 +613,7 @@ Most typed arrays also have a [short form](#short-form). The media array type an
 | Type (plane) |    8 | 0x94 (plane 2)                                 |
 | Type         |    4 | Upper 4 bits in [plane 2](#type-field-plane-2) |
 | Length       |    4 | Number of elements (0-15)                      |
-| Elements     |    * | The elements as a sequence of octets           |
+| Elements     |    ∞ | The elements as a sequence of octets           |
 
 The length represents the number of **elements** (not bytes) in the array/chunk.
 
@@ -622,7 +624,7 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
 
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be ignored by a decoder.
+In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -750,7 +752,7 @@ Nil is encoded as `[7e]`.
 
 ### RESERVED
 
-This type is reserved for future expansion of the format, and **MUST** not be used.
+This type is reserved for future expansion of the format, and **MUST NOT** be used.
 
 
 
@@ -812,7 +814,7 @@ Invisible Objects
 
 ### Comment
 
-Comments are not supported in CBE. An encoder **MUST** skip all comments when encoding to CBE.
+Comments are not supported in CBE. An encoder **MUST** skip all comments when converting CTE to CBE.
 
 
 ### Padding

@@ -3,7 +3,9 @@ Concise Encoding - Structural Specification
 
 Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
 
-It is composed of 1:1 type compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats, both of which follow the same structural and content rules laid out in this document. Examples are given in the [text](cte-specification.md) format for clarity.
+This document specifies the structure of Concise Encoding documents and describes all supported data types. The [text](cte-specification.md) and [binary](cbe-specification.md) formats (which are 1:1 compatible with each other) are described in separate documents.
+
+Examples in this document are usually given in the [text](cte-specification.md) format for clarity.
 
 
 
@@ -122,16 +124,24 @@ Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object. To store multiple values in a document, use a [container](#container-types) as the top-level object and store other objects within that container. For an [empty document](#empty-document), store [nil](#nil) as the top-level object.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object.
 
     [version specifier] [object]
 
-The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), but **MUST** itself be a real object of any type.
+**Notes**:
+
+ * To store multiple values in a document, use a [container](#container-types) as the top-level object and then store other objects within that container.
+ * To represent an [empty document](#empty-document), store [nil](#nil) as the top-level object.
+ * The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), but **MUST** itself be a real object of any type.
 
 **Examples**:
 
- * Empty document: In CTE: `c1 nil`, in [CBE](cbe-specification.md): [`83 01 7e`]
- * Document containing a top-level list: In CTE: `c1 [1 2 3]`, in [CBE](cbe-specification.md): [`83 01 7a 01 02 03 7b`]
+ * An empty document: 
+   - In [CTE](cte-specification.md): `c1 nil`
+   - In [CBE](cbe-specification.md): [`83 01 7e`]
+ * A document containing a top-level list:
+   - In [CTE](cte-specification.md): `c1 [1 2 3]`
+   - In [CBE](cbe-specification.md): [`83 01 7a 01 02 03 7b`]
 
 
 
@@ -142,8 +152,8 @@ The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x83
 
 **Example**:
 
- * CTE version 1: `c1`
- * CBE version 1: [`83 01`]
+ * [CTE](cte-specification.md) version 1: `c1`
+ * [CBE](cbe-specification.md) version 1: [`83 01`]
 
 
 
@@ -190,7 +200,7 @@ Floating point types support the following ranges:
 
 Binary floats are limited to what is representable by 64-bit ieee754 binary float.
 
-Although decimal floats technically have unlimited range, most implementations will have performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
+Although decimal floats technically have unlimited range, most implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values
 
@@ -205,7 +215,7 @@ Both decimal and binary floating point numbers have representations for the foll
 
 A universal identifier. This identifier is designed to be unique across all identifiers in the universe.
 
-Concise encoding version 1 uses [rfc4122 UUIDs](https://tools.ietf.org/html/rfc4122) as the implementation type.
+Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the univrsal identifier implementation.
 
 
 
@@ -214,7 +224,7 @@ Temporal Types
 
 ### Date
 
-Represents a date without specifying a time during that day.
+Represents a date without specifying a time of day.
 
 Dates in Concise Encoding are represented using the Gregorian calendar. Dates prior to 1582 are represented using the proleptic Gregorian calendar.
 
@@ -222,15 +232,15 @@ A date is made up of the following fields:
 
 | Field | Mandatory | Min Value | Max Value |
 | ----- | --------- | --------- | --------- |
-| Year  |     Y     |         * |         * |
+| Year  |     Y     |        -∞ |        +∞ |
 | Month |     Y     |         1 |        12 |
 | Day   |     Y     |         1 |        31 |
 
- * Year, month, and day fields **MUST NOT** be 0 (counting starts at 1).
- * The year value **MUST** be negative to represent BC dates, and positive to represent AD dates. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year values `0` and `-0` are invalid.
- * The year field **MUST** contain the full year (no abbreviations).
+ * Year, month, and day fields **MUST NOT** be 0 (counting begins at 1).
+ * The year value **MUST** be negative to represent BC dates, and positive to represent AD dates. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year value `0` is invalid.
+ * The year field always represents the full year (no abbreviations).
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `2019-8-5`: August 5, 2019
  * `5081-03-30`: March 30, 5081
@@ -249,14 +259,14 @@ A time is made up of the following fields:
 | Minute     |     Y     |         0 |        59 |
 | Second     |     Y     |         0 |        60 |
 | Subseconds |     N     |         0 | 999999999 |
-| Time Zone  |     N     |         - |         - |
+| Time Zone  |     N     |           |           |
 
  * Hours are always according to the 24h clock (21:00, not 9:00 PM).
  * Seconds go to 60 to support leap seconds.
  * Since a time by itself has no date component, time zone data **MUST** be interpreted as if it were "today". This means that time zones which are not offsets like `Etc/GMT+1` might be interpreted differently on different dates for political reasons (for example daylight savings).
  * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
  * `12:05:50.102/Z`: 12:05:50 and 102 milliseconds UTC
@@ -269,7 +279,7 @@ A time is made up of the following fields:
 
 A timestamp combines a date and a time.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
  * `1985-10-26/01:20:01.105/M/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
@@ -278,13 +288,19 @@ A timestamp combines a date and a time.
 
 ### Time Zones
 
-A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a continual state of flux, and could change at any time for many reasons. There are two ways to denote a time zone: by area/location, and by global coordinates.
+A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a continual state of flux, and could change at any time for many reasons.
+
+There are three ways to denote time zone data:
+
+ * Area/Location
+ * Global Coordinates
+ * UTC Offset
 
 **Note**: If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
 #### Area/Location
 
-The area/location method is the more human-readable of the two, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 bytes, and are also case-sensitive because they tend to be implemented that way on most platforms.
+Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 bytes (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
 
 **Note**: Some older IANA time zones (mostly deprecated ones) don't follow the `Area/Location` format (for example `MST`, `PST8PDT`). These **MUST** be supported.
 
@@ -328,23 +344,21 @@ The following special pseudo-areas **CAN** also be used. They do not contain a l
 
 #### Global Coordinates
 
-The global coordinates method uses the global position to a precision of hundredths of degrees, giving a resolution of about 1km at the equator. Locations are stored as latitude and longitude values representing global coordinates.
+The global coordinates method represents the location's global latitudinal and longitudinal position to a precision of hundredths of degrees, giving a resolution of about 1km at the equator.
 
 This method has the advantage of being temporally unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time such that area/location cannot be reliably determined. The disadvantage is that it's not as easily recognizable to humans.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `51.60/11.11`
  * `-13.53/-172.37`
 
 
-#### Time Offset
+#### UTC Offset
 
-Time offset records only the offset from UTC rather than an actual location. It exists for historical reasons, and its use is discouraged except as a means to interface with legacy systems.
+Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes. Since it doesn't contain any location data, it's not a real time zone, and its use is discouraged except as a means of interfacing with legacy systems.
 
-Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes as `±hhmm`.
-
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `+0530`
  * `-0100`
@@ -352,7 +366,7 @@ Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and mi
 
 ### How to Record Time
 
-Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose the correct **kind** of time to store, and the right kind depends on what the purpose of recording the time is.
+Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of recording the time is.
 
 There are three main kinds of time:
 
@@ -362,7 +376,7 @@ Absolute time is a time that is fixed relative to UTC (or an offset from UTC). I
 
 #### Fixed Time
 
-Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 in Toronto on December 1st relative to UTC due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th). If the expected time zone changes (for example an act of government such as a change to daylight savings), fixed time adapts automatically.
+Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 in Toronto on December 1st relative to UTC due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th) or repeating events. If the expected time zone changes (for example an act of government such as a change to daylight savings), fixed time adapts automatically.
 
 #### Floating Time
 
@@ -371,7 +385,7 @@ Floating (or local) time is always relative to the time zone of the observer. If
 
 ### When to Use Each Kind
 
-Use whichever kind of time most succinctly and completely handles your time needs. Don't depend on time zone information as a proxy for a location; that's depending on a side effect, which is always brittle. Always store location information separately if it's important.
+Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important.
 
 | Situation                            | Kind                                            |
 | ------------------------------------ | ----------------------------------------------- |
@@ -391,14 +405,14 @@ An array represents a contiguous sequence of fixed length elements. The length o
 
 There are three primary kinds of array representations in Concise Encoding:
 
- * String-like arrays, which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (the array length is in bytes, not characters).
+ * String-like arrays, which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
  * Custom types, which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent), and are encoded either in the style of a uint8 array for custom binary, or a string-like array for custom text.
 
 
 ### String-like Arrays
 
-String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
+String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
 #### String Character Replacement
 
@@ -411,9 +425,9 @@ Special processing is required:
 
 #### NUL
 
-String-like arrays can contain the NUL character (U+0000), which **MUST** be supported by the codec if the underlying implementation (language, platform etc) supports it.
+The NUL character (U+0000) **MUST** by default be disallowed in string-like arrays. A schema **CAN** explicitly allow the NUL character. When explicitly allowed, the codec **MUST** support NUL characters if the language/platform can support it. If the platform cannot support NUL, an explicit allow by the schema will have no effect (NUL support will still be disabled), and the codec **MUST** generate a diagnostic describing the problem.
 
-Decoders **MUST** provide the option to automatically replace NUL with the Unicode replacement character (U+FFFD), and this option **MUST** default to enabled. Decoders that cannot support NUL due to language/platform restrictions **MUST** always replace NUL with the Unicode replacement character (U+FFFD).
+If NUL support is disabled, encountering a NUL character in a string-like array is a [data error](#data-errors).
 
 **Note**: Because NUL is a troublesome character on many platforms, its use in documents is strongly discouraged.
 
@@ -423,7 +437,7 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 #### String
 
-A basic UTF-8 string.
+A UTF-8 string.
 
 #### Identifier
 
@@ -453,7 +467,7 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
 
 **Note**: Concise Encoding itself doesn't place any significance on namespaces; it only cares about the uniqueness of an identifier's string representation.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `123`
  * `some_id`
@@ -474,7 +488,7 @@ When concatenation occurs, validation **MUST** be done in two steps:
 * Each side of the concatenation is individually validated as a string.
 * The combined value is validated as a resource ID.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
     @"https://x.com/"             // = https://x.com/
     @"https://x.com/":"something" // = https://x.com/something
@@ -498,7 +512,7 @@ The following element types are supported in typed arrays. For other types, use 
 
 Array elements **CAN** be written using any of the representations allowed for the specified type and size.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `|u8x 9f 47 cb 9a 3c|`
  * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
@@ -509,17 +523,17 @@ Array elements **CAN** be written using any of the representations allowed for t
 
 ### Media
 
-The media object encapsulates a foreign media object/file, along with its string [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
+The media object encapsulates a foreign media object/file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
 
     [media type] [data]
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees its data as a sequence of bytes, and passes it along as such.
 
-A decoder **MUST NOT** attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is not a decoding error.
+A decoder **MUST NOT** attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is **not** a decoding error.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
@@ -548,11 +562,11 @@ Custom type implementations **SHOULD** provide both a binary and a text encoding
 
 A uint8 array value representing a user-defined custom data type. The interpretation of the octets is user-defined, and is only decodable by receivers that know how to decode it. To reduce cross-platform confusion, data **SHOULD** be represented in little endian byte order.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
     |cb 93 12 04 f6 28 3c 40 00 00 40 40|
 
-Which is binary data representing a fictional example custom "cplx" struct
+Which is binary data representing a fictional example custom "cplx" struct:
 
       {
           type:uint8 = 4
@@ -564,7 +578,7 @@ Which is binary data representing a fictional example custom "cplx" struct
 
 A string-like array value representing a user-defined custom data type. The interpretation of the string is user-defined, and is only decodable by receivers that know how to decode it.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
     |ct cplx(2.94+3i)|
 
@@ -588,7 +602,7 @@ For list-like containers, a duplicate means any object that is equivalent to ano
 
 For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
 
-The testing of integer and float values for duplicates transcends the data type when the value is convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
+The testing of integer and float values for duplicates transcends the data type when the value is type-compatible and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
@@ -632,7 +646,7 @@ Only certain types **CAN** be used as keys in map-like containers:
 
 [Nil](#nil) and [NA](#na) **MUST NOT** be used as a key.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1 {
@@ -735,7 +749,9 @@ If a child is not of type node, it is treated as though it were the value portio
 
 **Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
 
-Unless otherwise specified by a schema, the default interpretation of the data is a tree ordered using a **depth-first**, **node-right-left** order. This ensures that the pretty printed CTE representation looks like the actual tree structure it describes when rotated 90 degrees clockwise:
+Unless otherwise specified by a schema, the default interpretation of the data is a tree ordered using a **depth-first**, **node-right-left** order. This ensures that the [CTE](cte-specification.md) representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
+
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1
@@ -774,7 +790,7 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 
 ### Markup
 
-Markup is a specialized data structure (popularized in XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are generally best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
+Markup is a specialized data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
 
     [name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
 
@@ -787,7 +803,7 @@ Markup is a specialized data structure (popularized in XML) composed of a name, 
 
 Illustration of markup encodings:
 
-| Attributes | Contents | Example (CTE format)                                           |
+| Attributes | Contents | Example ([CTE](cte-specification.md) format)                   |
 | ---------- | -------- | -------------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                         |
 |     Y      |    N     | `<div "id"="fillme">`                                          |
@@ -808,13 +824,13 @@ For the purposes of this rule:
  * Leading collapsible whitespace is collapsible whitespace that occurs between the beginning of the line and the first non-collapsible whitespace character.
  * Trailing collapsible whitespace is collapsible whitespace that occurs between the last non-collapsible whitespace character and the end of the line.
 
-CTE encoders **MAY** add leading collapsible whitespace to content strings for aesthetic purposes.
+[CTE](cte-specification.md) encoders **MAY** add leading collapsible whitespace to content strings to make the document easier for a human to read.
 
 **Note**: At the application level, content strings generally follow the same rules as [HTML content strings](https://www.w3.org/TR/html4/struct/text.html#h-9.1), but this is beyond the scope of Concise Encoding.
 
 **Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they **MUST** be treated as regular text by decoders and never converted.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1 <View;
@@ -864,14 +880,14 @@ A marker is a [combined](#combined-object) pseudo-object that assigns a marker I
 
 The marker ID is an [identifier declaration](#identifier), except with the additional restriction that it cannot contain a colon (`:`) since it would clash with the id-value seprator in CTE.
 
-Marker IDs are declared identifiers, and therefore **MUST** be unique within the current document.
+Marker IDs are declared identifiers, and therefore **MUST** be unique to all other marker IDs in the current document.
 
 #### Rules
 
  * A marker construct **MUST NOT** contain other pseudo-objects (i.e. no markers-to-markers, markers-to-references, etc between left-side and right-side).
  * A marker **CANNOT** mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1 [
@@ -904,7 +920,7 @@ References can take one of two forms:
 
 A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following resource identifier references.
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 ```cte
 c1 {
     some_object = {
@@ -926,7 +942,7 @@ c1 {
 
 ### Constant
 
-Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `nil`, etc). Constants are only available to CTE documents. CBE documents must store the actual value instead.
+Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `nil`, etc). Constants are only available in [CTE](cte-specification.md) documents. [CBE](cbe-specification.md) documents must store the actual value instead.
 
 A constant's name is an [identifier](#identifier).
 
@@ -962,7 +978,7 @@ Decoders **MUST** provide a configuration option to choose whether NA is treated
  * There was an error while fetching or computing the data.
  * The data could not be provided in the requested form.
 
-**Examples**:
+**Examples (in [CTE](cte-specification.md))**:
 
  * `na:"Insufficient privileges"` (not available, with a text reason)
  * `na:404` (not available for reason code 404)
@@ -1041,14 +1057,14 @@ The effect of this combination could be to:
  * Assign metadata to an object ([markers](#marker))
  * Clarify meaning ([NA](#na))
 
-**Note**: In CTE, combining is indicated by the `:` character. In CBE, the combination is implied by the type field.
+**Note**: In [CTE](cte-specification.md), combining is indicated by the `:` character. In [CTE](cbe-specification.md), the combination is implied by the type field.
 
 ### Rules
 
  * Combined objects are considered a single object. This means for example that in `&123:@"http://example.com/":"999"`, the marker ID `123` refers to `http://example.com/999`, not `http://example.com/`.
  * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a combination. (`@"http://x.com/":$ref-to-string` is invalid).
 
-**Example**:
+**Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1 {
@@ -1084,7 +1100,7 @@ Because Concise Encoding is a twin format (text and binary), every character pri
 
 The following Unicode codepoints are text-unsafe:
 
- * Codepoints in general category `C`, except for TAB (u+0009), LF (u+000a), and CR (u+000d)
+ * Codepoints in general category `C` (except for TAB (u+0009), LF (u+000a), and CR (u+000d), which are text-safe)
  * Codepoints in categories `Zl` and `Zp` (basically u+2028 and u+2029)
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
@@ -1101,7 +1117,7 @@ There are many things to consider when determining if two Concise Encoding docum
 
 ### Relaxed Equivalence
 
-Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some minor structural and type differences?
+Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some type differences?
 
 #### Numeric Types
 
@@ -1117,7 +1133,7 @@ Unless the schema specifies otherwise, custom types are compared byte-by-byte, w
 
 #### Strings
 
-Strings are considered equivalent if their contents are equal. Comparisons are case sensitive unless otherwise specified by the schema.
+Strings are considered equivalent if their contents are equal after decoding escape sequences, etc. Comparisons are case sensitive unless otherwise specified by the schema.
 
 #### Arrays
 
@@ -1233,7 +1249,7 @@ Omission occurs when a decoder decides to drop bad data rather than store a defa
 
 #### Key Collisions
 
-Key collisions occur when two or more identical keys are present in the same encoded map. The most common ways systems tend to handle key collisions are:
+Key collisions occur when two or more identical keys are present in the same encoded map (assuming the map disallows duplicates). The most common ways systems tend to handle key collisions are:
 
  * Take the initial key and reject all duplicate keys (choose the first instance)
  * Replace the value for each duplicate encountered (choose the last instance)

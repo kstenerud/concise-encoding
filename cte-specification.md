@@ -135,7 +135,7 @@ In the spirit of human editability:
 
 ### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders **MUST** accept all encodings as input, but encoders **SHOULD** output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded either as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Decoders **MUST** accept all encodings as input, but encoders **SHOULD** output LF when the destination is a foreign or unknown system.
 
 
 ### Escape Sequences
@@ -165,7 +165,7 @@ Escape sequences **MUST** be converted before any other processing occurs during
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace-characters) characters until it encounters the next printable character. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace-characters) characters until it encounters the next character that is not structural whitespace. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
 
 **Example**:
 
@@ -283,7 +283,7 @@ A floating point number is composed of a whole part and a fractional part separa
 
 #### Base-10 Notation
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
@@ -298,7 +298,7 @@ Base-16 floating point numbers allow 100% accurate representation of ieee754 bin
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
-To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation **CAN** only be used to represent binary float values that are supported by CBE (16, 32, 64-bit).
+To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation **MUST** only be used to represent ieee754 binary float and bfloat value ranges that are supported by CBE (16, 32, 64-bit).
 
 #### Special Floating Point Values
 
@@ -324,9 +324,9 @@ To maintain compatibility with [CBE](cbe-specification.md), base-16 floating poi
 
 | Invalid      | Valid     | Notes                                                    |
 | ------------ | --------- | -------------------------------------------------------- |
-| `-1.`        | `-1.0`    | Or use integer value `-1`                                |
+| `-1.`        | `-1.0`    | Or just use the integer value `-1`                       |
 | `.1`         | `0.1`     |                                                          |
-| `.218901e+2` | `21.8901` | Or `2.18901e+1`                                          |
+| `.218901e+2` | `21.8901` | Or `2.18901e+1`, or `0.218901e+2`                        |
 | `-0`         | `-0.0`    | Special case: -0 **CANNOT** be represented as an integer |
 
 
@@ -336,7 +336,7 @@ The `_` character **CAN** be used as "numeric whitespace" when encoding certain 
 
 Rules:
 
- * Only [integer](#integer) and [floating point](#floating-point) types can contain numeric whitespace.
+ * Only [integer](#integer) and [floating point](#floating-point) types **CAN** contain numeric whitespace.
  * [Named values](#named-values) (such as `nan` and `inf`) **MUST NOT** contain numeric whitespace.
  * Numeric whitespace **CAN** only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
@@ -386,7 +386,7 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 | Field | Mandatory | Min Value | Max Value | Min Digits | Max Digits |
 | ----- | --------- | --------- | --------- | ---------- | ---------- |
-| Year  |     Y     |         * |         * |          1 |          * |
+| Year  |     Y     |        -∞ |         ∞ |          1 |          ∞ |
 | Month |     Y     |         1 |        12 |          1 |          2 |
 | Day   |     Y     |         1 |        31 |          1 |          2 |
 
@@ -402,7 +402,7 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 ### Time
 
-A time is made up of the following mandatory and optional fields:
+A time is made up of the following mandatory and **OPTIONAL** fields:
 
 | Field        | Mandatory | Separator | Min Value | Max Value | Min Digits | Max Digits |
 | ------------ | --------- | --------- | --------- | --------- | ---------- | ---------- |
@@ -412,7 +412,7 @@ A time is made up of the following mandatory and optional fields:
 | Subseconds   |     N     |    `.`    |         0 | 999999999 |          0 |          9 |
 | Time Zone    |     N     |    `/`    |         - |         - |          - |          - |
 
-**Note**: If the time zone is unspecified, it is assumed to be `Zero` (UTC).
+**Note**: If the time zone is omitted, it is assumed to be `Zero` (UTC).
 
 **Examples**:
 
@@ -539,6 +539,8 @@ For element array encodings, any valid representation of the element data type m
 
 A media object is a specialization of the typed array. The array type field contains its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
 
+    |media-type xx xx xx xx ...|
+
 **Note**: The array type field supports [escape sequences](#escape-sequences).
 
 **Example**:
@@ -591,7 +593,7 @@ A Concise Encoding implementation **MUST** interpret only [CTE escape sequences]
  * `@"http://x.y.z?quote=\""` decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
  * `@"http://x.y.z?quote=%22"` decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
 
-Resource IDs support [concatenation](#concatenation):
+Resource IDs support [concatenation](#combined-objects):
 
     @"http://x.com/":"my-suffix" // = http://x.com/my-suffix
 
@@ -849,7 +851,7 @@ A constant name begins with a hash `#` character, followed by an [identifier](ce
 
 ### NA
 
-NA is encoded as `na`, and **MUST** always be [concatenated](#concatenation) with a reason field consisting of any real object (not a pseudo-object).
+NA is encoded as `na`, and **MUST** always be [concatenated](#combined-objects) with a reason field consisting of any real object (not a pseudo-object).
 
 **Examples**:
 
@@ -981,7 +983,7 @@ A CTE document **MUST** be entirely in lower case, except in the following situa
  * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) **CAN** contain uppercase characters. Case **MUST** be preserved.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters. Case **MUST** be preserved.
 
-Everything else, including hexadecimal digits, exponents, and escape sequences, **MUST** be lower case.
+Everything else, including hexadecimal digits, exponents, and escape sequences, **MUST** be output in lower case by a CTE encoder.
 
 A CTE encoder **MUST** output letter case in accordance with this specification.
 
@@ -989,7 +991,7 @@ A CTE encoder **MUST** output letter case in accordance with this specification.
 
 Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
 
-A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, exponents, and escape sequences, etc).
+A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, exponents, escape sequences, etc).
 
 
 
@@ -1031,7 +1033,7 @@ Whitespace is defined as any character marked as whitespace in the [Unicode](htt
 
 Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document. Whitespace characters not intended to be structural will need to be quoted in most contexts to preserve their meaning.
 
-CTE decoders **MUST** accept all whitespace characters when decoding structural whitespace. CTE Encoders **MUST** produce only the following characters as structural whitespace:
+CTE decoders **MUST** accept all of the above whitespace characters when decoding structural whitespace. CTE Encoders **MUST** produce only the following characters as structural whitespace:
 
 | Code Point | Name                      |
 | ---------- | ------------------------- |
@@ -1068,7 +1070,7 @@ Examples:
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
- * Between a [concatenation](#concatenation) operator and its operands (`@"http://x.com/" : 1` is invalid).
+ * Between a [concatenation](#combined-objects) operator and its operands (`@"http://x.com/" : 1` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 
@@ -1099,7 +1101,7 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When only machines will read the document, use [CBE](cbe-specification.md).
+Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When only machines will read the document, use [CBE](cbe-specification.md) instead of minified CTE.
 
 This section specifies how to pretty-print CTE documents.
 
