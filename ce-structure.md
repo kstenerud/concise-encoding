@@ -1,11 +1,13 @@
 Concise Encoding - Structural Specification
 ===========================================
 
-Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
+Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
 
-This document specifies the structure of Concise Encoding documents and describes all supported data types. The [text](cte-specification.md) and [binary](cbe-specification.md) formats (which are 1:1 compatible with each other) are described in separate documents.
+The basic premise for the twin formats is that data should be transmitted and stored in the much more efficient binary format, and only converted to/from text on-demand whenever a human needs to be involved (for example modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CTE and CBE is often enough for a human to examine and modify the CBE data that your application uses.
 
-Examples in this document are usually given in the [text](cte-specification.md) format for clarity.
+This document describes the structure of Concise Encoding documents and the data types it supports. The encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in separate documents.
+
+**Note**: The examples in this document are usually given in [CTE format](cte-specification.md) for clarity.
 
 
 
@@ -130,9 +132,9 @@ Documents begin with a [version specifier](#version-specifier), followed by a to
 
 **Notes**:
 
- * To store multiple values in a document, use a [container](#container-types) as the top-level object and then store other objects within that container.
+ * To store multiple values in a document, use a [container](#container-types) as the top-level object and then store other objects in that container.
  * To represent an [empty document](#empty-document), store [nil](#nil) as the top-level object.
- * The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), but **MUST** itself be a real object of any type.
+ * The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), but the top-level object itself **MUST** be a real object.
 
 **Examples**:
 
@@ -148,7 +150,7 @@ Documents begin with a [version specifier](#version-specifier), followed by a to
 Document Version Specifier
 --------------------------
 
-The version specifier is composed of a 1-byte type identifier (`c` for CTE, 0x83 for CBE) followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
+The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for CTE, 0x83 for CBE - followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
 
 **Example**:
 
@@ -170,15 +172,15 @@ Supports the values true and false.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value remains the same.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value being represented remains the same.
 
 
 ### Floating Point
 
 A floating point number is composed of a whole part, fractional part, and possible exponent. Floating point numbers **CAN** be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
 
- * Decimal floating point number: 3.814 x 10⁵⁰
- * Binary floating point number:  7.403 x 2¹⁵
+ * Decimal floating point number (example): 3.814 x 10⁵⁰
+ * Binary floating point number (example):  7.403 x 2¹⁵
 
 Binary floating point values in Concise Encoding adhere to the ieee754 binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. In [CBE](cbe-specification.md), they are directly stored in these formats. In [CTE](cte-specification.md), they are stored as textual representations that will ultimately be converted into these formats when evaluated by a machine. Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
@@ -196,7 +198,7 @@ Floating point types support the following ranges:
 | Type    | Significant Digits | Exponent Min | Exponent Max |
 | ------- | ------------------ | ------------ | ------------ |
 | Binary  | 15.95              | -1022        | 1023         |
-| Decimal | unlimited          | unlimited    | unlimited    |
+| Decimal | ∞                  | -∞           | ∞            |
 
 Binary floats are limited to what is representable by 64-bit ieee754 binary float.
 
