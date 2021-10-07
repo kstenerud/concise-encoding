@@ -436,7 +436,7 @@ A schema **CAN** explicitly allow the NUL character. When explicitly allowed, th
 
 **Note**: Because NUL is a troublesome character on many platforms, its use in documents is *strongly* discouraged.
 
-##### Line Endings
+#### Line Endings
 
 Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
 
