@@ -7,7 +7,7 @@ The basic premise for the twin formats is that data should be transmitted and st
 
 This document describes the structure of Concise Encoding documents and the data types it supports. The encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in separate documents.
 
-**Note**: The examples in this document are usually given in [CTE format](cte-specification.md) for clarity.
+**Note**: The examples in this document are mostly given in [CTE format](cte-specification.md) for clarity.
 
 
 
@@ -177,17 +177,14 @@ Integer values **CAN** be positive or negative, and **CAN** be represented in va
 
 ### Floating Point
 
-A floating point number is composed of a whole part, fractional part, and possible exponent. Floating point numbers **CAN** be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value, whereas in a binary floating point number the exponent represents 2 to the power of the exponent value. Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
+A floating point number is composed of a whole part, fractional part, and possible exponent. Floating point numbers **CAN** be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value (for example 3.814 x 10⁵⁰), whereas in a binary floating point number the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
 
- * Decimal floating point number (example): 3.814 x 10⁵⁰
- * Binary floating point number (example):  7.403 x 2¹⁵
+Binary floating point values in Concise Encoding adhere to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754) binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. In [CBE](cbe-specification.md), they are directly stored in these formats. In [CTE](cte-specification.md), they are stored as textual representations that will ultimately be converted into these formats when evaluated by a machine. Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#Binary), the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
-Binary floating point values in Concise Encoding adhere to the ieee754 binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. In [CBE](cbe-specification.md), they are directly stored in these formats. In [CTE](cte-specification.md), they are stored as textual representations that will ultimately be converted into these formats when evaluated by a machine. Following ieee754-2008 recommendations, the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+    s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
+    s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-    s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = Quiet NaN (binary float32)
-    s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = Signaling NaN (binary float32)
-
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information.
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information (being careful not to set the payload to all zeroes, which would signify infinity instead of NaN).
 
 An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding as long as the final numeric value remains the same.
 
@@ -200,9 +197,10 @@ Floating point types support the following ranges:
 | Binary  | 15.95              | -1022        | 1023         |
 | Decimal | ∞                  | -∞           | ∞            |
 
-Binary floats are limited to what is representable by 64-bit ieee754 binary float.
+**Notes**:
 
-Although decimal floats technically have unlimited range, most implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
+ * Binary floats are limited to what is representable by 64-bit ieee754 binary float.
+ * Although decimal floats technically have unlimited range, most implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values
 
@@ -217,7 +215,7 @@ Both decimal and binary floating point numbers have representations for the foll
 
 A universal identifier. This identifier is designed to be unique across all identifiers in the universe.
 
-Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the univrsal identifier implementation.
+Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the universal identifier implementation.
 
 
 
@@ -238,8 +236,10 @@ A date is made up of the following fields:
 | Month |     Y     |         1 |        12 |
 | Day   |     Y     |         1 |        31 |
 
+**Notes**:
+
  * Year, month, and day fields **MUST NOT** be 0 (counting begins at 1).
- * The year value **MUST** be negative to represent BC dates, and positive to represent AD dates. The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year value `0` is invalid.
+ * The sign of the year value determines the era of the date (negative for BC, positive for AD). The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year value `0` is invalid.
  * The year field always represents the full year (no abbreviations).
 
 **Examples (in [CTE](cte-specification.md))**:
@@ -263,10 +263,12 @@ A time is made up of the following fields:
 | Subseconds |     N     |         0 | 999999999 |
 | Time Zone  |     N     |           |           |
 
+**Notes**:
+
  * Hours are always according to the 24h clock (21:00, not 9:00 PM).
  * Seconds go to 60 to support leap seconds.
  * Since a time by itself has no date component, time zone data **MUST** be interpreted as if it were "today". This means that time zones which are not offsets like `Etc/GMT+1` might be interpreted differently on different dates for political reasons (for example daylight savings).
- * If the time zone is unspecified, it is assumed to be `Zero` (UTC).
+ * If the time zone is omitted, it is assumed to be `Zero` (UTC).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -292,13 +294,12 @@ A timestamp combines a date and a time.
 
 A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a continual state of flux, and could change at any time for many reasons.
 
-There are three ways to denote time zone data:
+Time zone data can be denoted in the following ways:
 
  * Area/Location
  * Global Coordinates
+ * UTC
  * UTC Offset
-
-**Note**: If the time zone is unspecified, it is assumed to be `Zero` (UTC).
 
 #### Area/Location
 
@@ -355,10 +356,17 @@ This method has the advantage of being temporally unambiguous, which could be us
  * `51.60/11.11`
  * `-13.53/-172.37`
 
+#### UTC
+
+If the time zone is unspecified, it is assumed to be `Zero` (UTC). Placing all past event time values in the UTC time zone has the advantage of more compact and unambiguous time storage, which makes comparisons and other operations much easier and reduces bugs.
+
+UTC time is not recommended for future and periodic/repeating time values.
 
 #### UTC Offset
 
-Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes. Since it doesn't contain any location data, it's not a real time zone, and its use is discouraged except as a means of interfacing with legacy systems.
+Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes. This format is not an actual time zone because it doesn't contain location data and therefore cannot account for political shifts (such as daylight savings). In fact, it can't convey any useful information beyond what UTC time can (other than a vague notion of where the value might have originated, and roughly what time of day it was).
+
+Use of UTC offset is discouraged except as a means of interfacing with legacy systems.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -418,20 +426,15 @@ String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays **MUST*
 
 #### String Character Replacement
 
-String-like arrays **CAN** contain characters that require special processing when decoded. This processing **MUST** occur *before* any validation takes place.
-
-Special processing is required:
-
- * When escape sequences are encountered (in CTE documents only)
- * When a [NUL](#nul) character is encountered
+Special processing is required to replace escape sequences in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur *before* any validation takes place.
 
 #### NUL
 
-The NUL character (U+0000) **MUST** by default be disallowed in string-like arrays. A schema **CAN** explicitly allow the NUL character. When explicitly allowed, the codec **MUST** support NUL characters if the language/platform can support it. If the platform cannot support NUL, an explicit allow by the schema will have no effect (NUL support will still be disabled), and the codec **MUST** generate a diagnostic describing the problem.
+The NUL character (U+0000) **MUST** by default be disallowed in string-like arrays. When disabled, encountering a NUL character in a string-like array is a [data error](#data-errors).
 
-If NUL support is disabled, encountering a NUL character in a string-like array is a [data error](#data-errors).
+A schema **CAN** explicitly allow the NUL character. When explicitly allowed, the codec **MUST** support NUL characters if the language/platform can support it. If it cannot support NUL but the schema explicitly enables NUL, then the codec **MUST** generate a diagnostic describing the problem and halt processing.
 
-**Note**: Because NUL is a troublesome character on many platforms, its use in documents is strongly discouraged.
+**Note**: Because NUL is a troublesome character on many platforms, its use in documents is *strongly* discouraged.
 
 ##### Line Endings
 
