@@ -676,9 +676,9 @@ c1 {
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier).
+ * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be nil.
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [nil](#nil).
- * A **destination**, which is the second vertex of the edge being described.
+ * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be nil.
 
 Directionality is from the source to the destination unless the description or schema specifies otherwise.
 
