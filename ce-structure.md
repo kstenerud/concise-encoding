@@ -486,7 +486,7 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
 
 #### Marker Identifier
 
-A marker identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
+A [marker](#marker) identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
 
 
 #### Resource Identifier
