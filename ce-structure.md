@@ -430,9 +430,13 @@ Special processing is required to replace escape sequences in [CTE](cte-specific
 
 #### NUL
 
-The NUL character (U+0000) **MUST** by default be disallowed in string-like arrays. When disabled, encountering a NUL character in a string-like array is a [data error](#data-errors).
+The NUL character (U+0000) has a long history of causing problems and security issues due to inconsistent support at the platform, language, and application levels. Because of this, Concise Encoding has special rules for the NUL character:
 
-A schema **CAN** explicitly allow the NUL character. When explicitly allowed, the codec **MUST** support NUL characters if the language/platform can support it. If it cannot support NUL but the schema explicitly enables NUL, then the codec **MUST** generate a diagnostic describing the problem and halt processing.
+ * Codecs **MUST** provide a configuration option to enable NUL support (unless the underlying platform/language cannot support NUL).
+ * The option **MUST** have three states: `disabled always`, `enabled always`, and `schema controlled` (i.e. the schema will decide whether NUL is supported or not).
+ * The NUL support option **MUST** default to `disabled always`.
+ * Schema support for NUL **MUST** default to `disabled`.
+ * Encountering a NUL character in a string-like array (encoding or decoding) while NUL support is disabled is a [data error](#data-errors).
 
 **Note**: Because NUL is a troublesome character on many platforms, its use in documents is *strongly* discouraged.
 
@@ -479,6 +483,11 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
  * `25th`
  * `猫`
  * `foo:bar`
+
+#### Marker Identifier
+
+A marker identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
+
 
 #### Resource Identifier
 
@@ -877,13 +886,13 @@ Pseudo-objects **CAN** be placed anywhere a full object can be placed, with the 
 
 ### Marker
 
-A marker is a [combined](#combined-object) pseudo-object that assigns a marker ID to another object, which can then be [referenced](#reference) in another part of the document (or from a different document).
+A marker is a [combined](#combined-object) pseudo-object that assigns a [marker ID](#marker-id) to another object, which can then be [referenced](#reference) in another part of the document (or from a different document).
 
     [marker id] [marked object]
 
 #### Marker ID
 
-The marker ID is an [identifier declaration](#identifier), except with the additional restriction that it cannot contain a colon (`:`) since it would clash with the id-value seprator in CTE.
+A marker identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
 
 Marker IDs are declared identifiers, and therefore **MUST** be unique to all other marker IDs in the current document.
 
@@ -910,8 +919,8 @@ A reference acts as a stand-in for an object that has been [marked](#marker) els
 
 References can take one of two forms:
 
- * Local reference, where the [identifier](#identifier) is a reference to an object marked by a [marker ID](#marker) elsewhere in the current document.
- * Remote reference, where the [resource ID](#resource-id) is a reference to another document or to a [marker ID](#marker) in another document.
+ * Local reference, where the [marker ID](#marker-id) is a reference to an object marked by a [marker](#marker) elsewhere in the current document.
+ * Remote reference, where the [resource ID](#resource-id) is a reference to another document or to a [marker](#marker) in another document.
 
 #### Rules
 
