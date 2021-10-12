@@ -46,6 +46,7 @@ Contents
     - [Area/Location](#arealocation)
     - [Global Coordinates](#global-coordinates)
     - [Time Offset](#time-offset)
+  - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
   - [Media](#media)
@@ -468,6 +469,17 @@ Time offsets are recorded by using a `+` or `-` character as the time zone separ
 
  * `1985-10-26/01:20:01.105+0700`
  * `2000-01-14/10:22:00-0200`
+
+
+### Why not ISO 8601 or RFC 3339?
+
+[RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) was developed as a greatly simplified profile of [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to be used in internet protocols. RFC 3339's criticisms of ISO 8601 are valid: it tries to handle too many things and offers too much optional functionality (most of which is unused in the real world), rendering it overcomplicated and prone to misinterpretation and bugs. It's also non-free, which makes it even harder to write compliant, bug-free implementations (or trust any that claim to be).
+
+RFC 3339 is designed for timestamped internet events, and is well suited to that purpose. However, it lacks functionality that a general purpose date format would require:
+
+- It only supports time offsets (+01:00, -13:00, etc), not real time zones.
+- It doesn't support BCE dates.
+- It allows multiple interpretations of year values less than 4 digits long, which is a security risk and a source of bugs.
 
 
 
