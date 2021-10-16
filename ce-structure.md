@@ -37,7 +37,8 @@ Contents
   - [Time Zones](#time-zones)
     - [Area/Location](#arealocation)
     - [Global Coordinates](#global-coordinates)
-    - [Time Offset](#time-offset)
+    - [UTC](#utc)
+    - [UTC Offset](#utc-offset)
 * [Array Types](#array-types)
   - [String-like Arrays](#string-like-arrays)
     - [String Character Replacement](#string-character-replacement)
@@ -276,7 +277,7 @@ A time is made up of the following fields:
 
 **Notes**:
 
- * Since a time by itself has no date component, its time zone data **MUST** be interpreted as if it were "today". This means that location-based time zones like `America/Seattle` or `48.86/2.36` (as opposed to UTC-offsets like `Zero` or `Etc/GMT+1`) might result in a different absolute time on different dates due to political time shifts (such as daylight savings).
+ * Since a time by itself has no date component, its time zone data **MUST** be interpreted as if it were "today". This means that location-based time zones like `America/Seattle` or `48.86/2.36` (as opposed to UTC-offsets like `Zero` or `Etc/GMT+1`) might result in a different absolute time when read on different dates due to political time shifts (such as daylight savings).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -304,10 +305,10 @@ A time zone refers to the political designation of a location having a specific 
 
 Time zone data can be denoted in the following ways:
 
- * Area/Location
- * Global Coordinates
- * UTC
- * UTC Offset
+ * [Area/Location](#arealocation)
+ * [Global Coordinates](#global-coordinates)
+ * [UTC](#utc)
+ * [UTC Offset](#utc-offset)
 
 #### Area/Location
 
