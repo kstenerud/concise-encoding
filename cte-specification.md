@@ -45,7 +45,8 @@ Contents
   - [Time Zones](#time-zones)
     - [Area/Location](#arealocation)
     - [Global Coordinates](#global-coordinates)
-    - [Time Offset](#time-offset)
+    - [UTC](#utc)
+    - [UTC Offset](#utc-offset)
   - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
 * [Array Types](#array-types)
   - [Element Array Encodings](#element-array-encodings)
@@ -461,11 +462,15 @@ Global coordinates are written as latitude and longitude to a precision of hundr
  * `51.60/11.11`
  * `-13.53/-172.37`
 
-#### Time Offset
+#### UTC
 
-Time offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
+Simply omit the time zone entirely, which causes the time zone to default to UTC.
 
-**Examples**:
+#### UTC Offset
+
+UTC offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
+
+**Examples (using timestamps)**:
 
  * `1985-10-26/01:20:01.105+0700`
  * `2000-01-14/10:22:00-0200`
