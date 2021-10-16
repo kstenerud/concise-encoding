@@ -222,6 +222,8 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 Temporal Types
 --------------
 
+Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even with that full understanding, it's still a veritable minefield that can be your system's undoing if you don't take the time to think **very** carefully about [the purposes you need to keep time for](#how-to-record-time), and the implications thereof.
+
 Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
 
 
@@ -274,7 +276,7 @@ A time is made up of the following fields:
 
 **Notes**:
 
- * Since a time by itself has no date component, time zone data **MUST** be interpreted as if it were "today". This means that time zones which are not offsets like `Etc/GMT+1` might be interpreted differently on different dates for political reasons (for example daylight savings).
+ * Since a time by itself has no date component, its time zone data **MUST** be interpreted as if it were "today". This means that location-based time zones like `America/Seattle` or `48.86/2.36` (as opposed to UTC-offsets like `Zero` or `Etc/GMT+1`) might result in a different absolute time on different dates due to political time shifts (such as daylight savings).
 
 **Examples (in [CTE](cte-specification.md))**:
 
