@@ -233,7 +233,7 @@ Temporal types are represented using the [Gregorian calendar](https://en.wikiped
  * The sign of the `year` field signifies the era (negative for BC, positive for AD).
  * The `year` field always represents the full year (abbreviations are not allowed).
  * The `month` and `day` fields **CANNOT** be 0 (counting starts at 1).
- * The `day` field **MUST** be valid for the specified month according to the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar).
+ * The `day` field **MUST** be valid for the specified month according to the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar#Description).
  * The `day` field **CAN** go up to 29 in Feburary when accommodating a [leap year](https://en.wikipedia.org/wiki/Leap_year).
  * The `hour`, `minute`, and `second` fields start counting at 0.
  * The `hour` field represents the [24h clock](https://en.wikipedia.org/wiki/24-hour_clock) hour value (there is no AM or PM).
