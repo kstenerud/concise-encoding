@@ -187,7 +187,7 @@ Binary floating point values in Concise Encoding adhere to the [ieee754](https:/
 
 An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information (being careful not to set the payload to all zeroes, which would signify infinity instead of NaN).
 
-An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding as long as the final numeric value remains the same.
+An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers that are not negative 0) as long as the final numeric value remains the same.
 
 #### Value Ranges
 
@@ -424,22 +424,29 @@ An array represents a contiguous sequence of fixed length elements. The length o
 
 There are three primary kinds of array representations in Concise Encoding:
 
- * String-like arrays, which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
+ * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
- * Custom types, which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent), and are encoded either in the style of a uint8 array for custom binary, or a string-like array for custom text.
+ * [Custom types](#custom-types), which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent), and are encoded either in the style of a uint8 [typed array](#typed-array) for custom binary, or a [string-like array](#string-like-arrays) for custom text.
 
 
 ### String-like Arrays
 
-String-like arrays are arrays of UTF-8 encoded bytes. String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
+String-like arrays are arrays of UTF-8 encoded bytes. The following types are string-like arrays:
+
+ * [String](#string)
+ * [Identifier](#identifier)
+ * [Resource Identifier](#resource-identifier)
+ * [Text Custom Type](#text-custom-type)
+
+String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
 #### String Character Replacement
 
-Special processing is required to replace escape sequences in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur *before* any validation takes place.
+Special processing is required to replace escape sequences in string-like arrays in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur *before* any validation takes place.
 
 #### NUL
 
-The NUL character (U+0000) has a long history of causing problems and security issues due to inconsistent support at the platform, language, and application levels. Because of this, Concise Encoding has special rules for the NUL character:
+The NUL character (U+0000) has a long history of causing problems and security issues due to inconsistent support at the platform, language, and application levels. Because of this, Concise Encoding has special rules for the NUL character in string-like arrays:
 
  * Codecs **MUST** provide a configuration option to enable NUL support (unless the underlying platform/language cannot support NUL).
  * The option **MUST** have three states: `disabled always`, `enabled always`, and `schema controlled` (i.e. the schema will decide whether NUL is supported or not).
@@ -455,11 +462,11 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 #### String
 
-A UTF-8 string.
+A standard UTF-8 string.
 
 #### Identifier
 
-An identifier is a type designed to be unique within a local context. It's implemented as a string with the following additional requirements and restrictions:
+An identifier is a type designed to be unique within a local context. It's a string-like array with the following additional requirements and restrictions:
 
  * It **MUST** begin with one of:
    - A letter or numeric character ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
@@ -493,7 +500,7 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
  * `猫`
  * `foo:bar`
 
-#### Marker Identifier
+##### Marker Identifier
 
 A [marker](#marker) identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
 
@@ -502,7 +509,7 @@ A [marker](#marker) identifier is an [identifier](#identifier) with the addition
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
 
-Resource IDs **CAN** also be [concatenated](#combined-objects) with a [string](#string), whereby the string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
+Resource IDs **CAN** also be [concatenated](#combined-objects) with a [string](#string), whereby a string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
 
 **Note**: Concatenation is only allowed **once** per resource ID (for example, `@"a":"b":"c"` is not allowed)
 
@@ -520,7 +527,7 @@ When concatenation occurs, validation **MUST** be done in two steps:
 
 ### Typed Array
 
-A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be easily copied between the stream and your internal structures.
+A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
 The following element types are supported in typed arrays. For other types, use a [list](#list).
 
@@ -533,7 +540,7 @@ The following element types are supported in typed arrays. For other types, use 
 | IEEE754 Binary Float | 32, 64               |
 | UID                  | 128                  |
 
-Array elements **CAN** be written using any of the representations allowed for the specified type and size.
+Array elements in [CTE](cte-specification.md) **CAN** be written using any of the representations allowed for the specified type and size.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -546,13 +553,13 @@ Array elements **CAN** be written using any of the representations allowed for t
 
 ### Media
 
-The media object encapsulates a foreign media object/file, along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
+A media object encapsulates a foreign media object/file (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
 
     [media type] [data]
 
-The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees its data as a sequence of bytes, and passes it along as such.
+The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with a media type, and passes it along as such.
 
-A decoder **MUST NOT** attempt to validate the media type beyond checking the allowed character range per [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is **not** a decoding error.
+A decoder **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is **not** a decoding error.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
@@ -625,14 +632,14 @@ For list-like containers, a duplicate means any object that is equivalent to ano
 
 For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
 
-The testing of integer and float values for duplicates transcends the data type when the value is type-compatible and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
+The testing of integer and float values for duplicates transcends the data type when the value is type-compatible (i.e. both are numeric types) and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
 
 ### List
 
-A sequential list of objects. Lists **CAN** contain any mix of any type, including other containers.
+A sequential list of objects. List elements **CAN** be any type (including other containers), and do not all have to be the same type.
 
 By default, a list is ordered and allows duplicate values. Different rules **CAN** be set using a schema.
 
@@ -651,7 +658,7 @@ c1 [
 
 ### Map
 
-A map associates key objects with value objects. Keys **CAN** be any mix of any [keyable type](#keyable-types). Values **CAN** be any mix of any type, including other containers.
+A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not all have to be the same type. Values **CAN** be any type (including other containers), and do not all have to be the same type.
 
 Map entries are stored as key-value pairs. A key without a paired value is invalid.
 
@@ -813,7 +820,7 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 
 ### Markup
 
-Markup is a specialized data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
+Markup is a specialized tree-like data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
 
     [name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
 
