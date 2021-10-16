@@ -222,11 +222,26 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 Temporal Types
 --------------
 
+Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Dates prior to 1582 are represented using the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar). Temporal types also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
+
+
+### General Rules
+
+ * The `year` field **CANNOT** be 0 (The [Anno Domini](https://en.wikipedia.org/wiki/Anno_Domini) system has no zero year, meaning there is no 0 BC or 0 AD).
+ * The sign of the `year` field signifies the era (negative for BC, positive for AD).
+ * The `year` field always represents the full year (abbreviations are not allowed).
+ * The `month` and `day` fields **CANNOT** be 0 (counting starts at 1).
+ * The `day` field **MUST** be valid for the specified month according to the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar).
+ * The `day` field **MAY** go up to 29 in Feburary when accommodating a [leap year](https://en.wikipedia.org/wiki/Leap_year).
+ * The `hour`, `minute`, and `second` fields start counting at 0.
+ * The `hour` field represents the [24h clock](https://en.wikipedia.org/wiki/24-hour_clock) hour value (there is no AM or PM).
+ * The `second` field **MAY** go up to 60 when accommodating a [leap second](https://en.wikipedia.org/wiki/Leap_second).
+ * If the time zone is omitted, it is assumed to be `Zero` (aka "Zulu" or "[GMT](https://en.wikipedia.org/wiki/Greenwich_Mean_Time)" or "[UTC](https://en.wikipedia.org/wiki/UTC%C2%B100:00)").
+
+
 ### Date
 
 Represents a date without specifying a time of day.
-
-Dates in Concise Encoding are represented using the Gregorian calendar. Dates prior to 1582 are represented using the proleptic Gregorian calendar.
 
 A date is made up of the following fields:
 
@@ -235,12 +250,6 @@ A date is made up of the following fields:
 | Year  |     Y     |        -∞ |        +∞ |
 | Month |     Y     |         1 |        12 |
 | Day   |     Y     |         1 |        31 |
-
-**Notes**:
-
- * Year, month, and day fields **MUST NOT** be 0 (counting begins at 1).
- * The sign of the year value determines the era of the date (negative for BC, positive for AD). The Anno Domini system has no zero year (there is no 0 BC or 0 AD), so the year value `0` is invalid.
- * The year field always represents the full year (no abbreviations).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -265,10 +274,7 @@ A time is made up of the following fields:
 
 **Notes**:
 
- * Hours are always according to the 24h clock (21:00, not 9:00 PM).
- * Seconds go to 60 to support leap seconds.
  * Since a time by itself has no date component, time zone data **MUST** be interpreted as if it were "today". This means that time zones which are not offsets like `Etc/GMT+1` might be interpreted differently on different dates for political reasons (for example daylight savings).
- * If the time zone is omitted, it is assumed to be `Zero` (UTC).
 
 **Examples (in [CTE](cte-specification.md))**:
 
