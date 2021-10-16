@@ -222,7 +222,7 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 Temporal Types
 --------------
 
-Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Dates prior to 1582 are represented using the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar). Temporal types also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
+Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
 
 
 ### General Rules
