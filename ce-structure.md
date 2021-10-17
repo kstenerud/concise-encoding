@@ -1059,6 +1059,8 @@ c1
     */
     @"mailto:someone@somewhere.com"
 
+    "a" = "We're inside a string, so /* this is not a comment, it's part of the string! */"
+
     "data" =
     // A comment before some binary data
     |u8x 01 02 03 // A comment inside the binary array
