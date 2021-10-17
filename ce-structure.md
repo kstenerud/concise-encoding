@@ -1037,10 +1037,10 @@ Comments **MUST ONLY** contain [text-safe](#text-safety) characters.
 
 Comments are allowed anywhere in a CTE document except:
 
- * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid)
- * Inside of a string-like array type (strings, resource IDs, custom text) (`"/*comment*/"` would be interpreted as a string)
- * After the top-level object (`c1 100 /*comment*/` is invalid)
- * Between left and right side of a [combined object](#combined-objects) (`na:/*comment*/"IO Error"` and `@"http://x.com/"/*comment*/:"blah` are invalid)
+ * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid).
+ * After the top-level object (`c1 100 /*comment*/` is invalid).
+ * Between the left and right side of a [combined object](#combined-objects) (`na:/*comment*/"IO Error"` and `@"http://x.com/"/*comment*/:"blah` are invalid).
+ * Inside of a [string-like array](#string-like-arrays) type. It's actually not possible to have a comment inside of a [string-like array](#string-like-arrays) because, for example, a construct like `"this is a /*comment*/"` would be interpreted entirely as a string since it's within double-quote delimiters. It's also not possible in [custom text](#text-custom-type) because everything between the opening `|ct ` and closing `|` delimiters has a custom-defined interpretation (your custom interpretation could in theory support comments, but such things are beyond the scope of this specification).
 
 **Example**:
 ```cte
