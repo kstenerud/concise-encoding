@@ -919,15 +919,17 @@ c1
     "email" = // Comment after the "email" key.
     /* Multiline comment with nested comment inside
       @"mailto:joe@average.org"
-      /* Unlike in C, nested multiline
+      /* Nested multiline
          comments are allowed */
     */
     @"mailto:someone@somewhere.com"
 
-    "data" // Comment after data
-    =
-    // Comment before some binary data (but not inside it)
-    |u8x 01 02 03 04 05 06 07 08 09 0a|
+    "a" = "We're inside a string, so /* this is not a comment, it's part of the string! */"
+
+    "data" =
+    // A comment before some binary data
+    |u8x 01 02 03 // A comment inside the binary array
+         04 05 06 07 /* Another comment inside */ 08 09 0a|
 }
 ```
 
