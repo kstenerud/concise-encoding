@@ -1060,8 +1060,9 @@ c1
     @"mailto:someone@somewhere.com"
 
     "data" =
-    // Comment before some binary data (but not inside it)
-    |u8x 01 02 03 04 05 06 07 08 09 0a|
+    // A comment before some binary data
+    |u8x 01 02 03 // A comment inside the binary array
+         04 05 06 07 /* Another comment inside */ 08 09 0a|
 }
 ```
 
