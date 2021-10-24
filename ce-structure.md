@@ -225,7 +225,7 @@ Temporal Types
 
 Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even with that full understanding, it's still a veritable minefield that can be your system's undoing if you don't take the time to think **very** carefully about [the purposes you need to keep time for](#how-to-record-time), and the implications thereof.
 
-Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
+Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types can have precision to the nanosecond, and also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
 
 
 ### General Rules
@@ -935,22 +935,22 @@ A reference acts as a stand-in for an object that has been [marked](#marker) els
 
 References can take one of two forms:
 
- * Local reference, where the [marker ID](#marker-id) is a reference to an object marked by a [marker](#marker) elsewhere in the current document.
- * Remote reference, where the [resource ID](#resource-id) is a reference to another document or to a [marker](#marker) in another document.
+ * **Local reference**, composed of a [marker ID](#marker-id) that is a reference to an object marked by a [marker](#marker) elsewhere in the current document.
+ * **Remote reference**, composed of a [resource ID](#resource-id) that is a reference to another document or possibly to a [marker](#marker) in another document (using the URL fragment section as the marker ID).
 
 #### Rules
 
  * Recursive references are allowed.
- * References **CAN** refer to objects [marked](#marker) later in the document (forward references).
- * A reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
- * A resource identifier reference **MUST NOT** be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
- * A resource identifier reference **MUST** point to either:
+ * Local references **CAN** refer to objects [marked](#marker) later in the document (forward references).
+ * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
+ * A remote reference **MUST NOT** be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
+ * A remote reference **MUST** point to either:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A marker ID inside another CBE or CTE document, using the fragment section of the resource identifier as the local marker ID
 
-A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following resource identifier references.
+A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following remote references.
 
-**Example (in [CTE](cte-specification.md))**:
+**Examples (in [CTE](cte-specification.md))**:
 ```cte
 c1 {
     some_object = {

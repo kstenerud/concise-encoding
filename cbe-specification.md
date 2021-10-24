@@ -62,6 +62,8 @@ Contents
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
+    - [Local Reference](#local-reference)
+    - [Remote Reference](#remote-reference)
   - [Constant](#constant)
   - [NA](#na)
 * [Invisible Objects](#invisible-objects)
@@ -398,8 +400,8 @@ Short form arrays have their length encoded in the lower 4 bits of the type fiel
 
 **Examples**:
 
- * `[83 61 62 63]` = the string "abc"
- * `[94 12 01 00 02 00]` = unsigned 16-bit array with elements [1, 2]
+ * `[83 61 62 63]` = the string "abc" (short form - length is part of the type field)
+ * `[90 06 61 62 63]` = the string "abc" (chunked form - length is a separate field)
 
 
 ### Chunked Form
@@ -707,7 +709,7 @@ An edge always consists of exactly three components, and therefore doesn't use a
     [76 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
      91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
      91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
-    = the relationship: @(@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
+    = the relationship graph: @(@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
 
 
 ### Node
@@ -769,12 +771,14 @@ A marker begins with the marker type (0x97), followed by a marker ID (encoded as
 
     [97 01 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {some_value = "repeat this value"}, tagged with the ID "a".
+    = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
 
 
 ### Reference
 
-A reference begins with the reference type (0x98), followed by either a marker ID (encoded as an [identifier](#identifier)), or a [resource identifier](#resource-identifier).
+#### Local Reference
+
+A local reference begins with the reference type (0x98), followed by a marker ID.
 
     [98 (length) (ID string data)]
 
@@ -784,14 +788,17 @@ A reference begins with the reference type (0x98), followed by either a marker I
 
     [98 01 61] = reference to the object marked with ID "a"
 
+#### Remote Reference
+
+A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e2]`).
+
+**Examples**:
+
     [94 e2 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [94 e2 62 68 74 74 70 73 3a 2f 2f 73 6f 6d 65 77
-     68 65 72 65 2e 63 6f 6d 2f 6d 79 5f 64 6f 63 75
-     6d 65 6e 74 2e 63 62 65 3f 66 6f 72 6d 61 74 3d
-     6c 6f 6e 67]
-    = reference to entire document at https://somewhere.com/my_document.cbe?format=long
+    [94 e2 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
+    = remote reference to https://example.org/cities/france#paris, where "paris" is the local marker ID in that document
 
 
 ### Constant

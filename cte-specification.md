@@ -71,6 +71,8 @@ Contents
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
+    - [Local Reference](#local-reference)
+    - [Remote Reference](#remote-reference)
   - [Constant](#constant)
   - [NA](#na)
 * [Invisible Objects](#invisible-objects)
@@ -818,7 +820,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A marker ID ([identifier](#identifier))
+ * A [marker ID](ce-structure.md#marker-id) ([identifier](#identifier))
  * `:` (the marker separator)
  * The marked value
 
@@ -836,9 +838,11 @@ The string `"Pretend that this is a huge string"` is marked with the string ID `
 
 ### Reference
 
-A reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by either a [marker ID](ce-structure.md#marker-id) or a [resource identifier](#resource-identifier).
+#### Locale Reference
 
-Example:
+A local reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-id).
+
+**Example**:
 
 ```cte
 c1 {
@@ -851,6 +855,17 @@ c1 {
 
     "reference_to_string" = $big_string
     "reference_to_map" = $1
+}
+```
+
+#### Remote Reference
+
+A remote reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [resource identifier](#resource-identifier).
+
+**Example**:
+
+```cte
+c1 {
     "reference_to_local_doc" = $@"common.cte"
     "reference_to_remote_doc" = $@"https://somewhere.com/my_document.cbe?format=long"
     "reference_to_local_doc_marker" = $@"common.cte#legalese"
