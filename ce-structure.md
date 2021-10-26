@@ -962,10 +962,10 @@ c1 {
 
     reference_to_string = $big_string
     reference_to_map = $1
-    reference_to_local_doc = $@"common.cte"
-    reference_to_remote_doc = $@"https://somewhere.com/my_document.cbe?format=long"
-    reference_to_local_doc_marker = $@"common.cte#legalese"
-    reference_to_remote_doc_marker = $@"https://somewhere.com/my_document.cbe?format=long#examples"
+    reference_to_local_doc = $"common.cte"
+    reference_to_remote_doc = $"https://somewhere.com/my_document.cbe?format=long"
+    reference_to_local_doc_marker = $"common.cte#legalese"
+    reference_to_remote_doc_marker = $"https://somewhere.com/my_document.cbe?format=long#examples"
 }
 ```
 

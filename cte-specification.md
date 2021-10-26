@@ -860,16 +860,18 @@ c1 {
 
 #### Remote Reference
 
-A remote reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [resource identifier](#resource-identifier).
+A remote reference is encoded the same way as a [resource identifier](#resource-identifier), except using a reference initiator (`$`) instead of a resource ID initiator (`@`).
+
+    $"some-URL" instead of @"some-URL"
 
 **Example**:
 
 ```cte
 c1 {
-    "reference_to_local_doc" = $@"common.cte"
-    "reference_to_remote_doc" = $@"https://somewhere.com/my_document.cbe?format=long"
-    "reference_to_local_doc_marker" = $@"common.cte#legalese"
-    "reference_to_remote_doc_marker" = $@"https://somewhere.com/my_document.cbe?format=long#examples"
+    "reference_to_local_doc" = $"common.cte"
+    "reference_to_remote_doc" = $"https://somewhere.com/my_document.cbe?format=long"
+    "reference_to_local_doc_marker" = $"common.cte#legalese"
+    "reference_to_remote_doc_marker" = $"https://somewhere.com/my_document.cbe?format=long#examples"
 }
 ```
 
