@@ -60,12 +60,13 @@ Contents
   - [Node](#node)
   - [Markup](#markup)
 * [Other Types](#other-types)
-  - [Nil](#nil)
+  - [Null](#null)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
+    - [Local Reference](#local-reference)
+    - [Remote Reference](#remote-reference)
   - [Constant](#constant)
-  - [NA](#na)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -134,13 +135,13 @@ Documents begin with a [version specifier](#version-specifier), followed by a to
 **Notes**:
 
  * To store multiple values in a document, use a [container](#container-types) as the top-level object and then store other objects in that container.
- * To represent an [empty document](#empty-document), store [nil](#nil) as the top-level object.
- * The top-level object **CAN** be preceded by [pseudo-objects](#pseudo-objects), but the top-level object itself **MUST** be a real object.
+ * To represent an [empty document](#empty-document), store [null](#null) as the top-level object.
+ * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects) and at most one [marker](#marker), but the top-level object itself **MUST** be a real object.
 
 **Examples**:
 
  * An empty document: 
-   - In [CTE](cte-specification.md): `c1 nil`
+   - In [CTE](cte-specification.md): `c1 null`
    - In [CBE](cbe-specification.md): [`83 01 7e`]
  * A document containing a top-level list:
    - In [CTE](cte-specification.md): `c1 [1 2 3]`
@@ -651,7 +652,7 @@ c1 [
     "two"
     3.1
     {}
-    nil
+    null
 ]
 ```
 
@@ -674,7 +675,7 @@ Only certain types **CAN** be used as keys in map-like containers:
 * [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
 
-[Nil](#nil) and [NA](#na) **MUST NOT** be used as a key.
+[Null](#null) **MUST NOT** be used as a key.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -682,7 +683,7 @@ Only certain types **CAN** be used as keys in map-like containers:
 c1 {
     1 = "alpha"
     2 = "beta"
-    "a map" = {one=1 two=2}
+    "a map" = {"one"=1 "two"=2}
     2000-01-01 = "New millenium"
 }
 ```
@@ -692,9 +693,9 @@ c1 {
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be nil.
- * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [nil](#nil).
- * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be nil.
+ * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be null.
+ * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
+ * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be null.
 
 Directionality is from the source to the destination unless the description or schema specifies otherwise.
 
@@ -878,11 +879,19 @@ c1 <View;
 Other Types
 ------------
 
-### Nil
+### Null
 
-Nil (also known as "Null") represents the intentional absence of data. It is most commonly used in update operations to indicate the clearing of a field. For read and create operations, it's better to simply omit empty fields altogether.
+Null signals that the specified field or index is absent. It is used to support data operations that would otherwise be difficult to indicate.
 
-**Note**: Do not use nil to indicate an error condition; use [NA](#na) instead.
+Some uses for null in common operations:
+
+| Operation | Meaning when field value = null                          |
+| --------- | -------------------------------------------------------- |
+| Create    | Do not include this field (overrides any default value). |
+| Read      | This field has been removed since a previous checkpoint. |
+| Update    | Remove this field.                                       |
+| Delete    | Match records where this field is not present.           |
+| Fetch     | Match records where this field is not present.           |
 
 
 
@@ -921,58 +930,74 @@ Marker IDs are declared identifiers, and therefore **MUST** be unique to all oth
 
 ```cte
 c1 [
-    &remember_me:"Pretend that this is a huge string"
-    &1:{a = 1}
+    &remember_me:"Remember this string"
+    &1:{"a" = 1}
 ]
 ```
 
-The string `"Pretend that this is a huge string"` is marked with the ID `remember_me`, and the map `{a=1}` is marked with the ID `1`.
+The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
 
 
 ### Reference
 
-A reference acts as a stand-in for an object that has been [marked](#marker) elsewhere in this or another document (it's basically a pointer). This could be useful for repeating or cyclic data.
+A reference acts as a stand-in for another object in the current document or another document. It functions much like a pointer or reference would in a programming language, offering ways to:
 
-References can take one of two forms:
+ * Reduce repetitive information.
+ * Encode cyclic data (recursive references).
 
- * **Local reference**, composed of a [marker ID](#marker-id) that is a reference to an object marked by a [marker](#marker) elsewhere in the current document.
- * **Remote reference**, composed of a [resource ID](#resource-id) that is a reference to another document or possibly to a [marker](#marker) in another document (using the URL fragment section as the marker ID).
+#### Local Reference
 
-#### Rules
+A local reference refers to an object that has been [marked](#marker) elsewhere inside of the current document.
 
- * Recursive references are allowed.
- * Local references **CAN** refer to objects [marked](#marker) later in the document (forward references).
+ * Recursive references are supported.
+ * Forward references (reference to an object marked later in the document) are supported.
  * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
- * A remote reference **MUST NOT** be used as a map key (because there's no way to know if it refers to a keyable type without following the reference).
- * A remote reference **MUST** point to either:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A marker ID inside another CBE or CTE document, using the fragment section of the resource identifier as the local marker ID
-
-A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following remote references.
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
 c1 {
-    some_object = {
-        my_string = &big_string:"Pretend that this is a huge string"
-        my_map = &1:{
-            a = 1
+    "some object" = {
+        "some string" = &my_string_ref:"This is my string"
+        "some map" = &my_map_ref:{
+            "a" = 1
         }
     }
 
-    reference_to_string = $big_string
-    reference_to_map = $1
-    reference_to_local_doc = $"common.cte"
-    reference_to_remote_doc = $"https://somewhere.com/my_document.cbe?format=long"
-    reference_to_local_doc_marker = $"common.cte#legalese"
-    reference_to_remote_doc_marker = $"https://somewhere.com/my_document.cbe?format=long#examples"
+    "forward reference" = $later_obj_ref
+    "reference to string" = $my_string_ref
+    "reference to map" = $my_map_ref
+
+    "a later object" = &later_obj_ref:{
+      "x" = 2
+      "recursive reference" = $later_obj_ref
+    }
+}
+```
+
+#### Remote Reference
+
+A remote reference refers to an object in another document. It acts like a [resource ID](#resource-id) that describes how to find the referenced object in an outside document.
+
+ * A remote reference **MUST** point to either:
+   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
+   - A [marker ID](#marker) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker) in the document being referenced.
+ * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and could pose a security risk).
+ * A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following remote references.
+
+**Examples (in [CTE](cte-specification.md))**:
+```cte
+c1 {
+    "ref to doc on filesystem" = $"some_document.cbe"
+    "ref to marked obj in local doc" = $"some_document.cbe#widgets"
+    "ref to remote doc" = $"https://somewhere.com/my_document.cbe"
+    "ref to marked obj in remote doc" = $"https://somewhere.com/my_document.cbe#widgets"
 }
 ```
 
 
 ### Constant
 
-Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `nil`, etc). Constants are only available in [CTE](cte-specification.md) documents. [CBE](cbe-specification.md) documents must store the actual value instead.
+Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `null`, etc). Constants are only available in [CTE](cte-specification.md) documents. [CBE](cbe-specification.md) documents must store the actual value instead.
 
 A constant's name is an [identifier](#identifier).
 
@@ -981,38 +1006,6 @@ A constant **MUST** be defined in a schema to represent a real object, **not** a
 CTE decoders **MUST** look up (in the schema) all constants encountered in a CTE document and use the values they refer to. A lookup failure is a [data error](#data-errors).
 
 CTE encoders **MUST** use constant names where required by the schema.
-
-
-### NA
-
-NA ("Not Available") is a pseudo-object that indicates missing data (data that was expected be there but is not for some reason). This allows a service to return the available parts of a data structure even in the face of an error condition. The [combined](#combined-objects) reason field (which **MUST** be a real object) describes why the data is missing.
-
-    [NA] [Reason]
-
-NA implies an error condition. For intentional "no-data", use [nil](#nil).
-
-Decoders **MUST** provide a configuration option to choose whether NA is treated as a [structural error](#structural-errors) or a [data error](#data-errors), and **MUST** default to structural error.
-
-**NA MUST NOT be used as**:
-
- * A [map key](#map).
- * An [identifier](#identifier).
- * The media type field in a [media object](#media).
- * A content string in a [markup container](#markup).
- * The vertex in an [edge](#edge).
-
-**Some possible reasons for NA**:
-
- * The system doesn't have the requested data.
- * Rules prevent the data from being provided.
- * There was an error while fetching or computing the data.
- * The data could not be provided in the requested form.
-
-**Examples (in [CTE](cte-specification.md))**:
-
- * `na:"Insufficient privileges"` (not available, with a text reason)
- * `na:404` (not available for reason code 404)
- * `na:nil` (not available for unknown reason)
 
 
 
@@ -1039,7 +1032,7 @@ Comments are allowed anywhere in a CTE document except:
 
  * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid).
  * After the top-level object (`c1 100 /*comment*/` is invalid).
- * Between the left and right side of a [combined object](#combined-objects) (`na:/*comment*/"IO Error"` and `@"http://x.com/"/*comment*/:"blah` are invalid).
+ * Between the left and right side of a [combined object](#combined-objects) (`@"http://x.com/"/*comment*/:"blah` is invalid).
  * Inside of a [string-like array](#string-like-arrays) type. It's actually not possible to have a comment inside of a [string-like array](#string-like-arrays) because, for example, a construct like `"this is a /*comment*/"` would be interpreted entirely as a string since it's within double-quote delimiters. It's also not possible in [custom text](#text-custom-type) because everything between the opening `|ct ` and closing `|` delimiters has a custom-defined interpretation (your custom interpretation could in theory support comments, but such things are beyond the scope of this specification).
 
 **Example**:
@@ -1090,7 +1083,6 @@ The effect of this combination could be to:
 
  * Concatenate one object to another ([resource IDs](#resource-id))
  * Assign metadata to an object ([markers](#marker))
- * Clarify meaning ([NA](#na))
 
 **Note**: In [CTE](cte-specification.md), combining is indicated by the `:` character. In [CTE](cbe-specification.md), the combination is implied by the type field.
 
@@ -1103,15 +1095,15 @@ The effect of this combination could be to:
 
 ```cte
 c1 {
-    resources = [
-        &ex:@"http://example.com/"     // "ex" refers to http://example.com/
+    "resources" = [
+        &ex:@"http://example.com/"         // "ex" refers to http://example.com/
     ]
-    urls = [
+    "urls" = [
         @"http://example.com/":path        // http://example.com/path
         @"http://example.com/":"long/path" // http://example.com/long/path
-        $ex:path                            // http://example.com/path
-        &long-path:$ex:"long/path"          // "long-path" refers to http://example.com/long/path
-        $long-path:"a/b/c/d"                // http://example.com/long/path/a/b/c/d
+        $ex:"path"                         // http://example.com/path
+        &long-path:$ex:"long/path"         // "long-path" refers to http://example.com/long/path
+        $long-path:"a/b/c/d"               // http://example.com/long/path/a/b/c/d
     ]
 }
 ```
@@ -1121,10 +1113,10 @@ c1 {
 Empty Document
 --------------
 
-An empty document is signified by using the [Nil](#nil) type as the top-level object:
+An empty document is signified by using the [Null](#null) type as the top-level object:
 
 * In CBE: [`83 01 7e`]
-* In CTE: `c1 nil`
+* In CTE: `c1 null`
 
 
 
@@ -1188,13 +1180,9 @@ By default, list types **MUST** be compared ordered and map types unordered, unl
 
 Extraneous whitespace in a markup contents section is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 
-#### NA
+#### Null
 
-[NA](#na) values are always considered equivalent to each other regardless of the reasons.
-
-#### Nil
-
-[Nil](#nil) values are always considered equivalent to each other.
+[Null](#null) values are always considered equivalent to each other.
 
 #### Comments
 
@@ -1297,9 +1285,9 @@ For example, given the map:
 
 ```
 {
-    purchase-ids = [1004 102062 94112]
-    total = 91.44
-    total = 0
+    "purchase-ids" = [1004 102062 94112]
+    "total" = 91.44
+    "total" = 0
 }
 ```
 
@@ -1309,9 +1297,9 @@ As a seller, you'd want your billing system to choose the first instance of "tot
 
 ```
 {
-    purchase-ids = [1004 102062 94112]
-    total = 91.44
-    total\U+D800 = 0
+    "purchase-ids" = [1004 102062 94112]
+    "total" = 91.44
+    "total\4D800" = 0
 }
 ```
 
@@ -1377,7 +1365,6 @@ For application developers, security is a frame of mind. You **SHOULD** always b
  * Use a common schema to ensure that your validation rules are consistent across your infrastructure.
  * Treat received values as all-or-nothing. If you're unable to store it in its entirety without data loss, it **SHOULD** be rejected. Allowing data loss means opening your system to key collisions and other exploits.
  * Guard against unintentional default conversions (for example string values converting to 0 or true in comparisons).
- * Never store na or attempt to convert na to a default value. Generate a diagnostic and either store a consistent, deterministic replacement, or more preferably halt processing.
  * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise, either truncating or omitting data, which opens your system to exploitation.
 
 

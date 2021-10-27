@@ -67,14 +67,13 @@ Contents
     - [Container End](#container-end)
     - [Content String](#content-string)
 * [Other Types](#other-types)
-  - [Nil](#nil)
+  - [Null](#null)
 * [Pseudo-Objects](#pseudo-objects)
   - [Marker](#marker)
   - [Reference](#reference)
     - [Local Reference](#local-reference)
     - [Remote Reference](#remote-reference)
   - [Constant](#constant)
-  - [NA](#na)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -118,7 +117,7 @@ All characters in a CTE document **MUST** be [text-safe](ce-structure.md#text-sa
 
 **Examples**:
 
- * CTE v1 empty document: `c1 nil`
+ * CTE v1 empty document: `c1 null`
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 ["a" "b" "c"]`
  * CTE v1 document containing a top-level map: `c1 {"a"=1 "b"=2 "c"=3}`
@@ -251,7 +250,7 @@ The version specifier and the top-level object **MUST** be separated by [structu
 **Example**:
 
 * Version specifier (CTE version 1): `c1`
-* Complete (and empty) document: `c1 nil`
+* Complete (and empty) document: `c1 null`
 
 
 
@@ -667,7 +666,7 @@ c1 [
     "two"
     3.1
     {}
-    nil
+    null
 ]
 ```
 
@@ -792,7 +791,7 @@ c1 <View,
     <Text "id"="HelloText",
         Hello! Please choose a name!
     >
-    // <HRule style=thin>
+    // <HRule "style"="thin">
     <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"} "OnChange"="\.@@
         HelloText.SetText("Hello, " + NameInput.Text + "!")
     @@",
@@ -806,9 +805,9 @@ c1 <View,
 Other Types
 -----------
 
-### Nil
+### Null
 
-Nil is encoded as `nil`.
+Null is encoded as `null`.
 
 
 
@@ -828,12 +827,12 @@ Example:
 
 ```cte
 c1 [
-    &remember_me:"Pretend that this is a huge string"
+    &remember_me:"Remember this string"
     &1:{"a" = 1}
 ]
 ```
 
-The string `"Pretend that this is a huge string"` is marked with the string ID `remember_me`, and the map `{a=1}` is marked with the unsigned integer ID `1`.
+The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
 
 
 ### Reference
@@ -847,13 +846,13 @@ A local reference begins with the reference initiator (`$`), followed immediatel
 ```cte
 c1 {
     "some_object" = {
-        "my_string" = &big_string:"Pretend that this is a huge string"
+        "my_string" = &remember_me:"Remember this string"
         "my_map" = &1:{
             "a" = 1
         }
     }
 
-    "reference_to_string" = $big_string
+    "reference_to_string" = $remember_me
     "reference_to_map" = $1
 }
 ```
@@ -881,17 +880,6 @@ c1 {
 A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
 
     #some_const // a const named "some_const", whose type and value are defined in a schema.
-
-
-### NA
-
-NA is encoded as `na`, and **MUST** always be [concatenated](#combined-objects) with a reason field consisting of any real object (not a pseudo-object).
-
-**Examples**:
-
- * `na:"Insufficient privileges"` (not available, with an English language reason)
- * `na:404` (not available for reason code 404)
- * `na:nil` (not available for unknown reason)
 
 
 
@@ -971,31 +959,23 @@ The combine operator in CTE is `:`. There **MUST NOT** be whitespace between the
 c1 {
     "refs" = [
         &ref1:@"https://example.com/"
-        &ref2:@"https://example.com/":foo
+        &ref2:@"https://example.com/":"foo"
     ]
 
     // https://example.com/foo
-    "example_1" = @"https://example.com/":foo
+    "example_1" = @"https://example.com/":"foo"
 
     // https://example.com/foo
-    "example_2" = $ref1:foo
+    "example_2" = $ref1:"foo"
 
     // https://example.com/foo
     "example_3" = $ref2
 
     // https://example.com/200
-    "example_4" = $ref1:200
+    "example_4" = $ref1:"200"
 
     // https://example.com/foo/bar
     "example_5" = $ref1:"foo/bar"
-
-    // NA for reasons
-    "example_6" = na:"Insufficient privileges"
-    "example_7" = na:{
-        "code" = 409
-        "en" = "database error"
-        "jp" = "データベースエラー"
-    }
 }
 ```
 
@@ -1004,10 +984,10 @@ c1 {
 Empty Document
 --------------
 
-An empty document in CTE is signified by using the [Nil](#nil) type as the top-level object:
+An empty document in CTE is signified by using the [Null](#null) type as the top-level object:
 
 ```cte
-c1 nil
+c1 null
 ```
 
 
@@ -1139,9 +1119,11 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed because their intent is to be read by humans. When only machines will read the document, use [CBE](cbe-specification.md) instead of minified CTE.
+Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed (except when intended for single-line log entries) because the purpose of CTE is to be read by humans.
 
-This section specifies how to pretty-print CTE documents.
+Use [CBE](cbe-specification.md) wherever possible instead of minified CTE, and convert to (pretty-printed) CTE only in places where a human will be reading the data.
+
+The following sections describe how to pretty-print CTE documents.
 
 
 #### Right Margin
@@ -1153,7 +1135,7 @@ In general, 120 columns **SHOULD** always be considered reasonable, with larger 
 
 #### Indentation
 
-The canonical indentation is 4 spaces (`    `).
+The canonical indentation is 4 spaces (`    `). CTE encoders **SHOULD** always emit indentation unless the destination is a single-line log entry.
 
 
 #### Lists

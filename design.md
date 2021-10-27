@@ -39,7 +39,7 @@ Concise Encoding is composed of two parallel formats: one binary and one text. T
 
 The biggest challenge of a text format is figuring out how to concisely and uniquely represent all of the different data types in a convenient, human readable way that still remains easily parseable by a computer. Limiting the number of data types helps a lot, but that can run counter to the goal of covering 80% of use cases. After many revisions, I settled on the following types:
 
- * Nil
+ * Null
  * Boolean
  * Integer (arbitrary length)
  * UUID
@@ -50,6 +50,8 @@ The biggest challenge of a text format is figuring out how to concisely and uniq
  * Bytes
  * List
  * Map
+ * Edge
+ * Node
  * Markup
  * Reference
  * Comment
@@ -73,11 +75,6 @@ Type-Specific Concerns
 Containers can contain mixed types. Not all languages support this, but for such cases it's better to limit the kinds of data you send rather than limit the format itself.
 
 Containers are ordered by default. It's easier to start with tighter constraints and relax them on demand than to go the other way around.
-
-
-### NA
-
-The NA type is designed to avoid the [null problem](https://en.wikipedia.org/wiki/Null_pointer) while still allowing for the very real possibility of missing data.
 
 
 ### Time

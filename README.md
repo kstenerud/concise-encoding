@@ -117,8 +117,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |     |
 | Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
 | Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |     |
-| Nil           |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |  Y  |
-| NA            |    Y    |     |      |      |      |             |       |           |             |        |       |     |
+| Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |  Y  |
 | Media         |    Y    |     |      |      |      |             |       |           |             |        |       |     |
 | Custom        |    Y    |     |      |      |      |             |       |           |             |        |   Y   |  Y  |
 
@@ -212,8 +211,7 @@ c1
     "date"      = 2019-07-01
     "time"      = 18:04:00.940231541/E/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344/Z
-    "na"        = na:"database is offline"
-    "nil"       = nil
+    "null"      = null
     "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
                   65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
@@ -268,7 +266,7 @@ c1
     "ref2" = $id1
 
     // Reference pointing to part of another document.
-    "outside ref" = $@"https://xyz.com/document.cte#some_id"
+    "outside ref" = $"https://xyz.com/document.cte#some_id"
 }
 ```
 

@@ -69,7 +69,7 @@ If: true path, false path
 -------------------------------------------------
 
 Types:
-- Nil        
+- Null        
 - Boolean    
 - Integer    
 - Float      
@@ -201,7 +201,7 @@ String-like:
 Numeric:
 - multiple of
 
-Nil:
+Null:
 
 Boolean:
 
@@ -493,3 +493,7 @@ Attributes:
 - depends
 
 Default values?
+
+--------------------------------------------
+
+Will probably use https://cuelang.org/

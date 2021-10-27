@@ -57,7 +57,7 @@ Contents
   - [Node](#node)
   - [Markup](#markup)
 * [Other Types](#other-types)
-  - [Nil](#nil)
+  - [Null](#null)
   - [RESERVED](#reserved)
 * [Peudo-Objects](#peudo-objects)
   - [Marker](#marker)
@@ -65,7 +65,6 @@ Contents
     - [Local Reference](#local-reference)
     - [Remote Reference](#remote-reference)
   - [Constant](#constant)
-  - [NA](#na)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -152,7 +151,7 @@ The types are structured such that the most commonly used types and values encod
 |  7b | End of Container          |                                              |
 |  7c | Boolean False             |                                              |
 |  7d | Boolean True              |                                              |
-|  7e | Nil                       |                                              |
+|  7e | Null                      |                                              |
 |  7f | Padding                   |                                              |
 |  80 | String: 0 bytes           |                                              |
 |  81 | String: 1 byte            | [1 octet of UTF-8 data]                      |
@@ -190,7 +189,7 @@ The types are structured such that the most commonly used types and values encod
 
 ### Type Field (Plane 2)
 
-Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e3]`.
+Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e2]`.
 
 | Hex | Type                  | Elems | Payload                                   |
 | --- | --------------------- | ----- | ----------------------------------------- |
@@ -228,10 +227,9 @@ Types from plane 2 are represented using two bytes instead of one, with the pref
 | ... | ...                   |  ...  | ...                                       |
 |  af | Array: UID            |   15  | [128-bit big endian element] x15          |
 | ... | RESERVED              |       |                                           |
-|  e0 | NA                    |    1  | [reason object]                           |
-|  e1 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
-|  e2 | Resource ID Reference |    1  | [resource id]                             |
-|  e3 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
+|  e0 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
+|  e1 | Resource ID Reference |    1  | [resource id]                             |
+|  e2 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
 | ... | RESERVED              |       |                                           |
 |  f5 | Array: UID            |    ∞  | [chunk length] [128-bit B-E elements] ... |
 |  f6 | Array: Binary Float64 |    ∞  | [chunk length] [64-bit L-E elements] ...  |
@@ -330,7 +328,7 @@ Temporal Types
 
 Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
 
-**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed! Use [nil](#nil) instead.
+**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed!
 
 
 ### Date
@@ -517,7 +515,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e1]` for the [concatenated](#concatenation) form.
+Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e0]` for the [concatenated](#concatenation) form.
 
 **Example**:
 
@@ -529,11 +527,11 @@ Resource identifiers are encoded with type `[91]` for the normal form, or type `
 
 In [concatenated](#concatenation) form, the resource ID is followed by an implied string (where the string type field is omitted):
 
-    [94 e1 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
+    [94 e0 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
 
 **Example**:
 
-    [94 e1 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
+    [94 e0 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
      3f 6f 72 64 65 72 69 64 3d 04 34 32]
     = https://example.com/?orderid=42 (where "42" is concatenated)
 
@@ -641,7 +639,7 @@ The media array is composed of two sub-arrays: an implied string containing the 
 | Field        | Description                                 |
 | ------------ | ------------------------------------------- |
 | Plane 2      | The type code 0x94                          |
-| Type         | The type code 0xe3 (media)                  |
+| Type         | The type code 0xe2 (media)                  |
 | Chunk Header | The number of media type bytes following    |
 | Elements     | The characters as a sequence of octets      |
 | ...          | Possibly more chunks until continuation = 0 |
@@ -651,7 +649,7 @@ The media array is composed of two sub-arrays: an implied string containing the 
 
 **Example**:
 
-    [94 e3 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
+    [94 e2 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
      *1 *2 *3 *4                                              *5 *6                                                                                  
 
 Points of interest:
@@ -659,7 +657,7 @@ Points of interest:
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
 |  *1   | Type (0x94 = plane 2)                            |
-|  *2   | Plane 2 type (0xe3 = media)                      |
+|  *2   | Plane 2 type (0xe2 = media)                      |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
@@ -747,9 +745,9 @@ Unlike other containers, a markup container requires two end-of-container marker
 Other Types
 -----------
 
-### Nil
+### Null
 
-Nil is encoded as `[7e]`.
+Null is encoded as `[7e]`.
 
 
 ### RESERVED
@@ -782,22 +780,20 @@ A local reference begins with the reference type (0x98), followed by a marker ID
 
     [98 (length) (ID string data)]
 
-    [94 e2 (chunk header) (RID data)]
-
 **Examples**:
 
     [98 01 61] = reference to the object marked with ID "a"
 
 #### Remote Reference
 
-A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e2]`).
+A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e1]`).
 
 **Examples**:
 
-    [94 e2 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [94 e1 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [94 e2 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
+    [94 e1 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
     = remote reference to https://example.org/cities/france#paris, where "paris" is the local marker ID in that document
 
 
@@ -805,14 +801,6 @@ A remote reference is encoded in the same manner as a [resource identifier](#res
 
 Constants are not supported in CBE. An encoder **MUST** encode the value the constant represents instead.
 
-
-### NA
-
-NA is encoded as `[94 e0]` + reason.
-
-    [94 e0 84 67 6f 6e 65] = Not available for reason "gone"
-    [94 e0 6a 94 01] = Not available for reason 404
-    [94 e0 7e] = Not available for unknown reason
 
 
 
@@ -837,7 +825,7 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 Empty Document
 --------------
 
-An empty document in CBE is signified by using the [Nil](#nil) type the top-level object:
+An empty document in CBE is signified by using the [Null](#null) type the top-level object:
 
     [83 01 7e]
 
