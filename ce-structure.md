@@ -218,7 +218,7 @@ Concise Encoding adheres to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-**Note**: Be careful not to set the payload to all zeroes when changing a NaN to signaling, as an all-zero payload in ieee754-binary signifies infinity, not NaN.
+**Note**: Be careful not to set the rest of the payload to all zeroes on a signaling NaN, as that would result in an all-zero payload, which in ieee754-binary signifies infinity, not NaN.
 
 **Examples (in [CTE](cte-specification.md))**:
 
