@@ -115,6 +115,7 @@ Concise encoding is an ad-hoc format, so it shares more in common with XML, JSON
 | Markup        |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
 | Typed Arrays  |    Y    |     |      |      |  Y   |             |   Y   |     Y     |      Y      |   Y    |   Y   |     |
 | Reference     |    Y    |     |      |      |  Y   |             |       |           |             |        |       |     |
+| Remote Ref    |    Y    |     |      |      |      |             |       |           |             |        |       |     |
 | Comment       |    Y    |  Y  |      |      |      |             |       |           |             |        |       |     |
 | Constant      |    Y    |     |      |      |      |             |       |           |             |        |       |     |
 | Null          |    Y    |     |  Y   |  Y   |  Y   |      Y      |   Y   |     Y     |             |        |   Y   |  Y  |
@@ -157,10 +158,9 @@ Amazon's [Ion](https://amzn.github.io/ion-docs) is the only other format that ha
 * Doesn't support chunking (so you must always know the full length before you start encoding).
 * Lists must be prefixed with their length, so you must know the length before you start encoding. Converting a list from the text format to binary format would require loading the entire list into memory first.
 * Only supports "struct" encoding, so you can't have real maps (for example using integers or dates as keys).
-* Doesn't allow preserving comments when converting to binary.
 * Doesn't support arrays.
 * Doesn't support recursive data or references.
-* Doesn't have a URL or UUID or error type.
+* Doesn't have a URL or UUID type.
 * Integer, date, and decimal float encodings are inefficient.
 * Allows multiple sections, each with their own version declaration as a feature for mixing specification versions in the same document. This means that ALL codecs must support ALL versions forever, increasing bloat and attack surface.
 
@@ -196,7 +196,7 @@ c1
 ```cte
 c1
 {
-    "string" = "Strings support escape sequences: \n \t \27f"
+    "string" = "Strings support escape sequences: \n \t \51F415"
     "url"    = @"https://example.com/"
     "email"  = @"mailto:me@somewhere.com"
 }
@@ -209,8 +209,8 @@ c1
 {
     "uuid"      = f1ce4567-e89b-12d3-a456-426655440000
     "date"      = 2019-07-01
-    "time"      = 18:04:00.940231541/E/Prague
-    "timestamp" = 2010-07-15/13:28:15.415942344/Z
+    "time"      = 18:04:00.948/Europe/Prague
+    "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
     "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
                   65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
@@ -270,42 +270,66 @@ c1
 }
 ```
 
-#### Relationships
+#### Graphs
 
 ```cte
 c1
+c1
+//
+// The weighted graph:
+//
+//     b
+//    /|\
+//   4 1 1
+//  /  |  \
+// a-3-c-4-d
+//
 {
-    // Marked base resource identifiers used for concatenation.
-    "resources" = [
-        &people:@"https://springfield.gov/people#"
-        &mp:@"https://mypredicates.org/"
-        &mo:@"https://myobjects.org/"
+    "vertices" = [
+        &a:{}
+        &b:{}
+        &c:{}
+        &d:{}
     ]
-
-    // Map-encoded relationships (the map is the subject)
-    $people:"homer_simpson" = {
-
-        /* $mp refers to @"https://mypredicates.org/""
-         * $mp:"wife" concatenates to @"https://mypredicates.org/wife"
-         */
-        $mp:"wife" = $people:"marge_simpson"
-
-        // Multiple relationship objects
-        $mp:"regrets" = [
-            $firing
-            $forgotten_birthday
-        ]
-    }
-
-    "relationship statements" = [
-        &marge_birthday:($people:"marge_simpson" $mp:"birthday" 1956-10-01)
-        &forgotten_birthday:($people:"homer_simpson" $mp:"forgot" $marge_birthday)
-        &firing:($people:"montgomery_burns" $mp:"fired" $people:"homer_simpson")
-
-        // Multiple relationship subjects
-        ([$firing $forgotten_birthday] $mp:"contribute" $mo:"marital_strife")
+    "edges" = [
+        @($a {"weight"=4 "direction"="both"} $b)
+        @($a {"weight"=3 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $d)
+        @($c {"weight"=4 "direction"="both"} $d)
     ]
 }
+```
+
+#### Trees
+
+```cte
+//
+// The tree:
+//
+//       2
+//      / \
+//     5   7
+//    /   /|\
+//   9   6 1 2
+//  /   / \
+// 4   8   5
+//
+(2
+    (7
+        2
+        1
+        (6
+            5
+            8
+        )
+    )
+    (5
+        (9
+            4
+        )
+    )
+)
 ```
 
 #### Constants
