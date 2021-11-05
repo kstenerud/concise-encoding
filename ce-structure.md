@@ -255,6 +255,10 @@ A universal identifier. This identifier is designed to be unique across all iden
 
 Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the universal identifier implementation.
 
+**Example (in [CTE](cte-specification.md))**:
+
+ * `123e4567-e89b-12d3-a456-426655440000`
+
 
 
 Temporal Types

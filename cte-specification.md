@@ -373,7 +373,7 @@ Invalid:
 
 An [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
-Example:
+**Example**:
 
     123e4567-e89b-12d3-a456-426655440000
 
