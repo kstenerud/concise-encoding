@@ -92,17 +92,16 @@ Contents
 Terms
 -----
 
-The following terms have specific meanings in this specification:
+The following bolded, capitalized terms have specific meanings in this specification:
 
-| Term         | Meaning                                                                                                               |
-| ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| MUST (NOT)   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
-| SHOULD (NOT) | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
-| MAY (NOT)    | It is up to the implementation to decide whether to do something or not.                                              |
-| CAN          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
-| CANNOT       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
-| OPTIONAL     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
-| RECOMMENDED  | Refers to a "best practice", which **SHOULD** be followed if possible.                                                |
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+| **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 
 
 
