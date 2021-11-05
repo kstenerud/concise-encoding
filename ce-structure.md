@@ -29,6 +29,8 @@ Contents
   - [Boolean](#boolean)
   - [Integer](#integer)
   - [Floating Point](#floating-point)
+    - [Decimal Floating Point](#decimal-floating-point)
+    - [Binary Floating Point](#binary-floating-point)
   - [UID](#uid)
 * [Temporal Types](#temporal-types)
   - [Date](#date)
@@ -171,24 +173,58 @@ The Concise Encoding format itself places no bounds on the range of most numeric
 
 Supports the values true and false.
 
+**Examples (in [CTE](cte-specification.md))**:
+
+ * `true`
+ * `false`
+
 
 ### Integer
 
 Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value being represented remains the same.
 
+**Examples (in [CTE](cte-specification.md))**:
+
+ * `42`
+ * `-1000000000000000000000000000000000000000000000000000`
+
 
 ### Floating Point
 
-A floating point number is composed of a whole part, fractional part, and possible exponent. Floating point numbers **CAN** be binary or decimal. In a decimal floating point number, the exponent represents 10 to the power of the exponent value (for example 3.814 x 10⁵⁰), whereas in a binary floating point number the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). Concise Encoding supports both decimal and binary floating point numbers in various sizes, configurations, and notations.
+A floating point number is composed of a whole part, fractional part, and possible exponent. There are two primary classes of floating point numbers in Concise Encoding: decimal and binary, which can be stored in various sizes, configurations, and notations.
 
-Binary floating point values in Concise Encoding adhere to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754) binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. In [CBE](cbe-specification.md), they are directly stored in these formats. In [CTE](cte-specification.md), they are stored as textual representations that will ultimately be converted into these formats when evaluated by a machine. Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#Binary), the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information.
+
+An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers that are not negative 0) as long as the final numeric value remains the same (i.e. no rounding occurs).
+
+#### Decimal Floating Point
+
+In a decimal floating point number, the exponent represents 10 to the power of the exponent value (for example 3.814 x 10⁵⁰).
+
+Decimal floating point **SHOULD** be the preferred method for storing floating point values because of the rounding issues associated with binary floating point when viewing in human-friendly forms.
+
+**Examples (in [CTE](cte-specification.md))**:
+
+ * `-2.81`
+ * `4.195342e-10000`
+
+#### Binary Floating Point
+
+In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). 
+
+Binary floating point is provided mainly in support of legacy systems, to ensure that no further rounding occurs when transmitting the values.
+
+Concise Encoding adheres to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754) binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#Binary), the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information (being careful not to set the payload to all zeroes, which would signify infinity instead of NaN).
+**Note**: Be careful not to set the payload to all zeroes when changing a NaN to signaling, as an all-zero payload in ieee754-binary signifies infinity, not NaN.
 
-An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers that are not negative 0) as long as the final numeric value remains the same.
+**Examples (in [CTE](cte-specification.md))**:
+
+ * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
+ * `0x1.0p0` = 1
 
 #### Value Ranges
 
@@ -201,7 +237,7 @@ Floating point types support the following ranges:
 
 **Notes**:
 
- * Binary floats are limited to what is representable by 64-bit ieee754 binary float.
+ * Binary floats are limited to what is representable in ieee754 binary float up to 64 bits.
  * Although decimal floats technically have unlimited range, most implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values

@@ -286,6 +286,8 @@ A floating point number is composed of a whole part and a fractional part separa
 
 #### Base-10 Notation
 
+The base-10 notation is used to represent [decimal floating point numbers](ce-structure.md#decimal-floating-point).
+
 The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
  * `6.411e+9` = 6411000000
@@ -296,12 +298,14 @@ Although there is technically no maximum number of significant digits or exponen
 
 #### Base-16 Notation
 
-Base-16 floating point numbers allow 100% accurate representation of ieee754 binary floating point values. They begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
+The base-16 notation is used to represent [binary floating point numbers](ce-structure.md#binary-floating-point) because it allows 100% accurate representation of the actual value.
+
+Base-16 notation begins begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
-To maintain compatibility with [CBE](cbe-specification.md), base-16 floating point notation **MUST** only be used to represent ieee754 binary float and bfloat value ranges that are supported by CBE (16, 32, 64-bit).
+To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
 #### Special Floating Point Values
 
