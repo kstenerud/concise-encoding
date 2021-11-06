@@ -296,7 +296,7 @@ A date is made up of the following fields:
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `2019-8-5`: August 5, 2019
+ * `2019-08-05`: August 5, 2019
  * `5081-03-30`: March 30, 5081
  * `-300-12-21`: December 21, 300 BC (proleptic Gregorian)
 
@@ -322,10 +322,10 @@ A time is made up of the following fields:
 **Examples (in [CTE](cte-specification.md))**:
 
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
- * `12:05:50.102/Z`: 12:05:50 and 102 milliseconds UTC
+ * `12:05:50.102`: 12:05:50 and 102 milliseconds UTC
  * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
  * `17:41:03/-13.54/-172.36`: 17:41:03 Samoa time
- * `9:00:00/L`: 9:00:00 local time
+ * `9:00:00/Local`: 9:00:00 local time
 
 
 ### Timestamp
@@ -335,7 +335,7 @@ A timestamp combines a date and a time.
 **Examples (in [CTE](cte-specification.md))**:
 
  * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
- * `1985-10-26/01:20:01.105/M/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
+ * `1985-10-26/01:20:01.105/America/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
  * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever will be in the place of Paris at that time
 
 
