@@ -586,7 +586,7 @@ Array elements in [CTE](cte-specification.md) **CAN** be written using any of th
 
  * `|u8x 9f 47 cb 9a 3c|`
  * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
- * `|i16 0b1001010 0o744 1000 0xffff|`
+ * `|i16 0b1001010 0o744 1000 0x7fff|`
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 1 1 0 1 0|`
 
