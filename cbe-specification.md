@@ -40,7 +40,6 @@ Contents
   - [Chunked Form](#chunked-form)
     - [Chunk Header](#chunk-header)
     - [Zero Chunk](#zero-chunk)
-  - [Concatenation](#concatenation)
   - [String](#string)
   - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
@@ -188,7 +187,7 @@ The types are structured such that the most commonly used types and values encod
 
 ### Type Field (Plane 2)
 
-Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e2]`.
+Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e1]`.
 
 | Hex | Type                  | Elems | Payload                                   |
 | --- | --------------------- | ----- | ----------------------------------------- |
@@ -226,9 +225,8 @@ Types from plane 2 are represented using two bytes instead of one, with the pref
 | ... | ...                   |  ...  | ...                                       |
 |  af | Array: UID            |   15  | [128-bit big endian element] x15          |
 | ... | RESERVED              |       |                                           |
-|  e0 | Resource ID Concat    |    2  | [resource id] [concatenated object]       |
-|  e1 | Resource ID Reference |    1  | [resource id]                             |
-|  e2 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
+|  e0 | Resource ID Reference |    1  | [resource id]                             |
+|  e1 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
 | ... | RESERVED              |       |                                           |
 |  f5 | Array: UID            |    ∞  | [chunk length] [128-bit B-E elements] ... |
 |  f6 | Array: Binary Float64 |    ∞  | [chunk length] [64-bit L-E elements] ...  |
@@ -459,21 +457,6 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
 In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
 
 
-### Concatenation
-
-Some array types (currently only [resource ID](#resource-id)) have a special concatenated form, whereby extra array data is appended after the end of the array. This serves to provide a binary analogue to [CTE's combine operator](cte-specification.md#combined-objects) where needed.
-
-An array type in its concatenated form has a different type code from the regular form, and contains **two** array structures following the type (one for the base value, and one for the concatenated data):
-
-Regular form:
-
-    [type (chunk header) (data) ... (last chunk header) (data)]
-
-Concatenated form:
-
-    [type (chunk header) (data) ... (last chunk header) (data) (concat chunk header) (data) ... (last chunk header) (data)]
-
-
 ### String
 
 Strings are encoded as UTF-8.
@@ -514,7 +497,7 @@ Since an identifier is always part of another structure, it doesn't have its own
 
 ### Resource Identifier
 
-Resource identifiers are encoded with type `[91]` for the normal form, or type `[94 e0]` for the [concatenated](#concatenation) form.
+Resource identifiers are encoded like a long-form string, but with type `[91]`.
 
 **Example**:
 
@@ -523,16 +506,6 @@ Resource identifiers are encoded with type `[91]` for the normal form, or type `
      71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
      6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
     = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
-
-In [concatenated](#concatenation) form, the resource ID is followed by an implied string (where the string type field is omitted):
-
-    [94 e0 (chunk header) (resource ID contents) ... (chunk header) (string contents) ...]
-
-**Example**:
-
-    [94 e0 3a 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 63 6f 6d 2f
-     3f 6f 72 64 65 72 69 64 3d 04 34 32]
-    = https://example.com/?orderid=42 (where "42" is concatenated)
 
 
 ### Custom Types
@@ -638,7 +611,7 @@ The media array is composed of two sub-arrays: an implied string containing the 
 | Field        | Description                                 |
 | ------------ | ------------------------------------------- |
 | Plane 2      | The type code 0x94                          |
-| Type         | The type code 0xe2 (media)                  |
+| Type         | The type code 0xe1 (media)                  |
 | Chunk Header | The number of media type bytes following    |
 | Elements     | The characters as a sequence of octets      |
 | ...          | Possibly more chunks until continuation = 0 |
@@ -648,7 +621,7 @@ The media array is composed of two sub-arrays: an implied string containing the 
 
 **Example**:
 
-    [94 e2 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
+    [94 e1 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
      *1 *2 *3 *4                                              *5 *6                                                                                  
 
 Points of interest:
@@ -656,7 +629,7 @@ Points of interest:
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
 |  *1   | Type (0x94 = plane 2)                            |
-|  *2   | Plane 2 type (0xe2 = media)                      |
+|  *2   | Plane 2 type (0xe1 = media)                      |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
@@ -785,14 +758,14 @@ A local reference begins with the reference type (0x98), followed by a marker ID
 
 #### Remote Reference
 
-A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e1]`).
+A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e0]`).
 
 **Examples**:
 
-    [94 e1 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [94 e0 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [94 e1 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
+    [94 e0 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
     = remote reference to https://example.org/cities/france#paris, where "paris" is the local marker ID in that document
 
 

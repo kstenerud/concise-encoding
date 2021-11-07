@@ -77,7 +77,6 @@ Contents
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
-* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Letter Case](#letter-case)
 * [Whitespace](#whitespace)
@@ -614,20 +613,6 @@ A Concise Encoding implementation **MUST** interpret only [CTE escape sequences]
  * `@"http://x.y.z?quote=\""` decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
  * `@"http://x.y.z?quote=%22"` decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
 
-Resource IDs support [concatenation](#combined-objects):
-
-    @"http://x.com/":"my-suffix" // = http://x.com/my-suffix
-
-    c1 {
-        "resources" = [
-            &query:@"https://some-really-long-url-thats-annoying-to-type.com/query?ref-id="
-        ]
-        "queries" = {
-            "query-1" = $query:1
-            "query-5000" = $query:5000
-        }
-    }
-
 
 ### Custom Binary
 
@@ -950,40 +935,6 @@ Padding is not supported in CTE. Skip all padding when encoding to CTE.
 
 
 
-Combined Objects
-----------------
-
-The combine operator in CTE is `:`. There **MUST NOT** be whitespace between the combine operator and its operands.
-
-
-**Examples**:
-
-```cte
-c1 {
-    "refs" = [
-        &ref1:@"https://example.com/"
-        &ref2:@"https://example.com/":"foo"
-    ]
-
-    // https://example.com/foo
-    "example_1" = @"https://example.com/":"foo"
-
-    // https://example.com/foo
-    "example_2" = $ref1:"foo"
-
-    // https://example.com/foo
-    "example_3" = $ref2
-
-    // https://example.com/200
-    "example_4" = $ref1:"200"
-
-    // https://example.com/foo/bar
-    "example_5" = $ref1:"foo/bar"
-}
-```
-
-
-
 Empty Document
 --------------
 
@@ -1091,7 +1042,6 @@ Examples:
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
- * Between a [concatenation](#combined-objects) operator and its operands (`@"http://x.com/" : 1` is invalid).
  * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 

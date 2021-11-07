@@ -72,7 +72,6 @@ Contents
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
-* [Combined Objects](#combined-objects)
 * [Empty Document](#empty-document)
 * [Text Safety](#text-safety)
 * [Equivalence](#equivalence)
@@ -542,27 +541,19 @@ The colon (`:`) character has a special purpose as a **namespace separator**. Th
 
 ##### Marker Identifier
 
-A [marker](#marker) identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
+A [marker](#marker) identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would clash with the id-value seprator in [CTE](cte-specification.md)).
+
+Marker IDs are declared identifiers, and therefore **MUST** be unique to all other marker IDs in the current document.
 
 
 #### Resource Identifier
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
 
-Resource IDs **CAN** also be [concatenated](#combined-objects) with a [string](#string), whereby a string is appended to the resource ID to create a final combined value. This is normally done in conjunction with [references](#reference) to cut down on repetition.
-
-**Note**: Concatenation is only allowed **once** per resource ID (for example, `@"a":"b":"c"` is not allowed)
-
-When concatenation occurs, validation **MUST** be done in two steps:
-
-* Each side of the concatenation is individually validated as a string.
-* The combined value is validated as a resource ID.
-
 **Examples (in [CTE](cte-specification.md))**:
 
-    @"https://x.com/"             // = https://x.com/
-    @"https://x.com/":"something" // = https://x.com/something
-    @"https://x.com/":"1234"      // = https://x.com/1234
+ * `@"https://x.com/"`
+ * `@"mailto:nobody@nowhere.com"`
 
 
 ### Typed Array
@@ -765,43 +756,37 @@ More complex graph data can be succinctly represented by mixing in other CE feat
 
 ```cte
 c1 {
-    "resources" = [
-        &people:@"https://springfield.gov/people#"
-        &mp:@"https://mypredicates.org/"
-        &mo:@"https://myobjects.org/"
-    ]
-
-    $people:"homer_simpson" = {
-        $mp:"wife" = $people:"marge_simpson"
-        $mp:"regrets" = [
+    @"https://springfield.gov/people#homer_simpson" = {
+        @"https://mypredicates.org/wife" = @"https://springfield.gov/people#marge_simpson"
+        @"https://mypredicates.org/regrets" = [
             $firing
             $forgotten_birthday
         ]
-        $mp:"troubles" = $troubles
+        @"https://mypredicates.org/troubles" = $troubles
     }
 
     "graph edges" = [
         &marge_birthday:@(
-            $people:"marge_simpson"
-            $mp:"birthday"
+            @"https://springfield.gov/people#marge_simpson"
+            @"https://mypredicates.org/birthday"
             1956-10-01
         )
         &forgotten_birthday:@(
-            $people:"homer_simpson"
-            $mp:"forgot"
+            @"https://springfield.gov/people#homer_simpson"
+            @"https://mypredicates.org/forgot"
             $marge_birthday
         )
         &firing:@(
-            $people:"montgomery_burns"
-            $mp:"fired"
-            $people:"homer_simpson"
+            @"https://springfield.gov/people#montgomery_burns"
+            @"https://mypredicates.org/fired"
+            @"https://springfield.gov/people#homer_simpson"
         )
 
         // Multiple subjects
         &troubles:@(
             [$firing $forgotten_birthday]
-            $mp:"contribute"
-            $mo:"marital_strife"
+            @"https://mypredicates.org/contribute"
+            @"https://myobjects.org/marital_strife"
         )
     ]
 }
@@ -943,27 +928,17 @@ Pseudo-objects **CAN** be placed anywhere a full object can be placed, with the 
 
  * Pseudo-objects **MUST NOT** be placed before or used as an [identifier](#identifier) (for example, `&#myconst:"something"` is invalid).
  * Pseudo-objects **MUST NOT** be placed inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
- * Pseudo-objects **MUST NOT** be used as the right-side of [combined objects](#combined-objects) (for example, `#myconst:$myref`, `&myref1:$myref2`, and `@"http://x.com/":#myconst` are invalid).
 
 **Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the top-level object.
 
 
 ### Marker
 
-A marker is a [combined](#combined-object) pseudo-object that assigns a [marker ID](#marker-id) to another object, which can then be [referenced](#reference) in another part of the document (or from a different document).
+A marker assigns a [marker identifier](#marker-identifier) to another object, which can then be [referenced](#reference) in another part of the document (or from a different document).
 
     [marker id] [marked object]
 
-#### Marker ID
-
-A marker identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would [clash with the id-value seprator in CTE](cte-specification.md#combined-objects)).
-
-Marker IDs are declared identifiers, and therefore **MUST** be unique to all other marker IDs in the current document.
-
-#### Rules
-
- * A marker construct **MUST NOT** contain other pseudo-objects (i.e. no markers-to-markers, markers-to-references, etc between left-side and right-side).
- * A marker **CANNOT** mark an object in a different container level. For example: `(begin-list) (marker ID) (end-list) (string)` is invalid.
+A marker **CANNOT** mark other pseudo-objects or invisible objects (i.e. no markers-to-markers, markers-to-references, markers-to-comments, etc).
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -1040,7 +1015,7 @@ Constants are custom named values that have been defined in a schema. They can b
 
 A constant's name is an [identifier](#identifier).
 
-A constant **MUST** be defined in a schema to represent a real object, **not** a pseudo-object or pseudo-object combination.
+A constant **MUST** be defined in a schema to represent a real object, **not** a pseudo-object.
 
 CTE decoders **MUST** look up (in the schema) all constants encountered in a CTE document and use the values they refer to. A lookup failure is a [data error](#data-errors).
 
@@ -1071,7 +1046,7 @@ Comments are allowed anywhere in a CTE document except:
 
  * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid).
  * After the top-level object (`c1 100 /*comment*/` is invalid).
- * Between the left and right side of a [combined object](#combined-objects) (`@"http://x.com/"/*comment*/:"blah` is invalid).
+ * Between the left and right side of a [marker](#marker) and marke object (`&my_id:/*comment*/"blah` is invalid).
  * Inside of a [string-like array](#string-like-arrays) type. It's actually not possible to have a comment inside of a [string-like array](#string-like-arrays) because, for example, a construct like `"this is a /*comment*/"` would be interpreted entirely as a string since it's within double-quote delimiters. It's also not possible in [custom text](#text-custom-type) because everything between the opening `|ct ` and closing `|` delimiters has a custom-defined interpretation (your custom interpretation could in theory support comments, but such things are beyond the scope of this specification).
 
 **Example**:
@@ -1108,44 +1083,6 @@ c1
 Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning. CTE encoders **CANNOT** encode padding.
 
 The padding type **CAN** occur any number of times where a CBE type field is valid.
-
-
-
-Combined Objects
-----------------
-
-Combined objects are objects that are created by combining two sub-objects.
-
-    [left-object] combined-with [right-object]
-
-The effect of this combination could be to:
-
- * Concatenate one object to another ([resource IDs](#resource-id))
- * Assign metadata to an object ([markers](#marker))
-
-**Note**: In [CTE](cte-specification.md), combining is indicated by the `:` character. In [CTE](cbe-specification.md), the combination is implied by the type field.
-
-### Rules
-
- * Combined objects are considered a single object. This means for example that in `&123:@"http://example.com/":"999"`, the marker ID `123` refers to `http://example.com/999`, not `http://example.com/`.
- * [Pseudo-objects](#pseudo-objects) are not allowed on the right-side of a combination. (`@"http://x.com/":$ref-to-string` is invalid).
-
-**Example (in [CTE](cte-specification.md))**:
-
-```cte
-c1 {
-    "resources" = [
-        &ex:@"http://example.com/"         // "ex" refers to http://example.com/
-    ]
-    "urls" = [
-        @"http://example.com/":path        // http://example.com/path
-        @"http://example.com/":"long/path" // http://example.com/long/path
-        $ex:"path"                         // http://example.com/path
-        &long-path:$ex:"long/path"         // "long-path" refers to http://example.com/long/path
-        $long-path:"a/b/c/d"               // http://example.com/long/path/a/b/c/d
-    ]
-}
-```
 
 
 
@@ -1250,7 +1187,7 @@ Errors are an inevitable part of the decoding process. This section lays out how
 Structural errors are the kinds of errors that imply or cause a malformed document structure, affect lookups, or hit a limit that stops the object from being ingested. This could be due to things such as:
 
  * Improper document structure (mismatched container start/end, etc).
- * Incorrect data types for the current context (map keys, object combinations, etc).
+ * Incorrect data types for the current context (map keys, etc).
  * Malformed identifiers.
  * Failed reference lookup.
  * Failed [global limit checks](#user-controllable-limits).
