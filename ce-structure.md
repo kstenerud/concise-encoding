@@ -825,7 +825,6 @@ c1
         )
     )
 )
-
 ```
 
 When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
@@ -888,7 +887,7 @@ For the purposes of this rule:
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1 <View;
+c1 <View,
     <Image "src"=@"images/avatar-image.jpg">
     <Text,
         Hello! Please choose a name!
@@ -982,8 +981,8 @@ c1 {
     "reference to map" = $my_map_ref
 
     "a later object" = &later_obj_ref:{
-      "x" = 2
-      "recursive reference" = $later_obj_ref
+        "x" = 2
+        "recursive reference" = $later_obj_ref
     }
 }
 ```
