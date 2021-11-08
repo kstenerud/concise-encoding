@@ -685,7 +685,15 @@ An edge container is composed of the delimiters `@(` and `)`, containing the whi
 Weighted graph edge:
 
 ```cte
-@($a 200 $b)
+{
+    "objs" = [
+      &a:{}
+      &b:{}
+    ]
+    "graph" = [
+      @($a 200 $b)
+    ]
+}
 ```
 
 Relationship graph edge:
@@ -1181,11 +1189,11 @@ If the attributes section is too long, the overflow **SHOULD** be broken up into
 Edge components **SHOULD** be broken up into multiple lines if they're too long.
 
 ```cte
-@[
+@(
     @"https://springfield.gov/people#homer_simpson"
     @"https://example.org/wife"
     @"https://springfield.gov/people#marge_simpson"
-]
+)
 ```
 
 
@@ -1221,9 +1229,11 @@ In the event that a machine generating CTE documents wants to also output commen
 
 Comments **SHOULD** have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) **SHOULD** also have a space before the closing sequence.
 ```cte
-// abc
+{
+  // abc
 
-/* abc */
+  /* abc */
+}
 ```
 
 Long comments **SHOULD** be broken up to fit within the right margin.
@@ -1239,7 +1249,7 @@ The object following a comment **SHOULD** be on a different line.
 ```cte
 {
     // See list of request types in request-types.md
-    request-type = ping
+    "request-type" = "ping"
 }
 ```
 

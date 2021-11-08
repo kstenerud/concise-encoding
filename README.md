@@ -274,7 +274,6 @@ c1
 
 ```cte
 c1
-c1
 //
 // The weighted graph:
 //
