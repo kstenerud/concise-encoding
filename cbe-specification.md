@@ -269,6 +269,8 @@ Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (in
 
     [type] [byte 1 (low)] ... [byte x (high)]
 
+**Note**: Because the sign is encoded into the type field, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments, so care must be taken after decoding to ensure that the sign is not lost (the most common approach is to convert it to a floating point type).
+
 #### Variable width
 
 Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.

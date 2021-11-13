@@ -73,6 +73,7 @@ Contents
   - [Comment](#comment)
   - [Padding](#padding)
 * [Empty Document](#empty-document)
+* [Truncated Document](#truncated-document)
 * [Text Safety](#text-safety)
 * [Equivalence](#equivalence)
 * [Error Processing](#error-processing)
@@ -1092,6 +1093,25 @@ An empty document is signified by using the [Null](#null) type as the top-level 
 
 * In CBE: [`83 01 7e`]
 * In CTE: `c1 null`
+
+
+
+Truncated Document
+------------------
+
+When dealing with an unreliable data channel, it is sometimes desirable to keep a partial document rather than suffer total data loss.
+
+A codec **MUST** provide an option to artificially complete a truncated [CBE](cbe-specification.md) document. This option **MUST** default to disabled.
+
+#### To artificially complete a truncated document:
+
+ * Incomplete fields that are neither arrays nor containers **MUST** be discarded.
+ * Incomplete [resource identifier](#resource-identifier) and [remote reference](#remote-reference) fields **MUST** be discarded.
+ * Fields with incomplete [identifier](#identifier) data **MUST** be discarded.
+ * The last element of an incomplete array **MUST** be discarded if the element is incomplete.
+ * Any still-open containers and arrays **MUST** be artificially closed.
+
+The artificialy completed document is returned to the caller along with an indication that the document was truncated.
 
 
 
