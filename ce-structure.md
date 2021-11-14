@@ -830,7 +830,7 @@ c1
 
 When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
 
-![tree rotated](tree-rotated.svg)
+![tree rotated](img/tree-rotated.svg)
 
 ```
       2
