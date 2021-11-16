@@ -1,31 +1,30 @@
-<p align="center" style="margin: 0;">
-    <img width="130" alt="CE Logo" src="img/ce-logo.svg">
-    <h3 align="center">Concise Encoding</h3>
-    <p align="center">The secure data format for a modern world</p>
-    <hr/>
-</p>
+<p align="center"><img width="130" alt="CE Logo" src="img/ce-logo.svg"/><h3 align="center">
+
+Concise Encoding
+
+</h3><p align="center"> The secure data format for a modern world </p><hr/></p>
 
 
-💡 Solving the data problems of today
--------------------------------------
+💡 Solving today's problems
+---------------------------
 
-**Today's world is very different from the carefree days that brought us XML and JSON:**
+**Times are different from the carefree days that brought us XML and JSON:**
 
 ### Security
 
 State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage. The existing ad-hoc data formats are too loosely defined to be secure, and can't be fixed because they're not versioned.
 
-**Concise Encoding is designed from the ground up with security in mind, and is versioned so that it can be updated to handle new threats**.
+**Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats**.
 
-### Efficiency vs ease-of-use
+### Efficiency AND ease-of-use
 
-We send so much data that efficiency is critical, but until now efficiency has meant giving up the ease-of-use of text formats.
+We send so much data that efficiency is critical, but until now efficiency has meant giving up the ease-of-use that text formats offer.
 
-**Concise Encoding gives you the best of both worlds with its compatible text and binary formats. Edit text, transmit binary**.
+**Concise Encoding gives you both with its compatible text and binary formats. `Edit text. Transmit binary.`**
 
 ### Types
 
-There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything less secure.
+There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything *less secure*.
 
 **Concise Encoding supports all of the common types natively**.
 
@@ -33,7 +32,7 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 <br/>
 
 📊 Compared to other formats
------------------------------
+----------------------------
 
 ### Features
 
@@ -91,7 +90,7 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 <br/>
 
 📚 Specifications and Code
----------------------------
+--------------------------
 
 ### Specifications
 
@@ -114,7 +113,7 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 <br/>
 
 📌 Examples
-------------
+-----------
 
 All examples are valid [Concise Text Encoding](cte-specification.md) documents that can be transparently 1:1 converted to/from [Concise Binary Encoding](cbe-specification.md)
 
