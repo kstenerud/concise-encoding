@@ -1,7 +1,7 @@
 <p align="center" style="margin: 0;">
     <img width="130" alt="CE Logo" src="img/ce-logo.svg">
     <h3 align="center">Concise Encoding</h3>
-    <p align="center">The secure, efficient, human-friendly data format.</p>
+    <p align="center">The secure data format for a modern world</p>
     <hr/>
 </p>
 
@@ -9,19 +9,25 @@
 💡 Solving the data problems of today
 -------------------------------------
 
-**Today's world is very different from the simpler age that brought us XML and JSON:**
+**Today's world is very different from the carefree days that brought us XML and JSON:**
 
 ### Security
 
-The threat model is *much* more sophisticated now. State actors, criminal organizations and mercenaries are actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage. The existing ad-hoc data formats are too loosely defined to be secure (and they can't be fixed). **Concise Encoding is designed from the start with security in mind, and is versioned so that it can be updated to handle new threats**.
+State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage. The existing ad-hoc data formats are too loosely defined to be secure, and can't be fixed because they're not versioned.
+
+**Concise Encoding is designed from the ground up with security in mind, and is versioned so that it can be updated to handle new threats**.
 
 ### Efficiency vs ease-of-use
 
-We send so much data now that efficiency is critical, but efficiency has always required giving up the ease-of-use of text formats. **Concise Encoding gives you the best of both worlds with its compatible text and binary formats. Edit in text, transmit in binary**.
+We send so much data that efficiency is critical, but until now efficiency has meant giving up the ease-of-use of text formats.
+
+**Concise Encoding gives you the best of both worlds with its compatible text and binary formats. Edit text, transmit binary**.
 
 ### Types
 
-There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything less secure. **Concise Encoding supports all of the common types natively**.
+There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything less secure.
+
+**Concise Encoding supports all of the common types natively**.
 
 
 <br/>
@@ -31,19 +37,19 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 
 ### Features
 
-| Type                  | Concise | XML | JSON | BSON | CBOR | Protobufs | Thrift | ASN.1 | Ion |
-| --------------------- | ------- | --- | ---- | ---- | ---- | --------- | ------ | ----- | --- |
-| Int Max Size (bits)   |    ∞    | ❌  |  53  |  64  |  64  |    64     |   64   |  64   |  ∞  |
-| Float Max Size (bits) |    ∞    | ❌  |  64  | 128  |  64  |    64     |   64   |  64   |  ∞  |
-| Subsecond Precision   |   ns    | ❌  |  ❌  |  ns  |  ns  |    ns     |   ❌   |  ns   | ns  |
-| Little Endian         |   ✔️     | ❌  |  ❌  |  ✔️   |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
-| Ad-hoc                |   ✔️     | ✔️   |  ✔️   |  ✔️   |  ✔️   |    ❌     |   ❌   |  ❌   | ✔️   |
-| Non-string map keys   |   ✔️     | ❌  |  ❌  |  ✔️   |  ✔️   |    ✔️      |   ❌   |  ❌   | ❌  |
-| Size Optimization     |   ✔️     | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
-| Cyclic References     |   ✔️     | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
-| Time Zones            |   ✔️     | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
-| Bin + Txt             |   ✔️     | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ✔️   |
-| Versioned             |   ✔️     | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ⚠️   |
+| Type                  | CE | XML | JSON | BSON | CBOR | Protobufs | Thrift | ASN.1 | Ion |
+| --------------------- | -- | --- | ---- | ---- | ---- | --------- | ------ | ----- | --- |
+| Int Max Size (bits)   | ∞  | ❌  |  53  |  64  |  64  |    64     |   64   |  64   |  ∞  |
+| Float Max Size (bits) | ∞  | ❌  |  64  | 128  |  64  |    64     |   64   |  64   |  ∞  |
+| Subsecond Precision   | ns | ❌  |  ❌  |  ns  |  ns  |    ns     |   ❌   |  ns   | ns  |
+| Little Endian         | ✔️  | ❌  |  ❌  |  ✔️   |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
+| Ad-hoc                | ✔️  | ✔️   |  ✔️   |  ✔️   |  ✔️   |    ❌     |   ❌   |  ❌   | ✔️   |
+| Non-string map keys   | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ✔️      |   ❌   |  ❌   | ❌  |
+| Size Optimization     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
+| Cyclic References     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
+| Time Zones            | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
+| Bin + Txt             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ✔️   |
+| Versioned             | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ⚠️   |
 
 * **Little Endian**: Modern CPUs use little endian, so little endian formats can be more efficiently encoded/decoded.
 * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
