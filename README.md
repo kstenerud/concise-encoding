@@ -24,7 +24,7 @@ We send so much data that efficiency is critical, but until now efficiency has m
 
 ### Types
 
-There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything *less secure*.
+There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything *less* secure.
 
 **Concise Encoding supports all of the common types natively**.
 
@@ -41,22 +41,22 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 | Int Max Size (bits)   | ∞  | ❌  |  53  |  64  |  64  |    64     |   64   |  64   |  ∞  |
 | Float Max Size (bits) | ∞  | ❌  |  64  | 128  |  64  |    64     |   64   |  64   |  ∞  |
 | Subsecond Precision   | ns | ❌  |  ❌  |  ns  |  ns  |    ns     |   ❌   |  ns   | ns  |
-| Little Endian         | ✔️  | ❌  |  ❌  |  ✔️   |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
 | Ad-hoc                | ✔️  | ✔️   |  ✔️   |  ✔️   |  ✔️   |    ❌     |   ❌   |  ❌   | ✔️   |
+| Little Endian         | ✔️  | ❌  |  ❌  |  ✔️   |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
 | Non-string map keys   | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ✔️      |   ❌   |  ❌   | ❌  |
 | Size Optimization     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
-| Cyclic References     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
+| Cyclic Data           | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Time Zones            | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Bin + Txt             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ✔️   |
 | Versioned             | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ⚠️   |
 
-* **Little Endian**: Modern CPUs use little endian, so little endian formats can be more efficiently encoded/decoded.
-* **Ad-hoc**: Supports ad-hoc data (does not require a schema).
-* **Size Optimization**: Encoding is designed such that the more common types & values use less space.
-* **Cyclic References**: Supports cyclic (recursive) data structures.
-* **Time Zones**: Timestamps support real time zones.
-* **Bin + Txt**: All types in the binary format match 1:1 to the same type in the text format.
-* **Versioned**: Documents are versioned to match a specification version. Ion versioning is in the binary format only.
+ * **Ad-hoc**: Supports ad-hoc data (does not require a schema).
+ * **Little Endian**: Uses little-endian (modern CPUs use little endian, making little endian formats more efficient).
+ * **Size Optimization**: The most common types and values use less space.
+ * **Cyclic Data**: Supports cyclic (recursive) data structures.
+ * **Time Zones**: Time types support real time zones.
+ * **Bin + Txt**: Has twin formats, and the binary format is 1:1 compatible with the text format.
+ * **Versioned**: Documents are versioned to the specification they adhere to. (Ion supports versioning in the binary format only).
 
 ### Type Support
 
@@ -94,9 +94,9 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 
 ### Specifications
 
- * 🔬 [Concise Encoding Structure](ce-structure.md) (describes the overall structure and rules of the binary and text formats)
- * 📃 [Concise Text Encoding (CTE)](cte-specification.md) (describes the text format)
- * 💽 [Concise Binary Encoding (CBE)](cbe-specification.md) (describes the binary format)
+ * 🔬 [Concise Encoding Structure](ce-structure.md) (describes the structure and rules that both formats follow)
+ * 💽 [Concise Binary Encoding (CBE)](cbe-specification.md) (describes the binary format encoding)
+ * 📃 [Concise Text Encoding (CTE)](cte-specification.md) (describes the text format encoding)
 
 **Note**: Most applications will only need the [binary format](cbe-specification.md). The [text format](cte-specification.md) is only required in places where a human must get involved, and this can often be handled by a simple [command-line tool](https://github.com/kstenerud/enctool).
 
@@ -112,10 +112,20 @@ There's no excuse anymore for not supporting the common data types. Lack of type
 
 <br/>
 
+⚠️ Draft Specification
+----------------------
+
+Although Concise Encoding is nearing a release, it's currently a **draft** specification and thus subject to change. Please use a version of `0` for now to avoid compatibility issues with existing documents when version 1 is released.
+
+**Note**: When version 1 is released, `0` will no longer be a valid version number.
+
+
+<br/>
+
 📌 Examples
 -----------
 
-All examples are valid [Concise Text Encoding](cte-specification.md) documents that can be transparently 1:1 converted to/from [Concise Binary Encoding](cbe-specification.md)
+All examples are valid [Concise Text Encoding](cte-specification.md) documents that can be transparently 1:1 converted to/from [Concise Binary Encoding](cbe-specification.md).
 
 #### Numeric Types
 
