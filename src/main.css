@@ -5,7 +5,7 @@
     --box-shadow: 2px 2px 10px;
     --color: #118bee;
     --c-accent: #0000000c;
-    --c-bg: #EFF3F4;
+    --c-bg: #eef6ff;
     --c-bg-updt: white;
     --c-bg-2nd: #e9e9e9;
     --c-bg-shout: #00000048;
@@ -147,12 +147,26 @@ a.badge-shoutout:hover {
     font-size: 1.1rem;
 }
 
+.card-list {
+    border-radius: 0.5em;
+    background-color: #d4e1ff;
+    text-align: left;
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+    max-width: fit-content;
+    margin: 0.5rem auto auto auto;
+    font-size: 108%;
+}
+
+.card-list-item {
+    padding: 0.05rem;
+}
+
 .card-image {
-    width: 5.5rem;
+    width: 6.5rem;
     display: block;
     margin-left: auto;
     margin-right: auto;
-    padding-bottom: 1rem;
+    padding-bottom: 0.3rem;
 }
 
 .donate {
@@ -162,16 +176,20 @@ a.badge-shoutout:hover {
     margin-right: auto;
 }
 
+.resource-section {
+    width: 80%;
+    text-align: center;
+    margin: 4rem auto 0 auto;
+}
+
 .blurb {
     width: 80%;
     text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 3rem;
+    margin: 2rem auto 4rem auto;
 }
 
 .blurb-text {
-    opacity: 0.7;
+    opacity: 0.8;
 }
 
 .blurb-text-larger {
@@ -206,7 +224,6 @@ a.badge-shoutout:hover {
     float: left;
     margin-top: auto;
     margin-bottom: auto;
-    opacity: 0.7;
 }
 
 .horiz {
@@ -264,7 +281,6 @@ a.nav-link {
 /* Layout */
 article aside {
     background: var(--c-atc-accent);
-    border-left: 4px solid var(--c-atc);
     padding: 0.01rem 0.8rem;
 }
 
@@ -308,17 +324,8 @@ section {
 section aside {
     text-align: center;
     font-size: 0.9rem;
-    border: 1px solid var(--c-bg-2nd);
-    border-radius: var(--brdr-rad);
-    margin: 1rem;
-    padding: 1.25rem;
+    padding-top: 1.25rem;
     width: var(--w-card);
-    background-color: #ffffff;
-    filter: drop-shadow(0rem 0.2rem 0.2rem rgba(0, 0, 0, 0.2));
-}
-
-section aside:hover {
-    box-shadow: var(--box-shadow) var(--c-bg-2nd);
 }
 
 section aside img {
@@ -363,7 +370,7 @@ article h3 {
     text-align: left;
     font-size: 1rem;
     font-weight: normal;
-    opacity: 55%;
+    opacity: 75%;
     padding-top: 0;
     padding-bottom: 0.5rem;
     margin-top: 0;
@@ -378,7 +385,7 @@ article ul {
 }
 
 aside h3 {
-    font-size: 130%;
+    font-size: 150%;
 }
 
 /* Headers */

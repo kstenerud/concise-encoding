@@ -28,12 +28,12 @@
         </nav>
         </div>
         <br>
-        <p class="title-subtitle">The friendly data format for human &amp; machine</p>
+        <p class="title-subtitle">The secure data format for a modern world</p>
         <div class="title-bgimage">
     </header>
     <section class="updates-container">
         <div>
-            <span class="badge-warning">Release Status</span> <span class="release-number">Prerelease</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
+            <span class="badge-warning">Release Status</span> <span class="release-number">Draft</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
         </div>
     </section>
 
@@ -42,95 +42,122 @@
             <aside>
                 <img class="card-image" src="img/heart.svg">
                 <h3>Simple</h3>
-                <p>Easy to use. Easy to read. Easy to debug.</p>
+                <ul class="card-list">
+                    <li class="card-list-item">Easy to use</li>
+                    <li class="card-list-item">Easy to read</li>
+                    <li class="card-list-item">Easy to debug</li>
+                </ul>
             </aside>
             <aside>
                 <img class="card-image" src="img/battery.svg">
                 <h3>Efficient</h3>
-                <p>Compact encoding. Simple format. Streaming safe.</p>
+                <ul class="card-list">
+                    <li class="card-list-item">Compact encoding</li>
+                    <li class="card-list-item">Simple format</li>
+                    <li class="card-list-item">Streaming safe</li>
+                </ul>
             </aside>
             <aside>
                 <img class="card-image" src="img/security.svg">
                 <h3>Secure</h3>
-                <p>Strictly specified. Sensible defaults. Future proof.</p>
+                <ul class="card-list">
+                    <li class="card-list-item">Strictly specified</li>
+                    <li class="card-list-item">Sensible defaults</li>
+                    <li class="card-list-item">Future proof</li>
+                </ul>
             </aside>
         </section>
 
-        <section class="blurb">
-            <h2>What's important in a modern data format?</h2>
-            <p class="blurb-text">Data requirements have changed a lot over the years. These days, simplicity, efficiency, and security are paramount.</p>
-        </section>
-
-        <article>
-            <div class="horiz">
-                <img class="point-icon" src="img/heart.svg">
-                <div class="vert">
-                    <div>
-                        <h1>Must be easy to use</h1>
-                        <h3>Software development and maintenance is costly</h3>
-                    </div>
-                </div>
-            </div>
-            <p>The more steps there are and the more complicated the steps, the harder it is to develop and maintain. Simplicity is key.</p>
-            <p><strong>Concise Encoding is designed for ease-of-use:</strong></p>
-            <p>
-                <ul>
-                    <li>It's editable as plain text. Viewing and editing binary data is awful because it's so human-hostile. Concise Encoding solves this with twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats. <strong>Edit in text, transmit in binary.</strong></li>
-                    <li>All fundamental types are supported natively. When types are limited, you must adopt ways to encode your data into strings, which is complicated, slow, causes incompatibilities, and opens up security holes.</li>
-                    <li>There are no extra build steps. Just import the library and go.</li>
-                    <li>Debugging is easy: Seamlessly <a href="https://github.com/kstenerud/enctool">convert</a> the <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> document to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> format and examine, modify, play.</li>
-                </ul>
-            </p>
-        </article>
-
-        <article>
-            <div class="horiz">
-                <img class="point-icon" src="img/battery.svg">
-                <div class="vert">
-                    <div>
-                        <h1>Must be efficient</h1>
-                        <h3>Processing and bandwidth are costly</h3>
-                    </div>
-                </div>
-            </div>
-            <p>Text formats are convenient, but they're slow and bloated. Efficiency is the name of the game nowadays.</p>
-            <p><strong>Concise Encoding is designed for efficiency:</strong></p>
-            <p>
-                <ul>
-                    <li>With its twin <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a>/<a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> format, you can transmit your data in efficient binary, and still edit in convenient text.</li>
-                    <li>Streaming is efficient: You don't need to know the size of your data up front, which avoids buffering bottlenecks.</li>
-                    <li>The most common types and values are encoded in the smallest space.</li>
-                    <li>It's a byte-oriented format, keeping complicated bitfield encodings to a minimum.</li>
-                </ul>
-            </p>
-        </article>
+        <div class="blurb">
+            <h2>Solving today's problems</h2>
+            <p class="blurb-text">Times are different from the carefree days that brought us XML and JSON.</p>
+        </div>
 
         <article>
             <div class="horiz">
                 <img class="point-icon" src="img/security.svg">
                 <div class="vert">
                     <div>
-                        <h1>Must be worry-free</h1>
-                        <h3>Protect your data in a hostile world</h3>
+                        <h1>Security</h1>
+                        <h3>Protecting your data</h3>
                     </div>
                 </div>
             </div>
-            <p>Did you know that slightly different behaviors in parsers can lead to a security breach? A rounding or replacing Python parser at the access-control level mixed with a truncating Go parser at the database level could be exploited to <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#induced-data-loss">poison your data and elevate privileges!</a></p>
-            <p><strong>Concise encoding is designed for security, compatibility, and the future:</strong></p>
-            <p>
-                <ul>
-                    <li>It's tightly specified. Optional and ambiguous behaviors are kept to a minimum.</li>
-                    <li>It has intelligent defaults. Doing the right thing happens almost automatically.</li>
-                    <li>All documents are versioned, ensuring forward and backward compatibility forever.</li>
-                    <li>It can't be misinterpreted as text. All binary documents begin with <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md#version-specifier">0x83</a>, which is guaranteed invalid in UTF-8, ISO-8859, and ASCII. This makes it safe for use in QR codes, for example.</li>
-                </ul>
-            </p>
+            <p>State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage.</p>
+            <p>The existing ad-hoc data formats are <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#attack-vectors">too loosely defined to be secure</a>, and can't be fixed because they're not versioned.</p>
+            <p><strong>Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats.</strong></p>
         </article>
 
-        <section class="blurb extra-space">
+        <article>
+            <div class="horiz">
+                <img class="point-icon" src="img/twin.svg">
+                <div class="vert">
+                    <div>
+                        <h1>Efficiency</h1>
+                        <h3>But ease-of-use is also important!</h3>
+                    </div>
+                </div>
+            </div>
+            <p>We send so much data now that efficiency is critical, but switching to binary means giving up the ease of text formats.</p>
+            <p><strong>Concise Encoding gives you ease <em>and</em> efficiency with its 1:1 compatible <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats.</strong></p>
+            <p><strong>▸ Edit Text - Transmit Binary ◂</strong></p>
+        </article>
+
+        <article>
+            <div class="horiz">
+                <img class="point-icon" src="img/atom.svg">
+                <div class="vert">
+                    <div>
+                        <h1>Types</h1>
+                        <h3>We shouldn't have to stringify anymore</h3>
+                    </div>
+                </div>
+            </div>
+            <p>Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens new security holes.</a></p>
+            <p><strong>Concise Encoding supports all of the common types natively.</strong></p>
+        </article>
+
+        <div class="blurb extra-space">
+            <h2>Specifications</h2>
+        </div>
+
+        <article>
+            <div class="resource">
+                <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md"><img class="resource-img" src="img/structure.svg" alt="Structure"></a>
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md">Concise Encoding (Structual Specification)</a>
+                  <br>
+                  <span>Both formats follow this structure.</span>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <div class="resource">
+                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md"><img class="resource-img" src="img/binary-doc.svg" alt="Binary"></a>
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>
+                  <br>
+                  <span>Use this for data storage and transmission.</span>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <div class="resource">
+                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md"><img class="resource-img" src="img/text-doc.svg" alt="Text"></a>
+                <div class="resource-desc" style="display: block;">
+                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a>
+                  <br>
+                  <span>Use this where humans are involved.</span>
+                </div>
+            </div>
+        </article>
+
+        <div class="blurb extra-space">
             <h2>Examples</h2>
             <p class="blurb-text"><a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</p>
-        </section>
+        </div>
 
         <article id="numeric_types">
             <div class="horiz">
@@ -395,9 +422,9 @@ c1
             </pre>
         </article>
 
-        <section class="blurb">
+        <div class="blurb">
             <p class="blurb-text">See the <a href="resources.html">Resources</a> page or <a href="https://github.com/kstenerud/concise-encoding">Github</a> page for more information.</p>
-        </section>
+        </div>
 
         <section class="big-text">
             <p><a href="support-ce.html">Support Open Source Development!</a></p>
