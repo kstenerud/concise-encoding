@@ -12,19 +12,21 @@ Concise Encoding
 
 ### Security
 
-State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage. The existing ad-hoc data formats are too loosely defined to be secure, and can't be fixed because they're not versioned.
+State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage.
+
+The existing ad-hoc data formats are [too loosely defined to be secure](ce-structure.md#attack-vectors), and can't be fixed because they're not versioned.
 
 **Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats**.
 
 ### Efficiency AND ease-of-use
 
-We send so much data that efficiency is critical, but until now efficiency has meant giving up the ease-of-use that text formats offer.
+We send so much data now that efficiency is critical, but switching to binary means giving up the ease of text formats.
 
-**Concise Encoding gives you both with its compatible text and binary formats. `Edit text. Transmit binary.`**
+**Concise Encoding gives you ease and efficiency with its 1:1 compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats. `Edit text. Transmit binary.`**
 
 ### Types
 
-There's no excuse anymore for not supporting the common data types. Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and makes everything *less* secure.
+Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens new security holes.
 
 **Concise Encoding supports all of the common types natively**.
 
