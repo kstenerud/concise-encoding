@@ -260,9 +260,9 @@ c1
                 <code>
 c1
 {
-    "main-view" = &lt;View,
+    "main-view" = &lt;View;
         &lt;Image "src"=@"img/avatar-image.jpg"&gt;
-        &lt;Text "id"="HelloText",
+        &lt;Text "id"="HelloText";
             Hello! Please choose a name!
         &gt;
         // OnChange contains code which might have problematic characters.
@@ -270,7 +270,7 @@ c1
         &lt;TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
             NameInput.Parent.InsertRawAfter(NameInput, '&lt;Image "src"=@"img/check.svg"&gt;')
             HelloText.SetText("Hello, " + NameInput.Text + "!")
-            @@",
+            @@";
             Name me!
         &gt;
     &gt;
