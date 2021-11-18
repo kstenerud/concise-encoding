@@ -614,7 +614,7 @@ c1
 [
     |u8x 9f 47 cb 9a 3c|
     |f32 1,5 0x4,f391p100 30 9,31e-30|
-    |i16 0b1001010 0o744 1000 0xffff|
+    |i16 0b1001010 0o744 1000 0x7fff|
     |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     |b 11010|
 ]
@@ -860,15 +860,13 @@ Content strings **CAN** contain [escape sequences](#escape-sequences), which **M
 **Example**:
 
 ```cte
-c1 <View;
+c1
+<View;
     <Image "src"=@"images/avatar-image.jpg">
     <Text "id"="HelloText";
         Hello! Please choose a name!
     >
-    // <HRule "style"="thin">
-    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"} "OnChange"="\.@@
-        HelloText.SetText("Hello, " + NameInput.Text + "!")
-    @@";
+    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"};
         Name me!
     >
 >
@@ -1244,7 +1242,7 @@ The closing `>` **SHOULD** only be on a different line if there are contents.
 ```
 
 ```cte
-<a,
+<a;
     contents
 >
 ```
@@ -1255,7 +1253,7 @@ The attributes section **SHOULD** be entirely on the same line as the tag name i
 ```
 
 ```cte
-<a "x"="y",
+<a "x"="y";
     contents
 >
 ```

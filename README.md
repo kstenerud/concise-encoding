@@ -193,22 +193,15 @@ c1
 
 ```cte
 c1
-{
-    "main-view" = <View;
-        <Image "src"=@"img/avatar-image.jpg">
-        <Text "id"="HelloText";
-            Hello! Please choose a name!
-        >
-        // OnChange contains code which might have problematic characters.
-        // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
-        <TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
-            NameInput.Parent.InsertRawAfter(NameInput, '<Image "src"=@"img/check.svg">')
-            HelloText.SetText("Hello, " + NameInput.Text + "!")
-            @@";
-            Name me!
-        >
+<View;
+    <Image "src"=@"images/avatar-image.jpg">
+    <Text "id"="HelloText";
+        Hello! Please choose a name!
     >
-}
+    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"};
+        Name me!
+    >
+>
 ```
 
 #### References
