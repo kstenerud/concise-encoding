@@ -53,22 +53,15 @@ c1
             </pre></article><article id="markup"><div class="horiz"><img class="example-icon"src="img/markup.svg"><div class="vert"><h2>Markup</h2></div></div><pre>
                 <code>
 c1
-{
-    "main-view" = &lt;View;
-        &lt;Image "src"=@"img/avatar-image.jpg"&gt;
-        &lt;Text "id"="HelloText";
-            Hello! Please choose a name!
-        &gt;
-        // OnChange contains code which might have problematic characters.
-        // Use verbatim sequences (\.IDENTIFIER ... IDENTIFIER) to handle this.
-        &lt;TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
-            NameInput.Parent.InsertRawAfter(NameInput, '&lt;Image "src"=@"img/check.svg"&gt;')
-            HelloText.SetText("Hello, " + NameInput.Text + "!")
-            @@";
-            Name me!
-        &gt;
+&lt;View;
+    &lt;Image "src"=@"images/avatar-image.jpg"&gt;
+    &lt;Text "id"="HelloText";
+        Hello! Please choose a name!
     &gt;
-}
+    &lt;TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"};
+        Name me!
+    &gt;
+&gt;
                 </code>
             </pre></article><article id="references"><div class="horiz"><img class="example-icon"src="img/flag.svg"><div class="vert"><h2>References</h2></div></div><pre>
                 <code>
