@@ -205,7 +205,7 @@ Decimal floating point **SHOULD** be the preferred method for storing floating p
 **Examples (in [CTE](cte-specification.md))**:
 
  * `-2.81`
- * `4.195342e-10000`
+ * `4,195342e-10000`
 
 #### Binary Floating Point
 
@@ -222,7 +222,7 @@ Concise Encoding adheres to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
+ * `0xa,3fb8p+42` = a.3fb8 x 2⁴²
  * `0x1.0p0` = 1
 
 #### Value Ranges
@@ -321,10 +321,10 @@ A time is made up of the following fields:
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
+ * `23:59:59,999999999`: 23:59:59 and 999999999 nanoseconds UTC
  * `12:05:50.102`: 12:05:50 and 102 milliseconds UTC
  * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
- * `17:41:03/-13.54/-172.36`: 17:41:03 Samoa time
+ * `17:41:03/-13,54/-172,36`: 17:41:03 Samoa time
  * `9:00:00/Local`: 9:00:00 local time
 
 
@@ -335,7 +335,7 @@ A timestamp combines a date and a time.
 **Examples (in [CTE](cte-specification.md))**:
 
  * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
- * `1985-10-26/01:20:01.105/America/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
+ * `1985-10-26/01:20:01,105/America/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
  * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever will be in the place of Paris at that time
 
 
@@ -403,7 +403,7 @@ This method has the advantage of being temporally unambiguous, which could be us
 **Examples (in [CTE](cte-specification.md))**:
 
  * `51.60/11.11`
- * `-13.53/-172.37`
+ * `-13,53/-172,37`
 
 #### UTC
 
@@ -577,7 +577,7 @@ Array elements in [CTE](cte-specification.md) **CAN** be written using any of th
 **Examples (in [CTE](cte-specification.md))**:
 
  * `|u8x 9f 47 cb 9a 3c|`
- * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
+ * `|f32 1,5 0x4,f391p100 30 9,31e-30|`
  * `|i16 0b1001010 0o744 1000 0x7fff|`
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 1 1 0 1 0|`
@@ -681,7 +681,7 @@ By default, a list is ordered and allows duplicate values. Different rules **CAN
 c1 [
     1
     "two"
-    3.1
+    3,1
     {}
     null
 ]
@@ -1143,7 +1143,7 @@ Relaxed equivalence is concerned with the question: Does the data destined for m
 
 #### Numeric Types
 
-Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
+Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12,0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
 
 Infinities with the same sign are considered equivalent.
 
@@ -1161,7 +1161,7 @@ Strings are considered equivalent if their contents are equal after decoding esc
 
 Arrays **MUST** contain the same number of elements, and those elements **MUST** be equivalent.
 
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1,0 2,0 3,0` are equivalent under relaxed equivalence.
 
 #### Containers
 

@@ -32,6 +32,7 @@ Contents
   - [Boolean](#boolean)
   - [Integer](#integer)
   - [Floating Point](#floating-point)
+    - [Radix Point](#radix-point)
     - [Base-10 Notation](#base-10-notation)
     - [Base-16 Notation](#base-16-notation)
     - [Special Floating Point Values](#special-floating-point-values)
@@ -275,12 +276,22 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 
 ### Floating Point
 
-A floating point number is composed of a whole part and a fractional part separated by a dot `.`, with an **OPTIONAL** exponential portion. Negative values are prefixed with a dash `-`.
+A floating point number is composed of a whole part and a fractional part separated by a [radix point](#radix-point), with an **OPTIONAL** exponential portion. Negative values are prefixed with a dash `-`.
 
 **Examples**:
 
     1.0
     -98.413
+    3,14
+
+#### Radix Point
+
+A radix point separates the whole part of a floating point number from the fractional part. The General Conference on Weights and Measures declared in 2003 that "the symbol for the decimal marker shall be either the point on the line or the comma on the line". CTE therefore accepts both `,` and `.` as radix points.
+
+**Examples**:
+
+    -3.81 // Same value as below
+    -3,81 // Same value as above
 
 #### Base-10 Notation
 
@@ -290,7 +301,7 @@ The exponential portion of a base-10 number is denoted by the lowercase characte
 
  * `6.411e+9` = 6411000000
  * `6.411e9` = 6411000000
- * `6.411e-9` = 0.000000006411
+ * `6,411e-9` = 0.000000006411
 
 Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
@@ -301,7 +312,7 @@ The base-16 notation is used to represent [binary floating point numbers](ce-str
 Base-16 notation begins begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
  * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
- * `0x1.0p0` = 1
+ * `0x1,0p0` = 1
 
 To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
@@ -314,24 +325,24 @@ To maintain compatibility with [CBE](cbe-specification.md), values in base-16 no
 
 #### Floating Point Rules
 
-**There MUST be one (and only one) dot character:**
+**There MUST be one (and only one) radix point:**
 
 | Value          | Notes              |
 | -------------- | ------------------ |
 | `1`            | Integer, not float |
 | `1.0`          | Float              |
 | `500000000000` | Integer, not float |
-| `5.0e+11`      | Float              |
+| `5,0e+11`      | Float              |
 | `5e+11`        | Invalid            |
 | `10.4.5`       | Invalid            |
 
-**There MUST be at least one digit on each side of the dot character:**
+**There MUST be at least one digit on each side of the radic point:**
 
 | Invalid      | Valid     | Notes                                                    |
 | ------------ | --------- | -------------------------------------------------------- |
 | `-1.`        | `-1.0`    | Or just use the integer value `-1`                       |
 | `.1`         | `0.1`     |                                                          |
-| `.218901e+2` | `21.8901` | Or `2.18901e+1`, or `0.218901e+2`                        |
+| `,218901e+2` | `21,8901` | Or `2,18901e+1`, or `0,218901e+2`                        |
 | `-0`         | `-0.0`    | Special case: -0 **CANNOT** be represented as an integer |
 
 
@@ -351,7 +362,7 @@ Rules:
 Valid:
 
  * `1_000_000` = 1000000
- * `4_3.5_5_4e9_0` = 43.554e90
+ * `4_3,5_5_4e9_0` = 43.554e90
  * `-0xa.fee_31p1_00` = -0xa.fee31p100
 
 Invalid:
@@ -359,11 +370,11 @@ Invalid:
  * `_1000000`
  * `1000000_`
  * `43_.554e90`
- * `43._554e90`
- * `43.554_e90`
+ * `43,_554e90`
+ * `43,554_e90`
  * `-_43.554e90`
- * `-_0xa.fee31p100`
- * `-0xa.fee31p_100`
+ * `-_0xa,fee31p100`
+ * `-0xa,fee31p_100`
  * `-0_xa.fee31p100`
 
 
@@ -409,13 +420,13 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 A time is made up of the following mandatory and **OPTIONAL** fields:
 
-| Field        | Mandatory | Separator | Min Value | Max Value | Min Digits | Max Digits |
-| ------------ | --------- | --------- | --------- | --------- | ---------- | ---------- |
-| Hour         |     Y     |           |         0 |        23 |          1 |          2 |
-| Minute       |     Y     |    `:`    |         0 |        59 |          2 |          2 |
-| Second       |     Y     |    `:`    |         0 |        60 |          2 |          2 |
-| Subseconds   |     N     |    `.`    |         0 | 999999999 |          0 |          9 |
-| Time Zone    |     N     |    `/`    |         - |         - |          - |          - |
+| Field        | Mandatory | Separator  | Min Value | Max Value | Min Digits | Max Digits |
+| ------------ | --------- | ---------- | --------- | --------- | ---------- | ---------- |
+| Hour         |     Y     |            |         0 |        23 |          1 |          2 |
+| Minute       |     Y     |    `:`     |         0 |        59 |          2 |          2 |
+| Second       |     Y     |    `:`     |         0 |        60 |          2 |          2 |
+| Subseconds   |     N     | `,` or `.` |         0 | 999999999 |          0 |          9 |
+| Time Zone    |     N     |    `/`     |         - |         - |          - |          - |
 
 **Note**: If the time zone is omitted, it is assumed to be `Zero` (UTC).
 
@@ -423,9 +434,9 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 
  * `09:04:21`: 9:04:21 UTC
  * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
- * `12:05:50.102/Z`: 12:05:50 and 102 milliseconds UTC
+ * `12:05:50,102/Z`: 12:05:50 and 102 milliseconds UTC
  * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
- * `17:41:03/-13.54/-172.36`: 17:41:03 Samoa time
+ * `17:41:03/-13,54/-172,36`: 17:41:03 Samoa time
  * `9:00:00/L`: 9:00:00 local time
 
 
@@ -435,7 +446,7 @@ A timestamp combines a date and a time, separated by a slash character (`/`).
 
 **Examples**:
 
- * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
+ * `2019-01-23/14:08:51,941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
  * `1985-10-26/01:20:01.105/M/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
  * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever is in the place of Paris at that time
 
@@ -458,12 +469,12 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and the dot character (`.`) is used as a fractional separator.
+Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and a [radix point](#radix-point) is used as a fractional separator.
 
 **Examples**:
 
  * `51.60/11.11`
- * `-13.53/-172.37`
+ * `-13,53/-172,37`
 
 #### UTC
 
@@ -475,7 +486,7 @@ UTC offsets are recorded by using a `+` or `-` character as the time zone separa
 
 **Examples (using timestamps)**:
 
- * `1985-10-26/01:20:01.105+0700`
+ * `1985-10-26/01:20:01,105+0700`
  * `2000-01-14/10:22:00-0200`
 
 
@@ -549,7 +560,7 @@ For element array encodings, any valid representation of the element data type m
 **Examples**:
 
  * `|u8x 9f 47 cb 9a 3c|`
- * `|f32 1.5 0x4.f391p100 30 9.31e-30|`
+ * `|f32 1,5 0x4,f391p100 30 9,31e-30|`
  * `|i16 0b1001010 0o744 1000 0xffff|`
  * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
  * `|b 11010|`
@@ -1050,8 +1061,8 @@ Examples:
  * Before the [version specifier](#version-specifier).
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
- * In time values (`2018.07.01-10 :53:22.001481/Z` is invalid).
- * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
+ * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
+ * In numeric values (`0x3 f`, `9, 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 
 
 
