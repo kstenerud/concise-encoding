@@ -174,9 +174,13 @@ Supports the values true and false.
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `true`
- * `false`
-
+```cte
+c1
+[
+    true
+    false
+]
+```
 
 ### Integer
 
@@ -184,8 +188,13 @@ Integer values **CAN** be positive or negative, and **CAN** be represented in va
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `42`
- * `-1000000000000000000000000000000000000000000000000000`
+```cte
+c1
+[
+    42
+    -1000000000000000000000000000000000000000000000000000
+]
+```
 
 
 ### Floating Point
@@ -204,8 +213,13 @@ Decimal floating point **SHOULD** be the preferred method for storing floating p
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `-2.81`
- * `4,195342e-10000`
+```cte
+c1
+[
+    -2.81
+    4,195342e-10000
+]
+```
 
 #### Binary Floating Point
 
@@ -222,8 +236,13 @@ Concise Encoding adheres to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `0xa,3fb8p+42` = a.3fb8 x 2⁴²
- * `0x1.0p0` = 1
+```cte
+c1
+[
+    0xa,3fb8p+42 // a.3fb8 x 2⁴²
+    0x1.0p0      // 1
+]
+```
 
 #### Value Ranges
 
@@ -256,7 +275,12 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 
 **Example (in [CTE](cte-specification.md))**:
 
- * `123e4567-e89b-12d3-a456-426655440000`
+```cte
+c1
+[
+    123e4567-e89b-12d3-a456-426655440000
+]
+```
 
 
 
@@ -296,9 +320,14 @@ A date is made up of the following fields:
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `2019-08-05`: August 5, 2019
- * `5081-03-30`: March 30, 5081
- * `-300-12-21`: December 21, 300 BC (proleptic Gregorian)
+```cte
+c1
+[
+    2019-08-05 // August 5, 2019
+    5081-03-30 // March 30, 5081
+    -300-12-21 // December 21, 300 BC (proleptic Gregorian)
+]
+```
 
 
 ### Time
@@ -321,11 +350,16 @@ A time is made up of the following fields:
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `23:59:59,999999999`: 23:59:59 and 999999999 nanoseconds UTC
- * `12:05:50.102`: 12:05:50 and 102 milliseconds UTC
- * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
- * `17:41:03/-13,54/-172,36`: 17:41:03 Samoa time
- * `9:00:00/Local`: 9:00:00 local time
+```cte
+c1
+[
+    23:59:59,999999999      // 23:59:59 and 999999999 nanoseconds UTC
+    12:05:50.102            // 12:05:50 and 102 milliseconds UTC
+    4:00:00/Asia/Tokyo      // 4:00:00 Tokyo time
+    17:41:03/-13,54/-172,36 // 17:41:03 Samoa time
+    9:00:00/Local           // 9:00:00 local time
+]
+```
 
 
 ### Timestamp
@@ -334,9 +368,14 @@ A timestamp combines a date and a time.
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `2019-01-23/14:08:51.941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
- * `1985-10-26/01:20:01,105/America/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
- * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever will be in the place of Paris at that time
+```cte
+c1
+[
+    2019-01-23/14:08:51.941245                  // January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
+    1985-10-26/01:20:01,105/America/Los_Angeles // October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
+    5192-11-01/03:00:00/48.86/2.36              // November 1st, 5192, at 3:00:00, at whatever will be in the place of Paris at that time
+]
+```
 
 
 ### Time Zones
@@ -553,8 +592,13 @@ A resource identifier is a text-based (UTF-8) universally unique identifier that
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `@"https://x.com/"`
- * `@"mailto:nobody@nowhere.com"`
+```cte
+c1
+[
+    @"https://x.com/"
+    @"mailto:nobody@nowhere.com"
+]
+```
 
 
 ### Typed Array
@@ -576,11 +620,16 @@ Array elements in [CTE](cte-specification.md) **CAN** be written using any of th
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `|u8x 9f 47 cb 9a 3c|`
- * `|f32 1,5 0x4,f391p100 30 9,31e-30|`
- * `|i16 0b1001010 0o744 1000 0x7fff|`
- * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
- * `|b 1 1 0 1 0|`
+```cte
+c1
+[
+    |u8x 9f 47 cb 9a 3c|
+    |f32 1,5 0x4,f391p100 30 9,31e-30|
+    |i16 0b1001010 0o744 1000 0x7fff|
+    |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    |b 1 1 0 1 0|
+]
+```
 
 
 ### Media
@@ -598,6 +647,7 @@ A decoder **MUST NOT** attempt to validate the media type beyond ensuring that i
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
+c1
 |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
@@ -626,7 +676,10 @@ A uint8 array value representing a user-defined custom data type. The interpreta
 
 **Example (in [CTE](cte-specification.md))**:
 
-    |cb 93 12 04 f6 28 3c 40 00 00 40 40|
+```cte
+c1
+|cb 93 12 04 f6 28 3c 40 00 00 40 40|
+```
 
 Which is binary data representing a fictional example custom "cplx" struct:
 
@@ -642,7 +695,10 @@ A string-like array value representing a user-defined custom data type. The inte
 
 **Example (in [CTE](cte-specification.md))**:
 
-    |ct cplx(2.94+3i)|
+```cte
+c1
+|ct cplx(2.94+3i)|
+```
 
 
 
@@ -862,8 +918,8 @@ Illustration of markup encodings:
 | ---------- | -------- | -------------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                         |
 |     Y      |    N     | `<div "id"="fillme">`                                          |
-|     N      |    Y     | `<span,Some text here>`                                        |
-|     Y      |    Y     | `<ul "id"="mylist" "style"="boring", <li,first> <li,second> >` |
+|     N      |    Y     | `<span;Some text here>`                                        |
+|     Y      |    Y     | `<ul "id"="mylist" "style"="boring"; <li;first> <li;second> >` |
 
 ##### Content String
 
@@ -888,13 +944,13 @@ For the purposes of this rule:
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1 <View,
+c1 <View;
     <Image "src"=@"images/avatar-image.jpg">
-    <Text,
+    <Text;
         Hello! Please choose a name!
     >
     // <HRule "style"="thin">
-    <TextInput "id"="name" "style"={"height"=40 "borderColor"="gray"}, Name me! >
+    <TextInput "id"="name" "style"={"height"=40 "borderColor"="gray"}; Name me! >
 >
 ```
 
@@ -1049,7 +1105,7 @@ Comments are allowed anywhere in a CTE document except:
  * Between the left and right side of a [marker](#marker) and marke object (`&my_id:/*comment*/"blah` is invalid).
  * Inside of a [string-like array](#string-like-arrays) type. It's actually not possible to have a comment inside of a [string-like array](#string-like-arrays) because, for example, a construct like `"this is a /*comment*/"` would be interpreted entirely as a string since it's within double-quote delimiters. It's also not possible in [custom text](#text-custom-type) because everything between the opening `|ct ` and closing `|` delimiters has a custom-defined interpretation (your custom interpretation could in theory support comments, but such things are beyond the scope of this specification).
 
-**Example**:
+**Examples (in [CTE](cte-specification.md))**:
 ```cte
 c1
 // Comment before top level object

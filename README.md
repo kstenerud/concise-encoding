@@ -194,9 +194,9 @@ c1
 ```cte
 c1
 {
-    "main-view" = <View,
+    "main-view" = <View;
         <Image "src"=@"img/avatar-image.jpg">
-        <Text "id"="HelloText",
+        <Text "id"="HelloText";
             Hello! Please choose a name!
         >
         // OnChange contains code which might have problematic characters.
@@ -204,7 +204,7 @@ c1
         <TextInput "id"="NameInput" "style"={"height"=40 "color"="gray"} "OnChange"="\.@@
             NameInput.Parent.InsertRawAfter(NameInput, '<Image "src"=@"img/check.svg">')
             HelloText.SetText("Hello, " + NameInput.Text + "!")
-            @@",
+            @@";
             Name me!
         >
     >

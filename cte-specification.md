@@ -171,7 +171,7 @@ A continuation escape sequence causes the decoder to ignore all [structural whit
 
 **Example**:
 
-```
+```cte
     "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
      mad to be saved, desirous of everything at the same time, the ones who never yawn or \
      say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
@@ -280,9 +280,14 @@ A floating point number is composed of a whole part and a fractional part separa
 
 **Examples**:
 
+```cte
+c1
+[
     1.0
     -98.413
     3,14
+]
+```
 
 #### Radix Point
 
@@ -290,8 +295,13 @@ A radix point separates the whole part of a floating point number from the fract
 
 **Examples**:
 
+```cte
+c1
+[
     -3.81 // Same value as below
     -3,81 // Same value as above
+]
+```
 
 #### Base-10 Notation
 
@@ -299,9 +309,14 @@ The base-10 notation is used to represent [decimal floating point numbers](ce-st
 
 The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
- * `6.411e+9` = 6411000000
- * `6.411e9` = 6411000000
- * `6,411e-9` = 0.000000006411
+```cte
+c1
+[
+    6.411e+9 // 6411000000
+    6.411e9  // 6411000000
+    6,411e-9 // 0.000000006411
+]
+```
 
 Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
@@ -311,17 +326,27 @@ The base-16 notation is used to represent [binary floating point numbers](ce-str
 
 Base-16 notation begins begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
- * `0xa.3fb8p+42` = a.3fb8 x 2⁴²
- * `0x1,0p0` = 1
+```cte
+c1
+[
+    0xa.3fb8p+42 // a.3fb8 x 2⁴²
+    0x1,0p0      // 1
+]
+```
 
 To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
 #### Special Floating Point Values
 
- * `inf`: Infinity
- * `-inf`: Negative Infinity
- * `nan`: Not a Number (quiet)
- * `snan`: Not a Number (signaling)
+```cte
+c1
+[
+    inf  // Infinity
+    -inf // Negative Infinity
+    nan  // Not a Number (quiet)
+    snan // Not a Number (signaling)
+]
+```
 
 #### Floating Point Rules
 
@@ -361,9 +386,14 @@ Rules:
 
 Valid:
 
- * `1_000_000` = 1000000
- * `4_3,5_5_4e9_0` = 43.554e90
- * `-0xa.fee_31p1_00` = -0xa.fee31p100
+```cte
+c1
+[
+    1_000_000        // 1000000
+    4_3,5_5_4e9_0    // 43.554e90
+    -0xa.fee_31p1_00 // -0xa.fee31p100
+]
+```
 
 Invalid:
 
@@ -384,8 +414,10 @@ An [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
 **Example**:
 
-    123e4567-e89b-12d3-a456-426655440000
-
+```cte
+c1
+123e4567-e89b-12d3-a456-426655440000
+```
 
 
 Temporal Types
@@ -410,10 +442,14 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
 **Examples**:
 
- * `2019-8-5`: August 5, 2019
- * `5081-03-30`: March 30, 5081
- * `-300-12-21`: December 21, 300 BC (proleptic Gregorian)
-
+```cte
+c1
+[
+    2019-8-5   // August 5, 2019
+    5081-03-30 // March 30, 5081
+    -300-12-21 // December 21, 300 BC (proleptic Gregorian)
+]
+```
 
 
 ### Time
@@ -432,12 +468,17 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 
 **Examples**:
 
- * `09:04:21`: 9:04:21 UTC
- * `23:59:59.999999999`: 23:59:59 and 999999999 nanoseconds UTC
- * `12:05:50,102/Z`: 12:05:50 and 102 milliseconds UTC
- * `4:00:00/Asia/Tokyo`: 4:00:00 Tokyo time
- * `17:41:03/-13,54/-172,36`: 17:41:03 Samoa time
- * `9:00:00/L`: 9:00:00 local time
+```cte
+c1
+[
+    09:04:21                // 9:04:21 UTC
+    23:59:59.999999999      // 23:59:59 and 999999999 nanoseconds UTC
+    12:05:50,102/Z          // 12:05:50 and 102 milliseconds UTC
+    4:00:00/Asia/Tokyo      // 4:00:00 Tokyo time
+    17:41:03/-13,54/-172,36 // 17:41:03 Samoa time
+    9:00:00/L               // 9:00:00 local time
+]
+```
 
 
 ### Timestamp
@@ -446,10 +487,14 @@ A timestamp combines a date and a time, separated by a slash character (`/`).
 
 **Examples**:
 
- * `2019-01-23/14:08:51,941245`: January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
- * `1985-10-26/01:20:01.105/M/Los_Angeles`: October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
- * `5192-11-01/03:00:00/48.86/2.36`: November 1st, 5192, at 3:00:00, at whatever is in the place of Paris at that time
-
+```cte
+c1
+[
+    2019-01-23/14:08:51,941245            // January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
+    1985-10-26/01:20:01.105/M/Los_Angeles // October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
+    5192-11-01/03:00:00/48.86/2.36        // November 1st, 5192, at 3:00:00, at whatever is in the place of Paris at that time
+]
+```
 
 ### Time Zones
 
@@ -486,8 +531,13 @@ UTC offsets are recorded by using a `+` or `-` character as the time zone separa
 
 **Examples (using timestamps)**:
 
- * `1985-10-26/01:20:01,105+0700`
- * `2000-01-14/10:22:00-0200`
+```cte
+c1
+[
+    1985-10-26/01:20:01,105+0700
+    2000-01-14/10:22:00-0200
+]
+```
 
 
 ### Why not ISO 8601 or RFC 3339?
@@ -559,11 +609,16 @@ For element array encodings, any valid representation of the element data type m
 
 **Examples**:
 
- * `|u8x 9f 47 cb 9a 3c|`
- * `|f32 1,5 0x4,f391p100 30 9,31e-30|`
- * `|i16 0b1001010 0o744 1000 0xffff|`
- * `|u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|`
- * `|b 11010|`
+```cte
+c1
+[
+    |u8x 9f 47 cb 9a 3c|
+    |f32 1,5 0x4,f391p100 30 9,31e-30|
+    |i16 0b1001010 0o744 1000 0xffff|
+    |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
+    |b 11010|
+]
+```
 
 
 ### Media
@@ -600,7 +655,9 @@ Strings are enclosed within double-quote (`"`) delimiters, and the elements are 
 
 **Example**:
 
-    "Line 1\nLine 2\nLine 3"
+```cte
+c1 "Line 1\nLine 2\nLine 3"
+```
 
 
 ### Identifier
@@ -621,8 +678,13 @@ A resource identifier is enclosed within the delimiters `@"` and `"`.
 
 A Concise Encoding implementation **MUST** interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) **MUST NOT** be interpreted.
 
- * `@"http://x.y.z?quote=\""` decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
- * `@"http://x.y.z?quote=%22"` decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
+```cte
+c1
+[
+    @"http://x.y.z?quote=\""  // decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
+    @"http://x.y.z?quote=%22" // decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
+]
+```
 
 
 ### Custom Binary
@@ -631,13 +693,16 @@ Custom binary data is encoded using standard typed array syntax with type identi
 
 **Example**:
 
-    |cb 04 f6 28 3c 40 00 00 40 40|
-    = binary data representing an imaginary custom "cplx" struct
-      {
-          type:uint8 = 4
-          real:float32 = 2.94
-          imag:float32 = 3.0
-      }
+```cte
+c1
+|cb 04 f6 28 3c 40 00 00 40 40|
+// = binary data representing an imaginary custom "cplx" struct
+//   {
+//       type:uint8 = 4
+//       real:float32 = 2.94
+//       imag:float32 = 3.0
+//   }
+```
 
 
 ### Custom Text
@@ -646,7 +711,9 @@ Custom text data is encoded using standard typed array syntax with type identifi
 
 **Example**:
 
-    |ct cplx(2.94+3i)|
+```cte
+c1 |ct cplx(2.94+3i)|
+```
 
 
 
@@ -757,7 +824,7 @@ c1
 
 The CTE encoding of a markup container is similar to XML, except:
 
- * There are no end tags. All data is contained within the begin `<`, content begin `,`, and end `>` characters.
+ * There are no end tags. All data is contained within the begin `<`, content begin `;`, and end `>` characters.
  * Comments are encoded using `//` or `/*` and `*/` instead of `<!--` and `-->`, and comments can be nested.
 
 #### Markup Structure
@@ -766,7 +833,7 @@ The CTE encoding of a markup container is similar to XML, except:
 | ---------- | ---------- | ------------------------- | -------- |
 | Tag name   | `<`        | [Identifier](#identifier) | Y        |
 | Attributes | [structural whitespace](#structural-whitespace-characters) | [Map](#map)               |          |
-| Contents   | `,`        | [List](#list)             |          |
+| Contents   | `;`        | [List](#list)             |          |
 | End        | `>`        |                           | Y        |
 
 Attributes and contents are **OPTIONAL**. There **MUST** be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
@@ -777,8 +844,8 @@ Illustration of markup encodings:
 | ---------- | -------- | -------------------------------------------------------------- |
 |     N      |    N     | `<br>`                                                         |
 |     Y      |    N     | `<div "id"="fillme">`                                          |
-|     N      |    Y     | `<span,Some text here>`                                        |
-|     Y      |    Y     | `<ul "id"="mylist" "style"="boring", <li,first> <li,second> >` |
+|     N      |    Y     | `<span;Some text here>`                                        |
+|     Y      |    Y     | `<ul "id"="mylist" "style"="boring"; <li;first> <li;second> >` |
 
 The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
 
@@ -793,15 +860,15 @@ Content strings **CAN** contain [escape sequences](#escape-sequences), which **M
 **Example**:
 
 ```cte
-c1 <View,
+c1 <View;
     <Image "src"=@"images/avatar-image.jpg">
-    <Text "id"="HelloText",
+    <Text "id"="HelloText";
         Hello! Please choose a name!
     >
     // <HRule "style"="thin">
     <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"} "OnChange"="\.@@
         HelloText.SetText("Hello, " + NameInput.Text + "!")
-    @@",
+    @@";
         Name me!
     >
 >
@@ -886,7 +953,12 @@ c1 {
 
 A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
 
+```cte
+c1
+[
     #some_const // a const named "some_const", whose type and value are defined in a schema.
+]
+```
 
 
 
