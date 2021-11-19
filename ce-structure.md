@@ -452,7 +452,7 @@ UTC time is not recommended for future and periodic/repeating time values.
 
 #### UTC Offset
 
-Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes. This format is not an actual time zone because it doesn't contain location data and therefore cannot account for political shifts (such as daylight savings). In fact, it can't convey any useful information beyond what UTC time can (other than a vague notion of where the value might have originated, and roughly what time of day it was).
+Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes (to a maximum of `+2359` and a minimum of `-2359`). This format is not an actual time zone because it doesn't contain location data and therefore cannot account for political shifts (such as daylight savings). In fact, it can't convey any useful information beyond what UTC time can (other than a vague notion of where the value might have originated, and roughly what time of day it was).
 
 Use of UTC offset is discouraged except as a means of interfacing with legacy systems.
 
