@@ -274,9 +274,18 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
+
 ### Floating Point
 
-A floating point number is composed of a whole part and a fractional part separated by a [radix point](#radix-point), with an **OPTIONAL** exponential portion. Negative values are prefixed with a dash `-`.
+A floating point number is composed of an implied base (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
+
+    value = significand × baseᵉˣᵖ
+
+ * The significand and exponential portions are separated by an exponent marker.
+ * The whole and fractional parts of the significand are separated by a [radix point](#radix-point).
+ * Negative values are represented by prepending a dash `-` to the front of the floating point value (before any prefix).
+
+**Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
 
 **Examples**:
 
@@ -284,14 +293,15 @@ A floating point number is composed of a whole part and a fractional part separa
 c1
 [
     1.0
-    -98.413
+    5e-5
+    -98.413e50
     3,14
 ]
 ```
 
 #### Radix Point
 
-A radix point separates the whole part of a floating point number from the fractional part. The General Conference on Weights and Measures declared in 2003 that "the symbol for the decimal marker shall be either the point on the line or the comma on the line". CTE therefore accepts both `,` and `.` as radix points.
+A radix point separates the whole part of the significand from the fractional part. The General Conference on Weights and Measures declared in 2003 that "the symbol for the decimal marker shall be either the point on the line or the comma on the line". CTE therefore accepts both `,` and `.` equally as radix points.
 
 **Examples**:
 
@@ -305,36 +315,45 @@ c1
 
 #### Base-10 Notation
 
-The base-10 notation is used to represent [decimal floating point numbers](ce-structure.md#decimal-floating-point).
+Base-10 notation is used to represent [decimal floating point numbers](ce-structure.md#decimal-floating-point).
 
 The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
+
+    value = significand × 10ᵉˣᵖ
+
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+
+**Examples**:
 
 ```cte
 c1
 [
     6.411e+9 // 6411000000
     6.411e9  // 6411000000
+    6411e6   // 6411000000
     6,411e-9 // 0.000000006411
 ]
 ```
 
-Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
-
 #### Base-16 Notation
 
-The base-16 notation is used to represent [binary floating point numbers](ce-structure.md#binary-floating-point) because it allows 100% accurate representation of the actual value.
+Base-16 notation is used to represent [binary floating point numbers](ce-structure.md#binary-floating-point) because it allows 100% accurate representation of the actual value.
 
-Base-16 notation begins begin with `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
+Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
+
+    value = significand × 2ᵉˣᵖ
+
+To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
+
+**Examples**:
 
 ```cte
 c1
 [
     0xa.3fb8p+42 // a.3fb8 x 2⁴²
-    0x1,0p0      // 1
+    -0x1p0       // -1
 ]
 ```
-
-To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
 #### Special Floating Point Values
 
@@ -350,36 +369,25 @@ c1
 
 #### Floating Point Rules
 
-**There MUST be one (and only one) radix point:**
-
-| Value          | Notes              |
-| -------------- | ------------------ |
-| `1`            | Integer, not float |
-| `1.0`          | Float              |
-| `500000000000` | Integer, not float |
-| `5,0e+11`      | Float              |
-| `5e+11`        | Invalid            |
-| `10.4.5`       | Invalid            |
-
-**There MUST be at least one digit on each side of the radic point:**
+ * Codecs **MUST** output exponent portion markers in lowercase (`e` or `p`), but **MUST** also accept uppercase markers when decoding (`E` or `P`).
+ * There **MUST** be at least one digit on each side of a radix point.
 
 | Invalid      | Valid     | Notes                                                    |
 | ------------ | --------- | -------------------------------------------------------- |
 | `-1.`        | `-1.0`    | Or just use the integer value `-1`                       |
 | `.1`         | `0.1`     |                                                          |
-| `,218901e+2` | `21,8901` | Or `2,18901e+1`, or `0,218901e+2`                        |
-| `-0`         | `-0.0`    | Special case: -0 **CANNOT** be represented as an integer |
+| `,218901e+2` | `21,8901` | Or `2.18901e+1`, or `0,218901e+2`                        |
 
 
 ### Numeric Whitespace
 
-The `_` character **CAN** be used as "numeric whitespace" when encoding certain numeric values. Other [whitespace](#whitespace) characters are not allowed.
+The `_` character **CAN** be used as "numeric whitespace" when encoding integers and floating point numbers. Other [whitespace](#whitespace) characters are not allowed.
 
 Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types **CAN** contain numeric whitespace.
  * [Named values](#named-values) (such as `nan` and `inf`) **MUST NOT** contain numeric whitespace.
- * Numeric whitespace **CAN** only occur between two consecutive numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
+ * Numeric whitespace **CAN** only occur between two adjacent numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
 
 **Examples**:
