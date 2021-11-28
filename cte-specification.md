@@ -244,6 +244,8 @@ Version Specifier
 
 A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
 
+**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder must also accept uppercase `C` (u+0043).
+
 The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace-characters).
 
 **Example**:
@@ -273,6 +275,8 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |   8  | Octal       | 01234567         | `0o`   | `0o755`      | 493                |
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
+
+CTE encoders **MAY** offer configuration options to output integers in bases other than 10, but **MUST** by default output in base 10.
 
 
 ### Floating Point
@@ -382,6 +386,8 @@ c1
 ### Numeric Whitespace
 
 The `_` character **CAN** be used as "numeric whitespace" when encoding integers and floating point numbers. Other [whitespace](#whitespace) characters are not allowed.
+
+CTE encoders **MAY** offer configuration options to output numeric whitespace, but **MUST** by default output no numeric whitespace.
 
 Rules:
 
@@ -614,6 +620,7 @@ For element array encodings, any valid representation of the element data type m
 
  * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
  * Float array elements **CAN** be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
+ * CTE encoders **MUST** default to writing unsigned integer arrays using the `x` form (e.g. `|u8x 01 02 ff|`, not `|u8 1 2 255|`).
 
 **Examples**:
 
