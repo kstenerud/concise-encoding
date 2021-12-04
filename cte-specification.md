@@ -606,6 +606,10 @@ Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#le
 
 For element array encodings, any valid representation of the element data type may be used, provided the value fits within the type's width. 
 
+#### Float Array Elements
+
+Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
+
 #### Implied Prefix
 
 **OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix (except for special values `nan`, `snan`, `inf` etc - see below).
@@ -984,7 +988,7 @@ Comments **CAN** be written in single-line or multi-line form, and do not proces
 
 #### Single Line Comment
 
-A single line comment begins at the sequence `//` and continues until the next linefeed (u+000a) is encountered. No checks for nested comments are performed.
+A single line comment begins at the sequence `//` and continues until the next line end - LF (u+000a) or CRLF (u+000d u+000a) - is encountered. No checks for nested comments are performed.
 
 #### Multiline Comment
 

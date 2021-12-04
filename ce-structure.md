@@ -225,9 +225,13 @@ c1
 
 In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). 
 
-Binary floating point is provided mainly in support of legacy systems, to ensure that no further rounding occurs when transmitting the values.
+Binary floating point is provided mainly to support legacy systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports binary floating point values in three types:
 
-Concise Encoding adheres to the [ieee754](https://en.wikipedia.org/wiki/IEEE_754) binary floating point standard for 32-bit and 64-bit sizes, and [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for 16-bit sizes. Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#Binary), the most significant bit of the significand field of an ieee754 binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
+ * [16-bit bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
+ * [32-bit ieee754 binary](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)
+ * [64-bit ieee754 binary](https://en.wikipedia.org/wiki/Double-precision_floating-point_format)
+
+Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#Binary), the most significant bit of the significand field of a binary NaN (not-a-number) value is defined as the "quiet" bit. When set, the NaN is quiet. When cleared, the NaN is signaling.
 
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
@@ -250,13 +254,13 @@ Floating point types support the following ranges:
 
 | Type    | Significant Digits | Exponent Min | Exponent Max |
 | ------- | ------------------ | ------------ | ------------ |
-| Binary  | 15.95              | -1022        | 1023         |
+| Binary  | up to 15.95        | up to -1022  | up to 1023   |
 | Decimal | ∞                  | -∞           | ∞            |
 
 **Notes**:
 
- * Binary floats are limited to what is representable in ieee754 binary float up to 64 bits.
- * Although decimal floats technically have unlimited range, most implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
+ * Binary floats are limited to what is representable by their respective types.
+ * Although decimal floats technically have unlimited range, implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values
 
