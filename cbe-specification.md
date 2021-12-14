@@ -63,7 +63,6 @@ Contents
   - [Reference](#reference)
     - [Local Reference](#local-reference)
     - [Remote Reference](#remote-reference)
-  - [Constant](#constant)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -769,12 +768,6 @@ A remote reference is encoded in the same manner as a [resource identifier](#res
 
     [94 e0 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
     = remote reference to https://example.org/cities/france#paris, where "paris" is the local marker ID in that document
-
-
-### Constant
-
-Constants are not supported in CBE. An encoder **MUST** encode the value the constant represents instead.
-
 
 
 

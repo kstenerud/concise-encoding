@@ -74,7 +74,6 @@ Contents
   - [Reference](#reference)
     - [Local Reference](#local-reference)
     - [Remote Reference](#remote-reference)
-  - [Constant](#constant)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -966,18 +965,6 @@ c1 {
 ```
 
 
-### Constant
-
-A constant name begins with a hash `#` character, followed by an [identifier](ce-structure.md#identifier).
-
-```cte
-c1
-[
-    #some_const // a const named "some_const", whose type and value are defined in a schema.
-]
-```
-
-
 
 Invisible Objects
 -----------------
@@ -1060,7 +1047,7 @@ Letter Case
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
  * Strings, string-like arrays, and comments **CAN** contain uppercase characters. Case **MUST** be preserved.
- * [Marker IDs](ce-structure.md#marker-id) and [constants](#constant) **CAN** contain uppercase characters. Case **MUST** be preserved.
+ * [Marker IDs](ce-structure.md#marker-identifier) **CAN** contain uppercase characters. Case **MUST** be preserved.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters. Case **MUST** be preserved.
 
 Everything else, including hexadecimal digits, exponents, and escape sequences, **MUST** be output in lower case by a CTE encoder.

@@ -83,7 +83,6 @@ Lack of types forces everyone to add extra encoding steps to send their data, wh
 | Reference     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Remote Ref    | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Comment       | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
-| Constant      | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Null          | ✔️  | ❌  |  ✔️   |  ✔️   |  ✔️   |    ✔️      |   ❌   |  ✔️    | ✔️   |
 | Media         | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Custom        | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ✔️    | ✔️   |
@@ -286,19 +285,6 @@ c1
 Notice how when rotated 90°, it resembles the tree it represents:
 
 ![Rotated](img/tree-rotated.svg)
-
-#### Constants
-
-```cte
-c1
-{
-    /* Given: Actual type and value of "eggshell" and
-     *        "navy-blue" have been defined in a schema
-     */
-    "wall color" = #eggshell
-    "door color" = #navy-blue
-}
-```
 
 #### Custom Types
 

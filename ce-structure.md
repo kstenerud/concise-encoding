@@ -68,7 +68,6 @@ Contents
   - [Reference](#reference)
     - [Local Reference](#local-reference)
     - [Remote Reference](#remote-reference)
-  - [Constant](#constant)
 * [Invisible Objects](#invisible-objects)
   - [Comment](#comment)
   - [Padding](#padding)
@@ -541,7 +540,7 @@ The NUL character (U+0000) has a long history of causing problems and security i
 
 #### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission, the canonical format is LF only. Decoders **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Decoders **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
 
 #### String
 
@@ -892,6 +891,7 @@ A markup tag name is an integral part of the markup container, and thus **CANNOT
    - `-` (dash)
    - `.` (period)
 * It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
+* Comparisons are **case insensitive**.
 * It **CANNOT** be a [reference](#reference).
 
 **Note**: Although the colon (`:`) character tends to be used at the application level as a namespace separator, Concise Encoding itself places no special significance on the character.
@@ -940,20 +940,20 @@ Null signals that the specified field or index is absent. It is used to support 
 
 Some uses for null in common operations:
 
-| Operation | Meaning when field value = null                          |
-| --------- | -------------------------------------------------------- |
-| Create    | Do not include this field (overrides any default value). |
-| Read      | This field has been removed since a previous checkpoint. |
-| Update    | Remove this field.                                       |
-| Delete    | Match records where this field is not present.           |
-| Fetch     | Match records where this field is not present.           |
+| Operation | Meaning when field value = null                                              |
+| --------- | ---------------------------------------------------------------------------- |
+| Create    | Client: Do not include this field (overrides any default value).             |
+| Read      | Server: This field has been removed / cleared since the previous checkpoint. |
+| Update    | Client: Remove / clear this field.                                           |
+| Delete    | Client: Match records where this field is cleared / not present.             |
+| Fetch     | Client: Match records where this field is cleared / not present.             |
 
 
 
 Pseudo-Objects
 --------------
 
-Pseudo-objects stand-in for real objects, add additional context or meaning to another object, or affect the interpreted structure of the document in some way.
+Pseudo-objects stand-in for real objects, or add additional context or meaning to a real object.
 
 Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
 
@@ -966,7 +966,9 @@ A marker assigns a [marker identifier](#marker-identifier) to another object, wh
 
     [marker id] [marked object]
 
-A marker **CANNOT** mark other pseudo-objects or invisible objects (i.e. no markers-to-markers, markers-to-references, markers-to-comments, etc).
+Markers add context to existing objects (attaching an identifier); they **CANNOT** stand-in for real objects, and **CANNOT** mark other pseudo-objects or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
+
+The [marker identifier](#marker-identifier) used to mark the object **MUST** be unique within the current document.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -988,8 +990,7 @@ A marker identifier uniquely identifies the marked object in the current documen
    - `-` (dash)
    - `.` (period)
 * It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
-* It **MUST** be unique within the current document.
-* Comparisons for uniqueness are **case insensitive**.
+* Comparisons are **case insensitive**.
 * It **CANNOT** be a [reference](#reference).
 
 **Note**: The colon character (`:`) is exluded from marker identifiers because it is the [marker ID separator in CTE](cte-specification.md#marker).
@@ -1006,7 +1007,7 @@ A reference acts as a stand-in for another object in the current document or ano
 
 A local reference contains the [marker identifier](#marker-identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
 
- * Recursive references are supported.
+ * Recursive references (reference causing a cyclic graph) are supported.
  * Forward references (reference to an object marked later in the document) are supported.
  * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
 
@@ -1050,19 +1051,6 @@ c1 {
     "ref to marked obj in remote doc" = $"https://somewhere.com/my_document.cbe#widgets"
 }
 ```
-
-
-### Constant
-
-Constants are custom named values that have been defined in a schema. They can be used in the same fashion as the normal specification-defined named values (such as `true`, `nan`, `null`, etc). Constants are only available in [CTE](cte-specification.md) documents. [CBE](cbe-specification.md) documents must store the actual value instead.
-
-A constant's name is an [identifier](#identifier).
-
-A constant **MUST** be defined in a schema to represent a real object, **not** a pseudo-object.
-
-CTE decoders **MUST** look up (in the schema) all constants encountered in a CTE document and use the values they refer to. A lookup failure is a [data error](#data-errors).
-
-CTE encoders **MUST** use constant names where required by the schema.
 
 
 
