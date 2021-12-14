@@ -547,49 +547,6 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 A standard UTF-8 string.
 
-#### Identifier
-
-An identifier is a type designed to be unique within a local context. It's a string-like array with the following additional requirements and restrictions:
-
- * It **MUST** begin with one of:
-   - A letter or numeric character ([base categories "L" and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
-   - `_` (underscore)
- * It **MUST ONLY** contain:
-   - Letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories))
-   - `_` (underscore)
-   - `:` (colon)
-   - `-` (dash)
-   - `.` (period)
- * It **MUST NOT** begin or end with a colon (`:`).
- * Colons **MUST NOT** must not be placed adjacent to each other (`a::b` is invalid).
- * The maximum length is 127 **bytes** (not characters).
- * The minimum length is 1 **character** (identifiers **CANNOT** be empty strings).
- * Comparisons are case insensitive when doing lookups or testing for uniqueness.
- * All identifier declarations (not usages) **MUST** be unique within their context. A duplicate identifier declaration within a particular context is a [structural error](#structural-errors).
- * An identifier **MUST NOT** be [marked](#marker).
- * An identifier **MUST NOT** be the object referred to by a [reference](#reference) or [constant](#constant).
- * An identifier **MUST NOT** be preceded by or consist of [pseudo-objects](#pseudo-objects).
- * The identifier is not a general type; it's only allowed where specifically noted in this document.
-
-The colon (`:`) character has a special purpose as a **namespace separator**. The exact meaning and function of a namespace is application-specific, however it is most commonly used to mark an identifier's provenance in order to prevent naming collisions. An identifier containing multiple colons is considered to be in a multi-level namespace. An identifier that does not contain any colon characters is considered to be in the *default* namespace.
-
-**Note**: Concise Encoding itself doesn't place any significance on namespaces; it only cares about the uniqueness of an identifier's string representation.
-
-**Examples (in [CTE](cte-specification.md))**:
-
- * `123`
- * `some_id`
- * `25th`
- * `猫`
- * `foo:bar`
-
-##### Marker Identifier
-
-A [marker](#marker) identifier is an [identifier](#identifier) with the additional restriction that it also cannot contain a colon `:` (which would clash with the id-value seprator in [CTE](cte-specification.md)).
-
-Marker IDs are declared identifiers, and therefore **MUST** be unique to all other marker IDs in the current document.
-
-
 #### Resource Identifier
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
@@ -905,14 +862,14 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 
 ### Markup
 
-Markup is a specialized tree-like data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge) and [nodes](#node) are usually better.
+Markup is a specialized tree-like data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge), [nodes](#node) and [arrays](#typed-array) are usually better because they map more directly to internal data structures.
 
-    [name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
+    [tag name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
 
- * Name is an [identifier](#identifier).
+ * Tag name identifies what type of markup container this is (markup container types are application-specific, and beyond the scope of this specification).
  * The attributes section behaves like a [map](#map), except that an attribute key **MUST NOT** be an empty string-like object
  * The contents section behaves similarly to a [list](#list), except that it **MUST** only contain:
-   - [Content strings](#content-string)
+   - [Content strings](#markup-content-string)
    - [Comments](#comment)
    - Other markup containers
 
@@ -925,9 +882,23 @@ Illustration of markup encodings:
 |     N      |    Y     | `<span;Some text here>`                                        |
 |     Y      |    Y     | `<ul "id"="mylist" "style"="boring"; <li;first> <li;second> >` |
 
-##### Content String
+#### Markup Tag Name
 
-Content strings behave much like regular strings, except that:
+A markup tag name is an integral part of the markup container, and thus **CANNOT** be separately [marked](#marker) or be preceded by other objects, including [pseudo-objects](#pseudo-objects) and [invisible objects](#invisible-objects) (e.g. `</* comment */ some_name>` is invalid).
+
+* It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
+   - `_` (underscore)
+   - `:` (colon)
+   - `-` (dash)
+   - `.` (period)
+* It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
+* It **CANNOT** be a [reference](#reference).
+
+**Note**: Although the colon (`:`) character tends to be used at the application level as a namespace separator, Concise Encoding itself places no special significance on the character.
+
+#### Markup Content String
+
+Markup content strings behave much like regular strings, except that:
 
  * Leading and trailing collapsible whitespace **MUST** be removed from each line in the string before being passed on from the decoder.
  * If the last line ends in collapsible whitespace and is not otherwise empty, the collapsible whitespace at the end **MUST** be converted to a single space (U+0020).
@@ -984,10 +955,7 @@ Pseudo-Objects
 
 Pseudo-objects stand-in for real objects, add additional context or meaning to another object, or affect the interpreted structure of the document in some way.
 
-Pseudo-objects **CAN** be placed anywhere a full object can be placed, with the following additional restrictions:
-
- * Pseudo-objects **MUST NOT** be placed before or used as an [identifier](#identifier) (for example, `&#myconst:"something"` is invalid).
- * Pseudo-objects **MUST NOT** be placed inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
+Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
 
 **Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the top-level object.
 
@@ -1011,6 +979,21 @@ c1 [
 
 The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
 
+#### Marker Identifier
+
+A marker identifier uniquely identifies the marked object in the current document so that it can be [referenced](#reference) elsewhere. It is an integral part of the marker pseudo-object, and thus **CANNOT** be [marked](#marker) or be preceded by other objects, including [pseudo-objects](#pseudo-objects) and [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
+
+* It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
+   - `_` (underscore)
+   - `-` (dash)
+   - `.` (period)
+* It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
+* It **MUST** be unique within the current document.
+* Comparisons for uniqueness are **case insensitive**.
+* It **CANNOT** be a [reference](#reference).
+
+**Note**: The colon character (`:`) is exluded from marker identifiers because it is the [marker ID separator in CTE](cte-specification.md#marker).
+
 
 ### Reference
 
@@ -1021,7 +1004,7 @@ A reference acts as a stand-in for another object in the current document or ano
 
 #### Local Reference
 
-A local reference refers to an object that has been [marked](#marker) elsewhere inside of the current document.
+A local reference contains the [marker identifier](#marker-identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
 
  * Recursive references are supported.
  * Forward references (reference to an object marked later in the document) are supported.
@@ -1054,15 +1037,15 @@ A remote reference refers to an object in another document. It acts like a [reso
 
  * A remote reference **MUST** point to either:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A [marker ID](#marker) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker) in the document being referenced.
- * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and could pose a security risk).
+   - A [marker ID](#marker-identifier) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker-identifier) in the document being referenced.
+ * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following remote references.
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
 c1 {
     "ref to doc on filesystem" = $"some_document.cbe"
-    "ref to marked obj in local doc" = $"some_document.cbe#widgets"
+    "ref to marked obj in local doc" = $"some_document.cbe#widgets" // Refers to the marked object "widgets" in document some_document.cbe
     "ref to remote doc" = $"https://somewhere.com/my_document.cbe"
     "ref to marked obj in remote doc" = $"https://somewhere.com/my_document.cbe#widgets"
 }
