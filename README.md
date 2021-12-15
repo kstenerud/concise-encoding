@@ -96,22 +96,22 @@ Lack of types forces everyone to add extra encoding steps to send their data, wh
 ### Specifications
 
  * 🔬 [Concise Encoding Structure](ce-structure.md) (describes the structure and rules that both formats follow)
- * 💽 [Concise Binary Encoding (CBE)](cbe-specification.md) (describes the binary format encoding)
- * 📃 [Concise Text Encoding (CTE)](cte-specification.md) (describes the text format encoding)
+ * 🖥️ [Concise Binary Encoding (CBE)](cbe-specification.md) (describes the binary format encoding)
+ * 📝 [Concise Text Encoding (CTE)](cte-specification.md) (describes the text format encoding)
 
 **Note**: Most applications will only need the [binary format](cbe-specification.md). The [text format](cte-specification.md) is only required in places where a human must get involved, and this can often be handled by a simple [command-line tool](https://github.com/kstenerud/enctool).
 
 ### Grammar
 
- * [ANTLRv4 grammar for CTE](antlrv4-grammar)
+ * 🔡 [ANTLRv4 grammar for CTE](antlrv4-grammar)
 
 ### Implementations
 
- * [Go Implementation](https://github.com/kstenerud/go-concise-encoding) (reference implementation)
+ * ⚙️ [Go Implementation](https://github.com/kstenerud/go-concise-encoding) (reference implementation)
 
 ### Tools
 
- * [Enctool](https://github.com/kstenerud/enctool) A tool for converting between formats
+ * 🛠️ [Enctool](https://github.com/kstenerud/enctool) A tool for converting between formats
 
 
 <br/>
