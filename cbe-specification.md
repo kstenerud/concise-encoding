@@ -224,7 +224,7 @@ Types from plane 2 are represented using two bytes instead of one, with the pref
 | ... | ...                   |  ...  | ...                                       |
 |  af | Array: UID            |   15  | [128-bit big endian element] x15          |
 | ... | RESERVED              |       |                                           |
-|  e0 | Resource ID Reference |    1  | [resource id]                             |
+|  e0 | Remote Reference      |    1  | [resource id]                             |
 |  e1 | Media                 |    ∞  | [media type] [chunk length] [data] ...    |
 | ... | RESERVED              |       |                                           |
 |  f5 | Array: UID            |    ∞  | [chunk length] [128-bit B-E elements] ... |
