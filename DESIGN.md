@@ -5,18 +5,11 @@ This document describes the design choices that went into Concise Encoding, and 
 
 
 
-Mission Statement
------------------
-
-Concise Encoding is a secure, ad-hoc data format designed for ease-of-use, human-friendliness, and small encoding size.
-
-
-
 Contents
 --------
 - [Design Document](#design-document)
-  - [Mission Statement](#mission-statement)
   - [Contents](#contents)
+  - [Mission Statement](#mission-statement)
   - [Problem Space](#problem-space)
   - [Concise Encoding's Positioning](#concise-encodings-positioning)
   - [Primary Goals](#primary-goals)
@@ -59,13 +52,20 @@ Contents
 
 
 
+Mission Statement
+-----------------
+
+Concise Encoding is a secure, ad-hoc data format designed for ease-of-use, human-friendliness, and small encoding size.
+
+
+
 Problem Space
 -------------
 
 Current data encoding formats are becoming liabilities due to their security problems stemming from:
-- Under-specification, resulting in incompatible codecs or codecs with subtle behavioral differences that can be exploited.
-- Missing types, requiring custom secondary codecs (amplifying the compatibility and security problem).
-- Lack of versioning, so the format can't be updated without breakage when a new threat emerges (and in some cases can't be updated at all).
+- **Under-specification**, resulting in incompatible codecs or codecs with subtle behavioral differences that can be exploited.
+- **Missing types**, requiring custom secondary codecs (amplifying the compatibility and security problem).
+- **Lack of versioning**, so the format can't be updated without breakage when a new threat emerges (and in some cases can't be updated at all).
 
 Threat actors have become much more sophisticated and organized over the past decade, to the point where *security has become the dominant issue* nowadays.
 
@@ -94,9 +94,9 @@ Primary Goals
 The older formats are no longer secure enough for today's world. Incomplete and vague specifications result in implementation differences that hackers are taking advantage of *today*. As new vulnerabilities are discovered, the existing formats can't be changed to mitigate them.
 
 Any new format **must** be designed to focus on security **first**:
-- It must be tightly specified.
-- It must be changeable without breaking existing implementations and documents.
-- It must keep the attack surface small.
+- It must be **tightly specified**.
+- It must be **changeable** without breaking existing implementations and documents.
+- It must have a **small attack surface**.
 
 **An insecure format has no place in the modern world.**
 
@@ -112,7 +112,11 @@ Simple is also secure, because simpler software will have less bugs.
 
 ### Ad-Hoc
 
-Defining your data types and structure up front is actually a specialized case. It should be done only AFTER you've proven your model and know exactly what the data you're sending will look like, AND profiling demonstrates that your marshalling code is on the critical path. Until then, ad-hoc formats are MUCH easier to work with, easier to maintain, and are good enough for most purposes. Schemas should happen later as well, because most people aren't interested in creating one until it's absolutely necessary (once your requirements and problem space are fully understood).
+Defining your data types and structure up front is actually a specialized case. It should be done only AFTER you've proven your model and know exactly what the data you're sending will look like, AND profiling demonstrates that your marshalling code is on the critical path.
+
+Ad-hoc formats tend to be easier to work with, easier to maintain, and are good enough for most purposes.
+
+Schemas tend to happen later as well, because most people aren't interested in creating one until it's absolutely necessary (once their requirements and problem space are fully understood).
 
 **Ad-hoc is often all you need.**
 
@@ -207,7 +211,7 @@ There is always a temptation to add a little processing ability here and there t
 * Custom types that can be processed with zero knowledge
 * Dynamic data manipulation
 
-We can always find some reason to add extra processing abilities to a data format to make it more powerful, but **this temptation must be resisted**! Once you cross the threshold of Turing completeness (and usually well before), your format becomes a security liability due to the complexity explosion and the halting problem.
+We can always find some reason to add extra processing abilities to a data format to make it more powerful, but **this temptation must be resisted**! Once you cross the threshold of Turing completeness (and usually well before), your format becomes a security liability due to the complexity explosion and the [halting problem](https://en.wikipedia.org/wiki/Halting_problem).
 
 
 ### Signature Byte 0x83
