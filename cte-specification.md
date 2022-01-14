@@ -645,7 +645,7 @@ A media object is a specialization of the typed array. The array type field is `
 
     |m media-type xx xx xx xx ...|
 
-**Note**: The array type field supports [escape sequences](#escape-sequences).
+**Note**: The media type field supports [escape sequences](#escape-sequences).
 
 **Example**:
 
