@@ -641,19 +641,35 @@ c1
 
 ### Media
 
-A media object is a specialization of the typed array. The array type field is `m`, followed by its whitespace separated [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and finally the whitespace separated contents, encoded with an implied format of `u8x`.
+A media object is a specialization of the typed array. It has the array type `m` and consists of two whitespace separated fields:
 
-    |m media-type xx xx xx xx ...|
+| Field                                                                       | Required? |
+| --------------------------------------------------------------------------- | --------- |
+| [Media type](http://www.iana.org/assignments/media-types/media-types.xhtml) |     Y     |
+| Contents                                                                    |     N     |
 
-**Note**: The media type field supports [escape sequences](#escape-sequences).
+Media with no contents represents the equivalent of an empty file.
+
+### Media Contents
+
+If the actual media contents consist of UTF-8 text, they **CAN** be represented by enclosing the contents in double quotes (`"`). Otherwise they **MUST** be represented using hex byte values like in a `u8x` array:
+
+* Text: `|m media-type "contents"     |`
+* Binary: `|m media-type 01 02 03 ff ...|`
 
 **Example**:
 
 ```cte
 |m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+
+|m application/x-sh "\.@@
+#!/bin/sh
+
+echo hello world
+@@"|
 ```
 
-Which is the shell script:
+The above example media objects demonstrate two ways to represent the shell script:
 
 ```sh
 #!/bin/sh

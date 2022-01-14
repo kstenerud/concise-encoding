@@ -44,8 +44,6 @@ Contents
   - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
   - [Custom Types](#custom-types)
-    - [Binary Encoding](#custom-type-binary-encoding)
-    - [Text Encoding](#custom-type-text-encoding)
   - [Typed Arrays](#typed-arrays)
     - [Bit Array](#bit-array)
     - [Media](#media)
@@ -168,8 +166,8 @@ The types are structured such that the most commonly used types and values encod
 |  8f | String: 15 bytes          | [15 octets of UTF-8 data]                    |
 |  90 | String                    | [chunk length] [UTF-8 data] ...              |
 |  91 | Resource Identifier       | [chunk length] [UTF-8 data] ...              |
-|  92 | Custom (Binary)           | [chunk length] [data] ...                    |
-|  93 | Custom (Text)             | [chunk length] [UTF-8 data] ...              |
+|  92 | Custom Type               | [chunk length] [data] ...                    |
+|  93 | RESERVED                  |                                              |
 |  94 | Plane 2                   | (See [Plane 2](#type-field-plane-2))         |
 |  95 | Array: Unsigned Int8      | [chunk length] [8-bit elements] ...          |
 |  96 | Array: Bit                | [chunk length] [1-bit elements] ...          |
@@ -386,8 +384,7 @@ Array elements have a fixed size determined by the array type. Length fields in 
 | String        | 1 element per 1 byte   | -             |
 | Resource ID   | 1 element per 1 byte   | -             |
 | Media         | 1 element per 1 byte   | -             |
-| Custom Binary | 1 element per 1 byte   | -             |
-| Custom Text   | 1 element per 1 byte   | -             |
+| Custom Type   | 1 element per 1 byte   | -             |
 
 
 ### Short Form
@@ -511,28 +508,17 @@ Resource identifiers are encoded like a long-form string, but with type `[91]`.
 
 ### Custom Types
 
-#### Custom Type (Binary Encoding)
-
-Custom binary types are encoded as binary data with the type 0x92.
+Custom types are encoded as binary data with the array type 0x92.
 
 **Example**:
 
-    [92 12 04 f6 28 3c 40 00 00 40 40]
-    = binary data representing an imaginary custom "cplx" struct
+    [92 12 01 f6 28 3c 40 00 00 40 40]
+    = binary data representing a fictional custom "cplx" struct
       {
-          type:uint8 = 4
+          type:uint8 = 1
           real:float32 = 2.94
           imag:float32 = 3.0
       }
-
-
-#### Custom Type (Text Encoding)
-
-Custom text types are encoded as UTF-8 strings representing the data, with the type 0x93.
-
-**Example**:
-
-    [93 1a 63 70 6c 78 28 32 2e 39 34 2b 33 69 29] = custom data encoded as the string "cplx(2.94+3i)"
 
 
 ### Typed Arrays

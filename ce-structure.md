@@ -65,8 +65,6 @@ Contents
     - [Typed Array](#typed-array)
     - [Media](#media)
     - [Custom Types](#custom-types)
-      - [Binary Custom Type](#binary-custom-type)
-      - [Text Custom Type](#text-custom-type)
   - [Container Types](#container-types)
     - [Container Properties](#container-properties)
       - [Ordering](#ordering)
@@ -542,7 +540,7 @@ There are three primary kinds of array representations in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
- * [Custom types](#custom-types), which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent), and are encoded either in the style of a uint8 [typed array](#typed-array) for custom binary, or a [string-like array](#string-like-arrays) for custom text.
+ * [Custom types](#custom-types), which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent).
 
 
 ### String-like Arrays
@@ -634,7 +632,7 @@ A media object encapsulates a foreign media object/file (encoded as a binary str
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with a media type, and passes it along as such.
 
-A decoder **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc2045](https://tools.ietf.org/html/rfc2045). An unrecognized media type is **not** a decoding error.
+A decoder **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
@@ -658,41 +656,49 @@ echo hello world
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Custom types restrict interoperability to implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** report it as a [data error](#data-errors).
+Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** report it as a [data error](#data-errors).
 
-Custom type implementations **SHOULD** provide both a binary and a text encoding, with the binary encoding preferred for CBE documents, and the text encoding preferred for CTE documents. When both binary and text forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
+**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they likely won't represent an array at all.
 
-**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
+#### Custom Type Forms
 
-#### Binary Custom Type
+Custom types can be represented in either a binary or a textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
 
-A uint8 array value representing a user-defined custom data type. The interpretation of the octets is user-defined, and is only decodable by receivers that know how to decode it. To reduce cross-platform confusion, data **SHOULD** be represented in little endian byte order.
+[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** output the textual form if it's available.
 
-**Example (in [CTE](cte-specification.md))**:
+Custom type implementations **MUST** provide at least a binary form, and **SHOULD** also provide a textual form. When both binary and textual forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
 
-```cte
-c1
-|cb 93 12 04 f6 28 3c 40 00 00 40 40|
-```
+**Example**:
 
-Which is binary data representing a fictional example custom "cplx" struct:
+Suppose we wanted to encode a fictional "complex number" type:
 
-      {
-          type:uint8 = 4
-          real:float32 = 2.94
-          imag:float32 = 3.0
-      }
+    typedef complex
+    {
+        real:      float32
+        imaginary: float32
+    }
 
-#### Text Custom Type
+For a textual encoding scheme, we could represent it like so: `cplx(REAL+IMAGINARYi)`
 
-A string-like array value representing a user-defined custom data type. The interpretation of the string is user-defined, and is only decodable by receivers that know how to decode it.
+For a binary encoding scheme, we could just write the two float32 values directly. However, we might find later on that we need more than one custom type, so we should include a type field as the first byte to differentiate it from any future types (using type `1` for our complex type). Our data sequence is therefore:
 
-**Example (in [CTE](cte-specification.md))**:
+    [type: uint8] [real: float32] [imaginary: float32]
 
-```cte
-c1
-|ct cplx(2.94+3i)|
-```
+     01 78 56 34 12 78 56 34 12 <-- in little endian byte order
+     || |---------| |---------|
+    type   real      imaginary
+
+With the above encoding scheme, a complex number such as 2.94 + 3i would be represented as follows:
+
+In [CTE](cte-specification.md):
+
+ * Binary form: `|cb 01 f6 28 3c 40 00 00 40 40|`
+ * Textual form: `|ct cplx(2.94+3i)|`
+
+In [CBE](cbe-specification.md):
+
+ * Binary form: `92 12 01 f6 28 3c 40 00 00 40 40`
+ * Textual form not supported in CBE
 
 
 
