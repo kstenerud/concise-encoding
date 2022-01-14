@@ -12,24 +12,37 @@ Concise Encoding
 
 ### Security
 
-State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage.
+<ul>
 
-The existing ad-hoc data formats are [too loosely defined to be secure](ce-structure.md#attack-vectors), and can't be fixed because they're not versioned.
+  State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage.
 
-**Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats**.
+  The existing ad-hoc data formats are [too loosely defined to be secure](ce-structure.md#attack-vectors), and can't be fixed because they're not versioned.
+
+  **Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats**.
+
+</ul>
 
 ### Efficiency AND ease-of-use
 
-We send so much data now that efficiency is critical, but switching to binary means giving up the ease of text formats.
+<ul>
 
-**Concise Encoding gives you ease and efficiency with its 1:1 compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats. `Edit text. Transmit binary.`**
+  We send so much data now that efficiency is critical, but switching to binary means giving up the ease of text formats.
+
+  **Concise Encoding gives you ease and efficiency with its 1:1 compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats.**
+
+  **`Edit text. Transmit binary.`**
+
+</ul>
 
 ### Types
 
-Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens new security holes.
+<ul>
 
-**Concise Encoding supports all of the common types natively**.
+  Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens new security holes.
 
+  **Concise Encoding supports all of the common types natively**.
+
+</ul>
 
 <br/>
 
