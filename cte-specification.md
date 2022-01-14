@@ -641,16 +641,16 @@ c1
 
 ### Media
 
-A media object is a specialization of the typed array. The array type field contains its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the contents are encoded with an implied format of `u8x`.
+A media object is a specialization of the typed array. The array type field is `m`, followed by its whitespace separated [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and finally the whitespace separated contents, encoded with an implied format of `u8x`.
 
-    |media-type xx xx xx xx ...|
+    |m media-type xx xx xx xx ...|
 
 **Note**: The array type field supports [escape sequences](#escape-sequences).
 
 **Example**:
 
 ```cte
-|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is the shell script:
