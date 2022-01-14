@@ -642,7 +642,7 @@ A decoder **MUST NOT** attempt to validate the media type beyond ensuring that i
 
 ```cte
 c1
-|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is the shell script:
