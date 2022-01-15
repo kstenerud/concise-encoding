@@ -565,10 +565,10 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace-characters), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace-characters) separated elements, or as a string-like sequence representing the contents:
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace-characters), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace-characters) separated elements, or as a double-quote (`"`) delimited string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
-    |type contents-represented-as-a-string|
+    |type "contents-represented-as-a-string"|
 
 An empty array has a type but no contents:
 
@@ -645,14 +645,14 @@ A media object is a specialization of the typed array. It has the array type `m`
 | [Media type](http://www.iana.org/assignments/media-types/media-types.xhtml) |     Y     |
 | Contents                                                                    |     N     |
 
-Media with no contents represents the equivalent of an empty file.
+Media with no contents represents the equivalent of an empty file. Media with no media type is invalid.
 
 ### Media Contents
 
-If the actual media contents consist of UTF-8 text, they **CAN** be represented by enclosing the contents in double quotes (`"`). Otherwise they **MUST** be represented using hex byte values like in a `u8x` array:
+If the actual media contents consist of UTF-8 text, they **CAN** be represented in string form by enclosing the contents in double quotes (`"`). Otherwise they **MUST** be represented using hex byte values like in a `u8x` array:
 
-* Text: `|m media-type "contents"     |`
-* Binary: `|m media-type 01 02 03 ff ...|`
+* Text: `|m media/type "contents"|`
+* Binary: `|m media/type 63 6f 6e 74 65 6e 74 73|`
 
 **Example**:
 
@@ -677,7 +677,7 @@ echo hello world
 
 ### String-Like Array Encodings
 
-String-like array encodings are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, pipe (`|`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+String-like array contents are enclosed within double-quote (`"`) delimiters. They are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences) except when encoding a [verbatim sequence](#verbatim-sequence).
 
 
 ### String
@@ -718,7 +718,7 @@ In the binary form, its contents are encoded like a u8x array (hex encoded byte 
 c1 |c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-In the textual form, its contents are enclosed within double quotes like in a [string](#string), and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
+In the textual form, its contents are enclosed within within double-quote (`"`) delimiters, and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
