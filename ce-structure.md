@@ -548,9 +548,8 @@ There are three primary kinds of array representations in Concise Encoding:
 String-like arrays are arrays of UTF-8 encoded bytes. The following types are string-like arrays:
 
  * [String](#string)
- * [Identifier](#identifier)
  * [Resource Identifier](#resource-identifier)
- * [Text Custom Type](#text-custom-type)
+ * [Custom Type (text form)](#custom-type-forms)
 
 String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
@@ -1132,7 +1131,7 @@ Comments are allowed anywhere in a CTE document except:
  * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid).
  * After the top-level object (`c1 100 /*comment*/` is invalid).
  * Between the left and right side of a [marker](#marker) and marke object (`&my_id:/*comment*/"blah` is invalid).
- * Inside of a [string-like array](#string-like-arrays) type. It's actually not possible to have a comment inside of a [string-like array](#string-like-arrays) because, for example, a construct like `"this is a /*comment*/"` would be interpreted entirely as a string since it's within double-quote delimiters. It's also not possible in [custom text](#text-custom-type) because everything between the opening `|ct ` and closing `|` delimiters has a custom-defined interpretation (your custom interpretation could in theory support comments, but such things are beyond the scope of this specification).
+ * Inside of a [string-like array](#string-like-arrays) type. (`"/*comment*/blah"` is interpreted as a single string).
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte

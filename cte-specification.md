@@ -54,10 +54,8 @@ Contents
   - [Media](#media)
   - [String-Like Array Encodings](#string-like-array-encodings)
   - [String](#string)
-  - [Identifier](#identifier)
   - [Resource Identifier](#resource-identifier)
-  - [Custom Binary](#custom-binary)
-  - [Custom Text](#custom-text)
+  - [Custom Types](#custom-types)
 * [Container Types](#container-types)
   - [List](#list)
   - [Map](#map)
@@ -154,7 +152,6 @@ In some contexts, escape sequences **MAY** be used to encode data that would oth
 | `<`                  | less-than (u+003c)                      |
 | `>`                  | greater-than (u+003e)                   |
 | `\`                  | backslash (u+005c)                      |
-| `\|`                 | pipe (u+007c)                           |
 | `_`                  | non-breaking space (u+00a0)             |
 | `-`                  | soft-hyphen (u+00ad)                    |
 | u+000a               | [continuation](#continuation)           |
@@ -203,10 +200,10 @@ Unicode escape sequences begin with a backslash (`\`) character, followed by one
 Verbatim escape sequences work similarly to "here" documents in Bash. They're composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence identifier, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A [structural whitespace](#structural-whitespace-characters) terminator to terminate the end-of-sequence identifier (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * An end-of-sequence sentinel, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
+ * A [structural whitespace](#structural-whitespace-characters) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
- * A second instance of the end-of-sequence identifier (without whitespace terminator).
+ * A second instance of the end-of-sequence sentinel (without whitespace terminator).
 
 **Example**:
 
@@ -214,7 +211,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 "Verbatim sequences can occur anywhere escapes are allowed.\n\
 \.@@@
 In verbatim sequences, everything is interpreted literally until the
-end-of-string identifier is encountered (in this case three @ characters).
+end-of-string sentinel is encountered (in this case three @ characters).
 Characters like ", [, <, \ and such can appear unescaped.
 
 Whitespace (including "leading" whitespace) is also read verbatim.
@@ -226,7 +223,7 @@ Which decodes to:
 ```
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
-end-of-string identifier is encountered (in this case three @ characters).
+end-of-string sentinel is encountered (in this case three @ characters).
 Characters like ", [, <, \ and such can appear unescaped.
 
 Whitespace (including "leading" whitespace) is also read verbatim.
@@ -579,23 +576,23 @@ An empty array has a type but no contents:
 
 The following array types are available:
 
-| Type   | Description                                 | Encoding Kind |
-| ------ | ------------------------------------------- | ------------- |
-| `b`    | Bit                                         | Element       |
-| `u8`   | 8-bit unsigned integer                      | Element       |
-| `u16`  | 16-bit unsigned integer                     | Element       |
-| `u32`  | 32-bit unsigned integer                     | Element       |
-| `u64`  | 64-bit unsigned integer                     | Element       |
-| `i8`   | 8-bit signed integer                        | Element       |
-| `i16`  | 16-bit signed integer                       | Element       |
-| `i32`  | 32-bit signed integer                       | Element       |
-| `i64`  | 64-bit signed integer                       | Element       |
-| `f16`  | 16-bit floating point (bfloat)              | Element       |
-| `f32`  | 32-bit floating point (ieee754)             | Element       |
-| `f64`  | 64-bit floating point (ieee754)             | Element       |
-| `u`    | 128-bit UID                                 | Element       |
-| `ct`   | [Custom Text](#custom-text)                 | String-Like   |
-| `cb`   | [Custom Binary](#custom-binary)             | Element       |
+| Type   | Description                                 | Encoding Kind          |
+| ------ | ------------------------------------------- | ---------------------- |
+| `b`    | Bit                                         | Element                |
+| `u8`   | 8-bit unsigned integer                      | Element                |
+| `u16`  | 16-bit unsigned integer                     | Element                |
+| `u32`  | 32-bit unsigned integer                     | Element                |
+| `u64`  | 64-bit unsigned integer                     | Element                |
+| `i8`   | 8-bit signed integer                        | Element                |
+| `i16`  | 16-bit signed integer                       | Element                |
+| `i32`  | 32-bit signed integer                       | Element                |
+| `i64`  | 64-bit signed integer                       | Element                |
+| `f16`  | 16-bit floating point (bfloat)              | Element                |
+| `f32`  | 32-bit floating point (ieee754)             | Element                |
+| `f64`  | 64-bit floating point (ieee754)             | Element                |
+| `u`    | 128-bit UID                                 | Element                |
+| `c`    | [Custom Types](#custom-types)               | Element or string-Like |
+| `m`    | [Media](#media)                             | Element or string-Like |
 
 Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
 
@@ -694,18 +691,6 @@ c1 "Line 1\nLine 2\nLine 3"
 ```
 
 
-### Identifier
-
-Identifiers are implemented as strings, but are written without double-quotes and don't support escape sequences.
-
-**Examples**:
-
- * `123`
- * `some_id`
- * `25th`
- * `猫`
-
-
 ### Resource Identifier
 
 A resource identifier is enclosed within the delimiters `@"` and `"`.
@@ -721,32 +706,24 @@ c1
 ```
 
 
-### Custom Binary
+### Custom Types
 
-Custom binary data is encoded using standard typed array syntax with type identifier `cb`. Its elements are encoded like a u8x array (hex encoded byte elements).
+Custom data types are encoded using the typed array `c`, and can have a binary or textual form.
+
+In the binary form, its contents are encoded like a u8x array (hex encoded byte elements).
 
 **Example**:
 
 ```cte
-c1
-|cb 04 f6 28 3c 40 00 00 40 40|
-// = binary data representing an imaginary custom "cplx" struct
-//   {
-//       type:uint8 = 4
-//       real:float32 = 2.94
-//       imag:float32 = 3.0
-//   }
+c1 |c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-
-### Custom Text
-
-Custom text data is encoded using standard typed array syntax with type identifier `ct`. Its elements are string-like, and it **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
+In the textual form, its contents are enclosed within double quotes like in a [string](#string), and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
 ```cte
-c1 |ct cplx(2.94+3i)|
+c1 |c "cplx(2.94+3i)"|
 ```
 
 
@@ -863,12 +840,12 @@ The CTE encoding of a markup container is similar to XML, except:
 
 #### Markup Structure
 
-| Section    | Delimiter  | Type                      | Required |
-| ---------- | ---------- | ------------------------- | -------- |
-| Tag name   | `<`        | [Identifier](#identifier) | Y        |
-| Attributes | [structural whitespace](#structural-whitespace-characters) | [Map](#map)               |          |
-| Contents   | `;`        | [List](#list)             |          |
-| End        | `>`        |                           | Y        |
+| Section    | Delimiter                                                  | Type                                             | Required |
+| ---------- | ---------------------------------------------------------- | ------------------------------------------------ | -------- |
+| Tag name   | `<`                                                        | [Tag name](cbe-specification.md#markup-tag-name) | Y        |
+| Attributes | [structural whitespace](#structural-whitespace-characters) | [Map](#map)                                      |          |
+| Contents   | `;`                                                        | [List](#list)                                    |          |
+| End        | `>`                                                        |                                                  | Y        |
 
 Attributes and contents are **OPTIONAL**. There **MUST** be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
 
@@ -925,7 +902,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](ce-structure.md#marker-id) ([identifier](#identifier))
+ * A [marker ID](ce-structure.md#marker-identifier)
  * `:` (the marker separator)
  * The marked value
 
@@ -945,7 +922,7 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 #### Locale Reference
 
-A local reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-id).
+A local reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-identifier).
 
 **Example**:
 
@@ -1062,13 +1039,12 @@ Letter Case
 
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * Strings, string-like arrays, and comments **CAN** contain uppercase characters. Case **MUST** be preserved.
- * [Marker IDs](ce-structure.md#marker-identifier) **CAN** contain uppercase characters. Case **MUST** be preserved.
- * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters. Case **MUST** be preserved.
+ * Strings, string-like types, and comments **CAN** contain uppercase characters.
+ * [Markup tag names](ce-structure.md#markup-tag-name) **CAN** contain uppercase characters.
+ * [Marker identifiers](ce-structure.md#marker-identifier) **CAN** contain uppercase characters.
+ * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
-Everything else, including hexadecimal digits, exponents, and escape sequences, **MUST** be output in lower case by a CTE encoder.
-
-A CTE encoder **MUST** output letter case in accordance with this specification.
+For the above situations, a CTE encoder **MUST** preserve letter case. In all other situations, a CTE encoder **MUST** convert to lower case.
 
 ### Overriding Rule for Decoders
 
@@ -1141,7 +1117,7 @@ Examples:
 #### Structural Whitespace **MUST** occur:
 
  * Between the [version specifier](#version-specifier) and the first object.
- * Between the end-of-string identifier and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
+ * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a typed array element type specifier and the array contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map) or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
@@ -1169,14 +1145,14 @@ Lookalike characters are characters that look confusingly similar to CTE structu
 
 The following is a (as of 2021-03-01) complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation current with the latest lookalike characters.
 
-| Character | Context             | Lookalikes (codepoints)                                                 |
-| --------- | ------------------- | ----------------------------------------------------------------------- |
-| `"`       | String, Resource ID | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02  |
-| `*`       | Comment             | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                                |
-| `/`       | Comment             | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                               |
-| `>`       | Markup Contents     | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                          |
-| `\`       | Escapable Content   | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                                |
-| `\|`      | Custom Text         | 00a6, 01c0, 2223, 2225, 239c, 239f, 23a2, 23a5, 23aa, 23ae, 23b8, 23b9, 23d0, 2d4f, 3021, fe31, fe33, ff5c, ffdc, ffe4, ffe8, 1028a, 10320, 10926, 10ce5, 10cfa, 1d100, 1d105, 1d1c1, 1d1c2 |
+| Character | Context           | Lookalikes (codepoints)                                                |
+| --------- | ----------------- | ---------------------------------------------------------------------- |
+| `"`       | String-like       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
+| `*`       | Comment, Markup   | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                               |
+| `/`       | Comment, Markup   | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                              |
+| `<`       | Markup Contents   | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d      |
+| `>`       | Markup Contents   | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                         |
+| `\`       | Escapable Content | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                               |
 
 
 

@@ -444,7 +444,6 @@ The following escape sequences are supported:
 | `<`                  | less-than (u+003c)          |
 | `>`                  | greater-than (u+003e)       |
 | `\`                  | backslash (u+005c)          |
-| `\|`                 | pipe (u+007c)               |
 | `_`                  | non-breaking space (u+00a0) |
 | `-`                  | soft-hyphen (u+00ad)        |
 | u+000a               | [continuation](#continuation) |
@@ -455,7 +454,7 @@ The following escape sequences are supported:
 Reasoning:
 
 * `\r`, `\n`, `\t`, `\_`, `\-` : To support common whitespace and utility characters.
-* `\"`, `\*`, `\/`, `\<`, `\>`, `\\`, `\|`: To avoid ambiguity with delimiter characters.
+* `\"`, `\*`, `\/`, `\<`, `\>`, `\\`: To avoid ambiguity with delimiter characters.
 * [Continuation](#continuation)
 * [Unicode sequence](#unicode-escape-sequences)
 * [Verbatim Sequence](#verbatim-sequence)
