@@ -217,6 +217,8 @@ c1
 
 Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value being represented remains the same.
 
+**Note**: Although the integer value `-0` is valid in Concise Encoding, most implementations cannot represent such a value as an integer. In such a case, decoders **MUST** convert to a floating point type.
+
 **Examples (in [CTE](cte-specification.md))**:
 
 ```cte
@@ -232,9 +234,9 @@ c1
 
 A floating point number is composed of a whole part, fractional part, and possible exponent. There are two primary classes of floating point numbers in Concise Encoding: decimal and binary, which can be stored in various sizes, configurations, and notations.
 
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information.
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a security risk.
 
-An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers that are not negative 0) as long as the final numeric value remains the same (i.e. no rounding occurs).
+An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers) as long as the final numeric value remains the same (i.e. no rounding occurs).
 
 #### Decimal Floating Point
 
@@ -311,10 +313,7 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1
-[
-    123e4567-e89b-12d3-a456-426655440000
-]
+c1 123e4567-e89b-12d3-a456-426655440000
 ```
 
 
@@ -959,11 +958,11 @@ For the purposes of this rule:
  * Leading collapsible whitespace is collapsible whitespace that occurs between the beginning of the line and the first non-collapsible whitespace character.
  * Trailing collapsible whitespace is collapsible whitespace that occurs between the last non-collapsible whitespace character and the end of the line.
 
-[CTE](cte-specification.md) encoders **MAY** add leading collapsible whitespace to content strings to make the document easier for a human to read.
+[CTE](cte-specification.md) encoders **SHOULD** adjust leading collapsible whitespace (indentation) in content strings to make the document easier for a human to read.
 
-**Note**: At the application level, content strings generally follow the same rules as [HTML content strings](https://www.w3.org/TR/html4/struct/text.html#h-9.1), but this is beyond the scope of Concise Encoding.
+**Note**: At the application level, content strings generally tend to follow the same rules as [HTML content strings](https://www.w3.org/TR/html4/struct/text.html#h-9.1), but this is beyond the scope of Concise Encoding.
 
-**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they **MUST** be treated as regular text by decoders and never converted.
+**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are considered as regular text and **MUST NOT** be converted or processed by a CE decoder. Such interpretations are the domain of higher layers.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -991,7 +990,7 @@ Some uses for null in common operations:
 
 | Operation | Meaning when field value = null                                              |
 | --------- | ---------------------------------------------------------------------------- |
-| Create    | Client: Do not include this field (overrides any default value).             |
+| Create    | Client: Do not include this field (overriding any default value).            |
 | Read      | Server: This field has been removed / cleared since the previous checkpoint. |
 | Update    | Client: Remove / clear this field.                                           |
 | Delete    | Client: Match records where this field is cleared / not present.             |
@@ -1004,7 +1003,7 @@ Pseudo-Objects
 
 Pseudo-objects stand-in for real objects, or add additional context or meaning to a real object.
 
-Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 #myconst 44|` and `|u8x 11 22 $myref 44|` are invalid).
+Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
 **Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the top-level object.
 
@@ -1015,9 +1014,11 @@ A marker assigns a [marker identifier](#marker-identifier) to another object, wh
 
     [marker id] [marked object]
 
-Markers add context to existing objects (attaching an identifier); they **CANNOT** stand-in for real objects, and **CANNOT** mark other pseudo-objects or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
+Markers add context to existing objects (attaching an identifier).
 
-The [marker identifier](#marker-identifier) used to mark the object **MUST** be unique within the current document.
+ * Markers **CANNOT** stand-in for real objects.
+ * Markers **CANNOT** mark other pseudo-objects, invisible objects, or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
+ * The [marker identifier](#marker-identifier) used to mark the object **MUST** be unique within the current document.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -1112,7 +1113,7 @@ Invisible Objects
 
 Invisible objects are objects that are not semantically relevant to the structure of the document. Their placement rules are not the same as for other objects or pseudo-objects, and they may not be available in both text and binary formats.
 
-Invisible objects **CANNOT** be used as real objects; they are completely invisible to the document structure.
+Invisible objects **CANNOT** be used as real objects, and **CANNOT** be marked or referenced; they are completely invisible to the document structure.
 
 
 ### Comment
