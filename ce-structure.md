@@ -678,9 +678,11 @@ Suppose we wanted to encode a fictional "complex number" type:
         imaginary: float32
     }
 
-For a textual encoding scheme, we could represent it like so: `cplx(REAL+IMAGINARYi)`
+For our textual encoding scheme, we could represent complex numbers using something like this: `cplx(REAL+IMAGINARYi)`, where `REAL` and `IMAGINARY` are floats.
 
-For a binary encoding scheme, we could just write the two float32 values directly. However, we might find later on that we need more than one custom type, so we should include a type field as the first byte to differentiate it from any future types (using type `1` for our complex type). Our data sequence is therefore:
+For our binary encoding scheme, we could just write the two float32 values directly. However, we might find later on that we need more than one custom type, so it's a good idea to include a type field as the first byte to differentiate it from any future types we might add later (let's choose type `1` to represent our complex type).
+
+Our data sequence is therefore:
 
     [type: uint8] [real: float32] [imaginary: float32]
 
@@ -688,7 +690,15 @@ For a binary encoding scheme, we could just write the two float32 values directl
      || |---------| |---------|
     type   real      imaginary
 
+**Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
+
 With the above encoding scheme, a complex number such as 2.94 + 3i would be represented as follows:
+
+Our data:
+
+ * Type: `1`
+ * Real: `2.94`, float32 bit pattern `0x403c28f6`, in little endian `f6 28 3c 40`
+ * Imaginary: `3`, float32 bit pattern `0x40400000`, in little endian `00 00 40 40`
 
 In [CTE](cte-specification.md):
 
