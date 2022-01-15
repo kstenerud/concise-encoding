@@ -596,8 +596,6 @@ The following array types are available:
 
 Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
 
-**Note**: If an unrecognized array type is encountered, a decoder **MUST** treat it as a [media](#media) array type.
-
 ### Element Array Encodings
 
 For element array encodings, any valid representation of the element data type may be used, provided the value fits within the type's width. 
