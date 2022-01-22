@@ -398,7 +398,7 @@ Array elements have a fixed size determined by the array type. Length fields in 
 | Float32       | 1 element per 4 bytes  | Little Endian |
 | Float64       | 1 element per 8 bytes  | Little Endian |
 | UID           | 1 element per 16 bytes | Big Endian    |
-| Bit           | 8 elements per 1 byte  | -             |
+| Bit           | 8 elements per 1 byte  | Little Endian |
 | String        | 1 element per 1 byte   | -             |
 | Resource ID   | 1 element per 1 byte   | -             |
 | Media         | 1 element per 1 byte   | -             |
