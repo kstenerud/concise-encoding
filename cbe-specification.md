@@ -87,7 +87,7 @@ Contents
 Terms
 -----
 
-The following bolded, capitalized terms have specific meanings in this specification:
+**The following bolded, capitalized terms have specific meanings in this specification**:
 
 | Term             | Meaning                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------- |

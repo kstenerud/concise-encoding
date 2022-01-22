@@ -132,7 +132,7 @@ Contents
 Terms and Conventions
 ---------------------
 
-The following bolded, capitalized terms have specific meanings in this specification:
+**The following bolded, capitalized terms have specific meanings in this specification**:
 
 | Term             | Meaning                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -143,8 +143,10 @@ The following bolded, capitalized terms have specific meanings in this specifica
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
 | **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 
-* Example character sequences will generally be enclosed within backticks: `this is a character sequence`
-* Example byte sequences will generally be enclosed within backticks, which are themselves enclosed within square brackets: [`f1 33 91`]
+**Sample text and binary data will be represented as follows**:
+
+* Character sequences will generally be enclosed within backticks: `this is a character sequence`
+* Byte sequences are represented as a series of two-character hexadecimal values, and will generally be enclosed within a combination of square brackets and backticks: [`f1 33 91`]
 
 
 
