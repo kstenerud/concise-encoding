@@ -25,7 +25,8 @@ Contents
     - [Byte Oriented](#byte-oriented)
     - [Little Endian](#little-endian)
     - [Avoiding Turing Completeness](#avoiding-turing-completeness)
-    - [Signature Byte 0x83](#signature-byte-0x83)
+    - [Signature Byte 0x8f](#signature-byte-0x8f)
+      - [An added complication](#an-added-complication)
       - [Example: Encoding CBE into a QR Code](#example-encoding-cbe-into-a-qr-code)
     - [Versioned Documents](#versioned-documents)
     - [Short Array Forms](#short-array-forms)
@@ -217,20 +218,25 @@ There is always a temptation to add a little processing ability here and there t
 We can always find some reason to add extra processing abilities to a data format to make it more powerful, but **this temptation must be resisted**! Once you cross the threshold of Turing completeness (and usually well before), your format becomes a security liability due to the complexity explosion and the [halting problem](https://en.wikipedia.org/wiki/Halting_problem).
 
 
-### Signature Byte 0x83
+### Signature Byte 0x8f
 
-All CBE documents start with the signature byte 0x83, followed by the version. Why was 0x83 chosen?
-
-The low nybble `3` was chosen to match the low-nybble of the signature character `c` (hex code `0x63`) in CTE documents.
-
-The high nybble `8` was chosen for its useful property:
+All CBE documents start with the signature byte 0x8f, followed by the version. Why was 0x8f chosen?
 
 Most text formats leave 0x80-0x9f unassigned as first bytes (notably ISO 8859 and UTF-8), and so a document that begins with such a byte is never valid text. This property can be exploited to encode binary data onto mediums designed for modern text formats (text formats that use all 8 bits per byte).
 
+#### An added complication
+
+Due to the legacy of [Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252), many ISO 8859-1 decoders are actually CP-1252 decoders. It's therefore safest to pick unused codes from CP-1252, of which there are five: `81`, `8d`, `8f`, `90`, and `9d`.
+
+These unused codes are sometimes converted to their [C0 and C1](https://en.wikipedia.org/wiki/C0_and_C1_control_codes) equivalents (by stripping the high bit) in order to avoid completely invalid characters no matter what one decodes.
+
+Of the C0 and C1 equivalents, only `0f` (SI) has never been given special meaning in a data format, and it's also a pretty benign control character if dumped to a terminal. Admittedly this is a very minor benefit for an almost unheard of scenario, but since we're greenfielding anyway, why not take it?
+
+Thus, `8f` is the optimal choice for a signature byte.
 
 #### Example: Encoding CBE into a QR Code
 
-[QR codes](https://en.wikipedia.org/wiki/QR_code) support multiple different encoding modes, including one misleadingly called "binary" that's actually ISO 8859-1 (so QR codes are basically text-only). If the data were to start with a byte such as 0x83, interpreting it as ISO 8859-1 would break. A smart decoder could take this as an indication that a different format is encoded within, and use the first byte as a selector for what format it actually is (such as 0x83 for CBE).
+[QR codes](https://en.wikipedia.org/wiki/QR_code) support multiple different encoding modes, including one misleadingly called "binary" that's actually ISO 8859-1 (so QR codes are basically text-only). If the data were to start with a byte such as 0x8f, interpreting it as ISO 8859-1 would break. A smart decoder could take this as an indication that a different format is encoded within, and use the first byte as a selector for what format it actually is (such as 0x8f for CBE).
 
 Such a technique makes it possible to encode complex ad-hoc data structures into QR codes, giving the previously text-only QR codes new superpowers!
 
@@ -282,7 +288,7 @@ c1 {
     9 = 2022-12-05 // Perishes after Dec 5, 2022
 }
 ```
-Because integers from -100 to 100 encode into a single byte in CBE, you can achieve tremendous space savings using them as map keys. Doing so would reduce the CBE encoded size to 28 bytes, producing the document [83 00 79 00 6c 01 53 53 54 01 7a ec 05 7b 02 7a 04 06 13 7b 04 0f 09 99 85 59 00 7b], which we then encode into the QR code:
+Because integers from -100 to 100 encode into a single byte in CBE, you can achieve tremendous space savings using them as map keys. Doing so would reduce the CBE encoded size to 28 bytes, producing the document [8f 00 79 00 6c 01 53 53 54 01 7a ec 05 7b 02 7a 04 06 13 7b 04 0f 09 99 85 59 00 7b], which we then encode into the QR code:
 
 ```
 ██████████████      ██      ██  ██  ██████████████
@@ -312,7 +318,7 @@ Because integers from -100 to 100 encode into a single byte in CBE, you can achi
 ██████████████  ████████    ██  ██  ██  ██████████
 ```
 
-A smart QR code reader could then scan, detect the first byte 0x83 (which is invalid ISO 8859-1), switch to CBE decoding and reverse the whole process.
+A smart QR code reader could then scan, detect the first byte 0x8f (which is invalid ISO 8859-1), switch to CBE decoding and reverse the whole process.
 
 Full example with working code available [here](https://www.technicalsourcery.net/posts/qr-superpowers/).
 
@@ -333,7 +339,7 @@ Versioned documents are essential to keeping a format clean, secure, and current
 
 In the worst case, the format is inherently insecure and cannot be fixed (for example JSON).
 
-When documents are versioned to a specification, designers are free to change anything (including the very structure of the document aside from the version specifier), with no danger to legacy systems: A document beginning with [0x83 0x01] is only decodable by a CBE version 1 decoder, and a document beginning with [0x83 0x02] is only decodable by a CBE version 2 decoder.
+When documents are versioned to a specification, designers are free to change anything (including the very structure of the document aside from the version specifier), with no danger to legacy systems: A document beginning with [0x8f 0x01] is only decodable by a CBE version 1 decoder, and a document beginning with [0x8f 0x02] is only decodable by a CBE version 2 decoder.
 
 
 ### Short Array Forms

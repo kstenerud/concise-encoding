@@ -182,22 +182,22 @@ Documents begin with a [version specifier](#version-specifier), followed by a to
 
  * An empty document: 
    - In [CTE](cte-specification.md): `c1 null`
-   - In [CBE](cbe-specification.md): [`83 01 7e`]
+   - In [CBE](cbe-specification.md): [`8f 01 7e`]
  * A document containing a top-level list:
    - In [CTE](cte-specification.md): `c1 [1 2 3]`
-   - In [CBE](cbe-specification.md): [`83 01 7a 01 02 03 7b`]
+   - In [CBE](cbe-specification.md): [`8f 01 7a 01 02 03 7b`]
 
 
 
 Document Version Specifier
 --------------------------
 
-The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for CTE, 0x83 for CBE - followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
+The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for CTE, 0x8f for CBE - followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
 
 **Example**:
 
  * [CTE](cte-specification.md) version 1: the character sequence `c1`
- * [CBE](cbe-specification.md) version 1: the byte sequence [`83 01`]
+ * [CBE](cbe-specification.md) version 1: the byte sequence [`8f 01`]
 
 
 
@@ -1217,7 +1217,7 @@ Empty Document
 
 An empty document is signified by using the [Null](#null) type as the top-level object:
 
-* In CBE: [`83 01 7e`]
+* In CBE: [`8f 01 7e`]
 * In CTE: `c1 null`
 
 

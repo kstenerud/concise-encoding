@@ -108,9 +108,9 @@ Terms
 Version Specifier
 -----------------
 
-A CBE document begins with a version specifier, which is composed of the octet `0x83`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
+A CBE document begins with a version specifier, which is composed of the octet `0x8f`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
-**Note**: `0x83` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default format, implementations can safely try binary encodings that have deterministic signatures.
+**Note**: `0x8f` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default format, implementations can safely try binary encodings that have deterministic signatures.
 
  * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
  * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
@@ -118,7 +118,7 @@ A CBE document begins with a version specifier, which is composed of the octet `
 
 **Example**:
 
-    [83 01] = CBE version 1
+    [8f 01] = CBE version 1
 
 
 
@@ -797,7 +797,7 @@ Empty Document
 
 An empty document in CBE is signified by using the [Null](#null) type the top-level object:
 
-    [83 01 7e]
+    [8f 01 7e]
 
 
 
