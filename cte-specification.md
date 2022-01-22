@@ -22,7 +22,7 @@ Contents
 - [Concise Text Encoding](#concise-text-encoding)
   - [Version](#version)
   - [Contents](#contents)
-  - [Terms](#terms)
+  - [Terms and Conventions](#terms-and-conventions)
   - [General](#general)
     - [Human Editability](#human-editability)
     - [Line Endings](#line-endings)
@@ -106,8 +106,8 @@ Contents
 
 
 
-Terms
------
+Terms and Conventions
+---------------------
 
 **The following bolded, capitalized terms have specific meanings in this specification**:
 
@@ -193,7 +193,7 @@ A continuation escape sequence causes the decoder to ignore all [structural whit
 **Example**:
 
 ```cte
-    "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
+c1  "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
      mad to be saved, desirous of everything at the same time, the ones who never yawn or \
      say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
      exploding like spiders across the stars."

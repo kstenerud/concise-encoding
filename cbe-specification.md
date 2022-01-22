@@ -24,7 +24,7 @@ Contents
 - [Concise Binary Encoding](#concise-binary-encoding)
   - [Version](#version)
   - [Contents](#contents)
-  - [Terms](#terms)
+  - [Terms and Conventions](#terms-and-conventions)
   - [Version Specifier](#version-specifier)
   - [Encoding](#encoding)
       - [Type Field](#type-field)
@@ -84,8 +84,8 @@ Contents
 
 
 
-Terms
------
+Terms and Conventions
+---------------------
 
 **The following bolded, capitalized terms have specific meanings in this specification**:
 
