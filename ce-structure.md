@@ -24,11 +24,14 @@ Contents
 - [Concise Encoding - Structural Specification](#concise-encoding---structural-specification)
   - [Version](#version)
   - [Contents](#contents)
-  - [Terms](#terms)
+  - [Terms and Conventions](#terms-and-conventions)
   - [Versioning](#versioning)
       - [Prerelease Version](#prerelease-version)
   - [Structure](#structure)
   - [Document Version Specifier](#document-version-specifier)
+  - [Unrepresentable Values](#unrepresentable-values)
+    - [Problematic Values](#problematic-values)
+    - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -65,6 +68,7 @@ Contents
     - [Typed Array](#typed-array)
     - [Media](#media)
     - [Custom Types](#custom-types)
+      - [Custom Type Forms](#custom-type-forms)
   - [Container Types](#container-types)
     - [Container Properties](#container-properties)
       - [Ordering](#ordering)
@@ -92,7 +96,6 @@ Contents
     - [Padding](#padding)
   - [Empty Document](#empty-document)
   - [Truncated Document](#truncated-document)
-      - [To artificially complete a truncated document:](#to-artificially-complete-a-truncated-document)
   - [Text Safety](#text-safety)
   - [Equivalence](#equivalence)
     - [Relaxed Equivalence](#relaxed-equivalence)
@@ -126,8 +129,8 @@ Contents
 
 
 
-Terms
------
+Terms and Conventions
+---------------------
 
 The following bolded, capitalized terms have specific meanings in this specification:
 
@@ -139,6 +142,9 @@ The following bolded, capitalized terms have specific meanings in this specifica
 | **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
 | **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+
+* Example character sequences will generally be enclosed within backticks: `this is a character sequence`
+* Example byte sequences will generally be enclosed within backticks, which are themselves enclosed within square brackets: [`f1 33 91`]
 
 
 
@@ -188,8 +194,41 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
 
 **Example**:
 
- * [CTE](cte-specification.md) version 1: `c1`
- * [CBE](cbe-specification.md) version 1: [`83 01`]
+ * [CTE](cte-specification.md) version 1: the character sequence `c1`
+ * [CBE](cbe-specification.md) version 1: the byte sequence [`83 01`]
+
+
+
+Unrepresentable Values
+----------------------
+
+Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all of them will be representable on a particular platform.
+
+Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it is a [data error](#data-errors).
+
+
+### Problematic Values
+
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure a uniform (and thus unexploitable) response.
+
+ * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type.
+ * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
+ * Platforms might not support UTF-8 encoding.
+ * Platforms might have limitations on the size of numeric types.
+ * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
+ * Platforms might not support data with cyclical references.
+ * Platforms might not provide some of the less common data types such as [markup](#markup), [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
+ * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough.
+
+
+### Binary and Decimal Float Conversions
+
+Binary and decimal float values can rarely be converted to each other without data loss, but such conversions can sometimes be necessary:
+
+ * The destination platform might not support one of the types.
+ * The destination object's required type might not match.
+
+When there is a destination type mismatch, a decoder **MUST** perform the conversion by converting the source value to a string and then parsing it using the standard API of that platform (or use a provably equivalent process that yields the same result). This helps to minimize exploitable behavioral differences between implementations.
 
 
 
@@ -1188,7 +1227,7 @@ When dealing with an unreliable data channel, it is sometimes desirable to keep 
 
 A codec **MUST** provide an option to artificially complete a truncated [CBE](cbe-specification.md) document. This option **MUST** default to disabled.
 
-#### To artificially complete a truncated document:
+**To artificially complete a truncated document**:
 
  * Incomplete fields that are neither arrays nor containers **MUST** be discarded.
  * Incomplete [resource identifier](#resource-identifier) and [remote reference](#remote-reference) fields **MUST** be discarded.
