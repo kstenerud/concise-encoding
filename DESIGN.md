@@ -28,7 +28,6 @@ Contents
     - [Signature Byte 0x83](#signature-byte-0x83)
       - [Example: Encoding CBE into a QR Code](#example-encoding-cbe-into-a-qr-code)
     - [Versioned Documents](#versioned-documents)
-    - [Small Integers](#small-integers)
     - [Short Array Forms](#short-array-forms)
     - [Date Formats](#date-formats)
     - [Human Readability](#human-readability)
@@ -49,6 +48,10 @@ Contents
     - [Numeric Bases](#numeric-bases)
     - [Media](#media)
     - [Recursive Data](#recursive-data)
+    - [CBE Type Codes](#cbe-type-codes)
+      - [Small Integers](#small-integers)
+      - [Fixed Size Integers](#fixed-size-integers)
+      - [Booleans](#booleans)
 
 
 
@@ -333,13 +336,6 @@ In the worst case, the format is inherently insecure and cannot be fixed (for ex
 When documents are versioned to a specification, designers are free to change anything (including the very structure of the document aside from the version specifier), with no danger to legacy systems: A document beginning with [0x83 0x01] is only decodable by a CBE version 1 decoder, and a document beginning with [0x83 0x02] is only decodable by a CBE version 2 decoder.
 
 
-### Small Integers
-
-Integer is one of the most commonly used data types, and small values are much more common than large values in the wild (with the majority falling between -100 and 100).
-
-Small integer types in CBE are encoded as the type codes themselves, such that one can simply cast the type code to a signed 8-bit integer. The other types take the remaining type code space 101 to 127 and -101 to -128. This keeps the encoding size down for the most commonly encountered values.
-
-
 ### Short Array Forms
 
 Arrays normally have a length field following the type field, but for very small arrays this starts to take up a significant amount of overhead. In a 2-byte string, the total overhead (type code + length) is 50% of the complete object, and for a 1-byte string it's a whopping 66%!
@@ -611,3 +607,20 @@ Embedded media is such a common occurrence that it makes sense to include it in 
 ### Recursive Data
 
 Recursive data structures are very useful and powerful, yet potentially very dangerous. Concise Encoding opts to support recursive structures, with the caveat that they are opt-in (to avoid inadvertently opening a security hole).
+
+
+### CBE Type Codes
+
+#### Small Integers
+
+Integer is one of the most commonly used data types, and small values are much more common than large values in the wild (with the majority falling between -100 and 100).
+
+Small integer types in CBE are encoded as the type codes themselves, such that one can simply cast the type code to a signed 8-bit integer. The other types take the remaining type code space 101 to 127 and -101 to -128. This keeps the encoding size down for the most commonly encountered values.
+
+#### Fixed Size Integers
+
+The type codes for the integer types were chosen such that the lowest bit of the type code is always 0 for positive values and 1 for negative values, unofficially acting like a sign bit.
+
+#### Booleans
+
+The boolean type codes were chosen such that the low bit of the type code is 0 for false and 1 for true.

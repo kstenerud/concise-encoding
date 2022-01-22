@@ -98,6 +98,11 @@ Terms
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
 | **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 
+**Sample data will generally be represented as follows**:
+
+ * Character sequences are enclosed within backticks: `this is a character sequence`
+ * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
+
 
 
 Version Specifier

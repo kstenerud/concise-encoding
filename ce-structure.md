@@ -143,10 +143,10 @@ Terms and Conventions
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
 | **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 
-**Sample text and binary data will be represented as follows**:
+**Sample data will generally be represented as follows**:
 
-* Character sequences will generally be enclosed within backticks: `this is a character sequence`
-* Byte sequences are represented as a series of two-character hexadecimal values, and will generally be enclosed within a combination of square brackets and backticks: [`f1 33 91`]
+ * Character sequences are enclosed within backticks: `this is a character sequence`
+ * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
 
 
 
@@ -204,7 +204,7 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
 Unrepresentable Values
 ----------------------
 
-Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all of them will be representable on a particular platform.
+Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all values of all types will be representable on a particular platform.
 
 Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it is a [data error](#data-errors).
 
@@ -213,7 +213,7 @@ Decoders are given a lot of leeway in how they represent a document's data after
 
 It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure a uniform (and thus unexploitable) response.
 
- * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type.
+ * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
  * Platforms might not support UTF-8 encoding.
  * Platforms might have limitations on the size of numeric types.
