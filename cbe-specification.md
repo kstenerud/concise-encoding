@@ -114,6 +114,7 @@ A CBE document begins with a version specifier, which is composed of the octet `
 
  * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
  * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
+ * 0x81, 0x8D, 0x8F, 0x90, and 0x9D are [undefined in Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252).
  * 0x80-0xFF are [undefined in the ASCII character set](https://en.wikipedia.org/wiki/ASCII#Character_set).
 
 **Example**:
