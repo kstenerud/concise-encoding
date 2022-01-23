@@ -118,7 +118,8 @@ Terms and Conventions
 | **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
 | **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
-| **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| **OPTIONAL(LY)** | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| **OPTION(S)**    | Configuration option(s) that implementations **MUST** provide.                                                        |
 
 **Sample data will generally be represented as follows**:
 

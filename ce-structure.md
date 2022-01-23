@@ -141,7 +141,8 @@ Terms and Conventions
 | **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
 | **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
 | **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
-| **OPTIONAL**     | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| **OPTIONAL(LY)** | The implementation **MUST** support both the existence and the absence of the specified item.                         |
+| **OPTION(S)**    | Configuration option(s) that implementations **MUST** provide.                                                        |
 
 **Sample data will generally be represented as follows**:
 
@@ -601,10 +602,9 @@ Special processing is required to replace escape sequences in string-like arrays
 
 The NUL character (U+0000) has a long history of causing problems and security issues due to inconsistent support at the platform, language, and application levels. Because of this, Concise Encoding has special rules for the NUL character in string-like arrays:
 
- * Codecs **MUST** provide a configuration option to enable NUL support (unless the underlying platform/language cannot support NUL).
- * The option **MUST** have three states: `disabled always`, `enabled always`, and `schema controlled` (i.e. the schema will decide whether NUL is supported or not).
- * The NUL support option **MUST** default to `disabled always`.
- * Schema support for NUL **MUST** default to `disabled`.
+ * If the underlying platform supports NUL characters, codecs **MUST** provide a configuration **OPTION** to enable NUL character support, and this option **MUST** default to disabled.
+ * If the codec is has NUL support disabled, a schema **CANNOT** enable it.
+ * If the codec is has NUL support enabled, a schema **CAN** disable it.
  * Encountering a NUL character in a string-like array (encoding or decoding) while NUL support is disabled is a [data error](#data-errors).
 
 **Note**: Because NUL is a troublesome character on many platforms, its use in documents is *strongly* discouraged.
@@ -619,7 +619,7 @@ A standard UTF-8 string.
 
 #### Resource Identifier
 
-A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema, the default resource identifier type is IRI.
+A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema or configuration, the default resource identifier type is IRI.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1104,7 +1104,9 @@ A local reference contains the [marker identifier](#marker-identifier) of an obj
 
 ##### Recursive References
 
-Because cyclic graphs are potential denial-of-service attack vectors to a system unprepared to handle such data, decoders **MUST** make recursive local reference support configurable, and **MUST** default to disabled. When support is disabled, a recursive local reference is a [structural error](#structural-errors).
+Because cyclic graphs are potential denial-of-service attack vectors to a system unprepared to handle such data, decoders **MUST** provide a configuration **OPTION** to enable recursive references, and this option **MUST** default to disabled.
+
+When support is disabled, a recursive local reference is a [structural error](#structural-errors).
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
@@ -1135,7 +1137,7 @@ A remote reference refers to an object in another document. It acts like a [reso
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A [marker ID](#marker-identifier) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker-identifier) in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
- * A decoder **MUST** default to **not** automatically following resource ID references because they pose a security risk. Applications **SHOULD** define security rules for following remote references.
+ * Because remote links pose security risks, a decoder **MUST NOT** follow resource ID references unless explicitly configured to do so. If a decoder provides a configuration option to follow resource ID references, it **MUST** default to disabled.
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
@@ -1227,7 +1229,7 @@ Truncated Document
 
 When dealing with an unreliable data channel, it is sometimes desirable to keep a partial document rather than suffer total data loss.
 
-A codec **MUST** provide an option to artificially complete a truncated [CBE](cbe-specification.md) document. This option **MUST** default to disabled.
+A codec **MUST** provide an **OPTION** to artificially complete a truncated [CBE](cbe-specification.md) document, and this option **MUST** default to disabled.
 
 **To artificially complete a truncated document**:
 
@@ -1295,7 +1297,7 @@ Containers **MUST** be of the same type. For example, a map is never equivalent 
 
 Containers **MUST** contain the same number of elements, and their elements **MUST** be equivalent.
 
-By default, list types **MUST** be compared ordered and map types unordered, unless their ordering was otherwise specified by the schema.
+By default, list types **MUST** be compared ordered, and map types compared unordered, unless their ordering was otherwise specified by the schema.
 
 #### Markup Contents
 
@@ -1455,27 +1457,33 @@ All decoded values **MUST** be validated for the following before being passed t
 
 #### User-Controllable Limits
 
-The codec **MUST** allow the user to control the following limits and ranges, with sane defaults to guard against DOS attacks:
+A codec **MUST** provide at least the following **OPTIONS** to allow the user to control various limits and ranges, with sane defaults to guard against denial-of-service attacks:
 
- * Maximum object count overall
- * Maximum object count in a container
- * Maximum array length in bytes
- * Maximum total document size in bytes
- * Maximum depth from the top level (1) to the most deeply nested object (inclusive)
- * Maximum number of digits allowed in an integer value
- * Maximum number of significant digits allowed in a floating point number
- * Maximum exponent size (in digits) in a floating point number
- * Maximum/minimum year in a time value
+ * Maximum document size (bytes)
+ * Maximum array size (bytes)
+ * Maximum object count
+ * Maximum container depth (depth 0 = Top level)
+ * Maximum integer digits
+ * Maximum float coefficient digits
+ * Maximum float exponent digits
+ * Maximum year digits
+ * Maximum marker count
+ * Maximum reference count?
 
-It's impossible to prescribe what default limits are reasonable for all decoders, because different systems will have different constraints, and system capabilities increase as technologies improve. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
+It's impossible to prescribe what default limits are sane and reasonable for all decoders because different systems will have different constraints, and system capabilities in general keep improving as time goes on. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
 
-| Metric                 | Limit     |
-| ---------------------- | --------- |
-| Document size in bytes | 5 GB      |
-| Overall object count   | 1 million |
-| Depth                  | 1000      |
-| Coefficient size       | 100       |
-| Year size              | 32-bit    |
+| Metric                  | Limit     |
+| ----------------------- | --------- |
+| Document size           | 5 GB      |
+| Array size              | 1 GB      |
+| Object count            | 1 million |
+| Container depth         | 1000      |
+| Integer digit count     | 100       |
+| Coefficient digit count | 100       |
+| Exponent digit count    | 5         |
+| Year digit count        | 11        |
+| Marker count            | 10000     |
+| Reference count         | 10000     |
 
 
 ### Mitigations: Application Guidelines
