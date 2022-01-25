@@ -31,11 +31,13 @@ Contents
   - [Document Version Specifier](#document-version-specifier)
   - [Unrepresentable Values](#unrepresentable-values)
     - [Problematic Values](#problematic-values)
-    - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
+    - [Lossy Conversions](#lossy-conversions)
+      - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
     - [Floating Point](#floating-point)
+      - [NaN Payload](#nan-payload)
       - [Decimal Floating Point](#decimal-floating-point)
       - [Binary Floating Point](#binary-floating-point)
       - [Value Ranges](#value-ranges)
@@ -221,17 +223,45 @@ It's best to think ahead about types and values that might be problematic on the
  * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
  * Platforms might not support data with cyclical references.
  * Platforms might not provide some of the less common data types such as [markup](#markup), [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
- * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough.
+ * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
 
 
-### Binary and Decimal Float Conversions
+### Lossy Conversions
+
+If, after decoding a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
+
+**Lossy conversions that **MUST** be allowed**:
+
+ * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
+
+**Lossy conversions that **MUST NOT** be allowed**:
+
+ * String character substitution or omission
+ * Truncation from storing in a type that cannot hold all of the data (except where listed as configurable - see below)
+
+**Lossy conversions that **MUST** be decided based on configuration**:
+
+ * Loss of floating point coefficient precision from conversion between binary and decimal float types
+ * Loss of floating point coefficient precision from storing in a smaller float type
+ * Loss of subsecond precision due to temporal type mismatch or platform capabilities
+
+A decoder **MUST** provide configuration **OPTIONS** to enable each configurable lossy conversion individually, and each option **MUST** default to disabled.
+
+Disallowed lossy conversions are [data errors](#data-errors).
+
+#### Binary and Decimal Float Conversions
 
 Binary and decimal float values can rarely be converted to each other without data loss, but such conversions can sometimes be necessary:
 
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-When there is a destination type mismatch, a decoder **MUST** perform the conversion by converting the source value to a string and then parsing it using the standard API of that platform (or use a provably equivalent process that yields the same result). This helps to minimize exploitable behavioral differences between implementations.
+A decoder **MUST** perform such a conversion using the following algorithm or equivalent:
+
+ * Convert the source value to its string-based decimal exponent encoding.
+ * Convert the string value into the destination type.
+
+Binary float <-> string conversions **MUST** be done using standard conversion algorithms or equivalent. These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
 
 
 
@@ -276,9 +306,11 @@ c1
 
 A floating point number is composed of a whole part, fractional part, and possible exponent. There are two primary classes of floating point numbers in Concise Encoding: decimal and binary, which can be stored in various sizes, configurations, and notations.
 
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a security risk.
-
 An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers) as long as the final numeric value remains the same (i.e. no rounding occurs).
+
+#### NaN Payload
+
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a security risk.
 
 #### Decimal Floating Point
 
@@ -1468,7 +1500,7 @@ A codec **MUST** provide at least the following **OPTIONS** to allow the user to
  * Maximum float exponent digits
  * Maximum year digits
  * Maximum marker count
- * Maximum reference count?
+ * Maximum reference count
 
 It's impossible to prescribe what default limits are sane and reasonable for all decoders because different systems will have different constraints, and system capabilities in general keep improving as time goes on. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
 
