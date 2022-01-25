@@ -230,8 +230,9 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
  * Loss of floating point coefficient precision from conversion between binary and decimal float types
  * Loss of floating point coefficient precision from storing in a smaller float type
  * Loss of subsecond precision due to temporal type mismatch or platform capabilities
+ * Conversion from a real [time zone](#time-zones) to a [UTC offset](#utc-offset)
 
-A decoder **MUST** provide configuration **OPTIONS** to enable each configurable lossy conversion individually, and each option **MUST** default to disabled.
+Implementations **MUST** provide configuration **OPTIONS** to enable each configurable lossy conversion individually, and each option **MUST** default to disabled.
 
 Disallowed lossy conversions are [data errors](#data-errors).
 
@@ -242,7 +243,7 @@ Binary and decimal float values can rarely be converted to each other without da
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-A decoder **MUST** perform such a conversion using the following algorithm (or an algorithm that yields the same result):
+Implementations **MUST** perform such a conversion using the following algorithm (or an algorithm that yields the same result):
 
  * Convert the source value to its string-based decimal exponent encoding.
  * Convert the string value into the destination type.
@@ -289,7 +290,7 @@ c1
 
 Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value being represented remains the same.
 
-**Note**: Although the integer value `-0` is valid in Concise Encoding, most implementations cannot represent such a value as an integer. In such a case, decoders **MUST** convert to a floating point type.
+**Note**: Although the integer value `-0` is valid in Concise Encoding, most implementations cannot represent such a value as an integer. In such a case, implementations **MUST** convert to a floating point type.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -643,7 +644,7 @@ The NUL character (U+0000) has a long history of causing problems and security i
 
 #### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Decoders **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Implementations **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
 
 #### String
 
@@ -703,7 +704,7 @@ A media object encapsulates a foreign media object/file (encoded as a binary str
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with a media type, and passes it along as such.
 
-A decoder **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error.
+Implementations **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
@@ -1130,13 +1131,13 @@ A reference acts as a stand-in for another object in the current document or ano
 
 A local reference contains the [marker identifier](#marker-identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
 
- * Recursive references (reference causing a cyclic graph) are supported only if the decoder has been configured to accept them.
+ * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
  * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
 
 ##### Recursive References
 
-Because cyclic graphs are potential denial-of-service attack vectors to a system unprepared to handle such data, decoders **MUST** provide a configuration **OPTION** to enable recursive references, and this option **MUST** default to disabled.
+Because cyclic graphs are potential denial-of-service attack vectors to a system unprepared to handle such data, implementations **MUST** provide a configuration **OPTION** to enable recursive references, and this option **MUST** default to disabled.
 
 When support is disabled, a recursive local reference is a [structural error](#structural-errors).
 
@@ -1169,7 +1170,7 @@ A remote reference refers to an object in another document. It acts like a [reso
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A [marker ID](#marker-identifier) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker-identifier) in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
- * Because remote links pose security risks, a decoder **MUST NOT** follow resource ID references unless explicitly configured to do so. If a decoder provides a configuration option to follow resource ID references, it **MUST** default to disabled.
+ * Because remote links pose security risks, implementations **MUST NOT** follow resource ID references unless explicitly configured to do so. If an implementation provides a configuration option to follow resource ID references, it **MUST** default to disabled.
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
@@ -1381,7 +1382,7 @@ Data errors affect the reliability of a particular object, but don't compromise 
  * Failed value constraint validation.
  * Unrecognized custom data.
 
-A decoder **MUST** allow the user or schema to decide what to do when a data error occurs, with a default of halting processing and issuing a diagnostic.
+Implementations **MUST** allow the user or schema to decide what to do when a data error occurs, with a default of halting processing and issuing a diagnostic.
 
 
 
