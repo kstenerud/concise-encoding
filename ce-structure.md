@@ -30,9 +30,9 @@ Contents
   - [Structure](#structure)
   - [Document Version Specifier](#document-version-specifier)
   - [Unrepresentable Values](#unrepresentable-values)
-    - [Problematic Values](#problematic-values)
     - [Lossy Conversions](#lossy-conversions)
       - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
+    - [Problematic Values](#problematic-values)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -209,21 +209,7 @@ Unrepresentable Values
 
 Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all values of all types will be representable on a particular platform.
 
-Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it is a [data error](#data-errors).
-
-
-### Problematic Values
-
-It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure a uniform (and thus unexploitable) response.
-
- * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
- * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
- * Platforms might not support UTF-8 encoding.
- * Platforms might have limitations on the size of numeric types.
- * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
- * Platforms might not support data with cyclical references.
- * Platforms might not provide some of the less common data types such as [markup](#markup), [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
- * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
+Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it **MUST** be processed according to the [lossy conversion rules](#lossy-conversions).
 
 
 ### Lossy Conversions
@@ -262,6 +248,20 @@ A decoder **MUST** perform such a conversion using the following algorithm or eq
  * Convert the string value into the destination type.
 
 Binary float <-> string conversions **MUST** be done using standard conversion algorithms or equivalent. These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
+
+
+### Problematic Values
+
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure a uniform (and thus unexploitable) response.
+
+ * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
+ * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
+ * Platforms might not support UTF-8 encoding.
+ * Platforms might have limitations on the size of numeric types.
+ * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
+ * Platforms might not support data with cyclical references.
+ * Platforms might not provide some of the less common data types such as [markup](#markup), [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
+ * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
 
 
 
