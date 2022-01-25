@@ -243,13 +243,23 @@ Binary and decimal float values can rarely be converted to each other without da
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-Implementations **MUST** perform such a conversion using the following algorithm (or an algorithm that yields the same result):
+Such conversions **MUST** be done using the following algorithm (or an algorithm that yields the same result):
 
  * Convert the source value to its string-based decimal exponent encoding.
  * Convert the string value into the destination type.
 
 Binary float <-> string conversions **MUST** be done using standard conversion algorithms (or equivalent). These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
 
+Examples of widely used and largely standardized conversion algorithms:
+
+ * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
+ * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
+ * David M. Gay: "Correctly rounded binary-decimal and decimal-binary conversions." Technical Report 90-10, AT&T Bell Laboratories, November 1990.
+ * Robert G. Burger and R. Kent Dybvig: "Printing floating-point numbers quickly and accurately." In proceedings of ACM SIGPLAN 1996 conference on Programming Language Design and Implementation, Philadelphia, PA, USA, May 1996, pp. 108-116
+ * Guy L. Steele Jr. and Jon L. White: "Retrospective: How to print floating-point numbers accurately." ACM SIGPLAN Notices, Vol. 39, No. 4, April 2004, pp. 372–389
+ * Florian Loitsch: "Printing floating-point numbers quickly and accurately with integers." In proceedings of 2010 ACM SIGPLAN Conference on Programming Language Design and Implementation, Toronto, ON, Canada, June 2010, pp. 233-243
+ * Marc Andrysco, Ranjit Jhala, and Sorin Lerner: "Printing floating-point numbers: a faster, always correct method." ACM SIGPLAN Notices, Vol. 51, No. 1, January 2016, pp. 555-567
+ * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282 
 
 ### Problematic Values
 
