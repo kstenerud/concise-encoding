@@ -214,7 +214,7 @@ Decoders are given a lot of leeway in how they represent a document's data after
 
 ### Lossy Conversions
 
-If, after decoding a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
+If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
 
 **Lossy conversions that **MUST** be allowed**:
 
@@ -242,12 +242,12 @@ Binary and decimal float values can rarely be converted to each other without da
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-A decoder **MUST** perform such a conversion using the following algorithm or equivalent:
+A decoder **MUST** perform such a conversion using the following algorithm (or an algorithm that yields the same result):
 
  * Convert the source value to its string-based decimal exponent encoding.
  * Convert the string value into the destination type.
 
-Binary float <-> string conversions **MUST** be done using standard conversion algorithms or equivalent. These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
+Binary float <-> string conversions **MUST** be done using standard conversion algorithms (or equivalent). These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
 
 
 ### Problematic Values
