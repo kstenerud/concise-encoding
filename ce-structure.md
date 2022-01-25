@@ -232,7 +232,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
  * Loss of subsecond precision due to temporal type mismatch or platform capabilities
  * Conversion from a real [time zone](#time-zones) to a [UTC offset](#utc-offset)
 
-Implementations **MUST** provide configuration **OPTIONS** to enable each configurable lossy conversion individually, and each option **MUST** default to disabled.
+Implementations **MUST** provide a configuration **OPTION** for each configurable lossy conversion that can occur on its platform, and each option **MUST** default to disabled.
 
 Disallowed lossy conversions are [data errors](#data-errors).
 
