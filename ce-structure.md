@@ -1502,31 +1502,33 @@ All decoded values **MUST** be validated for the following before being passed t
 
 A codec **MUST** provide at least the following **OPTIONS** to allow the user to control various limits and ranges, with sane defaults to guard against denial-of-service attacks:
 
- * Maximum document size (bytes)
- * Maximum array size (bytes)
- * Maximum object count
- * Maximum container depth (depth 0 = Top level)
- * Maximum integer digits
- * Maximum float coefficient digits
- * Maximum float exponent digits
- * Maximum year digits
- * Maximum marker count
- * Maximum reference count
+| Limit                             | Notes                                    |
+| ---------------------             | ---------------------------------------- |
+| Max document size                 | In bytes                                 |
+| Max array size                    | For each array, in bytes                 |
+| Max object count                  | Not counting pseudo or invisible objects, an array is a single object. |
+| Max container depth               | 0 = no containers, 1 = top-level can be a container (but cannot contain containers), ... |
+| Max year digits                   |                                          |
+| Max integer digits                |                                          |
+| Max float coefficient digits      |                                          |
+| Max decimal float exponent digits | Max binary float exponent digits = `decimal_digits × 10 ÷ 3` rounded down. |
+| Max marker count                  |                                          |
+| Max reference count               |                                          |
 
 It's impossible to prescribe what default limits are sane and reasonable for all decoders because different systems will have different constraints, and system capabilities in general keep improving as time goes on. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
 
-| Metric                  | Limit     |
-| ----------------------- | --------- |
-| Document size           | 5 GB      |
-| Array size              | 1 GB      |
-| Object count            | 1 million |
-| Container depth         | 1000      |
-| Integer digit count     | 100       |
-| Coefficient digit count | 100       |
-| Exponent digit count    | 5         |
-| Year digit count        | 11        |
-| Marker count            | 10000     |
-| Reference count         | 10000     |
+| Limit                             | Value     |
+| --------------------------------- | --------- |
+| Max document size                 | 5 GB      |
+| Max array size                    | 1 GB      |
+| Max object count                  | 1,000,000 |
+| Max container depth               | 1000      |
+| Max year digits                   | 11        |
+| Max integer digits                | 100       |
+| Max float coefficient digits      | 100       |
+| Max decimal float exponent digits | 5         |
+| Max marker count                  | 10,000    |
+| Max reference count               | 10,000    |
 
 
 ### Mitigations: Application Guidelines
