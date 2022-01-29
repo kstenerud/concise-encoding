@@ -740,8 +740,6 @@ There are some situations where a custom data type is preferable to the standard
 
 Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** report it as a [data error](#data-errors).
 
-Implementations **MUST** provide a configuration option to allow custom types when decoding, and this option **MUST** default to disallow custom types. Receiving a custom type when custom types are disallowed is a [data error](#data-errors).
-
 **Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they likely won't represent an array at all.
 
 #### Custom Type Forms
