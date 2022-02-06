@@ -68,10 +68,6 @@ Contents
     - [Map](#map)
     - [Edge](#edge)
     - [Node](#node)
-    - [Markup](#markup)
-      - [Markup Structure](#markup-structure)
-        - [Container End](#container-end)
-        - [Content String](#content-string)
   - [Other Types](#other-types)
     - [Null](#null)
   - [Pseudo-Objects](#pseudo-objects)
@@ -96,7 +92,6 @@ Contents
       - [Lists](#lists)
       - [Maps](#maps)
       - [Node](#node-1)
-      - [Markup](#markup-1)
       - [Edge](#edge-1)
       - [Strings](#strings)
       - [Typed Arrays](#typed-arrays)
@@ -855,59 +850,6 @@ c1
 ```
 
 
-### Markup
-
-The CTE encoding of a markup container is similar to XML, except:
-
- * There are no end tags. All data is contained within the begin `<`, content begin `;`, and end `>` characters.
- * Comments are encoded using `//` or `/*` and `*/` instead of `<!--` and `-->`, and comments can be nested.
-
-#### Markup Structure
-
-| Section    | Delimiter                                                  | Type                                             | Required |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------ | -------- |
-| Tag name   | `<`                                                        | [Tag name](cbe-specification.md#markup-tag-name) | Y        |
-| Attributes | [structural whitespace](#structural-whitespace-characters) | [Map](#map)                                      |          |
-| Contents   | `;`                                                        | [List](#list)                                    |          |
-| End        | `>`                                                        |                                                  | Y        |
-
-Attributes and contents are **OPTIONAL**. There **MUST** be [structural whitespace](#structural-whitespace-characters) between the container name and the attributes section (if present), and there **CAN** **OPTIONALLY** be [structural whitespace](#structural-whitespace-characters) adjacent to the begin, contents, and end delimiters.
-
-Illustration of markup encodings:
-
-| Attributes | Children | Example                                                        |
-| ---------- | -------- | -------------------------------------------------------------- |
-|     N      |    N     | `<br>`                                                         |
-|     Y      |    N     | `<div "id"="fillme">`                                          |
-|     N      |    Y     | `<span;Some text here>`                                        |
-|     Y      |    Y     | `<ul "id"="mylist" "style"="boring"; <li;first> <li;second> >` |
-
-The contents section is in string processing mode whenever it's not processing a sub-container or comment (initiated by an unescaped `<` or `//` or `/*`).
-
-##### Container End
-
-The markup container ends when an unescaped `>` character is encountered while processing the attributes or contents.
-
-##### Content String
-
-Content strings **CAN** contain [escape sequences](#escape-sequences), which **MUST** be processed before applying the structural rules for content strings.
-
-**Example**:
-
-```cte
-c1
-<View;
-    <Image "src"=@"images/avatar-image.jpg">
-    <Text "id"="HelloText";
-        Hello! Please choose a name!
-    >
-    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"};
-        Name me!
-    >
->
-```
-
-
 
 Other Types
 -----------
@@ -998,7 +940,7 @@ A single line comment begins at the sequence `//` and continues until the next l
 
 A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-**Note**: Commenting out strings or markup contents containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
+**Note**: Commenting out strings containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
 
 ```cte
 c1
@@ -1064,7 +1006,6 @@ Letter Case
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
  * Strings, string-like types, and comments **CAN** contain uppercase characters.
- * [Markup tag names](ce-structure.md#markup-tag-name) **CAN** contain uppercase characters.
  * [Marker identifiers](ce-structure.md#marker-identifier) **CAN** contain uppercase characters.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
@@ -1144,8 +1085,7 @@ Examples:
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a typed array element type specifier and the array contents, and between typed array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
- * Between key-value pairs in a [map](#map) or [markup attributes](#attributes-section) (`{1="one"2="two"}` is invalid).
- * Between a markup's [tag name](#markup-tag-name) and its [attributes](#attributes-section) (if attributes are present).
+ * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is invalid).
 
 
 **Whitespace MUST NOT occur**:
@@ -1172,10 +1112,8 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 | Character | Context           | Lookalikes (codepoints)                                                |
 | --------- | ----------------- | ---------------------------------------------------------------------- |
 | `"`       | String-like       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
-| `*`       | Comment, Markup   | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                               |
-| `/`       | Comment, Markup   | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                              |
-| `<`       | Markup Contents   | 00ab, 02c2, 3111, 2039, 227a, 2329, 2d66, 3008, fe64, ff1c, 1032d      |
-| `>`       | Markup Contents   | 00bb, 02c3, 203a, 227b, 232a, 3009, fe65, ff1e                         |
+| `*`       | Comment           | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                               |
+| `/`       | Comment           | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                              |
 | `\`       | Escapable Content | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                               |
 
 
@@ -1254,37 +1192,6 @@ In order to keep the tree as readable as possible to a human:
 * If the node has no children, the closing `)` **SHOULD** be on the same line.
 
 See the example in [node](#node).
-
-
-#### Markup
-
-The closing `>` **SHOULD** only be on a different line if there are contents.
-```cte
-<a>
-```
-
-```cte
-<a;
-    contents
->
-```
-
-The attributes section **SHOULD** be entirely on the same line as the tag name if it's not too long.
-```cte
-<a "x"="y">
-```
-
-```cte
-<a "x"="y";
-    contents
->
-```
-
-If the attributes section is too long, the overflow **SHOULD** be broken up into multiple indented lines.
-```cte
-<img "src"=@"http://somereallylongdomainname.likereallylong.com/images/2.jpg"
-    "width"=50 "height"=50 "border-left"=10 "units"="px">
-```
 
 
 #### Edge

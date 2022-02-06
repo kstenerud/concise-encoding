@@ -64,7 +64,6 @@ Contents
     - [Map](#map)
     - [Edge](#edge)
     - [Node](#node)
-    - [Markup](#markup)
   - [Other Types](#other-types)
     - [Null](#null)
     - [RESERVED](#reserved)
@@ -157,9 +156,9 @@ The types are structured such that the most commonly used types and values encod
 |  73 | UID                       | [128 bits of data, big endian]               |
 |  74 | RESERVED                  |                                              |
 |  75 | RESERVED                  |                                              |
-|  76 | Edge                      | Source, Description, Destination             |
-|  77 | Node                      | Value, Child Node ... End of Container       |
-|  78 | Markup                    | Name, kv-pairs, contents                     |
+|  76 | RESERVED                  |                                              |
+|  77 | Edge                      | Source, Description, Destination             |
+|  78 | Node                      | Value, Child Node ... End of Container       |
 |  79 | Map                       | (Key, value) ... End of Container            |
 |  7a | List                      | Object ... End of Container                  |
 |  7b | End of Container          |                                              |
@@ -703,20 +702,6 @@ A node begins with 0x77, followed by a value object and zero or more child nodes
     2   3
        / \
       4   5
-
-
-### Markup
-
-Unlike other containers, a markup container requires two end-of-container markers: one to mark the end of the attributes, and another one to mark the end of the contents section:
-
-    [78] [name] [attr-key-1] [attr-value-1] ... [7b] [contents-1] [contents-2] ... [7b]
-
-**Note**: Name is encoded as an [identifier](#identifier)
-
-**Example**:
-
-    [78 04 54 65 78 74 81 61 81 62 7b 89 53 6f 6d 65 20 74 65 78 74 7b] = <Text a=b,Some text>
-
 
 
 

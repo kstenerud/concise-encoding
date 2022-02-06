@@ -91,7 +91,6 @@ Concise Encoding
 | Map           | ✔️  | ❌  |  ✔️   |  ✔️   |  ✔️   |    ✔️      |   ✔️    |  ❌   | ❌  |
 | Edge          | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Node          | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
-| Markup        | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Typed Arrays  | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ✔️      |   ✔️    |  ✔️    | ❌  |
 | Reference     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Remote Ref    | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
@@ -206,21 +205,6 @@ c1
     "uint16 hex"    = |u16x 91fe 443a 9c15|
     "float32 array" = |f32 1.5e10 -8,31e-12|
 }
-```
-
-#### Markup
-
-```cte
-c1
-<View;
-    <Image "src"=@"images/avatar-image.jpg">
-    <Text "id"="HelloText";
-        Hello! Please choose a name!
-    >
-    <TextInput "id"="NameInput" "style"={"height"=40 "borderColor"="gray"};
-        Name me!
-    >
->
 ```
 
 #### References

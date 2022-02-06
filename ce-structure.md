@@ -81,9 +81,6 @@ Contents
     - [Edge](#edge)
       - [Example](#example)
     - [Node](#node)
-    - [Markup](#markup)
-      - [Markup Tag Name](#markup-tag-name)
-      - [Markup Content String](#markup-content-string)
   - [Other Types](#other-types)
     - [Null](#null)
   - [Pseudo-Objects](#pseudo-objects)
@@ -106,7 +103,6 @@ Contents
       - [Strings](#strings)
       - [Arrays](#arrays)
       - [Containers](#containers)
-      - [Markup Contents](#markup-contents)
       - [Null](#null-1)
       - [Comments](#comments)
       - [Padding](#padding-1)
@@ -271,7 +267,7 @@ It's best to think ahead about types and values that might be problematic on the
  * Platforms might have limitations on the size of numeric types.
  * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
  * Platforms might not support data with cyclical references.
- * Platforms might not provide some of the less common data types such as [markup](#markup), [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
+ * Platforms might not provide some of the less common data types such as [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
  * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
 
 
@@ -991,77 +987,6 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 ```
 
 
-### Markup
-
-Markup is a specialized tree-like data structure (popularized by XML) composed of a name, a map of attributes, and a list of contents that **CAN** contain string data and child nodes. Markup containers are best suited for presentation data. For regular data, [maps](#map), [lists](#list), [edges](#edge), [nodes](#node) and [arrays](#typed-array) are usually better because they map more directly to internal data structures.
-
-    [tag name] [attributes (**OPTIONAL**)] [contents (**OPTIONAL**)]
-
- * Tag name identifies what type of markup container this is (markup container types are application-specific, and beyond the scope of this specification).
- * The attributes section behaves like a [map](#map), except that an attribute key **MUST NOT** be an empty string-like object
- * The contents section behaves similarly to a [list](#list), except that it **MUST** only contain:
-   - [Content strings](#markup-content-string)
-   - [Comments](#comment)
-   - Other markup containers
-
-Illustration of markup encodings:
-
-| Attributes | Contents | Example ([CTE](cte-specification.md) format)                   |
-| ---------- | -------- | -------------------------------------------------------------- |
-|     N      |    N     | `<br>`                                                         |
-|     Y      |    N     | `<div "id"="fillme">`                                          |
-|     N      |    Y     | `<span;Some text here>`                                        |
-|     Y      |    Y     | `<ul "id"="mylist" "style"="boring"; <li;first> <li;second> >` |
-
-#### Markup Tag Name
-
-A markup tag name is an integral part of the markup container, and thus **CANNOT** be separately [marked](#marker) or be preceded by other objects, including [pseudo-objects](#pseudo-objects) and [invisible objects](#invisible-objects) (e.g. `</* comment */ some_name>` is invalid).
-
-* It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
-   - `_` (underscore)
-   - `:` (colon)
-   - `-` (dash)
-   - `.` (period)
-* It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
-* Comparisons are **case insensitive**.
-* It **CANNOT** be a [reference](#reference).
-
-**Note**: Although the colon (`:`) character tends to be used at the application level as a namespace separator, Concise Encoding itself places no special significance on the character.
-
-#### Markup Content String
-
-Markup content strings behave much like regular strings, except that:
-
- * Leading and trailing collapsible whitespace **MUST** be removed from each line in the string before being passed on from the decoder.
- * If the last line ends in collapsible whitespace and is not otherwise empty, the collapsible whitespace at the end **MUST** be converted to a single space (U+0020).
-
-For the purposes of this rule:
-
- * Collapsible whitespace is a sequence containing only the TAB (U+0009) and SPACE (U+0020) characters.
- * A line is a sequence of characters delimited by either a line breaking sequence [(Unicode classes BK, CR, LF, NL)](http://www.unicode.org/reports/tr14/#Table1), or the beginning or end of the content string.
- * Leading collapsible whitespace is collapsible whitespace that occurs between the beginning of the line and the first non-collapsible whitespace character.
- * Trailing collapsible whitespace is collapsible whitespace that occurs between the last non-collapsible whitespace character and the end of the line.
-
-[CTE](cte-specification.md) encoders **SHOULD** adjust leading collapsible whitespace (indentation) in content strings to make the document easier for a human to read.
-
-**Note**: At the application level, content strings generally tend to follow the same rules as [HTML content strings](https://www.w3.org/TR/html4/struct/text.html#h-9.1), but this is beyond the scope of Concise Encoding.
-
-**Note**: Concise Encoding doesn't interpret [entity references](https://en.wikipedia.org/wiki/SGML_entity); they are considered as regular text and **MUST NOT** be converted or processed by a CE decoder. Such interpretations are the domain of higher layers.
-
-**Example (in [CTE](cte-specification.md))**:
-
-```cte
-c1 <View;
-    <Image "src"=@"images/avatar-image.jpg">
-    <Text;
-        Hello! Please choose a name!
-    >
-    // <HRule "style"="thin">
-    <TextInput "id"="name" "style"={"height"=40 "borderColor"="gray"}; Name me! >
->
-```
-
-
 
 Other Types
 ------------
@@ -1341,10 +1266,6 @@ Containers **MUST** be of the same type. For example, a map is never equivalent 
 Containers **MUST** contain the same number of elements, and their elements **MUST** be equivalent.
 
 By default, list types **MUST** be compared ordered, and map types compared unordered, unless their ordering was otherwise specified by the schema.
-
-#### Markup Contents
-
-Extraneous whitespace in a markup contents section is elided before comparison. Comparisons are case sensitive unless otherwise specified by the schema.
 
 #### Null
 
