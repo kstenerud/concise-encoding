@@ -1,18 +1,20 @@
 Concise Text Encoding
 =====================
 
-Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
-
-The text format aims to present data in a human friendly way, encoding data in a manner that can be easily and unambiguously edited in a UTF-8 capable text editor while maintaining 1:1 compatibility with the [binary format](cbe-specification.md) (which aims for compactness and machine processing efficiency).
-
-CTE documents **MUST** follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
-
-
 
 Version
 -------
 
-Version 1 (prerelease)
+Version 0 (prerelease)
+
+
+
+This Document
+-------------
+
+This document describes the encoding format of Concise Text Encoding (CTE), and how codecs of this format must behave.
+
+The logical structure of [Concise Encoding](ce-structure.md) is described in its own document.
 
 
 
@@ -21,9 +23,11 @@ Contents
 
 - [Concise Text Encoding](#concise-text-encoding)
   - [Version](#version)
+  - [This Document](#this-document)
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
-  - [General](#general)
+  - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
+  - [Text Format](#text-format)
     - [Human Editability](#human-editability)
     - [Line Endings](#line-endings)
     - [Escape Sequences](#escape-sequences)
@@ -35,7 +39,6 @@ Contents
     - [Boolean](#boolean)
     - [Integer](#integer)
     - [Floating Point](#floating-point)
-      - [Radix Point](#radix-point)
       - [Base-10 Notation](#base-10-notation)
       - [Base-16 Notation](#base-16-notation)
       - [Special Floating Point Values](#special-floating-point-values)
@@ -83,8 +86,7 @@ Contents
   - [Empty Document](#empty-document)
   - [Letter Case](#letter-case)
     - [Overriding Rule for Decoders](#overriding-rule-for-decoders)
-  - [Whitespace](#whitespace)
-    - [Structural Whitespace Characters](#structural-whitespace-characters)
+  - [Structural Whitespace](#structural-whitespace)
   - [Lookalike Characters](#lookalike-characters)
   - [Pretty Printing](#pretty-printing)
       - [Right Margin](#right-margin)
@@ -123,8 +125,17 @@ Terms and Conventions
 
 
 
-General
--------
+What is Concise Text Encoding?
+------------------------------
+
+Concise Text Encoding (CTE) is the text variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
+
+The text format aims to present data in a human friendly way, encoding data in a manner that can be easily and unambiguously edited in a UTF-8 capable text editor while maintaining 1:1 compatibility with the [binary format](cbe-specification.md) (which aims for compactness and machine processing efficiency).
+
+
+
+Text Format
+-----------
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
@@ -146,16 +157,17 @@ A CTE document **MUST** be editable by a human. This means that it **MUST** cont
 
 In the spirit of human editability:
 
- * Implementations **SHOULD** avoid outputting characters that editors tend to convert automatically.
+ * Implementations **SHOULD** avoid outputting characters that editors tend to convert automatically (for example, TAB).
  * Line lengths **SHOULD** be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
- * The canonical line ending is linefeed (u+000a)
- * Implementations **SHOULD** convert structural line endings to the operating system's native format when saving a document to disk. See: [line endings](#line-endings)
  * If a certain character is likely to be confusing or problematic to a human reader or editor, it **MUST** be escaped.
 
 
 ### Line Endings
 
-Line endings **CAN** be encoded either as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Decoders **MUST** accept all encodings as input, but encoders **SHOULD** output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only.
+
+ * Decoders **MUST** accept both line ending types as input.
+ * Encoders **MUST** output LF only.
 
 
 ### Escape Sequences
@@ -170,8 +182,6 @@ In some contexts, escape sequences **MAY** be used to encode data that would oth
 | `"`                  | double quote (u+0022)                   |
 | `*`                  | asterisk (u+002a)                       |
 | `/`                  | slash (u+002f)                          |
-| `<`                  | less-than (u+003c)                      |
-| `>`                  | greater-than (u+003e)                   |
 | `\`                  | backslash (u+005c)                      |
 | `_`                  | non-breaking space (u+00a0)             |
 | `-`                  | soft-hyphen (u+00ad)                    |
@@ -229,6 +239,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 **Example**:
 
 ```cte
+c1
 "Verbatim sequences can occur anywhere escapes are allowed.\n\
 \.@@@
 In verbatim sequences, everything is interpreted literally until the
@@ -303,7 +314,7 @@ A floating point number is composed of an implied base (signified by an **OPTION
     value = significand × baseᵉˣᵖ
 
  * The significand and exponential portions are separated by an exponent marker.
- * The whole and fractional parts of the significand are separated by a [radix point](#radix-point).
+ * The whole and fractional parts of the significand are separated by a radix point (`.`).
  * Negative values are represented by prepending a dash `-` to the front of the floating point value (before any prefix).
 
 **Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
@@ -316,21 +327,7 @@ c1
     1.0
     5e-5
     -98.413e50
-    3,14
-]
-```
-
-#### Radix Point
-
-A radix point separates the whole part of the significand from the fractional part. The General Conference on Weights and Measures declared in 2003 that "the symbol for the decimal marker shall be either the point on the line or the comma on the line". CTE therefore accepts both `,` and `.` equally as radix points.
-
-**Examples**:
-
-```cte
-c1
-[
-    -3.81 // Same value as below
-    -3,81 // Same value as above
+    3.14
 ]
 ```
 
@@ -352,7 +349,7 @@ c1
     6.411e+9 // 6411000000
     6.411e9  // 6411000000
     6411e6   // 6411000000
-    6,411e-9 // 0.000000006411
+    6.411e-9 // 0.000000006411
 ]
 ```
 
@@ -391,18 +388,18 @@ c1
 #### Floating Point Rules
 
  * Codecs **MUST** output exponent portion markers in lowercase (`e` or `p`), but **MUST** also accept uppercase markers when decoding (`E` or `P`).
- * There **MUST** be at least one digit on each side of a radix point.
+ * There **MUST** be at least one digit on each side of a radix point (`.`).
 
 | Invalid      | Valid     | Notes                                                    |
 | ------------ | --------- | -------------------------------------------------------- |
 | `-1.`        | `-1.0`    | Or just use the integer value `-1`                       |
 | `.1`         | `0.1`     |                                                          |
-| `,218901e+2` | `21,8901` | Or `2.18901e+1`, or `0,218901e+2`                        |
+| `.218901e+2` | `21.8901` | Or `2.18901e+1`, or `0.218901e+2`                        |
 
 
 ### Numeric Whitespace
 
-The `_` character **CAN** be used as "numeric whitespace" when encoding integers and floating point numbers. Other [whitespace](#whitespace) characters are not allowed.
+The `_` character **CAN** be used as "numeric whitespace" when encoding integers and floating point numbers. Other [whitespace](#structural-whitespace) characters are not allowed.
 
 CTE encoders **MAY** offer configuration options to output numeric whitespace, but **MUST** by default output no numeric whitespace.
 
@@ -421,7 +418,7 @@ Valid:
 c1
 [
     1_000_000        // 1000000
-    4_3,5_5_4e9_0    // 43.554e90
+    4_3.5_5_4e9_0    // 43.554e90
     -0xa.fee_31p1_00 // -0xa.fee31p100
 ]
 ```
@@ -432,10 +429,10 @@ Invalid:
  * `1000000_`
  * `43_.554e90`
  * `43,_554e90`
- * `43,554_e90`
+ * `43.554_e90`
  * `-_43.554e90`
- * `-_0xa,fee31p100`
- * `-0xa,fee31p_100`
+ * `-_0xa.fee31p100`
+ * `-0xa.fee31p_100`
  * `-0_xa.fee31p100`
 
 
@@ -495,8 +492,6 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 | Subseconds   |     N     | `,` or `.` |         0 | 999999999 |          0 |          9 |
 | Time Zone    |     N     |    `/`     |         - |         - |          - |          - |
 
-**Note**: If the time zone is omitted, it is assumed to be `Zero` (UTC).
-
 **Examples**:
 
 ```cte
@@ -504,9 +499,9 @@ c1
 [
     09:04:21                // 9:04:21 UTC
     23:59:59.999999999      // 23:59:59 and 999999999 nanoseconds UTC
-    12:05:50,102/Z          // 12:05:50 and 102 milliseconds UTC
+    12:05:50.102/Z          // 12:05:50 and 102 milliseconds UTC
     4:00:00/Asia/Tokyo      // 4:00:00 Tokyo time
-    17:41:03/-13,54/-172,36 // 17:41:03 Samoa time
+    17:41:03/-13.54/-172.36 // 17:41:03 Samoa time
     9:00:00/L               // 9:00:00 local time
 ]
 ```
@@ -521,7 +516,7 @@ A timestamp combines a date and a time, separated by a slash character (`/`).
 ```cte
 c1
 [
-    2019-01-23/14:08:51,941245            // January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
+    2019-01-23/14:08:51.941245            // January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
     1985-10-26/01:20:01.105/M/Los_Angeles // October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
     5192-11-01/03:00:00/48.86/2.36        // November 1st, 5192, at 3:00:00, at whatever is in the place of Paris at that time
 ]
@@ -545,12 +540,15 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`). Negative values are prefixed with a dash character (`-`), and a [radix point](#radix-point) is used as a fractional separator.
+Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`).
+
+ * Negative values are prefixed with a dash character (`-`)
+ * A period (`.`) is used as a fractional separator.
 
 **Examples**:
 
  * `51.60/11.11`
- * `-13,53/-172,37`
+ * `-13.53/-172.37`
 
 #### UTC
 
@@ -565,7 +563,7 @@ UTC offsets are recorded by using a `+` or `-` character as the time zone separa
 ```cte
 c1
 [
-    1985-10-26/01:20:01,105+0700
+    1985-10-26/01:20:01.105+0700
     2000-01-14/10:22:00-0200
 ]
 ```
@@ -647,7 +645,7 @@ Float array element values written in decimal form will be **silently rounded** 
 c1
 [
     |u8x 9f 47 cb 9a 3c|
-    |f32 1,5 0x4,f391p100 30 9,31e-30|
+    |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0x7fff|
     |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     |b 11010|
@@ -668,7 +666,7 @@ Media with no contents represents the equivalent of an empty file. Media with no
 
 ### Media Contents
 
-If the actual media contents consist of UTF-8 text, they **CAN** be represented in string form by enclosing the contents in double quotes (`"`). Otherwise they **MUST** be represented using hex byte values like in a `u8x` array:
+If the actual media contents consists of only valid UTF-8 text, it **CAN** be represented in string form by enclosing the contents in double quotes (`"`). Otherwise it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
 * Text: `|m media/type "contents"|`
 * Binary: `|m media/type 63 6f 6e 74 65 6e 74 73|`
@@ -676,16 +674,20 @@ If the actual media contents consist of UTF-8 text, they **CAN** be represented 
 **Example**:
 
 ```cte
-|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+c1 |m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+```
 
-|m application/x-sh "\.@@
+Which is equivalent to:
+
+```cte
+c1 |m application/x-sh "\.@@
 #!/bin/sh
 
 echo hello world
 @@"|
 ```
 
-The above example media objects demonstrate two ways to represent the shell script:
+Both of the above examples represent a document containing the shell script:
 
 ```sh
 #!/bin/sh
@@ -696,7 +698,7 @@ echo hello world
 
 ### String-Like Array Encodings
 
-String-like array contents are enclosed within double-quote (`"`) delimiters. They are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences) except when encoding a [verbatim sequence](#verbatim-sequence).
+String-like array contents are enclosed within double-quote (`"`) delimiters. They are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences) except when encoding as a [verbatim sequence](#verbatim-sequence).
 
 
 ### String
@@ -719,8 +721,13 @@ A Concise Encoding implementation **MUST** interpret only [CTE escape sequences]
 ```cte
 c1
 [
-    @"http://x.y.z?quote=\""  // decodes to `http://x.y.z?quote="`,  which the upper layers interpret as `http://x.y.z?quote="`
-    @"http://x.y.z?quote=%22" // decodes to `http://x.y.z?quote=%22`,  which the upper layers interpret as `http://x.y.z?quote="`
+    // CTE decodes this as `http://x.y.z?quote="`
+    // The application layer interprets it as `http://x.y.z?quote="`
+    @"http://x.y.z?quote=\""
+
+    // CTE decodes this as `http://x.y.z?quote=%22`
+    // The application layer interprets it as `http://x.y.z?quote="`
+    @"http://x.y.z?quote=%22"
 ]
 ```
 
@@ -737,7 +744,7 @@ In the binary form, its contents are encoded like a u8x array (hex encoded byte 
 c1 |c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-In the textual form, its contents are enclosed within within double-quote (`"`) delimiters, and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
+In the textual form, its contents are enclosed within double-quote (`"`) delimiters, and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
 
 **Example**:
 
@@ -788,17 +795,20 @@ c1 {
 
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
 
+Edges are most commonly used in conjunction with [references](#reference) to produce arbitrary graphs.
+
 **Examples**:
 
 Weighted graph edge:
 
 ```cte
+c1
 {
-    "objs" = [
+    "vertices" = [
       &a:{}
       &b:{}
     ]
-    "graph" = [
+    "edges" = [
       @($a 200 $b)
     ]
 }
@@ -807,6 +817,7 @@ Weighted graph edge:
 Relationship graph edge:
 
 ```cte
+c1
 @(
     @"https://springfield.gov/people#homer_simpson"
     @"https://example.org/wife"
@@ -819,35 +830,40 @@ Relationship graph edge:
 
 A node begins with an opening parenthesis `(`, contains a value (object) followed by zero or more whitespace separated child nodes, and is closed with a closing parenthesis `)`.
 
+Nodes are recorded in **depth-first**, **node-right-left** order, which ensures that the textual representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
+
 **Example**:
 
 ```cte
 c1
 // The tree structure:
-//       2
-//      / \
-//     7   5
-//    /|\   \
-//   2 1 6   9
-//  / \       \
-// 5   8       4
+//        2
+//       / \
+//      5   7
+//     /   /|\
+//    9   6 1 2
+//   /   / \
+//  4   8   5
 //
 (2
-    (5
-        (9
-            (4)
+    (7
+        2
+        1
+        (6
+            5
+            8
         )
     )
-    (7
-        (6)
-        (1)
-        (2
-            (8)
-            (5)
+    (5
+        (9
+            4
         )
     )
 )
 ```
+Viewed rotated, it resembles the tree it describes:
+
+![tree rotated](img/tree-rotated.svg)
 
 
 
@@ -1019,45 +1035,12 @@ A CTE decoder **MUST** accept data that breaks letter case restrictions (includi
 
 
 
-Whitespace
-----------
-
-Whitespace is defined as any character marked as whitespace in the [Unicode](https://unicode.org) database. As of 2021, these characters are:
-
-| Code Point | Name                      |
-| ---------- | ------------------------- |
-| U+0009     | character tabulation      |
-| U+000A     | line feed                 |
-| U+000B     | line tabulation           |
-| U+000C     | form feed                 |
-| U+000D     | carriage return           |
-| U+0020     | space                     |
-| U+0085     | next line                 |
-| U+00A0     | no-break space            |
-| U+1680     | ogham space mark          |
-| U+2000     | en quad                   |
-| U+2001     | em quad                   |
-| U+2002     | en space                  |
-| U+2003     | em space                  |
-| U+2004     | three-per-em space        |
-| U+2005     | four-per-em space         |
-| U+2006     | six-per-em space          |
-| U+2007     | figure space              |
-| U+2008     | punctuation space         |
-| U+2009     | thin space                |
-| U+200A     | hair space                |
-| U+2028     | line separator            |
-| U+2029     | paragraph separator       |
-| U+202F     | narrow no-break space     |
-| U+205F     | medium mathematical space |
-| U+3000     | ideographic space         |
-
-
-### Structural Whitespace Characters
+Structural Whitespace
+---------------------
 
 Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document. Whitespace characters not intended to be structural will need to be quoted in most contexts to preserve their meaning.
 
-CTE decoders **MUST** accept all of the above whitespace characters when decoding structural whitespace. CTE Encoders **MUST** produce only the following characters as structural whitespace:
+**Allowed structural whitespace characters:**
 
 | Code Point | Name                      |
 | ---------- | ------------------------- |
@@ -1094,7 +1077,7 @@ Examples:
  * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
  * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
- * In numeric values (`0x3 f`, `9, 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
+ * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
 
 
 
@@ -1144,6 +1127,7 @@ The canonical indentation is 4 spaces (`    `). CTE encoders **SHOULD** always e
 
 Objects in a list **SHOULD** be placed on separate lines.
 ```cte
+c1
 [
     @"https://www.imdb.com/title/tt0090605/"
     @"https://www.imdb.com/title/tt1029248/"
@@ -1152,11 +1136,13 @@ Objects in a list **SHOULD** be placed on separate lines.
 
 If a list is empty, the closing `]` **SHOULD** be on the same line.
 ```cte
+c1
 []
 ```
 
 Short lists containing small objects may be placed entirely on one line.
 ```cte
+c1
 ["a" "b" "c" "d"]
 ```
 
@@ -1165,6 +1151,7 @@ Short lists containing small objects may be placed entirely on one line.
 
 There **SHOULD** be a space between keys, values and the `=` in key-value pairs, and each key-value pair **SHOULD** be on a separate line.
 ```cte
+c1
 {
     "aliens" = @"https://www.imdb.com/title/tt0090605/"
     "moribito" = @"https://www.imdb.com/title/tt1029248/"
@@ -1173,11 +1160,13 @@ There **SHOULD** be a space between keys, values and the `=` in key-value pairs,
 
 If a map is empty, the closing `}` **SHOULD** be on the same line.
 ```cte
+c1
 {}
 ```
 
 Small maps containing small objects may be placed entirely on one line. In such a case, omit the spaces around the `=`.
 ```cte
+c1
 {"a"="b" "c"="d"}
 ```
 
@@ -1199,6 +1188,7 @@ See the example in [node](#node).
 Edge components **SHOULD** be broken up into multiple lines if they're too long.
 
 ```cte
+c1
 @(
     @"https://springfield.gov/people#homer_simpson"
     @"https://example.org/wife"
@@ -1211,6 +1201,7 @@ Edge components **SHOULD** be broken up into multiple lines if they're too long.
 
 Strings **SHOULD** use [continuations](#continuation) if the line is getting too long.
 ```cte
+c1
 [
     "All that most maddens and torments; all that stirs up the lees of things; \
     all truth with malice in it; all that cracks the sinews and cakes the brain; \
@@ -1227,6 +1218,7 @@ Strings **SHOULD** use [continuations](#continuation) if the line is getting too
 
 Typed arrays **SHOULD** be broken up into multiple indented lines if the line is getting too long.
 ```cte
+c1
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
       bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
       fb59 fdb0 1d93 5747 239d b16f 7d9c c48b 5581 13ba 19ca 6f3b 4ba9|
@@ -1239,6 +1231,7 @@ In the event that a machine generating CTE documents wants to also output commen
 
 Comments **SHOULD** have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) **SHOULD** also have a space before the closing sequence.
 ```cte
+c1
 {
   // abc
 
@@ -1248,6 +1241,7 @@ Comments **SHOULD** have one space (u+0020) after the comment opening sequence. 
 
 Long comments **SHOULD** be broken up to fit within the right margin.
 ```cte
+c1
 {
     /* When a comment gets too long to fit within the right margin, place
        the overflow on a separate lines, adjusting the indent to keep
@@ -1257,6 +1251,7 @@ Long comments **SHOULD** be broken up to fit within the right margin.
 
 The object following a comment **SHOULD** be on a different line.
 ```cte
+c1
 {
     // See list of request types in request-types.md
     "request-type" = "ping"

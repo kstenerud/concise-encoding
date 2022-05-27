@@ -1,15 +1,6 @@
 Concise Encoding - Structural Specification
 ===========================================
 
-Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
-
-The basic premise for the twin formats is that data should be transmitted and stored in the much more efficient binary format, and only converted to/from text on-demand whenever a human needs to be involved (for example modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CTE and CBE is often enough for a human to examine and modify the CBE data that your application uses.
-
-This document describes the structure of Concise Encoding documents and the data types it supports. The encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in separate documents.
-
-**Note**: The examples in this document are mostly given in [CTE format](cte-specification.md) for clarity.
-
-
 
 Version
 -------
@@ -18,16 +9,28 @@ Version 0 (prerelease)
 
 
 
+This Document
+-------------
+
+This document describes the logical structure of the Concise Encoding formats, and the data types it supports.
+
+The actual encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in their respective documents.
+
+
+
 Contents
 --------
 
 - [Concise Encoding - Structural Specification](#concise-encoding---structural-specification)
   - [Version](#version)
+  - [This Document](#this-document)
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
+  - [What is Concise Encoding?](#what-is-concise-encoding)
+  - [Why Two Formats?](#why-two-formats)
   - [Versioning](#versioning)
-      - [Prerelease Version](#prerelease-version)
-  - [Structure](#structure)
+    - [Prerelease Version](#prerelease-version)
+  - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
   - [Unrepresentable Values](#unrepresentable-values)
     - [Lossy Conversions](#lossy-conversions)
@@ -37,11 +40,12 @@ Contents
     - [Boolean](#boolean)
     - [Integer](#integer)
     - [Floating Point](#floating-point)
-      - [NaN Payload](#nan-payload)
+      - [Supported Bases](#supported-bases)
       - [Decimal Floating Point](#decimal-floating-point)
       - [Binary Floating Point](#binary-floating-point)
       - [Value Ranges](#value-ranges)
       - [Special Floating Point Values](#special-floating-point-values)
+      - [NaN Payload](#nan-payload)
     - [UID](#uid)
   - [Temporal Types](#temporal-types)
     - [General Rules](#general-rules)
@@ -98,7 +102,7 @@ Contents
   - [Text Safety](#text-safety)
   - [Equivalence](#equivalence)
     - [Relaxed Equivalence](#relaxed-equivalence)
-      - [Numeric Types](#numeric-types-1)
+      - [Integers and floats](#integers-and-floats)
       - [Custom Types](#custom-types-1)
       - [Strings](#strings)
       - [Arrays](#arrays)
@@ -146,6 +150,25 @@ Terms and Conventions
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
+
+
+
+What is Concise Encoding?
+-------------------------
+
+Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
+
+
+
+Why Two Formats?
+----------------
+
+Internally, machines represent data in binary, but binary formats are very difficult for humans to read and write, and humans sometimes need to be able to inspect and modify the data being stored and transmitted by machines.
+
+In the past, we've compromised by transmitting and storing data in text formats (XML, JSON, etc), but text formats are *incredibly* inefficient. Concise Encoding instead adopts the philosophy: **Not a human data format that a machine can read, but rather a machine data format that a human can read**.
+
+Data should ideally be stored and transmitted in a binary format, and only converted to/from text format in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
 
 
 
@@ -156,14 +179,14 @@ Concise Encoding is versioned, meaning that every Concise Encoding document cont
 
 The Concise Encoding version is a single positive integer value, starting at 1.
 
-#### Prerelease Version
+### Prerelease Version
 
 During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired and considered invalid (there shall be no backwards compatibility to the prerelease spec).
 
 
 
-Structure
----------
+Document Structure
+------------------
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
@@ -212,16 +235,16 @@ Decoders are given a lot of leeway in how they represent a document's data after
 
 If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
 
-**Lossy conversions that **MUST** be allowed**:
+**Lossy conversions that MUST be allowed**:
 
  * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
 
-**Lossy conversions that **MUST NOT** be allowed**:
+**Lossy conversions that MUST NOT be allowed**:
 
  * String character substitution or omission
  * Truncation from storing in a type that cannot hold all of the data (except where listed as configurable - see below)
 
-**Lossy conversions that **MUST** be decided based on configuration**:
+**Lossy conversions that MUST be decided based on configuration**:
 
  * Loss of floating point coefficient precision from conversion between binary and decimal float types
  * Loss of floating point coefficient precision from storing in a smaller float type
@@ -239,7 +262,7 @@ Binary and decimal float values can rarely be converted to each other without da
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-Such conversions **MUST** be done using the following algorithm (or an algorithm that yields the same result):
+Such conversions **MUST** be done using either the following algorithm, or an algorithm that ultimately yields the same result in the destination type:
 
  * Convert the source value to its string-based decimal exponent encoding.
  * Convert the string value into the destination type.
@@ -259,7 +282,7 @@ Examples of widely used and largely standardized conversion algorithms:
 
 ### Problematic Values
 
-It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure a uniform (and thus unexploitable) response.
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
 
  * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
@@ -275,7 +298,9 @@ It's best to think ahead about types and values that might be problematic on the
 Numeric Types
 -------------
 
-The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits).
+The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that any limits chosen are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
+
+An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the final numeric value remains the same (i.e. it can still be converted back to the original type and size with no data loss).
 
 
 ### Boolean
@@ -292,11 +317,10 @@ c1
 ]
 ```
 
+
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes. An implementation **MAY** alter base and size when encoding/decoding as long as the final numeric value being represented remains the same.
-
-**Note**: Although the integer value `-0` is valid in Concise Encoding, most implementations cannot represent such a value as an integer. In such a case, implementations **MUST** convert to a floating point type.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -311,19 +335,23 @@ c1
 
 ### Floating Point
 
-A floating point number is composed of a whole part, fractional part, and possible exponent. There are two primary classes of floating point numbers in Concise Encoding: decimal and binary, which can be stored in various sizes, configurations, and notations.
+A floating point number is conceptually composed of a whole part and a fractional part (forming a significand), multiplied by a base raised to an exponent:
 
-An implementation **MAY** alter the type and storage size of a floating point value when encoding/decoding (including converting to integer in the case of whole numbers) as long as the final numeric value remains the same (i.e. no rounding occurs).
+    value = whole.fractional × baseᵉˣᵖᵒⁿᵉⁿᵗ
 
-#### NaN Payload
+Internally, the whole and fractional parts are usually combined into a single integer significand value, with the exponent adjusted to compensate:
 
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a security risk.
+    value = significand × baseᵉˣᵖᵒⁿᵉⁿᵗ
+
+#### Supported Bases
+
+Concise Encoding supports the two most common bases in use: 10 (decimal) and 2 (binary).
 
 #### Decimal Floating Point
 
 In a decimal floating point number, the exponent represents 10 to the power of the exponent value (for example 3.814 x 10⁵⁰).
 
-Decimal floating point **SHOULD** be the preferred method for storing floating point values because of the rounding issues associated with binary floating point when viewing in human-friendly forms.
+Decimal floating point **SHOULD** be the preferred method for storing floating point values because of the rounding issues associated with binary floating point when converting from/to human-friendly forms.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -331,7 +359,7 @@ Decimal floating point **SHOULD** be the preferred method for storing floating p
 c1
 [
     -2.81
-    4,195342e-10000
+    4.195342e-10000
 ]
 ```
 
@@ -339,7 +367,7 @@ c1
 
 In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). 
 
-Binary floating point is provided mainly to support legacy systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports binary floating point values in three types:
+Binary floating point is provided mainly to support legacy systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports three types of binary floating point values:
 
  * [16-bit bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
  * [32-bit ieee754 binary](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)
@@ -350,14 +378,14 @@ Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-**Note**: Be careful not to set the rest of the payload to all zeroes on a signaling NaN, as that would result in an all-zero payload, which in ieee754-binary signifies infinity, not NaN.
+**Note**: Be careful not to set the rest of a binary float payload to all zeroes on a signaling NaN, as this signifies [infinity in ieee754-binary, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
 
 **Examples (in [CTE](cte-specification.md))**:
 
 ```cte
 c1
 [
-    0xa,3fb8p+42 // a.3fb8 x 2⁴²
+    0xa.3fb8p+42 // a.3fb8 x 2⁴²
     0x1.0p0      // 1
 ]
 ```
@@ -374,7 +402,7 @@ Floating point types support the following ranges:
 **Notes**:
 
  * Binary floats are limited to what is representable by their respective types.
- * Although decimal floats technically have unlimited range, implementations will suffer performance issues after a point, and thus require pragmatic [limit enforcement](#user-controllable-limits).
+ * Although decimal floats technically have unlimited range, implementations will suffer performance issues after a point, and thus require pragmatic and homogenous [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values
 
@@ -383,6 +411,10 @@ Both decimal and binary floating point numbers have representations for the foll
 * Two kinds of zero: +0 and -0
 * Two kinds of infinities: +∞ and -∞
 * Two kinds of NaN (not-a-number): Signaling and quiet
+
+#### NaN Payload
+
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a [security risk](#security-and-limits).
 
 
 ### UID
@@ -415,7 +447,7 @@ Temporal types are represented using the [Gregorian calendar](https://en.wikiped
  * The `month` and `day` fields start counting at 1 (they **CANNOT** be 0).
  * The `day` field **MUST** be valid for the specified month according to the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar#Description).
  * The `day` field **CAN** go up to 29 in Feburary when accommodating a [leap year](https://en.wikipedia.org/wiki/Leap_year).
- * The `hour`, `minute`, and `second` fields start counting at 0.
+ * The `hour`, `minute`, `second`, and `subsecond` fields start counting at 0.
  * The `hour` field represents the [24h clock](https://en.wikipedia.org/wiki/24-hour_clock) hour value (there is no AM or PM).
  * The `second` field **CAN** go up to 60 when accommodating a [leap second](https://en.wikipedia.org/wiki/Leap_second).
  * If the time zone is omitted, it is assumed to be `Zero` (aka "Zulu" or "[GMT](https://en.wikipedia.org/wiki/Greenwich_Mean_Time)" or "[UTC](https://en.wikipedia.org/wiki/UTC%C2%B100:00)").
@@ -468,10 +500,10 @@ A time is made up of the following fields:
 ```cte
 c1
 [
-    23:59:59,999999999      // 23:59:59 and 999999999 nanoseconds UTC
+    23:59:59.999999999      // 23:59:59 and 999999999 nanoseconds UTC
     12:05:50.102            // 12:05:50 and 102 milliseconds UTC
     4:00:00/Asia/Tokyo      // 4:00:00 Tokyo time
-    17:41:03/-13,54/-172,36 // 17:41:03 Samoa time
+    17:41:03/-13.54/-172.36 // 17:41:03 Samoa time
     9:00:00/Local           // 9:00:00 local time
 ]
 ```
@@ -487,7 +519,7 @@ A timestamp combines a date and a time.
 c1
 [
     2019-01-23/14:08:51.941245                  // January 23, 2019, at 14:08:51 and 941245 microseconds, UTC
-    1985-10-26/01:20:01,105/America/Los_Angeles // October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
+    1985-10-26/01:20:01.105/America/Los_Angeles // October 26, 1985, at 1:20:01 and 105 milliseconds, Los Angeles time
     5192-11-01/03:00:00/48.86/2.36              // November 1st, 5192, at 3:00:00, at whatever will be in the place of Paris at that time
 ]
 ```
@@ -557,13 +589,13 @@ This method has the advantage of being temporally unambiguous, which could be us
 **Examples (in [CTE](cte-specification.md))**:
 
  * `51.60/11.11`
- * `-13,53/-172,37`
+ * `-13.53/-172.37`
 
 #### UTC
 
 If the time zone is unspecified, it is assumed to be `Zero` (UTC). Placing all past event time values in the UTC time zone has the advantage of more compact and unambiguous time storage, which makes comparisons and other operations much easier and reduces bugs.
 
-UTC time is not recommended for future and periodic/repeating time values.
+UTC time is **not** recommended for future and periodic/repeating time values.
 
 #### UTC Offset
 
@@ -614,13 +646,14 @@ Use whichever kind of time most succinctly handles your time needs. Don't depend
 Array Types
 -----------
 
-An array represents a contiguous sequence of fixed length elements. The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
+An array represents a contiguous sequence of fixed length elements, and is essentially a space-optimized [list](#list). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
-There are three primary kinds of array representations in Concise Encoding:
+There are three kinds of array types in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
- * [Custom types](#custom-types), which represent custom data that only a custom codec designed for them will understand. Elements of a custom type array are always considered 8 bits wide (regardless of the actual data the bytes represent).
+ * [Media](#media), whose contents encapsulate other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec if necessary).  Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [Custom types](#custom-types), whose contents represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
 
 ### String-like Arrays
@@ -639,18 +672,20 @@ Special processing is required to replace escape sequences in string-like arrays
 
 #### NUL
 
-The NUL character (U+0000) has a long history of causing problems and security issues due to inconsistent support at the platform, language, and application levels. Because of this, Concise Encoding has special rules for the NUL character in string-like arrays:
+The NUL byte (`00`) **MUST NOT** be present in a string-like array.
 
- * If the underlying platform supports NUL characters, codecs **MUST** provide a configuration **OPTION** to enable NUL character support, and this option **MUST** default to disabled.
- * If the codec is has NUL support disabled, a schema **CANNOT** enable it.
- * If the codec is has NUL support enabled, a schema **CAN** disable it.
- * Encountering a NUL character in a string-like array (encoding or decoding) while NUL support is disabled is a [data error](#data-errors).
+Encoders **MUST** convert NUL characters [`00`] in a string-like array to the UTF-8 sequence [`c0 80`], which is equivalent to U+0000 without containing the actual byte value 0.
 
-**Note**: Because NUL is a troublesome character on many platforms, its use in documents is *strongly* discouraged.
+Decoders **MUST NOT** convert [`c0 80`] to [`00`]. The application layer is better suited to make such decisions.
+
+**Note**: Because NUL is such a troublesome character on many platforms, its use is *strongly* discouraged.
 
 #### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only. Implementations **MUST** accept both line ending types as input, but encoders **SHOULD** only output LF when the destination is a foreign or unknown system.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only.
+
+ * Decoders **MUST** accept both line ending types as input.
+ * Encoders **MUST** output LF only.
 
 #### String
 
@@ -694,7 +729,7 @@ Array elements in [CTE](cte-specification.md) **CAN** be written using any of th
 c1
 [
     |u8x 9f 47 cb 9a 3c|
-    |f32 1,5 0x4,f391p100 30 9,31e-30|
+    |f32 1.5 0x4.f391p100 30 9.31e-30|
     |i16 0b1001010 0o744 1000 0x7fff|
     |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
     |b 1 1 0 1 0|
@@ -780,12 +815,12 @@ Our data:
 
 In [CTE](cte-specification.md):
 
- * Binary form: `|cb 01 f6 28 3c 40 00 00 40 40|`
- * Textual form: `|ct cplx(2.94+3i)|`
+ * Binary form: `|c 01 f6 28 3c 40 00 00 40 40|`
+ * Textual form: `|c "cplx(2.94+3i)"|`
 
 In [CBE](cbe-specification.md):
 
- * Binary form: `92 12 01 f6 28 3c 40 00 00 40 40`
+ * Binary form: [`92 12 01 f6 28 3c 40 00 00 40 40`]
  * Textual form not supported in CBE
 
 
@@ -808,7 +843,7 @@ For list-like containers, a duplicate means any object that is equivalent to ano
 
 For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
 
-The testing of integer and float values for duplicates transcends the data type when the value is type-compatible (i.e. both are numeric types) and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates. The string value `"2000"`, however, would not be a duplicate.
+The testing of integer and float values for duplicates transcends the data type when the value is type-compatible (i.e. both are numeric types) and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates, but the string value `"2000"` is not a duplicate.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
@@ -825,7 +860,7 @@ By default, a list is ordered and allows duplicate values. Different rules **CAN
 c1 [
     1
     "two"
-    3,1
+    3.1
     {}
     null
 ]
@@ -834,23 +869,21 @@ c1 [
 
 ### Map
 
-A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not all have to be the same type. Values **CAN** be any type (including other containers), and do not all have to be the same type.
+A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not have to all be the same type. Values **CAN** be any type (including other containers), and do not have to all be the same type.
 
-Map entries are stored as key-value pairs. A key without a paired value is invalid.
+Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
 By default, a map is unordered and does not allow duplicate keys. Different rules **CAN** be set using a schema.
 
 #### Keyable types
 
-Only certain types **CAN** be used as keys in map-like containers:
+Only the following types are allowed as keys in map-like containers:
 
 * [Numeric types](#numeric-types), except for NaN (not-a-number)
 * [Temporal types](#temporal-types)
 * [Strings](#string)
 * [Resource identifiers](#resource-identifier)
 * [References](#reference) (only if the referenced value is keyable)
-
-[Null](#null) **MUST NOT** be used as a key.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -949,7 +982,7 @@ If a child is not of type node, it is treated as though it were the value portio
 
 **Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
 
-Unless otherwise specified by a schema, the default interpretation of the data is a tree ordered using a **depth-first**, **node-right-left** order. This ensures that the [CTE](cte-specification.md) representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
+Nodes are recorded in a **depth-first**, **node-right-left** order, which ensures that the [CTE](cte-specification.md) representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -997,13 +1030,13 @@ Null signals that the specified field or index is absent. It is used to support 
 
 Some uses for null in common operations:
 
-| Operation | Meaning when field value = null                                              |
-| --------- | ---------------------------------------------------------------------------- |
-| Create    | Client: Do not include this field (overriding any default value).            |
-| Read      | Server: This field has been removed / cleared since the previous checkpoint. |
-| Update    | Client: Remove / clear this field.                                           |
-| Delete    | Client: Match records where this field is cleared / not present.             |
-| Fetch     | Client: Match records where this field is cleared / not present.             |
+| Operation | Meaning when field value = null                                         |
+| --------- | ----------------------------------------------------------------------- |
+| Create    | From client: Do not create this field (overrides any default value).    |
+| Read      | From server: This field has been removed since the previous checkpoint. |
+| Update    | From client: Remove this field.                                         |
+| Delete    | From client: Match records where this field is not present.             |
+| Fetch     | From client: Match records where this field is not present.             |
 
 
 
@@ -1019,11 +1052,9 @@ Pseudo-objects **CAN** be placed anywhere a full object can be placed, except in
 
 ### Marker
 
-A marker assigns a [marker identifier](#marker-identifier) to another object, which can then be [referenced](#reference) in another part of the document (or from a different document).
+A marker assigns a [marker identifier](#marker-identifier) to another object, which is then [referenceable](#reference) from another part of the document (or from a different document).
 
     [marker id] [marked object]
-
-Markers add context to existing objects (attaching an identifier).
 
  * Markers **CANNOT** stand-in for real objects.
  * Markers **CANNOT** mark other pseudo-objects, invisible objects, or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
@@ -1048,11 +1079,9 @@ A marker identifier uniquely identifies the marked object in the current documen
    - `_` (underscore)
    - `-` (dash)
    - `.` (period)
-* It **MUST** be from 1 to 127 inclusive **bytes** (not characters) long.
+* It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
 * Comparisons are **case insensitive**.
 * It **CANNOT** be a [reference](#reference).
-
-**Note**: The colon character (`:`) is exluded from marker identifiers because it is the [marker ID separator in CTE](cte-specification.md#marker).
 
 
 ### Reference
@@ -1129,7 +1158,7 @@ Invisible objects **CANNOT** be used as real objects, and **CANNOT** be marked o
 
 ### Comment
 
-A comment is a string-like invisible object that provides extra information for human readers in CTE documents. CBE encoders **CANNOT** encode comments.
+A comment is a string-like invisible object that provides extra information for human readers in CTE documents. CBE documents do not support comments.
 
 CTE supports two forms of comments:
 
@@ -1138,12 +1167,7 @@ CTE supports two forms of comments:
 
 Comments **MUST ONLY** contain [text-safe](#text-safety) characters.
 
-Comments are allowed anywhere in a CTE document except:
-
- * Before the [version specifier](#version-specifier) (`/*comment*/c1` is invalid).
- * After the top-level object (`c1 100 /*comment*/` is invalid).
- * Between the left and right side of a [marker](#marker) and marke object (`&my_id:/*comment*/"blah` is invalid).
- * Inside of a [string-like array](#string-like-arrays) type. (`"/*comment*/blah"` is interpreted as a single string).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, except between a [marker](#marker) and marked object (`&my_id:/*comment*/123456` is invalid).
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
@@ -1201,11 +1225,8 @@ A codec **MUST** provide an **OPTION** to artificially complete a truncated [CBE
 
 **To artificially complete a truncated document**:
 
- * Incomplete fields that are neither arrays nor containers **MUST** be discarded.
- * Incomplete [resource identifier](#resource-identifier) and [remote reference](#remote-reference) fields **MUST** be discarded.
- * Fields with incomplete [identifier](#identifier) data **MUST** be discarded.
- * The last element of an incomplete array **MUST** be discarded if the element is incomplete.
- * Any still-open containers and arrays **MUST** be artificially closed.
+ * Incomplete fields that are not containers **MUST** be discarded.
+ * Any still-open containers **MUST** be artificially closed.
 
 The artificialy completed document is returned to the caller along with an indication that the document was truncated.
 
@@ -1214,12 +1235,13 @@ The artificialy completed document is returned to the caller along with an indic
 Text Safety
 -----------
 
-Because Concise Encoding is a twin format (text and binary), every character printed in a CTE document **MUST** be editable by a human. Such human-editable characters are considered "text safe".
+Because Concise Encoding is a twin format (text and binary), every character in a CTE document **MUST** be editable by a human. Such human-editable characters are considered "text safe".
 
 The following Unicode codepoints are text-unsafe:
 
- * Codepoints in general category `C` (except for TAB (u+0009), LF (u+000a), and CR (u+000d), which are text-safe)
+ * Codepoints in general category `C` (except for TAB (u+0009), LF (u+000a), and CR (u+000d))
  * Codepoints in categories `Zl` and `Zp` (basically u+2028 and u+2029)
+ * Unassigned, reserved, and invalid codepoints
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
 
@@ -1235,19 +1257,19 @@ There are many things to consider when determining if two Concise Encoding docum
 
 ### Relaxed Equivalence
 
-Relaxed equivalence is concerned with the question: Does the data destined for machine use come out essentially the same, even if there are some type differences?
+Relaxed equivalence is concerned with the question: Does the data destined for machine use come out with essentially the same values, even if there are some type differences?
 
-#### Numeric Types
+#### Integers and floats
 
-Numeric values (integers and floats) do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12,0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
+Integers and floats do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
 
 Infinities with the same sign are considered equivalent.
 
-**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN so long as they are both the same kind of NaN (signaling or quiet).
+**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Other than the signaling status, the NaN payload is disregarded when comparing.
 
 #### Custom Types
 
-Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared with custom binary values unless the receiver understands the custom type.
+Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared with custom binary values unless they can both first be converted to a type that the receiver can compare.
 
 #### Strings
 
@@ -1257,7 +1279,7 @@ Strings are considered equivalent if their contents are equal after decoding esc
 
 Arrays **MUST** contain the same number of elements, and those elements **MUST** be equivalent.
 
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1,0 2,0 3,0` are equivalent under relaxed equivalence.
+The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
 
 #### Containers
 
@@ -1335,13 +1357,12 @@ Once the characteristics of a system are known, an attacker could anticipate und
 
 The most common sources of deserialization data loss are:
 
- * Cutting off the upper part of an integer on overflow
- * Rounding off the lower part of a binary float on overflow
- * Rounding to infinity or converting to NaN
+ * On integer overflow: losing the most significant portion of the value.
+ * On floating point overflow: losing a portion of the significand and/or exponent, rounding to infinity, or converting to NaN
  * Truncating long arrays/strings
  * Erasing/replacing invalid characters in a string-like object
 
-Any point in your system that allows data loss is a potential security hole, because different parts of your system will likely handle the same loss-inducing data in different ways, and those differences could be exploited by an attacker using specially crafted documents.
+Any part of your system that allows data loss is a potential security hole, because different parts of your system will likely handle the same loss-inducing data in different ways, and those differences could be exploited by an attacker using specially crafted documents.
 
 As a contrived example, consider a fictional system where the access control subsystem running on platform A leaves bad characters as-is or replaces them with u+fffd, and the storage subsystem running on platform B truncates bad characters. If an attacker is able to send a "create user" or "change user" command with a group of `admin\U+D800` (which would pass access control validation because `admin\U+D800` != `admin`), he could set up an admin user because the storage subsystem truncates bad characters and stores the group `admin\U+D800` as `admin`. The next time that user is loaded, it will be in group `admin`.
 
@@ -1390,7 +1411,7 @@ As a seller, you'd want your billing system to choose the first instance of "tot
 }
 ```
 
-In this case, if the system truncated bad Unicode characters after checking for duplicate keys, it would be vulnerable to exploitation.
+In this case, if the system truncated bad Unicode characters *after* checking for duplicate keys, it would be vulnerable to exploitation.
 
 #### Deserialization Complexity
 

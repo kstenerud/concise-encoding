@@ -1,20 +1,20 @@
 Concise Binary Encoding
 =======================
 
-Concise Binary Encoding (CBE) is the binary variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
-
-The binary format aims for compactness and machine processing efficiency while maintaining 1:1 compatibility with the [text format](cte-specification.md) (which aims to present data in a human friendly way).
-
-CBE documents **MUST** follow the [Concise Encoding structural rules](ce-structure.md). Many terms used in this document are defined there.
-
-**Note**: CBE examples will be represented as series of hex encoded byte values enclosed within square brackets. For example, `[00 01 fe ff]` represents the four byte sequence 0x00, 0x01, 0xfe, 0xff.
-
-
 
 Version
 -------
 
-Version 1 (prerelease)
+Version 0 (prerelease)
+
+
+
+This Document
+-------------
+
+This document describes the encoding format of Concise Binary Encoding (CBE), and how codecs of this format must behave.
+
+The logical structure of [Concise Encoding](ce-structure.md) is described in its own document.
 
 
 
@@ -23,8 +23,10 @@ Contents
 
 - [Concise Binary Encoding](#concise-binary-encoding)
   - [Version](#version)
+  - [This Document](#this-document)
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
+  - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Version Specifier](#version-specifier)
   - [Encoding](#encoding)
       - [Type Field](#type-field)
@@ -57,6 +59,7 @@ Contents
     - [Resource Identifier](#resource-identifier)
     - [Custom Types](#custom-types)
     - [Typed Arrays](#typed-arrays)
+      - [Array Forms](#array-forms)
       - [Bit Array](#bit-array)
       - [Media](#media)
   - [Container Types](#container-types)
@@ -105,12 +108,21 @@ Terms and Conventions
 
 
 
+What is Concise Binary Encoding?
+--------------------------------
+
+Concise Binary Encoding (CBE) is the binary variant of Concise Encoding: a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data.
+
+The binary format aims for compactness and machine processing efficiency while maintaining 1:1 compatibility with the [text format](cte-specification.md) (which aims to present data in a human friendly way).
+
+
+
 Version Specifier
 -----------------
 
 A CBE document begins with a version specifier, which is composed of the octet `0x8f`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
-**Note**: `0x8f` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default format, implementations can safely try binary encodings that have deterministic signatures.
+**Note**: `0x8f` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default text format, implementations can safely try binary encodings that have deterministic signatures.
 
  * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
  * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
@@ -126,7 +138,9 @@ A CBE document begins with a version specifier, which is composed of the octet `
 Encoding
 --------
 
-A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required (A CBE document does not require a length envelope for decoding).
+A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required. This ensures that the end of a CBE document can always be deterministically found in a single pass.
+
+Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy wherever possible on little endian systems.
 
@@ -280,7 +294,7 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 #### Fixed Width
 
-Fixed width integers are stored unsigned in widths of 8, 16, 32, and 64 bits (in little endian byte order). The sign is encoded in the type field.
+Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field implies the sign of the integer.
 
     [type] [byte 1 (low)] ... [byte x (high)]
 
@@ -342,7 +356,7 @@ Temporal Types
 
 Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
 
-**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed!
+**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed in CBE!
 
 
 ### Date
@@ -457,7 +471,7 @@ vs
 
 Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
 
-If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
+If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
 
     ...                          // buffer = [84 t e s t 6a 10 a0 ...]
     case string (length 4):      // 0x84 = string (length 4)
@@ -497,7 +511,7 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 ### Identifier
 
-Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 character, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
 
 | Field        | Bits | Value             |
 | ------------ | ---- | ----------------- |
@@ -562,28 +576,28 @@ The following types are supported:
 
 Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
 
-Most typed arrays also have a [short form](#short-form). The media array type and array types in the [primary plane](#type-field) (other than [string](#string)) only have a [chunked form](#chunked-form).
+#### Array Forms
 
-**Typed array format (primary plane)**:
+All arrays have a [chunked form](#chunked-form), and many also have a [short form](#short-form).
 
-| Field        | Bits | Description                            |
-| ------------ | ---- | -------------------------------------- |
-| Type         |   8  | Type in [primary plane](#type-field)   |
-| Chunk Header |   ∞  | The number of elements following       |
-| Elements     |   ∞  | The elements as a sequence of octets   |
-| ...          |   ∞  | Possibly more chunks                   |
+**Primary plane, short form**:
 
-**Typed array format (plane 2)**:
+| Field        | Bits | Description                                    |
+| ------------ | ---- | ---------------------------------------------- |
+| Type         |    4 | Upper 4 bits in [primary plane](#type-field)   |
+| Length       |    4 | Number of elements (0-15)                      |
+| Elements     |    ∞ | The elements as a sequence of octets           |
 
-| Field        | Bits | Description                            |
-| ------------ | ---- | -------------------------------------- |
-| Type (plane) |   8  | 0x94 (plane 2)                         |
-| Type         |   8  | Type in [plane 2](#type-field-plane-2) |
-| Chunk Header |   ∞  | The number of elements following       |
-| Elements     |   ∞  | The elements as a sequence of octets   |
-| ...          |   ∞  | Possibly more chunks                   |
+**Primary plane, chunked form**:
 
-**Typed array format (plane 2, short form)**:
+| Field        | Bits | Description                                    |
+| ------------ | ---- | ---------------------------------------------- |
+| Type         |   8  | Type in [primary plane](#type-field)           |
+| Chunk Header |   ∞  | The number of elements in this chunk           |
+| Elements     |   ∞  | The elements as a sequence of octets           |
+| ...          |   ∞  | Possibly more chunks                           |
+
+**Plane 2, short form**:
 
 | Field        | Bits | Description                                    |
 | ------------ | ---- | ---------------------------------------------- |
@@ -591,6 +605,16 @@ Most typed arrays also have a [short form](#short-form). The media array type an
 | Type         |    4 | Upper 4 bits in [plane 2](#type-field-plane-2) |
 | Length       |    4 | Number of elements (0-15)                      |
 | Elements     |    ∞ | The elements as a sequence of octets           |
+
+**Plane 2, chunked form**:
+
+| Field        | Bits | Description                                    |
+| ------------ | ---- | ---------------------------------------------- |
+| Type (plane) |   8  | 0x94 (plane 2)                                 |
+| Type         |   8  | Type in [plane 2](#type-field-plane-2)         |
+| Chunk Header |   ∞  | The number of elements in this chunk           |
+| Elements     |   ∞  | The elements as a sequence of octets           |
+| ...          |   ∞  | Possibly more chunks                           |
 
 The length represents the number of **elements** (not bytes) in the array/chunk.
 
@@ -613,21 +637,24 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 The media array is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
 
-| Field        | Description                                 |
-| ------------ | ------------------------------------------- |
-| Plane 2      | The type code 0x94                          |
-| Type         | The type code 0xe1 (media)                  |
-| Chunk Header | The number of media type bytes following    |
-| Elements     | The characters as a sequence of octets      |
-| ...          | Possibly more chunks until continuation = 0 |
-| Chunk Header | The number of media bytes following         |
-| Elements     | The bytes as a sequence of octets           |
-| ...          | Possibly more chunks until continuation = 0 |
+| Field        | Description                                  |
+| ------------ | -------------------------------------------- |
+| Plane 2      | The type code 0x94                           |
+| Type         | The type code 0xe1 (media)                   |
+| Chunk Header | The number of media type bytes in this chunk |
+| Elements     | The characters as a sequence of octets       |
+| ...          | Possibly more chunks until continuation = 0  |
+| Chunk Header | The number of media bytes in this chunk      |
+| Elements     | The bytes as a sequence of octets            |
+| ...          | Possibly more chunks until continuation = 0  |
 
 **Example**:
 
-    [94 e1 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
-     *1 *2 *3 *4                                              *5 *6                                                                                  
+     *1 *2 *3 *4                                              *5
+    [94 e1 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 
+
+     *6
+     23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 
 Points of interest:
 
@@ -640,7 +667,7 @@ Points of interest:
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
 |  *6   | Media bytes                                      |
 
-Which is the shell script (media type "application/x-sh"):
+The media in this example is the shell script (media type "application/x-sh"):
 
 ```sh
 #!/bin/sh
