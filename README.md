@@ -82,7 +82,7 @@ Concise Encoding
 | Binary Float  | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ✔️      |   ✔️    |  ✔️    | ✔️   |
 | Decimal Float | ✔️  | ❌  |  ✔️   |  ✔️   |  ✔️   |    ❌     |   ❌   |  ❌   | ✔️   |
 | NaN, Infinity | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ✔️      |   ✔️    |  ✔️    | ✔️   |
-| UUID          | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
+| Universal ID  | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
 | Timestamp     | ✔️  | ❌  |  ❌  |  ✔️   |  ✔️   |    ✔️      |   ❌   |  ✔️    | ✔️   |
 | Resource ID   | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | String        | ✔️  | ✔️   |  ✔️   |  ✔️   |  ✔️   |    ✔️      |   ✔️    |  ✔️    | ✔️   |
@@ -160,7 +160,7 @@ c1
     "very long int" = 100000000000000000000000000000000000009
     "decimal float" = -14.125
     "hex float"     = 0x5.1ec4p+20
-    "very long flt" = 4,957234990634579394723460546348e+100000
+    "very long flt" = 4.957234990634579394723460546348e+100000
     "not-a-number"  = nan
     "infinity"      = inf
     "neg infinity"  = -inf
@@ -185,7 +185,7 @@ c1
 {
     "uuid"      = f1ce4567-e89b-12d3-a456-426655440000
     "date"      = 2019-07-01
-    "time"      = 18:04:00,948/Europe/Prague
+    "time"      = 18:04:00.948/Europe/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
     "media"     = |m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
@@ -203,7 +203,7 @@ c1
     "bytes"         = |u8x 01 ff de ad be ef|
     "int16 array"   = |i16 7374 17466 -9957|
     "uint16 hex"    = |u16x 91fe 443a 9c15|
-    "float32 array" = |f32 1.5e10 -8,31e-12|
+    "float32 array" = |f32 1.5e10 -8.31e-12|
 }
 ```
 
