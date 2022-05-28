@@ -538,7 +538,7 @@ Time zone data can be denoted in the following ways:
 
 #### Area/Location
 
-Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 bytes (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
+Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 **bytes** (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
 
 **Note**: Some older IANA time zones (mostly deprecated ones) don't follow the `Area/Location` format (for example `MST`, `PST8PDT`). These **MUST** be supported.
 
@@ -564,6 +564,8 @@ Since there are only a limited number of areas in the database, the following ab
 | `Indian`     | `I`          |
 | `Pacific`    | `P`          |
 
+A Decoder **MUST** convert abbreviated areas back to their full names.
+
 ##### Special Areas
 
 The following special pseudo-areas **CAN** also be used. They do not contain a location component.
@@ -572,6 +574,8 @@ The following special pseudo-areas **CAN** also be used. They do not contain a l
 | ------- | ------------ | ------------------ |
 | `Zero`  | `Z`          | Alias to `Etc/UTC` |
 | `Local` | `L`          | "Local" time zone, meaning that the accompanying time value is to be interpreted as if in the time zone of the observer. |
+
+**Note**: These special areas may not be understood by the host's time APIs. Implementations **MUST** compensate for this.
 
 **Examples**:
 
@@ -648,7 +652,7 @@ Array Types
 
 An array represents a contiguous sequence of fixed length elements, and is essentially a space-optimized [list](#list). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
-There are three kinds of array types in Concise Encoding:
+There are four kinds of array types in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
