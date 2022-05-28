@@ -443,8 +443,6 @@ The following escape sequences are supported:
 | `"`                  | double quote (u+0022)       |
 | `*`                  | asterisk (u+002a)           |
 | `/`                  | slash (u+002f)              |
-| `<`                  | less-than (u+003c)          |
-| `>`                  | greater-than (u+003e)       |
 | `\`                  | backslash (u+005c)          |
 | `_`                  | non-breaking space (u+00a0) |
 | `-`                  | soft-hyphen (u+00ad)        |
@@ -456,7 +454,7 @@ The following escape sequences are supported:
 Reasoning:
 
 * `\r`, `\n`, `\t`, `\_`, `\-` : To support common whitespace and utility characters.
-* `\"`, `\*`, `\/`, `\<`, `\>`, `\\`: To avoid ambiguity with delimiter characters.
+* `\"`, `\*`, `\/`, `\\`: To avoid ambiguity with delimiter characters.
 * [Continuation](#continuation)
 * [Unicode sequence](#unicode-escape-sequences)
 * [Verbatim Sequence](#verbatim-sequence)
@@ -571,7 +569,7 @@ In the above example, using a newline terminator is preferable because:
 
 NUL is a troublesome character in many languages, but it's still a valid codepoint and must be supported somehow. On the other hand, it's an exploitable security hole in systems that are unprepared for it.
 
-As a compromise, NUL support is opt-in.
+As a compromise, decoders convert NUL to [`c0 80`] by default in order to sidestep the NUL termination problem.
 
 
 ### Whitespace

@@ -672,13 +672,12 @@ Special processing is required to replace escape sequences in string-like arrays
 
 #### NUL
 
-The NUL byte (`00`) **MUST NOT** be present in a string-like array.
+The NUL character (U+0000) is allowed in string-like arrays in documents, but because it is problematic on so many platforms, Concise Encoding imposes a special rule:
 
-Encoders **MUST** convert NUL characters [`00`] in a string-like array to the UTF-8 sequence [`c0 80`], which is equivalent to U+0000 without containing the actual byte value 0.
+ * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`].
+ * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
 
-Decoders **MUST NOT** convert [`c0 80`] to [`00`]. The application layer is better suited to make such decisions.
-
-**Note**: Because NUL is such a troublesome character on many platforms, its use is *strongly* discouraged.
+This ensures a default of uniform behavior across platforms.
 
 #### Line Endings
 
