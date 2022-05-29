@@ -38,9 +38,6 @@ KV_SEPARATOR:         '=';
 NODE_BEGIN:           '(';
 EDGE_BEGIN:           '@(';
 EDGE_NODE_END:        ')';
-MARKUP_BEGIN:         SEQ_MARKUP_BEGIN -> pushMode(MARKUP_GET_ID);
-MARKUP_END:           SEQ_MARKUP_END;
-MARKUP_CONTENT_BEGIN: ';' -> pushMode(MARKUP_BEGIN_CONTENTS);
 
 ARRAY_BIT_BEGIN:  '|' B -> pushMode(ARRAY_BIT);
 
@@ -257,29 +254,6 @@ MEDIA_END:  SEQ_ARRAY_END -> popMode;
 MEDIA_WS:   WHITESPACE -> skip;
 
 
-// ===============
-mode MARKUP_GET_ID;
-// ===============
-
-MARKUP_NAME:  SEQ_MARKUP_NAME -> popMode;
-
-
-// =======================
-mode MARKUP_BEGIN_CONTENTS;
-// =======================
-
-MARKUP_CONTENTS:     (ESCAPE | CHAR_MARKUP_STRING)+;
-MARKUP_CONTENTS_END: SEQ_MARKUP_END -> popMode;
-MARKUP_SUB_BEGIN:    SEQ_MARKUP_BEGIN -> pushMode(MARKUP_SUB_GET_ID);
-
-
-// ===================
-mode MARKUP_SUB_GET_ID;
-// ===================
-
-MARKUP_SUB_NAME: SEQ_MARKUP_NAME -> mode(NORMAL);
-
-
 // =========
 // Fragments
 // =========
@@ -297,9 +271,6 @@ fragment T: [tT];
 fragment U: [uU];
 fragment X: [xX];
 
-fragment SEQ_MARKUP_BEGIN: '<';
-fragment SEQ_MARKUP_END: '>';
-fragment SEQ_MARKUP_NAME: CHAR_MARKUP_NAME+;
 fragment SEQ_ARRAY_END: '|';
 fragment SEQ_MARKER_ID: CHAR_MARKER_ID+;
 
@@ -308,7 +279,7 @@ fragment PREFIX_OCT:    '0' O;
 fragment PREFIX_HEX:    '0' X;
 fragment FRACTION_DEC:  RADIX DIGITS_DEC;
 fragment FRACTION_HEX:  RADIX DIGITS_HEX;
-fragment RADIX:         [.,];
+fragment RADIX:         [.];
 fragment NEG:           '-';
 fragment BIT:           [0-1];
 fragment OCT:           [0-7];
@@ -367,10 +338,6 @@ fragment TZ_OFFSET: [+-] DEC DEC DEC DEC;
 
 fragment CHAR_WS: [ \t\n\r];
 
-fragment CHAR_MARKUP_NAME
-   : [0-9a-zA-Z.\-_:] // TODO
-   ;
-
 fragment CHAR_MARKER_ID
    : [0-9a-zA-Z.\-_] // TODO
    ;
@@ -381,10 +348,6 @@ fragment CHAR_AREA_LOC
 
 fragment CHAR_MEDIA_TYPE
    : ~[\u0000-\u0020] // TODO
-   ;
-
-fragment CHAR_MARKUP_STRING
-   : ~[\u0000-\u001F<>\\] // TODO
    ;
 
 fragment CHAR_QUOTED_STRING

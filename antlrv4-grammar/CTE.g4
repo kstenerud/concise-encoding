@@ -80,7 +80,6 @@ value
    | containerList
    | containerEdge
    | containerNode
-   | containerMarkup
    | marker
    | reference
    | remoteRef
@@ -126,18 +125,10 @@ marker: markerID value;
 reference: REFRENCE;
 remoteRef: REMOTE_REF;
 
-markupName: MARKUP_NAME | MARKUP_SUB_NAME;
-markupContents: MARKUP_CONTENTS | containerMarkup;
-
 containerMap:    MAP_BEGIN  kvPair* MAP_END;
 containerList:   LIST_BEGIN value* LIST_END;
 containerEdge:   EDGE_BEGIN value value value EDGE_NODE_END;
 containerNode:   NODE_BEGIN value+ EDGE_NODE_END;
-containerMarkup
-   : (MARKUP_BEGIN | MARKUP_SUB_BEGIN)
-     markupName kvPair*
-     (MARKUP_CONTENT_BEGIN markupContents*)?
-     (MARKUP_END | MARKUP_CONTENTS_END);
 
 arrayElemBits:   ARRAY_BIT_BITS;
 arrayElemInt:    ARRAY_I_ELEM_D | ARRAY_I_ELEM_B | ARRAY_I_ELEM_O | ARRAY_I_ELEM_H;
