@@ -126,6 +126,7 @@ Contents
       - [Validation](#validation)
       - [User-Controllable Limits](#user-controllable-limits)
     - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
+  - [Appendix A: List of Codec Options](#appendix-a-list-of-codec-options)
   - [Version History](#version-history)
   - [License](#license)
 
@@ -1137,7 +1138,7 @@ A remote reference refers to an object in another document. It acts like a [reso
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A [marker ID](#marker-identifier) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker-identifier) in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
- * Because remote links pose security risks, implementations **MUST NOT** follow resource ID references unless explicitly configured to do so. If an implementation provides a configuration option to follow resource ID references, it **MUST** default to disabled.
+ * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
@@ -1485,6 +1486,39 @@ For application developers, security is a frame of mind. You **SHOULD** always b
  * Treat received values as all-or-nothing. If you're unable to store it in its entirety without data loss, it **SHOULD** be rejected. Allowing data loss means opening your system to key collisions and other exploits.
  * Guard against unintentional default conversions (for example string values converting to 0 or true in comparisons).
  * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise, either truncating or omitting data, which opens your system to exploitation.
+
+
+
+Appendix A: List of Codec Options
+---------------------------------
+
+This section collects in one place all required **OPTIONS** listed elsewhere in the document:
+
+| Option                                | Default   | Section                                       |
+| ------------------------------------- | --------- | --------------------------------------------- |
+| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul)                                   |
+| Follow remote references              | disabled  | [Remote Reference](#remote-reference)         |
+| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)       |
+| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)       |
+| Recursive references                  | forbidden | [Recursive References](#recursive-references) |
+| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)       |
+| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)     |
+| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)       |
+
+The following [user-controllable limit](#user-controllable-limits) **OPTIONS** have default values given as recommendations only:
+
+| Option                            | Recommended Default |
+| --------------------------------- | ------------------- |
+| Max array size                    | 1 GB                |
+| Max container depth               | 1000                |
+| Max decimal float exponent digits | 5                   |
+| Max document size                 | 5 GB                |
+| Max float coefficient digits      | 100                 |
+| Max integer digits                | 100                 |
+| Max marker count                  | 10,000              |
+| Max object count                  | 1,000,000           |
+| Max reference count               | 10,000              |
+| Max year digits                   | 11                  |
 
 
 
