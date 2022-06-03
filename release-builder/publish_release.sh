@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Requirements:
+#   sudo apt install pandoc npm
+#   sudo npm i -g puppeteer-cli
+
 set -eux
 
 if [ "$#" -ne 1 ]; then
@@ -25,7 +29,7 @@ REPO_DIR="$BUILD_DIR/$REPO_NAME"
 generate_markdown() {
 	src_base="$1"
 	dst_base="$2"
-	cp "$src_base.md" "$dst_base.md"
+	cp "${src_base}.md" "${dst_base}-v${VERSION}.md"
 }
 
 generate_html() {
@@ -39,23 +43,40 @@ generate_html() {
 		-c github-pandoc.css \
 		--lua-filter="$SCRIPT_DIR/links-to-html.lua" \
 	    --resource-path="$REPO_DIR:$SCRIPT_DIR" \
-	    -o "$dst_base.html" \
-	    "$src_base.md"
+	    -o "${dst_base}-v${VERSION}.html" \
+	    "${src_base}.md"
 }
 
 generate_pdf() {
-	# Unfortunately, this doesn't work because latex is a terrible language
-	# that needs to die in a fire: https://texfaq.org/FAQ-toodeep
 	src_base="$1"
 	dst_base="$2"
 
 	pandoc \
 		-f markdown \
-		-t pdf \
-		--pdf-engine=xelatex \
+		-t html5 \
+		--self-contained \
+		-c github-pandoc.css \
 	    --resource-path="$REPO_DIR:$SCRIPT_DIR" \
-	    -o "$dst_base.pdf" \
-	    "$src_base.md"
+	    -o "${BUILD_DIR}/temp.html" \
+	    "${src_base}.md"
+
+	puppeteer print \
+		--format=a4 \
+		--margin-top=11mm \
+		--margin-bottom=11mm \
+		--margin-left=11mm \
+		--margin-right=11mm \
+		"${BUILD_DIR}/temp.html" \
+		"${dst_base}-v${VERSION}.a4.pdf"
+
+	puppeteer print \
+		--format=letter \
+		--margin-top=11mm \
+		--margin-bottom=11mm \
+		--margin-left=11mm \
+		--margin-right=11mm \
+		"${BUILD_DIR}/temp.html" \
+		"${dst_base}-v${VERSION}.letter.pdf"
 }
 
 generate() {
@@ -64,19 +85,19 @@ generate() {
 
 	generate_markdown "$src_base" "$dst_base"
 	generate_html "$src_base" "$dst_base"
-	# generate_pdf "$src_base" "$dst_base"
+	generate_pdf "$src_base" "$dst_base"
 }
 
 generate_index() {
-	cat "$SCRIPT_DIR/release-index.md" | sed "s/INSERT_RELEASE_HERE/$VERSION/g" >"$BUILD_DIR/index.md"
+	cat "$SCRIPT_DIR/release-index.md" | sed "s/INSERT_RELEASE_HERE/$VERSION/g" | sed "s/-v0/-v$VERSION/g" >"$BUILD_DIR/index.md"
 	pandoc \
 		-f markdown \
 		-t html5 \
 		--self-contained \
 	    --resource-path="$SCRIPT_DIR" \
 		-c github-pandoc.css \
-	    -o "$DEST_DIR/index.html" \
-	    "$BUILD_DIR/index.md"
+	    -o "${DEST_DIR}/index.html" \
+	    "${BUILD_DIR}/index.md"
 
 	pandoc \
 		-f markdown \
@@ -84,8 +105,8 @@ generate_index() {
 		--self-contained \
 	    --resource-path="$SCRIPT_DIR" \
 		-c github-pandoc.css \
-	    -o "$RELEASES_DIR/index.html" \
-	    "$SCRIPT_DIR/release-list-index.md"
+	    -o "${RELEASES_DIR}/index.html" \
+	    "${SCRIPT_DIR}/release-list-index.md"
 }
 
 rm -rf "$BUILD_DIR"
