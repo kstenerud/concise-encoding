@@ -56,11 +56,6 @@ Contents
       - [Global Coordinates](#global-coordinates)
       - [UTC](#utc)
       - [UTC Offset](#utc-offset)
-    - [How to Record Time](#how-to-record-time)
-      - [Absolute Time](#absolute-time)
-      - [Fixed Time](#fixed-time)
-      - [Floating Time](#floating-time)
-    - [When to Use Each Kind](#when-to-use-each-kind)
   - [Array Types](#array-types)
     - [String-like Arrays](#string-like-arrays)
       - [String Character Replacement](#string-character-replacement)
@@ -128,6 +123,11 @@ Contents
       - [User-Controllable Limits](#user-controllable-limits)
     - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
   - [Appendix A: List of Codec Options](#appendix-a-list-of-codec-options)
+  - [Appendix B: How to Record Time](#appendix-b-how-to-record-time)
+    - [Absolute Time](#absolute-time)
+    - [Fixed Time](#fixed-time)
+    - [Floating Time](#floating-time)
+    - [When to Use Each Kind](#when-to-use-each-kind)
   - [Version History](#version-history)
   - [License](#license)
 
@@ -361,7 +361,7 @@ c1 123e4567-e89b-12d3-a456-426655440000
 Temporal Types
 --------------
 
-Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even with that full understanding, it's still a veritable minefield that can be your system's undoing if you don't take the time to think **very** carefully about [the purposes you need to keep time for](#how-to-record-time), and the implications thereof.
+Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even then, it's still a veritable minefield that can be your system's undoing if you haven't planned **very** carefully for [the purposes you need to keep time for](#appendix-b-how-to-record-time), and the implications thereof.
 
 Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types can have precision to the nanosecond, and also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
 
@@ -538,39 +538,6 @@ Use of UTC offset is discouraged except as a means of interfacing with legacy sy
 
  * `+0530`
  * `-0100`
-
-
-### How to Record Time
-
-Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of recording the time is.
-
-There are three main kinds of time:
-
-#### Absolute Time
-
-Absolute time is a time that is fixed relative to UTC (or an offset from UTC). It is not affected by daylight savings time, nor will it be affected if an area's time zone changes through political action. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
-
-#### Fixed Time
-
-Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 in Toronto on December 1st relative to UTC due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th) or repeating events. If the expected time zone changes (for example an act of government such as a change to daylight savings), fixed time adapts automatically.
-
-#### Floating Time
-
-Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes time zones with you. If two observers in different time zones observe the same floating time, they will convert that same floating time to different absolute times. An example would be an 8:00 morning workout.
-
-
-### When to Use Each Kind
-
-Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important.
-
-| Situation                            | Kind                                            |
-| ------------------------------------ | ----------------------------------------------- |
-| Log entries and past events          | Absolute                                        |
-| Future events                        | Absolute or fixed (it depends on the use case)  |
-| Appointments                         | Fixed                                           |
-| Your daily schedule                  | Floating                                        |
-| Multi-zone shared repeating schedule | Absolute or fixed (it depends on the use case)  |
-| Deadlines                            | Usually fixed time, but possibly absolute time. |
 
 
 
@@ -1517,6 +1484,41 @@ The following [user-controllable limit](#user-controllable-limits) **OPTIONS** h
 | Max object count                  | 1,000,000           |
 | Max reference count               | 10,000              |
 | Max year digits                   | 11                  |
+
+
+
+Appendix B: How to Record Time
+------------------------------
+
+Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of recording the time is.
+
+There are three main kinds of time:
+
+### Absolute Time
+
+Absolute time is a time that is fixed relative to UTC (or an offset from UTC). It is not affected by daylight savings time, nor will it be affected if an area's time zone changes through political action. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
+
+### Fixed Time
+
+Fixed time is fixed to a particular place. If the time zone at that place changes, the fixed time's corresponding absolute time will change as well. For example, 12:00 in Toronto on June 1st is equivalent to 11:00 in Toronto on December 1st relative to UTC due to daylight savings. Fixed time is mostly useful for times in the future (such as an appointment in London this coming October 12th) or repeating events. If the expected time zone changes (for example an act of government such as a change to daylight savings), fixed time adapts automatically.
+
+### Floating Time
+
+Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes time zones with you. If two observers in different time zones observe the same floating time, they will convert that same floating time to different absolute times. An example would be an 8:00 morning workout.
+
+
+### When to Use Each Kind
+
+Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important.
+
+| Situation                            | Kind                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| Log entries and past events          | Absolute                                        |
+| Future events                        | Absolute or fixed (it depends on the use case)  |
+| Appointments                         | Fixed                                           |
+| Your daily schedule                  | Floating                                        |
+| Multi-zone shared repeating schedule | Absolute or fixed (it depends on the use case)  |
+| Deadlines                            | Usually fixed time, but possibly absolute time. |
 
 
 
