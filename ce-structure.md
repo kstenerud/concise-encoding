@@ -26,10 +26,11 @@ Contents
   - [This Document](#this-document)
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
-  - [What is Concise Encoding?](#what-is-concise-encoding)
-  - [Why Two Formats?](#why-two-formats)
-  - [Versioning](#versioning)
-    - [Prerelease Version](#prerelease-version)
+  - [Introduction](#introduction)
+    - [What is Concise Encoding?](#what-is-concise-encoding)
+    - [Why Two Formats?](#why-two-formats)
+    - [Versioning](#versioning)
+      - [Prerelease Version](#prerelease-version)
   - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
   - [Numeric Types](#numeric-types)
@@ -154,16 +155,15 @@ Terms and Conventions
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
+Introduction
+------------
 
-What is Concise Encoding?
--------------------------
+### What is Concise Encoding?
 
 Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
 
 
-
-Why Two Formats?
-----------------
+### Why Two Formats?
 
 Internally, machines represent data in binary, but binary formats are very difficult for humans to read and write, and humans sometimes need to be able to inspect and modify the data being stored and transmitted by machines.
 
@@ -172,15 +172,13 @@ In the past, we've compromised by transmitting and storing data in text formats 
 Data should ideally be stored and transmitted in a binary format, and only converted to/from text format in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
 
 
-
-Versioning
-----------
+### Versioning
 
 Concise Encoding is versioned, meaning that every Concise Encoding document contains the version of the Concise Encoding specification it adheres to. This ensures that any future incompatible changes to the format will not break existing implementations.
 
 The Concise Encoding version is a single positive integer value, starting at 1.
 
-### Prerelease Version
+#### Prerelease Version
 
 During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired and considered invalid (there shall be no backwards compatibility to the prerelease spec).
 
