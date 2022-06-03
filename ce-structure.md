@@ -189,7 +189,7 @@ Document Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object.
+Documents begin with a [version specifier](#version-specifier), followed by a top-level object of any concrete type ([numeric](#numeric-types), [temporal](#temporal-types), [array](#array-types), [container](#container-types), or [other](#other-types)).
 
     [version specifier] [object]
 
