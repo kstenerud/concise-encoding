@@ -32,10 +32,6 @@ Contents
     - [Prerelease Version](#prerelease-version)
   - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
-  - [Unrepresentable Values](#unrepresentable-values)
-    - [Lossy Conversions](#lossy-conversions)
-      - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
-    - [Problematic Values](#problematic-values)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -98,6 +94,10 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Empty Document](#empty-document)
+  - [Unrepresentable Values](#unrepresentable-values)
+    - [Lossy Conversions](#lossy-conversions)
+      - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
+    - [Problematic Values](#problematic-values)
   - [Truncated Document](#truncated-document)
   - [Text Safety](#text-safety)
   - [Equivalence](#equivalence)
@@ -221,78 +221,6 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
 
  * [CTE](cte-specification.md) version 1: the character sequence `c1`
  * [CBE](cbe-specification.md) version 1: the byte sequence [`8f 01`]
-
-
-
-Unrepresentable Values
-----------------------
-
-Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all values of all types will be representable on a particular platform.
-
-Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it **MUST** be processed according to the [lossy conversion rules](#lossy-conversions).
-
-
-### Lossy Conversions
-
-If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
-
-**Lossy conversions that MUST be allowed**:
-
- * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
-
-**Lossy conversions that MUST NOT be allowed**:
-
- * String character substitution or omission
- * Truncation from storing in a type that cannot hold all of the data (except where listed as configurable - see below)
-
-**Lossy conversions that MUST be decided based on configuration**:
-
- * Loss of floating point coefficient precision from conversion between binary and decimal float types
- * Loss of floating point coefficient precision from storing in a smaller float type
- * Loss of subsecond precision due to temporal type mismatch or platform capabilities
- * Conversion from a real [time zone](#time-zones) to a [UTC offset](#utc-offset)
-
-Implementations **MUST** provide a configuration **OPTION** for each configurable lossy conversion that can occur on its platform, and each option **MUST** default to disabled.
-
-Disallowed lossy conversions are [data errors](#data-errors).
-
-#### Binary and Decimal Float Conversions
-
-Binary and decimal float values can rarely be converted to each other without data loss, but such conversions can sometimes be necessary:
-
- * The destination platform might not support one of the types.
- * The destination object's required type might not match.
-
-Such conversions **MUST** be done using either the following algorithm, or an algorithm that ultimately yields the same result in the destination type:
-
- * Convert the source value to its string-based decimal exponent encoding.
- * Convert the string value into the destination type.
-
-Binary float <-> string conversions **MUST** be done using standard conversion algorithms (or equivalent). These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
-
-Examples of widely used and largely standardized conversion algorithms:
-
- * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
- * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
- * David M. Gay: "Correctly rounded binary-decimal and decimal-binary conversions." Technical Report 90-10, AT&T Bell Laboratories, November 1990.
- * Robert G. Burger and R. Kent Dybvig: "Printing floating-point numbers quickly and accurately." In proceedings of ACM SIGPLAN 1996 conference on Programming Language Design and Implementation, Philadelphia, PA, USA, May 1996, pp. 108-116
- * Guy L. Steele Jr. and Jon L. White: "Retrospective: How to print floating-point numbers accurately." ACM SIGPLAN Notices, Vol. 39, No. 4, April 2004, pp. 372–389
- * Florian Loitsch: "Printing floating-point numbers quickly and accurately with integers." In proceedings of 2010 ACM SIGPLAN Conference on Programming Language Design and Implementation, Toronto, ON, Canada, June 2010, pp. 233-243
- * Marc Andrysco, Ranjit Jhala, and Sorin Lerner: "Printing floating-point numbers: a faster, always correct method." ACM SIGPLAN Notices, Vol. 51, No. 1, January 2016, pp. 555-567
- * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282 
-
-### Problematic Values
-
-It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
-
- * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
- * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
- * Platforms might not support UTF-8 encoding.
- * Platforms might have limitations on the size of numeric types.
- * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
- * Platforms might not support data with cyclical references.
- * Platforms might not provide some of the less common data types such as [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
- * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
 
 
 
@@ -1217,6 +1145,78 @@ An empty document is signified by using the [Null](#null) type as the top-level 
 
 * In CBE: [`8f 01 7e`]
 * In CTE: `c1 null`
+
+
+
+Unrepresentable Values
+----------------------
+
+Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all values of all types will be representable on a particular platform.
+
+Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it **MUST** be processed according to the [lossy conversion rules](#lossy-conversions).
+
+
+### Lossy Conversions
+
+If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
+
+**Lossy conversions that MUST be allowed**:
+
+ * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
+
+**Lossy conversions that MUST NOT be allowed**:
+
+ * String character substitution or omission
+ * Truncation from storing in a type that cannot hold all of the data (except where listed as configurable - see below)
+
+**Lossy conversions that MUST be decided based on configuration**:
+
+ * Loss of floating point coefficient precision from conversion between binary and decimal float types
+ * Loss of floating point coefficient precision from storing in a smaller float type
+ * Loss of subsecond precision due to temporal type mismatch or platform capabilities
+ * Conversion from a real [time zone](#time-zones) to a [UTC offset](#utc-offset)
+
+Implementations **MUST** provide a configuration **OPTION** for each configurable lossy conversion that can occur on its platform, and each option **MUST** default to disabled.
+
+Disallowed lossy conversions are [data errors](#data-errors).
+
+#### Binary and Decimal Float Conversions
+
+Binary and decimal float values can rarely be converted to each other without data loss, but such conversions can sometimes be necessary:
+
+ * The destination platform might not support one of the types.
+ * The destination object's required type might not match.
+
+Such conversions **MUST** be done using either the following algorithm, or an algorithm that ultimately yields the same result in the destination type:
+
+ * Convert the source value to its string-based decimal exponent encoding.
+ * Convert the string value into the destination type.
+
+Binary float <-> string conversions **MUST** be done using standard conversion algorithms (or equivalent). These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
+
+Examples of widely used and largely standardized conversion algorithms:
+
+ * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
+ * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
+ * David M. Gay: "Correctly rounded binary-decimal and decimal-binary conversions." Technical Report 90-10, AT&T Bell Laboratories, November 1990.
+ * Robert G. Burger and R. Kent Dybvig: "Printing floating-point numbers quickly and accurately." In proceedings of ACM SIGPLAN 1996 conference on Programming Language Design and Implementation, Philadelphia, PA, USA, May 1996, pp. 108-116
+ * Guy L. Steele Jr. and Jon L. White: "Retrospective: How to print floating-point numbers accurately." ACM SIGPLAN Notices, Vol. 39, No. 4, April 2004, pp. 372–389
+ * Florian Loitsch: "Printing floating-point numbers quickly and accurately with integers." In proceedings of 2010 ACM SIGPLAN Conference on Programming Language Design and Implementation, Toronto, ON, Canada, June 2010, pp. 233-243
+ * Marc Andrysco, Ranjit Jhala, and Sorin Lerner: "Printing floating-point numbers: a faster, always correct method." ACM SIGPLAN Notices, Vol. 51, No. 1, January 2016, pp. 555-567
+ * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282 
+
+### Problematic Values
+
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
+
+ * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
+ * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
+ * Platforms might not support UTF-8 encoding.
+ * Platforms might have limitations on the size of numeric types.
+ * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
+ * Platforms might not support data with cyclical references.
+ * Platforms might not provide some of the less common data types such as [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
+ * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
 
 
 
