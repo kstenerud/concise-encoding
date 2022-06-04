@@ -743,7 +743,7 @@ For list-like containers, a duplicate means any object that is [equivalent](#equ
 
 For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what the key's associated value is.
 
-An implementation **MUST** disregard the type and size of integers and floats when comparing them (including to each other). If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000` and the 32-bit float value `2000.0` are considered duplicates, but the string value `"2000"` is not a duplicate.
+An implementation **MUST** disregard the type and size of integers and floats when comparing them to one other. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is not a duplicate because it is a string, not an integer or float.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
