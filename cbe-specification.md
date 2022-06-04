@@ -122,27 +122,30 @@ Version Specifier
 
 A CBE document begins with a version specifier, which is composed of the octet `0x8f`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
-**Note**: `0x8f` has been chosen as the first byte of a CBE document because it is an invalid encoding in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default text format, implementations can safely try binary encodings that have deterministic signatures.
+**Example**:
+
+    [8f 01] = CBE version 1
+
+
+### Why 0x8f?
+
+`0x8f` is an invalid first byte in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default text format, implementations can safely try binary encodings that have deterministic signatures.
 
  * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
  * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
  * 0x81, 0x8D, 0x8F, 0x90, and 0x9D are [undefined in Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252#Character_set).
  * 0x80-0xFF are [undefined in the ASCII character set](https://en.wikipedia.org/wiki/ASCII#Character_set).
 
-**Example**:
-
-    [8f 01] = CBE version 1
-
 
 
 Encoding
 --------
 
-A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically with no lookahead required. This ensures that the end of a CBE document can always be deterministically found in a single pass.
+A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found in a single pass.
 
 Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
 
-The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy wherever possible on little endian systems.
+The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy capable in most places on little endian systems.
 
 
 #### Type Field
@@ -394,7 +397,7 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 ### Array Elements
 
-Array elements have a fixed size determined by the array type. Length fields in arrays represent the number of *elements* rather than bytes, so for example a uin32 array chunk of length 3 contains 12 bytes of array data.
+Array elements have a fixed size determined by the array type. Length fields in array chunks represent the number of *elements*, so for example a uin32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element).
 
 #### Element Sizes:
 
@@ -421,7 +424,7 @@ Array elements have a fixed size determined by the array type. Length fields in 
 
 ### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Many array types have both short and chunked forms.
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Most array types have both short and chunked forms.
 
 **Examples**:
 
@@ -435,7 +438,7 @@ In chunked form, array data is "chunked", meaning that it is represented as a se
 
     [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
 
-There is no limit to the number of chunks in an array, nor do the chunks have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known from the start (for example if it's being built progressively).
+There is no limit to the number of chunks in an array, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
 
 #### Chunk Header
 
