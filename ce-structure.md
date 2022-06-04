@@ -526,13 +526,15 @@ This method has the advantage of being temporally unambiguous, which could be us
 
 If the time zone is unspecified, it is assumed to be `Zero` (UTC). Placing all past event time values in the UTC time zone has the advantage of more compact and unambiguous time storage, which makes comparisons and other operations much easier and reduces bugs.
 
-UTC time is **not** recommended for future and periodic/repeating time values.
+UTC time **SHOULD NOT** be used for future or periodic/repeating time values.
 
 #### UTC Offset
 
 Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and minutes (to a maximum of `+2359` and a minimum of `-2359`). This format is not an actual time zone because it doesn't contain location data and therefore cannot account for political shifts (such as daylight savings). In fact, it can't convey any useful information beyond what UTC time can (other than a vague notion of where the value might have originated, and roughly what time of day it was).
 
 Use of UTC offset is discouraged except as a means of interfacing with legacy systems.
+
+UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -549,7 +551,7 @@ An array represents a contiguous sequence of fixed length elements, and is essen
 There are four kinds of array types in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
- * [Typed arrays](#typed-array), whose contents represent elements of a particular size and type.
+ * [Typed arrays](#typed-array), whose contents represent elements of a fixed size and type.
  * [Media](#media), whose contents encapsulate other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec if necessary).  Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
  * [Custom types](#custom-types), whose contents represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
@@ -560,6 +562,7 @@ String-like arrays are arrays of UTF-8 encoded bytes. The following types are st
 
  * [String](#string)
  * [Resource Identifier](#resource-identifier)
+ * [Remote Reference](#remote-reference)
  * [Custom Type (text form)](#custom-type-forms)
 
 String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
@@ -640,9 +643,9 @@ A media object encapsulates a foreign media object/file (encoded as a binary str
 
     [media type] [data]
 
-The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with a media type, and passes it along as such.
+The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with an associated media type, and passes it along as such.
 
-Implementations **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error.
+Implementations **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error; it is the application layer's job to decide such things.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
@@ -732,15 +735,15 @@ Container types hold collections of other objects.
 
 #### Ordering
 
-If a container is ordered, the order in which objects are placed in the container matters. Ordered containers that contain equivalent objects but in a different order are NOT equivalent.
+If a container is ordered, the order in which objects are placed in the container matters. Ordered containers that contain [equivalent](#equivalence) objects but in a different order are NOT [equivalent](#equivalence).
 
 #### Duplicates
 
-For list-like containers, a duplicate means any object that is equivalent to another object already present in the list.
+For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list.
 
-For map-like containers, a duplicate means any key-value pair whose key is equivalent to another key already present in the map, regardless of what the key's associated value is.
+For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what the key's associated value is.
 
-The testing of integer and float values for duplicates transcends the data type when the value is type-compatible (i.e. both are numeric types) and convertible without loss. For example, the integer value `2000` and the float value `2000.0` are considered duplicates, but the string value `"2000"` is not a duplicate.
+An implementation **MUST** disregard the type and size of integers and floats when comparing them (including to each other). If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000` and the 32-bit float value `2000.0` are considered duplicates, but the string value `"2000"` is not a duplicate.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
@@ -798,7 +801,7 @@ c1 {
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will usually be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be null.
+ * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be null.
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be null.
 
@@ -972,13 +975,14 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 A marker identifier uniquely identifies the marked object in the current document so that it can be [referenced](#reference) elsewhere. It is an integral part of the marker pseudo-object, and thus **CANNOT** be [marked](#marker) or be preceded by other objects, including [pseudo-objects](#pseudo-objects) and [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
 
-* It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
+ * It **MUST** be a valid UTF-8 string.
+ * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
    - `_` (underscore)
    - `-` (dash)
    - `.` (period)
-* It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
-* Comparisons are **case insensitive**.
-* It **CANNOT** be a [reference](#reference).
+ * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
+ * Comparisons are **case insensitive**.
+ * It **CANNOT** be a [reference](#reference).
 
 
 ### Reference
