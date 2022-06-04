@@ -28,6 +28,7 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Version Specifier](#version-specifier)
+    - [Why 0x8f?](#why-0x8f)
   - [Encoding](#encoding)
       - [Type Field](#type-field)
     - [Type Field (Plane 2)](#type-field-plane-2)
