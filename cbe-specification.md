@@ -28,7 +28,6 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Version Specifier](#version-specifier)
-    - [Why 0x8f?](#why-0x8f)
   - [Encoding](#encoding)
       - [Type Field](#type-field)
     - [Type Field (Plane 2)](#type-field-plane-2)
@@ -121,21 +120,11 @@ The binary format aims for compactness and machine processing efficiency while m
 Version Specifier
 -----------------
 
-A CBE document begins with a version specifier, which is composed of the octet `0x8f`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
+A CBE document begins with a version specifier, which is composed of the octet `0x81`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
 **Example**:
 
-    [8f 01] = CBE version 1
-
-
-### Why 0x8f?
-
-`0x8f` is an invalid first byte in the most common text formats. This is useful for situations where the data encoding can be ambiguous (for example in [QR codes](DESIGN.md#example-encoding-cbe-into-a-qr-code)). After a failed decode attempt in their default text format, implementations can safely try binary encodings that have deterministic signatures.
-
- * 0x80-0xBF are [continuation bytes in UTF-8](https://en.wikipedia.org/wiki/UTF-8#Encoding), which are invalid as the first byte of a UTF-8 character.
- * 0x80-0x9F are [undefined in all parts of ISO 8859 (1 through 16)](https://en.wikipedia.org/wiki/ISO/IEC_8859-1#Code_page_layout).
- * 0x81, 0x8D, 0x8F, 0x90, and 0x9D are [undefined in Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252#Character_set).
- * 0x80-0xFF are [undefined in the ASCII character set](https://en.wikipedia.org/wiki/ASCII#Character_set).
+    [81 01] = CBE version 1
 
 
 
@@ -815,7 +804,7 @@ Empty Document
 
 An empty document in CBE is signified by using the [Null](#null) type the top-level object:
 
-    [8f 01 7e]
+    [81 01 7e]
 
 
 

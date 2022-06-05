@@ -25,8 +25,7 @@ Contents
     - [Byte Oriented](#byte-oriented)
     - [Little Endian](#little-endian)
     - [Avoiding Turing Completeness](#avoiding-turing-completeness)
-    - [Signature Byte 0x8f](#signature-byte-0x8f)
-      - [An added complication](#an-added-complication)
+    - [Signature Byte 0x81](#signature-byte-0x81)
       - [Example: Encoding CBE into a QR Code](#example-encoding-cbe-into-a-qr-code)
     - [Versioned Documents](#versioned-documents)
     - [Short Array Forms](#short-array-forms)
@@ -218,25 +217,25 @@ There is always a temptation to add a little processing ability here and there t
 We can always find some reason to add extra processing abilities to a data format to make it more powerful, but **this temptation must be resisted**! Once you cross the threshold of Turing completeness (and usually well before), your format becomes a security liability due to the complexity explosion and the [halting problem](https://en.wikipedia.org/wiki/Halting_problem).
 
 
-### Signature Byte 0x8f
+### Signature Byte 0x81
 
-All CBE documents start with the signature byte 0x8f, followed by the version. Why was 0x8f chosen?
+All CBE documents start with the signature byte 0x81, followed by the version. Why was 0x81 chosen?
 
-Most text formats leave 0x80-0x9f unassigned as first bytes (notably ISO 8859 and UTF-8), and so a document that begins with such a byte is never valid text. This property can be exploited to encode binary data onto mediums designed for modern text formats (text formats that use all 8 bits per byte).
 
-#### An added complication
+0x81 is either invalid outright as a first byte in all modern text formats, or cannot be followed by a byte < 0x40.
 
-Due to the legacy of [Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252), many ISO 8859-1 decoders are actually CP-1252 decoders. It's therefore safest to pick unused codes from CP-1252, of which there are five: `81`, `8d`, `8f`, `90`, and `9d`.
+ * In [UTF-8](https://en.wikipedia.org/wiki/UTF-8), 0x80-0xBF are continuation bytes, and therefore are invalid as the first byte of a character.
+ * 0x80 (PAD), 0x81 (HOP), and 0x99 (SGI) were never actually included in the [C1 set](https://en.wikipedia.org/wiki/C0_and_C1_control_codes) of [ISO 2022](https://en.wikipedia.org/wiki/ISO/IEC_2022), and are thus invalid for all compliant character sets ([EUC](https://en.wikipedia.org/wiki/Extended_Unix_Code), [ISO 8859](https://en.wikipedia.org/wiki/ISO/IEC_8859))
+ * The byte sequences [`80 00`] to [`81 3f`] are invalid in Shift-JIS-like character sets ([Shift JIS](https://en.wikipedia.org/wiki/Shift_JIS), [BIG5](https://en.wikipedia.org/wiki/Big5), [GB18030](https://en.wikipedia.org/wiki/GB_18030)).
+ * 0x81, 0x8D, 0x8F, 0x90, and 0x9D are undefined in [Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252#Character_set) (most ISO 8859-1 decoders are actually CP-1252 decoders).
 
-These unused codes are sometimes converted to their [C0 and C1](https://en.wikipedia.org/wiki/C0_and_C1_control_codes) equivalents (by stripping the high bit) in order to avoid completely invalid characters no matter what one decodes.
+Thus, 0x81 is invalid for all major character sets in the next 63 Concise Encoding versions (from 0x01 to 0x3f).
 
-Of the C0 and C1 equivalents, only `0f` (SI) has never been given special meaning in a data format, and it's also a pretty benign control character if dumped to a terminal. Admittedly this is a very minor benefit for an almost unheard of scenario, but since we're greenfielding anyway, why not take it?
-
-Thus, `8f` is the optimal choice for a signature byte.
+This "invalid" property can be used to indicate the presence of binary data on mediums originally designed for text.
 
 #### Example: Encoding CBE into a QR Code
 
-[QR codes](https://en.wikipedia.org/wiki/QR_code) support multiple different encoding modes, including one misleadingly called "binary" that's actually ISO 8859-1 (so QR codes are basically text-only). If the data were to start with a byte such as 0x8f, interpreting it as ISO 8859-1 would break. A smart decoder could take this as an indication that a different format is encoded within, and use the first byte as a selector for what format it actually is (such as 0x8f for CBE).
+[QR codes](https://en.wikipedia.org/wiki/QR_code) support multiple different encoding modes, including one misleadingly called "binary" that's actually ISO 8859-1 (so QR codes are basically text-only). If the data were to start with a byte such as 0x81, interpreting it as ISO 8859-1 would result in an invalid character. A smart decoder could take this as an indication that a different format is encoded within, and use the first byte as a selector for what format it actually is (such as 0x81 for CBE).
 
 Such a technique makes it possible to encode complex ad-hoc data structures into QR codes, giving the previously text-only QR codes new superpowers!
 
@@ -288,7 +287,7 @@ c1 {
     9 = 2022-12-05 // Perishes after Dec 5, 2022
 }
 ```
-Because integers from -100 to 100 encode into a single byte in CBE, you can achieve tremendous space savings using them as map keys. Doing so would reduce the CBE encoded size to 28 bytes, producing the document [8f 00 79 00 6c 01 53 53 54 01 7a ec 05 7b 02 7a 04 06 13 7b 04 0f 09 99 85 59 00 7b], which we then encode into the QR code:
+Because integers from -100 to 100 encode into a single byte in CBE, you can achieve tremendous space savings using them as map keys. Doing so would reduce the CBE encoded size to 28 bytes, producing the document [81 00 79 00 6c 01 53 53 54 01 7a ec 05 7b 02 7a 04 06 13 7b 04 0f 09 99 85 59 00 7b], which we then encode into the QR code:
 
 ```
 ██████████████      ██      ██  ██  ██████████████
@@ -300,25 +299,25 @@ Because integers from -100 to 100 encode into a single byte in CBE, you can achi
 ██████████████  ██  ██  ██  ██  ██  ██████████████
                 ██        ████                    
 ██████  ██████████    ██  ██  ██  ████      ██    
-          ██  ██  ██    ██  ██  ████  ██  ████  ██
-  ████    ████████  ██  ██████  ██  ██  ██████████
-    ██  ████  ██  ██████  ████            ██  ██  
-    ████    ████    ██  ██  ██  ██████████  ██  ██
-      ██  ██  ██    ████  ██  ██    ██    ██  ██  
-██        ████  ████                  ██    ██  ██
-  ██  ██            ████  ██      ██████        ██
-██      ██  ██    ██  ██    ██████████████    ██  
-                ██████████      ██      ██  ████  
-██████████████  ██        ██  ████  ██  ██  ██    
-██          ██  ██████████████  ██      ████  ██  
+██  ██    ██    ████    ██  ██  ████  ██  ████  ██
+      ██  ████████  ██  ██████  ██  ██  ██████████
+  ██  ██  ██      ██████  ████            ██  ██  
+████        ██  ██  ██  ██  ██  ██████████  ██  ██
+        ████  ██████████  ██  ██    ██    ██  ██  
+██  ██████  ██  ██                    ██    ██  ██
+  ██████████      ██  ██  ██      ██████          
+██  ██  ██████      ████    ██████████████      ██
+                ██    ████      ██      ██  ████  
+██████████████  ██  ██    ██  ████  ██  ██  ██    
+██          ██  ██  ██████████  ██      ████  ██  
 ██  ██████  ██  ████    ██  ██  ██████████  ████  
-██  ██████  ██      ████            ██    ██      
-██  ██████  ██  ██  ████    ██████    ████████  ██
-██          ██  ████  ██    ████    ██  ██    ██  
+██  ██████  ██        ██            ██    ██      
+██  ██████  ██  ██    ██    ██████    ████████  ██
+██          ██  ████████    ████    ██  ██    ██  
 ██████████████  ██    ██    ██  ██  ██  ██████████
 ```
 
-A smart QR code reader could then scan, detect the first byte 0x8f (which is invalid ISO 8859-1), switch to CBE decoding and reverse the whole process.
+A smart QR code reader could then scan, detect the first byte 0x81 (which is invalid ISO 8859-1), switch to CBE decoding and reverse the whole process.
 
 Full example with working code available [here](https://www.technicalsourcery.net/posts/qr-superpowers/).
 
@@ -332,14 +331,16 @@ Versioned documents are essential to keeping a format clean, secure, and current
 | 2    | String: ASCII (deprecated)           |
 | 3    | String: ISO 8859-1 (deprecated)      |
 | 4    | String: UTF-8                        |
-| 5    | DB Pointer (deprecated)              |
-| 6    | Symbol (deprecated)                  |
-| 7    | Embedded CSV (deprecated)            |
-| 8    | Auto-execute Javascript (deprecated) |
+| 5    | Date: ISO 8601 (deprecated)          |
+| 6    | Date: RFC3339                        |
+| 7    | DB Pointer (deprecated)              |
+| 8    | Symbol (deprecated)                  |
+| 9    | Embedded CSV (deprecated)            |
+| A    | Auto-execute Javascript (deprecated) |
 
 In the worst case, the format is inherently insecure and cannot be fixed (for example JSON).
 
-When documents are versioned to a specification, designers are free to change anything (including the very structure of the document aside from the version specifier), with no danger to legacy systems: A document beginning with [0x8f 0x01] is only decodable by a CBE version 1 decoder, and a document beginning with [0x8f 0x02] is only decodable by a CBE version 2 decoder.
+When documents are versioned to a specification, designers are free to change anything (including the very structure of the document aside from the version specifier), with no danger to legacy systems: A document beginning with [0x81 0x01] is only decodable by a CBE version 1 decoder, and a document beginning with [0x81 0x02] is only decodable by a CBE version 2 decoder.
 
 
 ### Short Array Forms
