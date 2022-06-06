@@ -187,7 +187,7 @@ In some contexts, escape sequences **MAY** be used to encode data that would oth
 | `-`                  | soft-hyphen (u+00ad)                    |
 | u+000a               | [continuation](#continuation)           |
 | u+000d               | [continuation](#continuation)           |
-| `0` - `9`            | [Unicode sequence](#unicode-sequence)   |
+| `0`-`9`, `a`-`f`     | [Unicode sequence](#unicode-sequence)   |
 | `.`                  | [verbatim sequence](#verbatim-sequence) |
 
 Escape sequences **MUST** be converted before any other processing occurs during the decode process.
@@ -213,18 +213,20 @@ The only people for me are the mad ones, the ones who are mad to live, mad to ta
 
 #### Unicode Sequence
 
-Unicode escape sequences begin with a backslash (`\`) character, followed by one digit (`0`-`9`) specifying the number of hex digits encoding the codepoint, followed by that number of hex digits (`0`-`f`) representing the hexadecimal value of the codepoint.
+Unicode escape sequences begin with a backslash (`\`) character, followed by the hexadecimal digits representing the codepoint, followed by a dot character (`.`).
 
 **Examples**:
 
 | Sequence  | Digits | Character     |
 | --------- | ------ | ------------- |
-| `\0`      | 0      | NUL           |
-| `\16`     | 1      | ACK           |
-| `\27f`    | 2      | DEL           |
-| `\3101`   | 3      | ā  (a macron) |
-| `\42191`  | 4      | ↑  (up arrow) |
-| `\51f415` | 5      | 🐕 (dog)      |
+| `\c.`     | 1      | Form Feed     |
+| `\df.`    | 2      | ß  (Eszett)   |
+| `\101.`   | 3      | ā  (a macron) |
+| `\2191.`  | 4      | ↑  (up arrow) |
+| `\1f415.` | 5      | 🐕 (dog)      |
+
+
+`"gro\df.e"` = `"große"`
 
 #### Verbatim Sequence
 

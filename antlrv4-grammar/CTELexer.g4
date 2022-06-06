@@ -359,19 +359,10 @@ fragment CHAR_CUSTOM_TEXT
    ;
 
 fragment ESCAPE
-   : '\\' ([nrt"*/<>\\|_-]
+   : '\\' ([nrt"*/\\|_-]
          | '\r' '\n'
          | '\n'
-         | '0'
-         | '1' HEX
-         | '2' HEX HEX
-         | '3' HEX HEX HEX
-         | '4' HEX HEX HEX HEX
-         | '5' HEX HEX HEX HEX HEX
-         | '6' HEX HEX HEX HEX HEX HEX
-         | '7' HEX HEX HEX HEX HEX HEX HEX
-         | '8' HEX HEX HEX HEX HEX HEX HEX HEX
-         | '9' HEX HEX HEX HEX HEX HEX HEX HEX HEX
+         | HEX+ '.'
          | '.' // TODO
       )
    ;

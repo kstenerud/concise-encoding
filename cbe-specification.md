@@ -104,7 +104,7 @@ Terms and Conventions
 **Sample data will generally be represented as follows**:
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
- * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
 
 
 
