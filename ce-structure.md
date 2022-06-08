@@ -1402,7 +1402,7 @@ As a seller, you'd want your billing system to choose the first instance of "tot
 {
     "purchase-ids" = [1004 102062 94112]
     "total" = 91.44
-    "total\4D800" = 0
+    "total\+D800." = 0
 }
 ```
 

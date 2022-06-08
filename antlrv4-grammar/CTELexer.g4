@@ -362,7 +362,7 @@ fragment ESCAPE
    : '\\' ([nrt"*/\\|_-]
          | '\r' '\n'
          | '\n'
-         | HEX+ '.'
+         | '+' HEX+ '.'
          | '.' // TODO
       )
    ;

@@ -32,7 +32,7 @@ Contents
     - [Line Endings](#line-endings)
     - [Escape Sequences](#escape-sequences)
       - [Continuation](#continuation)
-      - [Unicode Sequence](#unicode-sequence)
+      - [Unicode Codepoint](#unicode-codepoint)
       - [Verbatim Sequence](#verbatim-sequence)
   - [Version Specifier](#version-specifier)
   - [Numeric Types](#numeric-types)
@@ -141,7 +141,7 @@ A CTE document is a UTF-8 encoded text document containing data arranged in an a
 
 All characters in a CTE document **MUST** be [text-safe](ce-structure.md#text-safety). Text-unsafe characters **MUST** only be represented using [escape sequences](#escape-sequences) (where allowed). Validation of text-safety **MUST** occur before processing escape-sequences. All other validation of string-like values **MUST** occur **after** decoding any escape sequences contained within.
 
-[Structural whitespace](#structural-whitespace-characters) is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace-characters). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace-characters). Extraneous [structural whitespace](#structural-whitespace-characters) is ignored.
+[Structural whitespace](#structural-whitespace) is used to separate elements in a container. In maps, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace). Extraneous [structural whitespace](#structural-whitespace) is ignored.
 
 **Examples**:
 
@@ -187,14 +187,14 @@ In some contexts, escape sequences **MAY** be used to encode data that would oth
 | `-`                  | soft-hyphen (u+00ad)                    |
 | u+000a               | [continuation](#continuation)           |
 | u+000d               | [continuation](#continuation)           |
-| `0`-`9`, `a`-`f`     | [Unicode sequence](#unicode-sequence)   |
+| `+`                  | [Unicode codepoint](#unicode-codepoint) |
 | `.`                  | [verbatim sequence](#verbatim-sequence) |
 
 Escape sequences **MUST** be converted before any other processing occurs during the decode process.
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace-characters) characters until it encounters the next character that is not structural whitespace. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters the next character that is not structural whitespace. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
 
 **Example**:
 
@@ -211,22 +211,24 @@ The above string is interpreted as:
 The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 ```
 
-#### Unicode Sequence
+#### Unicode Codepoint
 
-Unicode escape sequences begin with a backslash (`\`) character, followed by the hexadecimal digits representing the codepoint, followed by a dot character (`.`).
+A Unicode codepoint escape sequence represents a single character as its Unicode codepoint value.
+
+The escape sequence begins with a backslash (`\`) character, followed by a plus (`+`), followed by any number of hexadecimal digits representing the codepoint, and finally terminated by a dot character (`.`).
 
 **Examples**:
 
-| Sequence  | Digits | Character     |
-| --------- | ------ | ------------- |
-| `\c.`     | 1      | Form Feed     |
-| `\df.`    | 2      | ß  (Eszett)   |
-| `\101.`   | 3      | ā  (a macron) |
-| `\2191.`  | 4      | ↑  (up arrow) |
-| `\1f415.` | 5      | 🐕 (dog)      |
+| Sequence   | Digits | Codepoint | Character     |
+| ---------- | ------ | --------- | ------------- |
+| `\+c.`     | 1      | u+000c    | Form Feed     |
+| `\+df.`    | 2      | u+00df    | ß  (Eszett)   |
+| `\+101.`   | 3      | u+0101    | ā  (a macron) |
+| `\+2191.`  | 4      | u+2191    | ↑  (up arrow) |
+| `\+1f415.` | 5      | u+1f415   | 🐕 (dog)      |
 
 
-`"gro\df.e"` = `"große"`
+`"gro\+df.e"` = `"große"`
 
 #### Verbatim Sequence
 
@@ -234,7 +236,7 @@ Verbatim escape sequences work similarly to "here" documents in Bash. They're co
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence sentinel, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A [structural whitespace](#structural-whitespace-characters) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator).
 
@@ -276,7 +278,7 @@ A CTE document begins with a version specifier, which is composed of the charact
 
 **Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder must also accept uppercase `C` (u+0043).
 
-The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace-characters).
+The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace).
 
 **Example**:
 
@@ -586,7 +588,7 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace-characters), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace-characters) separated elements, or as a double-quote (`"`) delimited string-like sequence representing the contents:
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace) separated elements, or as a double-quote (`"`) delimited string-like sequence representing the contents:
 
     |type elem1 elem2 elem3 ...|
     |type "contents-represented-as-a-string"|
@@ -637,7 +639,7 @@ Float array element values written in decimal form will be **silently rounded** 
 
 #### Special Array Element Rules
 
- * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace-characters) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
+ * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
  * Float array elements **CAN** be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
  * CTE encoders **MUST** default to writing unsigned integer arrays using the `x` form (e.g. `|u8x 01 02 ff|`, not `|u8 1 2 255|`).
 
@@ -761,7 +763,7 @@ Container Types
 
 ### List
 
-A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace-characters) separated contents, and finishes with a closing square bracket `]`.
+A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace) separated contents, and finishes with a closing square bracket `]`.
 
 **Example**:
 
@@ -778,9 +780,9 @@ c1 [
 
 ### Map
 
-A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace-characters) separated key-value pairs, and finishes with a closing curly brace `}`.
+A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace) separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace-characters). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace-characters). A key without a paired value is invalid.
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is invalid.
 
 **Example**:
 
@@ -1090,7 +1092,7 @@ Lookalike characters are characters that look confusingly similar to CTE structu
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
-| `"A” string"`  | `"A\4201d string"`  |
+| `"A” string"`  | `"A\+201d. string"` |
 
 The following is a (as of 2021-03-01) complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation current with the latest lookalike characters.
 
@@ -1106,7 +1108,7 @@ The following is a (as of 2021-03-01) complete list of lookalike [Unicode charac
 Pretty Printing
 ---------------
 
-Pretty printing is the act of laying out [structural whitespace](#structural-whitespace-characters) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed (except when intended for single-line log entries) because the purpose of CTE is to be read by humans.
+Pretty printing is the act of laying out [structural whitespace](#structural-whitespace) in a CTE document such that it is easier for humans to parse. CTE documents **SHOULD** always be pretty-printed (except when intended for single-line log entries) because the purpose of CTE is to be read by humans.
 
 Use [CBE](cbe-specification.md) wherever possible instead of minified CTE, and convert to (pretty-printed) CTE only in places where a human will be reading the data.
 
