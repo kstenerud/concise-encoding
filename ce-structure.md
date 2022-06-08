@@ -1236,9 +1236,10 @@ The following Unicode codepoints are text-unsafe:
 
  * Codepoints in general category `C` (except for TAB (u+0009), LF (u+000a), and CR (u+000d))
  * Codepoints in categories `Zl` and `Zp` (basically u+2028 and u+2029)
- * Unassigned, reserved, and invalid codepoints
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
+
+Unassigned, reserved, and invalid codepoints **MUST NOT** be used at all, even in escaped form.
 
 
 

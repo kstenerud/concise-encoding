@@ -29,11 +29,8 @@ Contents
   - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
   - [Text Format](#text-format)
     - [Human Editability](#human-editability)
+    - [Lookalike Characters](#lookalike-characters)
     - [Line Endings](#line-endings)
-    - [Escape Sequences](#escape-sequences)
-      - [Continuation](#continuation)
-      - [Unicode Codepoint](#unicode-codepoint)
-      - [Verbatim Sequence](#verbatim-sequence)
   - [Version Specifier](#version-specifier)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -56,13 +53,17 @@ Contents
       - [UTC Offset](#utc-offset)
     - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
   - [Array Types](#array-types)
-    - [Element Array Encodings](#element-array-encodings)
+    - [String-Like Array Encoding](#string-like-array-encoding)
+      - [Escape Sequences](#escape-sequences)
+      - [Continuation](#continuation)
+      - [Unicode Codepoint](#unicode-codepoint)
+      - [Verbatim Sequence](#verbatim-sequence)
+    - [Elemental Array Encoding](#elemental-array-encoding)
       - [Float Array Elements](#float-array-elements)
+    - [Standard Array Encoding](#standard-array-encoding)
       - [Implied Prefix](#implied-prefix)
-      - [Special Array Element Rules](#special-array-element-rules)
     - [Media](#media)
-    - [Media Contents](#media-contents)
-    - [String-Like Array Encodings](#string-like-array-encodings)
+      - [Media Contents](#media-contents)
     - [String](#string)
     - [Resource Identifier](#resource-identifier)
     - [Custom Types](#custom-types)
@@ -76,7 +77,7 @@ Contents
   - [Pseudo-Objects](#pseudo-objects)
     - [Marker](#marker)
     - [Reference](#reference)
-      - [Locale Reference](#locale-reference)
+      - [Local Reference](#local-reference)
       - [Remote Reference](#remote-reference)
   - [Invisible Objects](#invisible-objects)
     - [Comment](#comment)
@@ -87,7 +88,6 @@ Contents
   - [Letter Case](#letter-case)
     - [Overriding Rule for Decoders](#overriding-rule-for-decoders)
   - [Structural Whitespace](#structural-whitespace)
-  - [Lookalike Characters](#lookalike-characters)
   - [Pretty Printing](#pretty-printing)
       - [Right Margin](#right-margin)
       - [Indentation](#indentation)
@@ -153,13 +153,28 @@ All characters in a CTE document **MUST** be [text-safe](ce-structure.md#text-sa
 
 ### Human Editability
 
-A CTE document **MUST** be editable by a human. This means that it **MUST** contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode runes that have no width or visibility or direct input method, or are reserved or permanently marked as non-characters, **MUST** not be present in the document.
+A CTE document **MUST** be editable by a human. This means that it **MUST** contain only valid UTF-8 characters and sequences that can actually be viewed, entered and modified in a UTF-8 capable text editor. Unicode codepoints that have no width/visibility or are control characters (other than [structural whitespace](#structural-whitespace)) **CANNOT** be present in [unescaped](#escape-sequences) form in a CTE document.
 
 In the spirit of human editability:
 
- * Implementations **SHOULD** avoid outputting characters that editors tend to convert automatically (for example, TAB).
+ * Implementations **SHOULD** avoid outputting characters that different editors tend to display inconsistently (for example, TAB).
  * Line lengths **SHOULD** be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
- * If a certain character is likely to be confusing or problematic to a human reader or editor, it **MUST** be escaped.
+
+
+### Lookalike Characters
+
+Lookalike characters are characters that look confusingly similar to CTE structural delimiters in [string-like arrays](#string-like-array-encoding) when viewed by a human. Such characters **MUST** be escaped in CTE documents.
+
+| Lookalike      | Escaped             |
+| -------------- | ------------------- |
+| `"A” string"`  | `"A\+201d. string"` |
+
+The following is (as of 2021-03-01) a complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
+
+| Character | Is delimiter       | Lookalikes (codepoints)                                                |
+| --------- | ------------------ | ---------------------------------------------------------------------- |
+| `"`       | String terminator  | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
+| `\`       | Escape initiator   | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                               |
 
 
 ### Line Endings
@@ -168,106 +183,6 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
  * Decoders **MUST** accept both line ending types as input.
  * Encoders **MUST** output LF only.
-
-
-### Escape Sequences
-
-In some contexts, escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible data (see [letter case rules](#letter-case)):
-
-| Sequence (`\` + ...) | Interpretation                          |
-| -------------------- | --------------------------------------- |
-| `t`                  | horizontal tab (u+0009)                 |
-| `n`                  | linefeed (u+000a)                       |
-| `r`                  | carriage return (u+000d)                |
-| `"`                  | double quote (u+0022)                   |
-| `*`                  | asterisk (u+002a)                       |
-| `/`                  | slash (u+002f)                          |
-| `\`                  | backslash (u+005c)                      |
-| `_`                  | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
-| `-`                  | [soft-hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
-| u+000a               | [continuation](#continuation)           |
-| u+000d               | [continuation](#continuation)           |
-| `+`                  | [Unicode codepoint](#unicode-codepoint) |
-| `.`                  | [verbatim sequence](#verbatim-sequence) |
-
-Escape sequences **MUST** be converted before any other processing occurs during the decode process.
-
-#### Continuation
-
-A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters the next character that is not structural whitespace. The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
-
-**Example**:
-
-```cte
-c1  "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
-     mad to be saved, desirous of everything at the same time, the ones who never yawn or \
-     say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
-     exploding like spiders across the stars."
-```
-
-The above string is interpreted as:
-
-```
-The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
-```
-
-#### Unicode Codepoint
-
-A Unicode codepoint escape sequence represents a single character as its Unicode codepoint value.
-
-The escape sequence begins with a backslash (`\`) character, followed by a plus (`+`), followed by any number of hexadecimal digits representing the codepoint, and finally terminated by a dot character (`.`).
-
-**Examples**:
-
-| Sequence   | Digits | Codepoint | Character     |
-| ---------- | ------ | --------- | ------------- |
-| `\+c.`     | 1      | u+000c    | Form Feed     |
-| `\+df.`    | 2      | u+00df    | ß  (Eszett)   |
-| `\+101.`   | 3      | u+0101    | ā  (a macron) |
-| `\+2191.`  | 4      | u+2191    | ↑  (up arrow) |
-| `\+1f415.` | 5      | u+1f415   | 🐕 (dog)      |
-
-
-`"gro\+df.e"` = `"große"`
-
-#### Verbatim Sequence
-
-Verbatim escape sequences work similarly to "here" documents in Bash. They're composed as follows:
-
- * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence sentinel, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](cte-specification.md#human-editability)).
- * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
- * The string contents.
- * A second instance of the end-of-sequence sentinel (without whitespace terminator).
-
-**Example**:
-
-```cte
-c1
-"Verbatim sequences can occur anywhere escapes are allowed.\n\
-\.@@@
-In verbatim sequences, everything is interpreted literally until the
-end-of-string sentinel is encountered (in this case three @ characters).
-Characters like ", [, <, \ and such can appear unescaped.
-
-Whitespace (including "leading" whitespace) is also read verbatim.
-          For example, this line really is indented 10 spaces.
-
-@@@Normal processing resumes after the terminator, so '\n' and such are interpreted."
-```
-Which decodes to:
-```
-Verbatim sequences can occur anywhere escapes are allowed.
-In verbatim sequences, everything is interpreted literally until the
-end-of-string sentinel is encountered (in this case three @ characters).
-Characters like ", [, <, \ and such can appear unescaped.
-
-Whitespace (including "leading" whitespace) is also read verbatim.
-          For example, this line really is indented 10 spaces.
-
-Normal processing resumes after the terminator, so '
-' and such are interpreted.
-```
 
 
 
@@ -589,48 +504,186 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe. Depending on the kind of array, the contents are encoded either as [structural whitespace](#structural-whitespace) separated elements, or as a double-quote (`"`) delimited string-like sequence representing the contents:
+Array types are encoded in two primary forms: [string-like](#string-like-array-encoding) or [elemental](#elemental-array-encoding).
 
-    |type elem1 elem2 elem3 ...|
-    |type "contents-represented-as-a-string"|
 
-An empty array has a type but no contents:
+### String-Like Array Encoding
 
-    |type|
+A string-like array **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String-like arrays **CAN** contain [escape sequences](#escape-sequences).
 
-The following array types are available:
+    "contents"
 
-| Type   | Description                                 | Encoding Kind          |
-| ------ | ------------------------------------------- | ---------------------- |
-| `b`    | Bit                                         | Element                |
-| `u8`   | 8-bit unsigned integer                      | Element                |
-| `u16`  | 16-bit unsigned integer                     | Element                |
-| `u32`  | 32-bit unsigned integer                     | Element                |
-| `u64`  | 64-bit unsigned integer                     | Element                |
-| `i8`   | 8-bit signed integer                        | Element                |
-| `i16`  | 16-bit signed integer                       | Element                |
-| `i32`  | 32-bit signed integer                       | Element                |
-| `i64`  | 64-bit signed integer                       | Element                |
-| `f16`  | 16-bit floating point (bfloat)              | Element                |
-| `f32`  | 32-bit floating point (ieee754)             | Element                |
-| `f64`  | 64-bit floating point (ieee754)             | Element                |
-| `u`    | 128-bit UID                                 | Element                |
-| `c`    | [Custom Types](#custom-types)               | Element or string-Like |
-| `m`    | [Media](#media)                             | Element or string-Like |
+[Text-unsafe](ce-specification#text-safety) characters **MUST** always be escaped.
 
-Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
+Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well.
 
-### Element Array Encodings
+When decoding a string-like array type, all [escape sequences](#escape-sequences) **MUST** be converted before any other type-specific processing occurs.
 
-For element array encodings, any valid representation of the element data type may be used, provided the value fits within the type's width. 
+#### Escape Sequences
+
+Within [string-like arrays](#string-like-array-encoding), escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+
+| Escape Type Character | Interpretation                          |
+| --------------------- | --------------------------------------- |
+| `t`                   | horizontal tab (u+0009)                 |
+| `n`                   | linefeed (u+000a)                       |
+| `r`                   | carriage return (u+000d)                |
+| `"`                   | double quote (u+0022)                   |
+| `*`                   | asterisk (u+002a)                       |
+| `/`                   | slash (u+002f)                          |
+| `\`                   | backslash (u+005c)                      |
+| `_`                   | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
+| `-`                   | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
+| u+000a                | [continuation](#continuation)           |
+| u+000d                | [continuation](#continuation)           |
+| `+`                   | [Unicode codepoint](#unicode-codepoint) |
+| `.`                   | [verbatim sequence](#verbatim-sequence) |
+
+Escape sequences **MUST** be converted before any other processing occurs during the decode process.
+
+#### Continuation
+
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+
+**Example**:
+
+```cte
+c1 "The only people for me are the mad ones, the ones who are mad to live, mad to talk, \
+     mad to be saved, desirous of everything at the same time, the ones who never yawn or \
+     say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles \
+     exploding like spiders across the stars."
+```
+
+The above string is interpreted as:
+
+```
+The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
+```
+
+#### Unicode Codepoint
+
+A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
+
+The escape sequence begins with a backslash (`\`) character, followed by a plus (`+`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a dot character (`.`).
+
+**Examples**:
+
+| Sequence   | Digits | Codepoint | Character     |
+| ---------- | ------ | --------- | ------------- |
+| `\+c.`     | 1      | u+000c    | Form Feed     |
+| `\+df.`    | 2      | u+00df    | ß  (Eszett)   |
+| `\+101.`   | 3      | u+0101    | ā  (a macron) |
+| `\+2191.`  | 4      | u+2191    | ↑  (up arrow) |
+| `\+1f415.` | 5      | u+1f415   | 🐕 (dog)      |
+
+`"gro\+df.e"` = `"große"`
+
+#### Verbatim Sequence
+
+A Verbatim escape sequence works similarly to a "here" document in Bash. It's composed as follows:
+
+ * Verbatim sequence escape initiator (`\.`).
+ * An end-of-sequence sentinel, which is a sequence of [text-safe](ce-structure.md#text-safety), non-whitespace characters (in accordance with [human editability](#human-editability)).
+ * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * The string contents.
+ * A second instance of the end-of-sequence sentinel (without whitespace terminator).
+
+**Example**:
+
+```cte
+c1
+"Verbatim sequences can occur anywhere escapes are allowed.\n\
+\.@@@
+In verbatim sequences, everything is interpreted literally until the
+end-of-string sentinel is encountered (in this case three @ characters).
+Characters like " and \ are no longer special: See \n and \t appear as-is.
+
+Whitespace (including "leading" whitespace) is also read verbatim.
+          For example, this line really is indented 10 spaces.
+
+@@@Normal processing resumes after the terminator, so escape sequences\nare once again interpreted."
+```
+Which decodes to:
+```
+Verbatim sequences can occur anywhere escapes are allowed.
+In verbatim sequences, everything is interpreted literally until the
+end-of-string sentinel is encountered (in this case three @ characters).
+Characters like " and \ are no longer special: See \n and \t appear as-is.
+
+Whitespace (including "leading" whitespace) is also read verbatim.
+          For example, this line really is indented 10 spaces.
+
+Normal processing resumes after the terminator, so escape sequences
+are once again interpreted.
+```
+
+### Elemental Array Encoding
+
+An elemental array lists the array's contents as [structural whitespace](#structural-whitespace) separated elements:
+
+    1 2 3 4 ...
+
+Any valid representation of the array's data type and size may be used to represent the element values.
 
 #### Float Array Elements
 
 Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
+
+### Standard Array Encoding
+
+The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe.
+
+Depending on the kind of array, the contents are encoded as either [string-like](#string-like-array-encoding) or [elemental](#elemental-array-encoding):
+
+    |type elem1 elem2 elem3 ...|
+    |type "string-like contents"|
+
+An empty array has a type but no contents:
+
+    |type|
+
+Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array:
+
+    |b 1 0 0 1|
+    |b 1001|
+
+Float array elements **CAN** be written using special float values `nan`, `snan`, `inf`:
+
+    |f32x 1.5da nan -inf c.1f3p38|
+
+**Note**: Some string-like array types ([string](#string), [resource identifier](#resource-identifier), and [remote reference](#remote-reference)) omit the enclosing pipes entirely, and do not explicitly denote their type:
+
+    "strings, for example, aren't enclosed in pipes, and their type is implied"
+
+The following array types are available:
+
+| Denoted Type | Description                                 | Encoding Kind          |
+| ------------ | ------------------------------------------- | ---------------------- |
+| `b`          | Bit                                         | Element                |
+| `u8`         | 8-bit unsigned integer                      | Element                |
+| `u16`        | 16-bit unsigned integer                     | Element                |
+| `u32`        | 32-bit unsigned integer                     | Element                |
+| `u64`        | 64-bit unsigned integer                     | Element                |
+| `i8`         | 8-bit signed integer                        | Element                |
+| `i16`        | 16-bit signed integer                       | Element                |
+| `i32`        | 32-bit signed integer                       | Element                |
+| `i64`        | 64-bit signed integer                       | Element                |
+| `f16`        | 16-bit floating point (bfloat)              | Element                |
+| `f32`        | 32-bit floating point (ieee754)             | Element                |
+| `f64`        | 64-bit floating point (ieee754)             | Element                |
+| `u`          | 128-bit UID                                 | Element                |
+| `c`          | [Custom Types](#custom-types)               | Element or string-Like |
+| `m`          | [Media](#media)                             | Element or string-Like |
+|              | String                                      | String-like            |
+|              | Resource ID                                 | String-like            |
+|              | Remote Reference                            | String-like            |
+
+Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
+
 #### Implied Prefix
 
-**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix (except for special values `nan`, `snan`, `inf` etc - see below).
+**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix (except for special values `nan`, `snan`, `inf`).
 
 | Type Suffix | Implied element prefix | Example                         |
 | ----------- | ---------------------- | ------------------------------- |
@@ -638,11 +691,7 @@ Float array element values written in decimal form will be **silently rounded** 
 | `o`         | `0o`                   | `\|i16o -7445 644\|`            |
 | `x`         | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
 
-#### Special Array Element Rules
-
- * Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array using `0` and `1` (e.g. `|b 1001|` = `|b 1 0 0 1|`).
- * Float array elements **CAN** be written using special float values such as `nan`, `snan`, `inf` (regardless of implied prefix).
- * CTE encoders **MUST** default to writing unsigned integer arrays using the `x` form (e.g. `|u8x 01 02 ff|`, not `|u8 1 2 255|`).
+CTE encoders **MUST** default to writing unsigned integer arrays using the `x` form (e.g. `|u8x 01 02 ff|`, not `|u8 1 2 255|`).
 
 **Examples**:
 
@@ -667,11 +716,15 @@ A media object is a specialization of the typed array. It has the array type `m`
 | [Media type](http://www.iana.org/assignments/media-types/media-types.xhtml) |     Y     |
 | Contents                                                                    |     N     |
 
-Media with no contents represents the equivalent of an empty file. Media with no media type is invalid.
+Media with no contents represents the equivalent of an empty file.
 
-### Media Contents
+    |m text/plain|
 
-If the actual media contents consists of only valid UTF-8 text, it **CAN** be represented in string form by enclosing the contents in double quotes (`"`). Otherwise it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
+Media with no media type is invalid.
+
+#### Media Contents
+
+If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented as a [string-like array](#string-like-array-encoding) by enclosing the contents within double-quote delimiters (`"`). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
 * Text: `|m media/type "contents"|`
 * Binary: `|m media/type 63 6f 6e 74 65 6e 74 73|`
@@ -679,13 +732,15 @@ If the actual media contents consists of only valid UTF-8 text, it **CAN** be re
 **Example**:
 
 ```cte
-c1 |m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+c1
+|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is equivalent to:
 
 ```cte
-c1 |m application/x-sh "\.@@
+c1
+|m application/x-sh "\.@@
 #!/bin/sh
 
 echo hello world
@@ -701,27 +756,27 @@ echo hello world
 ```
 
 
-### String-Like Array Encodings
-
-String-like array contents are enclosed within double-quote (`"`) delimiters. They are interpreted as a whole, and **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences) except when encoding as a [verbatim sequence](#verbatim-sequence).
-
-
 ### String
 
-Strings are enclosed within double-quote (`"`) delimiters, and the elements are string-like. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. A quoted string **MUST** encode [text-unsafe](ce-specification#text-safety) characters, TAB, CR, LF, double-quote (`"`) and backslash (`\`) (as well as their [lookalikes](ce-structure.md#confusable-characters)) as [escape sequences](#escape-sequences).
+A string is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`).
 
 **Example**:
 
 ```cte
-c1 "Line 1\nLine 2\nLine 3"
+c1
+"Line 1\nLine 2\nLine 3"
 ```
 
 
 ### Resource Identifier
 
-A resource identifier is enclosed within the delimiters `@"` and `"`.
+A resource identifier is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
 
-A Concise Encoding implementation **MUST** interpret only [CTE escape sequences](#escape-sequences) when decoding resource identifiers. Resource-specific escape sequences (such as percent-escapes) **MUST NOT** be interpreted.
+    @"contents"
+
+**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST NOT** be interpreted.
+
+**Example**:
 
 ```cte
 c1
@@ -741,20 +796,22 @@ c1
 
 Custom data types are encoded using the typed array `c`, and can have a binary or textual form.
 
-In the binary form, its contents are encoded like a u8x array (hex encoded byte elements).
+The binary form is encoded like a u8x array (hex encoded byte elements).
 
 **Example**:
 
 ```cte
-c1 |c 01 f6 28 3c 40 00 00 40 40|
+c1
+|c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-In the textual form, its contents are enclosed within double-quote (`"`) delimiters, and **CAN** contain [escape sequences](#escape-sequences) which **MUST** be processed before the converted string is passed to the custom decoder that will interpret it.
+The textual form is encoded as a [string-like array](#string-like-array-encodings) inside of the typed array pipe (`|`) delimiters.
 
 **Example**:
 
 ```cte
-c1 |c "cplx(2.94+3i)"|
+c1
+|c "cplx(2.94+3i)"|
 ```
 
 
@@ -769,7 +826,8 @@ A list begins with an opening square bracket `[`, contains [structural whitespac
 **Example**:
 
 ```cte
-c1 [
+c1
+[
     1
     "two"
     3.1
@@ -788,7 +846,8 @@ Map entries are split into key-value pairs using the equals `=` character and **
 **Example**:
 
 ```cte
-c1 {
+c1
+{
     1 = "alpha"
     2 = "beta"
     "a map" = {"one"=1 "two"=2}
@@ -896,7 +955,8 @@ A marker sequence consists of the following, with no whitespace in between:
 Example:
 
 ```cte
-c1 [
+c1
+[
     &remember_me:"Remember this string"
     &1:{"a" = 1}
 ]
@@ -907,14 +967,15 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 ### Reference
 
-#### Locale Reference
+#### Local Reference
 
-A local reference begins with the reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-identifier).
+A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-identifier) that has been defined elsewhere in the current document.
 
 **Example**:
 
 ```cte
-c1 {
+c1
+{
     "some_object" = {
         "my_string" = &remember_me:"Remember this string"
         "my_map" = &1:{
@@ -929,14 +990,15 @@ c1 {
 
 #### Remote Reference
 
-A remote reference is encoded the same way as a [resource identifier](#resource-identifier), except using a reference initiator (`$`) instead of a resource ID initiator (`@`).
+A remote reference is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
-    $"some-URL" instead of @"some-URL"
+    $"https://www.ietf.org/"
 
 **Example**:
 
 ```cte
-c1 {
+c1
+{
     "reference_to_local_doc" = $"common.cte"
     "reference_to_remote_doc" = $"https://somewhere.com/my_document.cbe?format=long"
     "reference_to_local_doc_marker" = $"common.cte#legalese"
@@ -1016,7 +1078,8 @@ Empty Document
 An empty document in CTE is signified by using the [Null](#null) type as the top-level object:
 
 ```cte
-c1 null
+c1
+null
 ```
 
 
@@ -1026,7 +1089,7 @@ Letter Case
 
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * Strings, string-like types, and comments **CAN** contain uppercase characters.
+ * [string-like arrays](#string-like-array-encoding) and comments **CAN** contain uppercase characters.
  * [Marker identifiers](ce-structure.md#marker-identifier) **CAN** contain uppercase characters.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
@@ -1036,29 +1099,29 @@ For the above situations, a CTE encoder **MUST** preserve letter case. In all ot
 
 Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
 
-A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, exponents, escape sequences, etc).
+A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, array types, escape sequences, etc).
 
 
 
 Structural Whitespace
 ---------------------
 
-Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document. Whitespace characters not intended to be structural will need to be quoted in most contexts to preserve their meaning.
+Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document.
 
 **Allowed structural whitespace characters:**
 
-| Code Point | Name                      |
-| ---------- | ------------------------- |
-| U+0009     | character tabulation      |
-| U+000A     | line feed                 |
-| U+000D     | carriage return           |
-| U+0020     | space                     |
+| Code Point | Name                       |
+| ---------- | -------------------------- |
+| U+0009     | TAB (character tabulation) |
+| U+000A     | LF (line feed)             |
+| U+000D     | CR (carriage return)       |
+| U+0020     | SP (space)                 |
 
 
 **Structural Whitespace CAN occur**:
 
  * Around an object.
- * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `<`, `,`, `>`)
+ * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`)
 
 Examples:
 
@@ -1079,30 +1142,10 @@ Examples:
 **Whitespace MUST NOT occur**:
 
  * Before the [version specifier](#version-specifier).
- * Between a sentinel character and its associated value (`& 1234`, `$ @"mydoc.cbe"`, `# Planck_Js` are invalid).
- * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` is invalid).
+ * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are invalid).
+ * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
- * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead where it's valid to do so.
-
-
-
-Lookalike Characters
---------------------
-
-Lookalike characters are characters that look confusingly similar to CTE structural symbol characters when viewed by a human. Such characters **MUST** be escaped in CTE documents where a human would likely confuse them for an escape sequence initiator (`\`) or a string object terminator.
-
-| Lookalike      | Escaped             |
-| -------------- | ------------------- |
-| `"A” string"`  | `"A\+201d. string"` |
-
-The following is a (as of 2021-03-01) complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation current with the latest lookalike characters.
-
-| Character | Context           | Lookalikes (codepoints)                                                |
-| --------- | ----------------- | ---------------------------------------------------------------------- |
-| `"`       | String-like       | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
-| `*`       | Comment           | 204e, 2055, 2217, 22c6, 2b51, fe61, ff0a                               |
-| `/`       | Comment           | 2044, 2215, 27cb, 29f8, 3033, ff0f, 1d10d                              |
-| `\`       | Escapable Content | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                               |
+ * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
 
 
 
