@@ -174,12 +174,12 @@ The following table lists the text safety of Unicode characters based on categor
 
 Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows [escape sequences](#escape-sequences), such characters **MUST** be represented as [escape sequences](#escape-sequences) in a CTE document.
 
-Unassigned, reserved, and invalid codepoints **MUST NOT** be used at all, even in escaped form.
+Unassigned, reserved, and invalid codepoints **MUST NOT** be present at all, even in escaped form.
 
 
 ### Lookalike Characters
 
-Lookalike characters are characters that look confusingly similar to CTE structural delimiters in [string-like arrays](#string-like-array-encoding) when viewed by a human. Such characters **MUST** be escaped in CTE documents.
+Lookalike characters are characters that look confusingly similar to [string-like array](#string-like-array-encoding) delimiters when viewed by a human. Such characters **MUST** be escaped in [string-like arrays](#string-like-array-encoding).
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
@@ -195,7 +195,7 @@ The following is (as of 2021-03-01) a complete list of lookalike [Unicode charac
 
 ### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only.
+Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for document sharing purposes the canonical format is LF only.
 
  * Decoders **MUST** accept both line ending types as input.
  * Encoders **MUST** output LF only.
