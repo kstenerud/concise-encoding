@@ -183,8 +183,8 @@ In some contexts, escape sequences **MAY** be used to encode data that would oth
 | `*`                  | asterisk (u+002a)                       |
 | `/`                  | slash (u+002f)                          |
 | `\`                  | backslash (u+005c)                      |
-| `_`                  | non-breaking space (u+00a0)             |
-| `-`                  | soft-hyphen (u+00ad)                    |
+| `_`                  | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
+| `-`                  | [soft-hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
 | u+000a               | [continuation](#continuation)           |
 | u+000d               | [continuation](#continuation)           |
 | `+`                  | [Unicode codepoint](#unicode-codepoint) |
@@ -297,7 +297,7 @@ Represented by the sequences `true` and `false`.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character. There is no positive sign character (such as `+`). Encoders **MUST** write values in lower case (see [letter case rules](#letter-case)).
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **MAY** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case (see [letter case rules](#letter-case)).
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -315,11 +315,11 @@ CTE encoders **MAY** offer configuration options to output integers in bases oth
 
 A floating point number is composed of an implied base (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
 
-    value = significand × baseᵉˣᵖ
+    value = significand × baseᵉˣᵖᵒⁿᵉⁿᵗ
 
- * The significand and exponential portions are separated by an exponent marker.
+ * The significand and exponential portions are separated by an exponent marker (either `e` or `p`, depending on the base).
  * The whole and fractional parts of the significand are separated by a radix point (`.`).
- * Negative values are represented by prepending a dash `-` to the front of the floating point value (before any prefix).
+ * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix), and a `+` **MAY** be prepended to positive values.
 
 **Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
 
@@ -331,7 +331,7 @@ c1
     1.0
     5e-5
     -98.413e50
-    3.14
+    +3.14
 ]
 ```
 
@@ -341,9 +341,9 @@ Base-10 notation is used to represent [decimal floating point numbers](ce-struct
 
 The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
-    value = significand × 10ᵉˣᵖ
+    value = significand × 10ᵉˣᵖᵒⁿᵉⁿᵗ
 
-Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, 64-bit ieee754 floating point values can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, the 64-bit ieee754 floating point type can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 **Examples**:
 
@@ -363,7 +363,7 @@ Base-16 notation is used to represent [binary floating point numbers](ce-structu
 
 Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
-    value = significand × 2ᵉˣᵖ
+    value = significand × 2ᵉˣᵖᵒⁿᵉⁿᵗ
 
 To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
@@ -391,7 +391,8 @@ c1
 
 #### Floating Point Rules
 
- * Codecs **MUST** output exponent portion markers in lowercase (`e` or `p`), but **MUST** also accept uppercase markers when decoding (`E` or `P`).
+ * Encoders **MUST** output exponent portion markers in lowercase only (`e` or `p`).
+ * Decoders **MUST** accept uppercase (`E` or `P`) and lowercase (`e` or `p`) exponent portion markers.
  * There **MUST** be at least one digit on each side of a radix point (`.`).
 
 | Invalid      | Valid     | Notes                                                    |
@@ -493,7 +494,7 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 | Hour         |     Y     |            |         0 |        23 |          1 |          2 |
 | Minute       |     Y     |    `:`     |         0 |        59 |          2 |          2 |
 | Second       |     Y     |    `:`     |         0 |        60 |          2 |          2 |
-| Subseconds   |     N     | `,` or `.` |         0 | 999999999 |          0 |          9 |
+| Subseconds   |     N     |    `.`     |         0 | 999999999 |          0 |          9 |
 | Time Zone    |     N     |    `/`     |         - |         - |          - |          - |
 
 **Examples**:
