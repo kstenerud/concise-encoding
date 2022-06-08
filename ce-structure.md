@@ -32,6 +32,7 @@ Contents
     - [Versioning](#versioning)
       - [Prerelease Version](#prerelease-version)
   - [Document Structure](#document-structure)
+  - [Schema](#schema)
   - [Document Version Specifier](#document-version-specifier)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -207,6 +208,27 @@ Documents begin with a [version specifier](#version-specifier), followed by a to
  * A document containing a top-level list:
    - In [CTE](cte-specification.md): `c1 [1 2 3]`
    - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
+
+
+
+Schema
+------
+
+Schema research and development is still very much in its infancy. There are currently many schema languages in various stages of maturity, but they tend to focus on specific technologies, formats and use cases, which limits their utility in a general purpose data format:
+- [XML DTD](https://www.w3.org/XML/1998/06/xmlspec-report-v20.htm)
+- [XML Schema](https://www.w3.org/XML/Schema)
+- [RelaxNG](https://relaxng.org/)
+- [JSON Schema](https://json-schema.org/)
+- [TypeSchema](https://typeschema.org/)
+- [JTD](https://datatracker.ietf.org/doc/html/rfc8927)
+- [AsyncAPI](https://www.asyncapi.com/)
+- [OpenAPI](https://www.openapis.org/)
+
+Although many of these schema technologies could be used to validate CE documents, their limitations would constrain the data and structural design.
+
+The current frontrunner and most agnostic language so far is [CUE](https://cuelang.org/), and although even CUE doesn't fully support all CE types and structural possibilities, it shows the most promise and extensibility.
+
+Therefore, [CUE](https://cuelang.org/) is the preferred schema language for validating Concise Encoding documents.
 
 
 
