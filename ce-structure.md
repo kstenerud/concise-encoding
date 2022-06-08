@@ -96,7 +96,6 @@ Contents
       - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
     - [Problematic Values](#problematic-values)
   - [Truncated Document](#truncated-document)
-  - [Text Safety](#text-safety)
   - [Equivalence](#equivalence)
     - [Relaxed Equivalence](#relaxed-equivalence)
       - [Integers and floats](#integers-and-floats)
@@ -1088,8 +1087,6 @@ CTE supports two forms of comments:
  * Single-line comments, which end at the line end (`// a comment`).
  * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment */`).
 
-Comments **MUST ONLY** contain [text-safe](#text-safety) characters.
-
 Comments are allowed anywhere in a CTE document where a real object would be allowed, except between a [marker](#marker) and marked object (`&my_id:/*comment*/123456` is invalid).
 
 **Examples (in [CTE](cte-specification.md))**:
@@ -1224,22 +1221,6 @@ A codec **MUST** provide an **OPTION** to artificially complete a truncated [CBE
  * Any still-open containers **MUST** be artificially closed.
 
 The artificialy completed document is returned to the caller along with an indication that the document was truncated.
-
-
-
-Text Safety
------------
-
-Because Concise Encoding is a twin format (text and binary), every character in a CTE document **MUST** be editable by a human. Such human-editable characters are considered "text safe".
-
-The following Unicode codepoints are text-unsafe:
-
- * Codepoints in general category `C` (except for TAB (u+0009), LF (u+000a), and CR (u+000d))
- * Codepoints in categories `Zl` and `Zp` (basically u+2028 and u+2029)
-
-Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows escape sequences, such characters **MUST** be represented as escape sequences in a CTE document.
-
-Unassigned, reserved, and invalid codepoints **MUST NOT** be used at all, even in escaped form.
 
 
 
