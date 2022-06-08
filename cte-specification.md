@@ -231,12 +231,12 @@ Numeric Types
 
 ### Boolean
 
-Represented by the sequences `true` and `false`.
+Represented by the text sequences `true` and `false`.
 
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **MAY** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case (see [letter case rules](#letter-case)).
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **MAY** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -278,7 +278,7 @@ c1
 
 Base-10 notation is used to represent [decimal floating point numbers](ce-structure.md#decimal-floating-point).
 
-The exponential portion of a base-10 number is denoted by the lowercase character `e` (see [letter case rules](#letter-case)), followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
+The exponential portion of a base-10 number is denoted by the character `e`, followed by the signed size of the exponent (using **OPTIONAL** `+` for positive, and mandatory `-` for negative). The exponential portion is a signed base-10 number representing the power-of-10 to multiply the significand by. Values **SHOULD** be normalized (only one digit to the left of the decimal point) when using exponential notation.
 
     value = significand × 10ᵉˣᵖᵒⁿᵉⁿᵗ
 
@@ -300,7 +300,7 @@ c1
 
 Base-16 notation is used to represent [binary floating point numbers](ce-structure.md#binary-floating-point) because it allows 100% accurate representation of the actual value.
 
-Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is denoted by the lowercase character `p` (see [letter case rules](#letter-case)). The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
+Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is denoted by the character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
     value = significand × 2ᵉˣᵖᵒⁿᵉⁿᵗ
 
@@ -350,7 +350,7 @@ CTE encoders **MAY** offer configuration options to output numeric whitespace, b
 Rules:
 
  * Only [integer](#integer) and [floating point](#floating-point) types **CAN** contain numeric whitespace.
- * [Named values](#named-values) (such as `nan` and `inf`) **MUST NOT** contain numeric whitespace.
+ * [Special floating point values](#special-floating-point-values) **MUST NOT** contain numeric whitespace.
  * Numeric whitespace **CAN** only occur between two adjacent numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
 
@@ -672,7 +672,7 @@ Bit array elements are represented using `0` for false and `1` for true. [struct
     |b 1 0 0 1|
     |b 1001|
 
-Float array elements **CAN** be written using special float values `nan`, `snan`, `inf`:
+Float array elements **CAN** be written using [special float values](#special-floating-point-values):
 
     |f32x 1.5da nan -inf c.1f3p38|
 
@@ -699,15 +699,15 @@ The following array types are available:
 | `u`          | 128-bit UID                                 | Element                |
 | `c`          | [Custom Types](#custom-types)               | Element or string-Like |
 | `m`          | [Media](#media)                             | Element or string-Like |
-|              | String                                      | String-like            |
-|              | Resource ID                                 | String-like            |
-|              | Remote Reference                            | String-like            |
+| implied      | String                                      | String-like            |
+| implied      | Resource ID                                 | String-like            |
+| implied      | Remote Reference                            | String-like            |
 
 Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
 
 #### Implied Prefix
 
-**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all values **MUST** be considered to have an implicit prefix (except for special values `nan`, `snan`, `inf`).
+**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all element values **MUST** be considered to have an implicit prefix (except for [special float values](#special-floating-point-values)).
 
 | Type Suffix | Implied element prefix | Example                         |
 | ----------- | ---------------------- | ------------------------------- |
@@ -782,7 +782,7 @@ echo hello world
 
 ### String
 
-A string is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`).
+A string is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`).
 
 **Example**:
 
@@ -794,7 +794,7 @@ c1
 
 ### Resource Identifier
 
-A resource identifier is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
+A resource identifier is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
 
     @"contents"
 
@@ -829,7 +829,7 @@ c1
 |c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-The textual form is encoded as a [string-like array](#string-like-array-encodings) inside of the typed array pipe (`|`) delimiters.
+The textual form is encoded as a [string-like array](#string-like-array-encoding) inside of the typed array pipe (`|`) delimiters.
 
 **Example**:
 
@@ -1014,7 +1014,7 @@ c1
 
 #### Remote Reference
 
-A remote reference is encoded as a [string-like array](#string-like-array-encodings), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
+A remote reference is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
     $"https://www.ietf.org/"
 
@@ -1169,7 +1169,7 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are invalid).
- * Between a [marker ID](ce-structure.md#marker-id) and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
+ * Between a [marker ID](ce-structure.md#marker-identifier) and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
 
