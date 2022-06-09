@@ -239,7 +239,7 @@ Represented by the text sequences `true` and `false`.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **MAY** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **CAN** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -261,7 +261,7 @@ A floating point number is composed of an implied base (signified by an **OPTION
 
  * The significand and exponential portions are separated by an exponent marker (either `e` or `p`, depending on the base).
  * The whole and fractional parts of the significand are separated by a radix point (`.`).
- * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix), and a `+` **MAY** be prepended to positive values.
+ * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix), and a `+` **CAN** be prepended to positive values.
 
 **Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
 
@@ -548,7 +548,7 @@ When decoding a string-like array type, all [escape sequences](#escape-sequences
 
 #### Escape Sequences
 
-Within [string-like arrays](#string-like-array-encoding), escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+Within [string-like arrays](#string-like-array-encoding), escape sequences **CAN** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
 
 | Escape Type Character    | Interpretation                          |
 | ------------------------ | --------------------------------------- |
@@ -652,7 +652,7 @@ An elemental array lists the array's contents as [structural whitespace](#struct
 
     1 2 3 4 ...
 
-Any valid representation of the array's data type and size may be used to represent the element values.
+Any valid representation of the array's data type and size **CAN** be used to represent the element values.
 
 #### Float Array Elements
 
@@ -1219,7 +1219,7 @@ c1
 []
 ```
 
-Short lists containing small objects may be placed entirely on one line.
+Short lists containing small objects **MAY** be placed entirely on one line.
 ```cte
 c1
 ["a" "b" "c" "d"]
@@ -1243,7 +1243,7 @@ c1
 {}
 ```
 
-Small maps containing small objects may be placed entirely on one line. In such a case, omit the spaces around the `=`.
+Small maps containing small objects **MAY** be placed entirely on one line. In such a case, omit the spaces around the `=`.
 ```cte
 c1
 {"a"="b" "c"="d"}
