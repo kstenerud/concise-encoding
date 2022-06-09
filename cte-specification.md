@@ -1312,9 +1312,9 @@ Comments **SHOULD** have one space (u+0020) after the comment opening sequence. 
 ```cte
 c1
 {
-  // abc
+    // abc
 
-  /* abc */
+    /* abc */
 }
 ```
 
