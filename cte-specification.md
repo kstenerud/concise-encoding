@@ -239,7 +239,7 @@ Represented by the text sequences `true` and `false`.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values are prefixed with a dash `-` as a sign character, and positive values **CAN** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values **MUST** be prefixed with a dash `-` as a sign character, and positive values **CAN** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -489,7 +489,7 @@ An area/location time zone is written in the form `Area/Location`.
 
 Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`).
 
- * Negative values are prefixed with a dash character (`-`)
+ * Negative values **MUST** be prefixed with a dash character (`-`)
  * A period (`.`) is used as a fractional separator.
 
 **Examples**:
