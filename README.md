@@ -296,7 +296,7 @@ Notice how when rotated 90°, it resembles the tree it represents:
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    "custom text"   = |ct cplx(2.94+3i)|
-    "custom binary" = |cb 04 f6 28 3c 40 00 00 40 40|
+    "custom text"   = |c "cplx(2.94+3i)"|
+    "custom binary" = |c 04 f6 28 3c 40 00 00 40 40|
 }
 ```
