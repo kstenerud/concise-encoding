@@ -194,7 +194,7 @@ The types are structured such that the most commonly used types and values encod
 |  93 | [RESERVED](#reserved)                           |                                          |
 |  94 | [Plane 2](#type-field-plane-2)                  | (See [Plane 2](#type-field-plane-2))     |
 |  95 | [Array: Unsigned Int8](#supported-array-types)  | [chunk length] [8-bit elements] ...      |
-|  96 | [Array: Bit](#supported-array-types)            | [chunk length] [1-bit elements] ...      |
+|  96 | [Array: Bit](#bit-array)                        | [chunk length] [1-bit elements] ...      |
 |  97 | [Marker](#marker)                               | [length] [UTF-8 data]                    |
 |  98 | [Reference](#reference)                         | [length] [UTF-8 data]                    |
 |  99 | [Date](#date)                                   | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]            |
@@ -382,12 +382,12 @@ Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compac
 Array Types
 -----------
 
-An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted, and the size of each element.
+An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The [array type](#supported-array-types) determines how the data is to be interpreted, and the size of each element.
 
 
 ### Array Elements
 
-Array elements have a fixed size determined by the array type. Length fields in array chunks represent the number of *elements*, so for example a uin32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element).
+Array elements have a fixed size determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uin32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element).
 
 
 ### Array Forms
