@@ -1332,7 +1332,7 @@ The object following a comment **SHOULD** be on a different line.
 ```cte
 c1
 {
-    // See list of request types in request-types.md
+    /* See list of request types in request-types.md */
     "request-type" = "ping"
 }
 ```
