@@ -35,8 +35,8 @@ Contents
     - [Boolean](#boolean)
     - [Integer](#integer)
       - [Small Int](#small-int)
-      - [Fixed Width](#fixed-width)
-      - [Variable width](#variable-width)
+      - [Fixed Width Int](#fixed-width-int)
+      - [Variable width Int](#variable-width-int)
     - [Decimal Floating Point](#decimal-floating-point)
     - [Binary Floating Point](#binary-floating-point)
     - [UID](#uid)
@@ -147,16 +147,16 @@ The types are structured such that the most commonly used types and values encod
 | ... | ...                                             |                                          |
 |  64 | [Integer value 100](#small-int)                 |                                          |
 |  65 | [Decimal Float](#decimal-floating-point)        | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  67 | [Negative Integer](#variable-width)             | [byte length] [little endian bytes]      |
-|  66 | [Positive Integer](#variable-width)             | [byte length] [little endian bytes]      |
-|  68 | [Positive Integer (8 bit)](#fixed-width)        | [8-bit unsigned integer]                 |
-|  69 | [Negative Integer (8 bit)](#fixed-width)        | [8-bit unsigned integer]                 |
-|  6a | [Positive Integer (16 bit)](#fixed-width)       | [16-bit unsigned integer, little endian] |
-|  6b | [Negative Integer (16 bit)](#fixed-width)       | [16-bit unsigned integer, little endian] |
-|  6c | [Positive Integer (32 bit)](#fixed-width)       | [32-bit unsigned integer, little endian] |
-|  6d | [Negative Integer (32 bit)](#fixed-width)       | [32-bit unsigned integer, little endian] |
-|  6e | [Positive Integer (64 bit)](#fixed-width)       | [64-bit unsigned integer, little endian] |
-|  6f | [Negative Integer (64 bit)](#fixed-width)       | [64-bit unsigned integer, little endian] |
+|  67 | [Negative Integer](#variable-width-int)         | [byte length] [little endian bytes]      |
+|  66 | [Positive Integer](#variable-width-int)         | [byte length] [little endian bytes]      |
+|  68 | [Positive Integer (8 bit)](#fixed-width-int)    | [8-bit unsigned integer]                 |
+|  69 | [Negative Integer (8 bit)](#fixed-width-int)    | [8-bit unsigned integer]                 |
+|  6a | [Positive Integer (16 bit)](#fixed-width-int)   | [16-bit unsigned integer, little endian] |
+|  6b | [Negative Integer (16 bit)](#fixed-width-int)   | [16-bit unsigned integer, little endian] |
+|  6c | [Positive Integer (32 bit)](#fixed-width-int)   | [32-bit unsigned integer, little endian] |
+|  6d | [Negative Integer (32 bit)](#fixed-width-int)   | [32-bit unsigned integer, little endian] |
+|  6e | [Positive Integer (64 bit)](#fixed-width-int)   | [64-bit unsigned integer, little endian] |
+|  6f | [Negative Integer (64 bit)](#fixed-width-int)   | [64-bit unsigned integer, little endian] |
 |  70 | [Binary Float (16 bit)](#binary-floating-point) | [16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
 |  71 | [Binary Float (32 bit)](#binary-floating-point) | [[32-bit ieee754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), little endian] |
 |  72 | [Binary Float (64 bit)](#binary-floating-point) | [[64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian] |
@@ -285,7 +285,7 @@ Integers are encoded in three possible ways:
 
 Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
 
-#### Fixed Width
+#### Fixed Width Int
 
 Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field implies the sign of the integer.
 
@@ -293,7 +293,7 @@ Fixed width integers are stored as their absolute values in widths of 8, 16, 32,
 
 **Note**: Because the sign is encoded into the type field, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments, so care must be taken after decoding to ensure that the sign is not lost (the most common approach is to convert it to a floating point type).
 
-#### Variable width
+#### Variable width Int
 
 Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
