@@ -46,22 +46,20 @@ Contents
     - [Timestamp](#timestamp)
   - [Array Types](#array-types)
     - [Array Elements](#array-elements)
-      - [Element Sizes:](#element-sizes)
-    - [Short Form](#short-form)
-    - [Chunked Form](#chunked-form)
-      - [Chunk Header](#chunk-header)
-      - [Bit Array Chunks](#bit-array-chunks)
-      - [String-like Array Chunks](#string-like-array-chunks)
-      - [Zero Chunk](#zero-chunk)
-      - [Chunking Example:](#chunking-example)
-    - [String](#string)
-    - [Identifier](#identifier)
-    - [Resource Identifier](#resource-identifier)
-    - [Custom Types](#custom-types)
-    - [Typed Arrays](#typed-arrays)
-      - [Array Forms](#array-forms)
+    - [Array Forms](#array-forms)
+      - [Short Form](#short-form)
+      - [Chunked Form](#chunked-form)
+        - [Chunk Header](#chunk-header)
+        - [Bit Array Chunks](#bit-array-chunks)
+        - [String-like Array Chunks](#string-like-array-chunks)
+        - [Zero Chunk](#zero-chunk)
+        - [Chunking Example:](#chunking-example)
+    - [Supported Array Types](#supported-array-types)
+      - [String](#string)
+      - [Resource Identifier](#resource-identifier)
       - [Bit Array](#bit-array)
       - [Media](#media)
+      - [Custom Types](#custom-types)
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
@@ -72,6 +70,7 @@ Contents
     - [RESERVED](#reserved)
   - [Peudo-Objects](#peudo-objects)
     - [Marker](#marker)
+      - [Marker ID](#marker-id)
     - [Reference](#reference)
       - [Local Reference](#local-reference)
       - [Remote Reference](#remote-reference)
@@ -295,7 +294,7 @@ Fixed width integers are stored as their absolute values in widths of 8, 16, 32,
 
 #### Variable width Int
 
-Variable width integers are encoded as blocks of little endian ordered bytes with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
+Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
     [type] [length] [byte 1 (low)] ... [byte x (high)]
 
@@ -323,7 +322,7 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 
 ### Binary Floating Point
 
-Binary floating point values are stored in 32 or 64-bit ieee754 binary floating point format, or in 16-bit [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) format, in little endian byte order.
+Binary floating point values are stored in 32 or 64-bit [ieee754 binary floating point](https://en.wikipedia.org/wiki/IEEE_754) format, or in 16-bit [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) format, in little endian byte order.
 
 **Examples**:
 
@@ -336,7 +335,7 @@ Binary floating point values are stored in 32 or 64-bit ieee754 binary floating 
 
 A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format.
 
-**Note**: This is the only data type that is stored in **big endian** byte order (as required by [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
+**Note**: This is the only data type that is stored in **big endian** byte order ([as required by rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
 
 **Example**:
 
@@ -385,191 +384,13 @@ Array Types
 
 An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The array type determines how the data is to be interpreted, and the size of each element.
 
+
 ### Array Elements
 
 Array elements have a fixed size determined by the array type. Length fields in array chunks represent the number of *elements*, so for example a uin32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element).
 
-#### Element Sizes:
 
-| Array Type    | Element Size           | Byte Order    |
-| ------------- | ---------------------- | ------------- |
-| Int8          | 1 element per 1 byte   | -             |
-| Int16         | 1 element per 2 bytes  | Little Endian |
-| Int32         | 1 element per 4 bytes  | Little Endian |
-| Int64         | 1 element per 8 bytes  | Little Endian |
-| Uint8         | 1 element per 1 byte   | -             |
-| Uint16        | 1 element per 2 bytes  | Little Endian |
-| Uint32        | 1 element per 4 bytes  | Little Endian |
-| Uint64        | 1 element per 8 bytes  | Little Endian |
-| Float16       | 1 element per 2 bytes  | Little Endian |
-| Float32       | 1 element per 4 bytes  | Little Endian |
-| Float64       | 1 element per 8 bytes  | Little Endian |
-| UID           | 1 element per 16 bytes | Big Endian    |
-| Bit           | 8 elements per 1 byte  | Little Endian |
-| String        | 1 element per 1 byte   | -             |
-| Resource ID   | 1 element per 1 byte   | -             |
-| Media         | 1 element per 1 byte   | -             |
-| Custom Type   | 1 element per 1 byte   | -             |
-
-
-### Short Form
-
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Most array types have both short and chunked forms.
-
-**Examples**:
-
- * `[83 61 62 63]` = the string "abc" (short form - length is part of the type field)
- * `[90 06 61 62 63]` = the string "abc" (chunked form - length is a separate field)
-
-
-### Chunked Form
-
-In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
-
-    [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
-
-There is no limit to the number of chunks in an array, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
-
-#### Chunk Header
-
-All array chunks are preceded by a header containing the chunk length and a continuation bit (the low bit of the fully decoded header). The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). Chunk processing continues until the end of a chunk with a continuation bit of 0.
-
-| Field        | Bits | Description                          |
-| ------------ | ---- | ------------------------------------ |
-| Length       |   ∞  | Chunk length (element count)         |
-| Continuation |   1  | If 1, another chunk follows this one |
-
-**Examples**:
-
- * `[03]` = Chunk length 1 with the continuation bit set
- * `[80 02]` = Chunk length 256 with the continuation bit cleared
-
-#### Bit Array Chunks
-
-Bit array chunks with continuation bit = 1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on a byte boundary. Only the final chunk (continuation=0) of a bit array may be of arbitrary size.
-
-#### String-like Array Chunks
-
-Array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks). Decoders **MAY** validate string data on every chunk received, which will fail if a chunk ends on an incomplete character.
-
-#### Zero Chunk
-
-The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for C-style strings. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support C-style string implementations.
-
-    [90 20 m i s u n d e r s t a n d i n g ...]
-
-vs
-
-    [90 21 m i s u n d e r s t a n d i n g 00 ...]
-
-Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
-
-If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
-
-    ...                          // buffer = [84 t e s t 6a 10 a0 ...]
-    case string (length 4):      // 0x84 = string (length 4)
-      cachedType = buffer[5]     // 0x6a (16-bit positive int type)
-      buffer[5] = 0              // buffer = [84 t e s t 00 10 a0 ...]
-      notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
-      next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
-
-#### Chunking Example:
-
-    [1d] (14 elements of data) [08] (4 elements of data)
-
-In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
-
-
-### String
-
-Strings are encoded as UTF-8.
-
-The general string encoding form is:
-
-    [90] [chunk header] [Octet 0] ... [Octet (Length-1)]
-
-Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
-
-    [80]
-    [81] [octet 0]
-    [82] [octet 0] [octet 1]
-    ...
-
-**Examples**:
-
-    [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
-    [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
-    [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
-
-
-### Identifier
-
-Since an identifier is always part of another structure, it doesn't have its own type field. Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
-
-| Field        | Bits | Value             |
-| ------------ | ---- | ----------------- |
-| RESERVED     |   1  | 0                 |
-| Length       |   7  | 1-127             |
-| UTF-8 Data   |   ∞  | UTF-8 string data |
-
-**Examples**:
-
-    [07 73 6f 6d 65 5f 69 64] = some_id
-    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
-
-
-### Resource Identifier
-
-Resource identifiers are encoded like a long-form string, but with type `[91]`.
-
-**Example**:
-
-    [91 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
-     2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
-     71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
-     6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
-    = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
-
-
-### Custom Types
-
-Custom types are encoded as binary data with the array type 0x92.
-
-**Example**:
-
-    [92 12 01 f6 28 3c 40 00 00 40 40]
-    = binary data representing a fictional custom "cplx" struct
-      {
-          type:uint8 = 1
-          real:float32 = 2.94
-          imag:float32 = 3.0
-      }
-
-
-### Typed Arrays
-
-The following types are supported:
-
-| Array Type                | Element Size (bits) |
-| ------------------------- | ------------------- |
-| Unsigned int              | 8                   |
-| Unsigned int              | 16                  |
-| Unsigned int              | 32                  |
-| Unsigned int              | 64                  |
-| 2's complement signed int | 8                   |
-| 2's complement signed int | 16                  |
-| 2's complement signed int | 32                  |
-| 2's complement signed int | 64                  |
-| Bfloat16                  | 16                  |
-| IEEE754 binary float      | 32                  |
-| IEEE754 binary float      | 64                  |
-| RFC4122 UUID              | 128                 |
-| Bit (0=false, 1=true)     | 1                   |
-| Media                     | 8                   |
-
-Element byte ordering is according to the element type (big endian for UUID, little endian for everything else).
-
-#### Array Forms
+### Array Forms
 
 All arrays have a [chunked form](#chunked-form), and many also have a [short form](#short-form).
 
@@ -616,9 +437,132 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
  * `[95 04 01 02]` = unsigned 8-bit array with elements 1, 2
  * `[94 12 01 00 02 00]` = unsigned 16-bit array with elements 1, 2
 
+#### Short Form
+
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Most array types have both short and chunked forms.
+
+**Examples**:
+
+ * `[83 61 62 63]` = the string "abc" (short form - length is part of the type field)
+ * `[90 06 61 62 63]` = the string "abc" (chunked form - length is a separate field)
+
+
+#### Chunked Form
+
+In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
+
+    [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
+
+There is no limit to the number of chunks in an array, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
+
+##### Chunk Header
+
+All array chunks are preceded by a header containing the chunk length and a continuation bit (the low bit of the fully decoded header). The header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128). Chunk processing continues until the end of a chunk with a continuation bit of 0.
+
+| Field        | Bits | Description                          |
+| ------------ | ---- | ------------------------------------ |
+| Length       |   ∞  | Chunk length (element count)         |
+| Continuation |   1  | If 1, another chunk follows this one |
+
+**Examples**:
+
+ * `[03]` = Chunk length 1 with the continuation bit set
+ * `[80 02]` = Chunk length 256 with the continuation bit cleared
+
+##### Bit Array Chunks
+
+Bit array chunks with continuation bit = 1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on a byte boundary. Only the final chunk (continuation=0) of a bit array may be of arbitrary size.
+
+##### String-like Array Chunks
+
+Array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks). Decoders **MAY** validate string data on every chunk received, which will fail if a chunk ends on an incomplete character.
+
+##### Zero Chunk
+
+The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for C-style strings. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support C-style string implementations.
+
+    [90 20 m i s u n d e r s t a n d i n g ...]
+
+vs
+
+    [90 21 m i s u n d e r s t a n d i n g 00 ...]
+
+Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
+
+If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
+
+    ...                          // buffer = [84 t e s t 6a 10 a0 ...]
+    case string (length 4):      // 0x84 = string (length 4)
+      cachedType = buffer[5]     // 0x6a (16-bit positive int type)
+      buffer[5] = 0              // buffer = [84 t e s t 00 10 a0 ...]
+      notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
+      next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
+
+##### Chunking Example:
+
+    [1d] (14 elements of data) [08] (4 elements of data)
+
+In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
+
+
+### Supported Array Types
+
+| Array Type                                                                                   | Size (bits) | Byte Order    |
+| -------------------------------------------------------------------------------------------- | ----------- | ------------- |
+| Unsigned int                                                                                 | 8           | -             |
+| Unsigned int                                                                                 | 16          | Little Endian |
+| Unsigned int                                                                                 | 32          | Little Endian |
+| Unsigned int                                                                                 | 64          | Little Endian |
+| 2's complement signed int                                                                    | 8           | -             |
+| 2's complement signed int                                                                    | 16          | Little Endian |
+| 2's complement signed int                                                                    | 32          | Little Endian |
+| 2's complement signed int                                                                    | 64          | Little Endian |
+| [Bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)                     | 16          | Little Endian |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) | 32          | Little Endian |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) | 64          | Little Endian |
+| [RFC4122 UUID](https://tools.ietf.org/html/rfc4122#section-4.1.2)                            | 128         | Big Endian    |
+| [String](#string)                                                                            | 8           | -             |
+| [Resource ID](#resource-identifier)                                                          | 8           | -             |
+| [Bit](#bit-array)                                                                            | 1           | Little Endian |
+| [Media](#media)                                                                              | 8           | -             |
+| [Custom Type](#custom-types)                                                                 | 8           | -             |
+
+#### String
+
+Strings are encoded as UTF-8.
+
+The general string encoding form is:
+
+    [90] [chunk header] [Octet 0] ... [Octet (Length-1)]
+
+Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
+
+    [80]
+    [81] [octet 0]
+    [82] [octet 0] [octet 1]
+    ...
+
+**Examples**:
+
+    [8b 4d 61 69 6e 20 53 74 72 65 65 74] = Main Street
+    [8d 52 c3 b6 64 65 6c 73 74 72 61 c3 9f 65] = Rödelstraße
+    [90 2a e8 a6 9a e7 8e 8b e5 b1 b1 e3 80 80 e6 97 a5 e6 b3 b0 e5 af ba] = 覚王山　日泰寺
+
+#### Resource Identifier
+
+Resource identifiers are encoded like a long-form string, but with type `[91]`.
+
+**Example**:
+
+    [91 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
+     2e 65 78 61 6d 70 6c 65 2e 63 6f 6d 3a 31 32 33 2f 66 6f 72 75 6d 2f
+     71 75 65 73 74 69 6f 6e 73 2f 3f 74 61 67 3d 6e 65 74 77 6f 72 6b 69
+     6e 67 26 6f 72 64 65 72 3d 6e 65 77 65 73 74 23 74 6f 70]
+    = https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
+
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -667,6 +611,20 @@ The media in this example is the shell script (media type "application/x-sh"):
 
 echo hello world
 ```
+
+#### Custom Types
+
+Custom types are encoded as binary data with the array type 0x92.
+
+**Example**:
+
+    [92 12 01 f6 28 3c 40 00 00 40 40]
+    = binary data representing a fictional custom "cplx" struct
+      {
+          type:uint8 = 1
+          real:float32 = 2.94
+          imag:float32 = 3.0
+      }
 
 
 
@@ -744,7 +702,7 @@ Peudo-Objects
 
 ### Marker
 
-A marker begins with the marker type (0x97), followed by a marker ID (encoded as an [identifier](#identifier)), and then the marked object.
+A marker begins with the marker type (0x97), followed by a [marker ID](#marker-id), and then the marked object.
 
     [97 (length) (ID string data) (marked object)]
 
@@ -754,12 +712,27 @@ A marker begins with the marker type (0x97), followed by a marker ID (encoded as
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
 
+#### Marker ID
+
+Marker IDs begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+
+| Field        | Bits | Value             |
+| ------------ | ---- | ----------------- |
+| RESERVED     |   1  | 0                 |
+| Length       |   7  | 1-127             |
+| UTF-8 Data   |   ∞  | UTF-8 string data |
+
+**Examples**:
+
+    [07 73 6f 6d 65 5f 69 64] = some_id
+    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
+
 
 ### Reference
 
 #### Local Reference
 
-A local reference begins with the reference type (0x98), followed by a marker ID.
+A local reference begins with the reference type (0x98), followed by a [marker ID](#marker-id).
 
     [98 (length) (ID string data)]
 
