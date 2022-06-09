@@ -374,7 +374,8 @@ Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1 123e4567-e89b-12d3-a456-426655440000
+c1
+123e4567-e89b-12d3-a456-426655440000
 ```
 
 
@@ -778,7 +779,8 @@ By default, a list is ordered and allows duplicate values. Different rules **CAN
 **Example**:
 
 ```cte
-c1 [
+c1
+[
     1
     "two"
     3.1
@@ -809,7 +811,8 @@ Only the following types are allowed as keys in map-like containers:
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1 {
+c1
+{
     1 = "alpha"
     2 = "beta"
     "a map" = {"one"=1 "two"=2}
@@ -835,7 +838,8 @@ Because graphs can take so many forms, there is no default interpretation for ed
 Edges can describe many kinds of graphs, even [RDF-style](https://en.wikipedia.org/wiki/Resource_Description_Framework) edges of a semantic graph (where the source, description and destination represent the subject, predicate and object of the semantic relationships):
 
 ```cte
-c1 [
+c1
+[
     @(
         @"https://springfield.gov/people#homer_simpson"
         @"https://example.org/wife"
@@ -854,7 +858,8 @@ From the above data, we understand that Homer Simpson's wife is Marge Simpson, a
 More complex graph data can be succinctly represented by mixing in other CE features such as [references](#reference), [lists](#list), and [maps](#map).
 
 ```cte
-c1 {
+c1
+{
     @"https://springfield.gov/people#homer_simpson" = {
         @"https://mypredicates.org/wife" = @"https://springfield.gov/people#marge_simpson"
         @"https://mypredicates.org/regrets" = [
@@ -984,7 +989,8 @@ A marker assigns a [marker identifier](#marker-identifier) to another object, wh
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
-c1 [
+c1
+[
     &remember_me:"Remember this string"
     &1:{"a" = 1}
 ]
@@ -1029,7 +1035,8 @@ When support is disabled, a recursive local reference is a [structural error](#s
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
-c1 {
+c1
+{
     "some object" = {
         "some string" = &my_string_ref:"This is my string"
         "some map" = &my_map_ref:{
@@ -1060,7 +1067,8 @@ A remote reference refers to an object in another document. It acts like a [reso
 
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
-c1 {
+c1
+{
     "ref to doc on filesystem" = $"some_document.cbe"
     "ref to marked obj in local doc" = $"some_document.cbe#widgets" // Refers to the marked object "widgets" in document some_document.cbe
     "ref to remote doc" = $"https://somewhere.com/my_document.cbe"
