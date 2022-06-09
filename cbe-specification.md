@@ -193,8 +193,8 @@ The types are structured such that the most commonly used types and values encod
 |  92 | [Custom Type](#custom-types)                    | [chunk length] [data] ...                |
 |  93 | [RESERVED](#reserved)                           |                                          |
 |  94 | [Plane 2](#type-field-plane-2)                  | (See [Plane 2](#type-field-plane-2))     |
-|  95 | [Array: Unsigned Int8](#element-sizes)          | [chunk length] [8-bit elements] ...      |
-|  96 | [Array: Bit](#element-sizes)                    | [chunk length] [1-bit elements] ...      |
+|  95 | [Array: Unsigned Int8](#supported-array-types)  | [chunk length] [8-bit elements] ...      |
+|  96 | [Array: Bit](#supported-array-types)            | [chunk length] [1-bit elements] ...      |
 |  97 | [Marker](#marker)                               | [length] [UTF-8 data]                    |
 |  98 | [Reference](#reference)                         | [length] [UTF-8 data]                    |
 |  99 | [Date](#date)                                   | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]            |
@@ -210,56 +210,56 @@ The types are structured such that the most commonly used types and values encod
 
 Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e1]`.
 
-| Hex | Type                                    | Elems | Payload                                   |
-| --- | --------------------------------------- | ----- | ----------------------------------------- |
-|  00 | [Array: Signed Int8](#element-sizes)    |    0  | [8-bit element] x0                        |
-| ... | ...                                     |  ...  | ...                                       |
-|  0f | [Array: Signed Int8](#element-sizes)    |   15  | [8-bit element] x15                       |
-|  10 | [Array: Unsigned Int16](#element-sizes) |    0  | [16-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  1f | [Array: Unsigned Int16](#element-sizes) |   15  | [16-bit little endian element] x15        |
-|  20 | [Array: Signed Int16](#element-sizes)   |    0  | [16-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  2f | [Array: Signed Int16](#element-sizes)   |   15  | [16-bit little endian element] x15        |
-|  30 | [Array: Unsigned Int32](#element-sizes) |    0  | [32-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  3f | [Array: Unsigned Int32](#element-sizes) |   15  | [32-bit little endian element] x15        |
-|  40 | [Array: Signed Int32](#element-sizes)   |    0  | [32-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  4f | [Array: Signed Int32](#element-sizes)   |   15  | [32-bit little endian element] x15        |
-|  50 | [Array: Unsigned Int64](#element-sizes) |    0  | [64-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  5f | [Array: Unsigned Int64](#element-sizes) |   15  | [64-bit little endian element] x15        |
-|  60 | [Array: Signed Int64](#element-sizes)   |    0  | [64-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  6f | [Array: Signed Int64](#element-sizes)   |   15  | [64-bit little endian element] x15        |
-|  70 | [Array: BFloat16](#element-sizes)       |    0  | [16-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  7f | [Array: BFloat16](#element-sizes)       |   15  | [16-bit little endian element] x15        |
-|  80 | [Array: Binary Float32](#element-sizes) |    0  | [32-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  8f | [Array: Binary Float32](#element-sizes) |   15  | [32-bit little endian element] x15        |
-|  90 | [Array: Binary Float64](#element-sizes) |    0  | [64-bit little endian element] x0         |
-| ... | ...                                     |  ...  | ...                                       |
-|  9f | [Array: Bin Float64](#element-sizes)    |   15  | [64-bit little endian element] x15        |
-|  a0 | [Array: UID](#element-sizes)            |    0  | [128-bit big endian element] x0           |
-| ... | ...                                     |  ...  | ...                                       |
-|  af | [Array: UID](#element-sizes)            |   15  | [128-bit big endian element] x15          |
-| ... | [RESERVED](#reserved)                   |       |                                           |
-|  e0 | [Remote Reference](#remote-reference)   |    1  | [resource id]                             |
-|  e1 | [Media](#media)                         |    ∞  | [media type] [chunk length] [data] ...    |
-| ... | [RESERVED](#reserved)                   |       |                                           |
-|  f5 | [Array: UID](#element-sizes)            |    ∞  | [chunk length] [128-bit B-E elements] ... |
-|  f6 | [Array: Binary Float64](#element-sizes) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  f7 | [Array: Binary Float32](#element-sizes) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  f8 | [Array: BFloat16](#element-sizes)       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  f9 | [Array: Signed Int64](#element-sizes)   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  fa | [Array: Unsigned Int64](#element-sizes) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  fb | [Array: Signed Int32](#element-sizes)   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  fc | [Array: Unsigned Int32](#element-sizes) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  fd | [Array: Signed Int16](#element-sizes)   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  fe | [Array: Unsigned Int16](#element-sizes) |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  ff | [Array: Signed Int8](#element-sizes)    |    ∞  | [chunk length] [8-bit elements] ...       |
+| Hex | Type                                            | Elems | Payload                                   |
+| --- | ----------------------------------------------- | ----- | ----------------------------------------- |
+|  00 | [Array: Signed Int8](#supported-array-types)    |    0  | [8-bit element] x0                        |
+| ... | ...                                             |  ...  | ...                                       |
+|  0f | [Array: Signed Int8](#supported-array-types)    |   15  | [8-bit element] x15                       |
+|  10 | [Array: Unsigned Int16](#supported-array-types) |    0  | [16-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  1f | [Array: Unsigned Int16](#supported-array-types) |   15  | [16-bit little endian element] x15        |
+|  20 | [Array: Signed Int16](#supported-array-types)   |    0  | [16-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  2f | [Array: Signed Int16](#supported-array-types)   |   15  | [16-bit little endian element] x15        |
+|  30 | [Array: Unsigned Int32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  3f | [Array: Unsigned Int32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
+|  40 | [Array: Signed Int32](#supported-array-types)   |    0  | [32-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  4f | [Array: Signed Int32](#supported-array-types)   |   15  | [32-bit little endian element] x15        |
+|  50 | [Array: Unsigned Int64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  5f | [Array: Unsigned Int64](#supported-array-types) |   15  | [64-bit little endian element] x15        |
+|  60 | [Array: Signed Int64](#supported-array-types)   |    0  | [64-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  6f | [Array: Signed Int64](#supported-array-types)   |   15  | [64-bit little endian element] x15        |
+|  70 | [Array: BFloat16](#supported-array-types)       |    0  | [16-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  7f | [Array: BFloat16](#supported-array-types)       |   15  | [16-bit little endian element] x15        |
+|  80 | [Array: Binary Float32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  8f | [Array: Binary Float32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
+|  90 | [Array: Binary Float64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+| ... | ...                                             |  ...  | ...                                       |
+|  9f | [Array: Bin Float64](#supported-array-types)    |   15  | [64-bit little endian element] x15        |
+|  a0 | [Array: UID](#supported-array-types)            |    0  | [128-bit big endian element] x0           |
+| ... | ...                                             |  ...  | ...                                       |
+|  af | [Array: UID](#supported-array-types)            |   15  | [128-bit big endian element] x15          |
+| ... | [RESERVED](#reserved)                           |       |                                           |
+|  e0 | [Remote Reference](#remote-reference)           |    1  | [resource id]                             |
+|  e1 | [Media](#media)                                 |    ∞  | [media type] [chunk length] [data] ...    |
+| ... | [RESERVED](#reserved)                           |       |                                           |
+|  f5 | [Array: UID](#supported-array-types)            |    ∞  | [chunk length] [128-bit B-E elements] ... |
+|  f6 | [Array: Binary Float64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  f7 | [Array: Binary Float32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  f8 | [Array: BFloat16](#supported-array-types)       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  f9 | [Array: Signed Int64](#supported-array-types)   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  fa | [Array: Unsigned Int64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  fb | [Array: Signed Int32](#supported-array-types)   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  fc | [Array: Unsigned Int32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  fd | [Array: Signed Int16](#supported-array-types)   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  fe | [Array: Unsigned Int16](#supported-array-types) |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  ff | [Array: Signed Int8](#supported-array-types)    |    ∞  | [chunk length] [8-bit elements] ...       |
 
 
 
