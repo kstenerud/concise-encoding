@@ -53,7 +53,6 @@ Contents
         - [Bit Array Chunks](#bit-array-chunks)
         - [String-like Array Chunks](#string-like-array-chunks)
         - [Zero Chunk](#zero-chunk)
-        - [Chunking Example:](#chunking-example)
     - [Supported Array Types](#supported-array-types)
       - [String](#string)
       - [Resource Identifier](#resource-identifier)
@@ -449,11 +448,17 @@ Short form arrays have their length encoded in the lower 4 bits of the type fiel
 
 #### Chunked Form
 
-In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own length field representing the number of elements in the chunk:
+In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own [header](#chunk-header) containing the number of elements in the chunk and a continuation bit that tells if more chunks follow the current one:
 
-    [chunk-length-a] [chunk-elements-a] [chunk-length-b] [chunk-elements-b] ...
+    [chunk-header-a] [chunk-elements-a] [chunk-header-b] [chunk-elements-b] ...
 
-There is no limit to the number of chunks in an array, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
+An array **CAN** contain any number of chunks, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
+
+**Example**:
+
+    [1d] (14 elements of data) [08] (4 elements of data)
+
+In this case, the first chunk of the array has 14 elements and has a continuation bit of 1. The second chunk has 4 elements and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
 
 ##### Chunk Header
 
@@ -471,7 +476,7 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 ##### Bit Array Chunks
 
-Bit array chunks with continuation bit = 1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on a byte boundary. Only the final chunk (continuation=0) of a bit array may be of arbitrary size.
+Bit array chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size.
 
 ##### String-like Array Chunks
 
@@ -497,12 +502,6 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
       buffer[5] = 0              // buffer = [84 t e s t 00 10 a0 ...]
       notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
       next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
-
-##### Chunking Example:
-
-    [1d] (14 elements of data) [08] (4 elements of data)
-
-In this case, the first chunk is 14 elements long and has a continuation bit of 1. The second chunk has 4 elements of data and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
 
 
 ### Supported Array Types
@@ -550,7 +549,7 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 #### Resource Identifier
 
-Resource identifiers are encoded like a long-form string, but with type `[91]`.
+Resource identifiers are encoded like a long-form [string](#string), but with type `[91]`.
 
 **Example**:
 
@@ -775,7 +774,7 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 Empty Document
 --------------
 
-An empty document in CBE is signified by using the [Null](#null) type the top-level object:
+An empty document in CBE is signified by using [null](#null) type the top-level object:
 
     [81 01 7e]
 

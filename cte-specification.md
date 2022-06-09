@@ -156,7 +156,7 @@ All characters in a CTE document **MUST** be [text-safe](#text-safety). Validati
 
 A CTE document **MUST** be editable by a human. This means that it **MUST** contain only valid UTF-8 characters and sequences that can actually be viewed and edited in most UTF-8 capable text editors without potentially losing information. Such characters are referred to as "text safe" characters.
 
-The following table lists the text safety of Unicode characters based on category or character. More specific categories or characters override the text safety of the broader categories:
+The following table lists the text safety of Unicode characters based on [general category](https://unicode.org/glossary/#general_category) or character. More specific categories or characters override the text safety of the broader categories:
 
 | Category or Character | Text Safe? |
 | --------------------- | ---------- |
@@ -172,7 +172,7 @@ The following table lists the text safety of Unicode characters based on categor
 | LF (u+000a)           |     Y      |
 | CR (u+000d)           |     Y      |
 
-Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows [escape sequences](#escape-sequences), such characters **MUST** be represented as [escape sequences](#escape-sequences) in a CTE document.
+Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows [escape sequences](#escape-sequences), such characters **MUST** be represented as [escape sequences](#escape-sequences).
 
 Unassigned, reserved, and invalid codepoints **MUST NOT** be present at all, even in escaped form.
 
@@ -185,12 +185,15 @@ Lookalike characters are characters that look confusingly similar to [string-lik
 | -------------- | ------------------- |
 | `"A” string"`  | `"A\+201d. string"` |
 
-The following is (as of 2021-03-01) a complete list of lookalike [Unicode characters](https://unicode.org/charts). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
+The unicode.org site provides an online utility to find confusable characters.
 
-| Character | Is delimiter       | Lookalikes (codepoints)                                                |
-| --------- | ------------------ | ---------------------------------------------------------------------- |
-| `"`       | String terminator  | 02ba, 02ee, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
-| `\`       | Escape initiator   | 2216, 27cd, 29f5, 29f9, 3035, fe68, ff3c                               |
+
+The following is (as of 2022-06-09) a complete list of [lookalike Unicode characters](https://util.unicode.org/UnicodeJsps/confusables.jsp). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
+
+| Character                                                                | Lookalikes (codepoints)                                                |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [`"`](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) | 02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
+| [`\`](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) | 2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b |
 
 
 ### Line Endings
@@ -545,23 +548,23 @@ When decoding a string-like array type, all [escape sequences](#escape-sequences
 
 #### Escape Sequences
 
-Within [string-like arrays](#string-like-array-encoding), escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. `\` acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+Within [string-like arrays](#string-like-array-encoding), escape sequences **MAY** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
 
-| Escape Type Character | Interpretation                          |
-| --------------------- | --------------------------------------- |
-| `t`                   | horizontal tab (u+0009)                 |
-| `n`                   | linefeed (u+000a)                       |
-| `r`                   | carriage return (u+000d)                |
-| `"`                   | double quote (u+0022)                   |
-| `*`                   | asterisk (u+002a)                       |
-| `/`                   | slash (u+002f)                          |
-| `\`                   | backslash (u+005c)                      |
-| `_`                   | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
-| `-`                   | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
-| u+000a                | [continuation](#continuation)           |
-| u+000d                | [continuation](#continuation)           |
-| `+`                   | [Unicode codepoint](#unicode-codepoint) |
-| `.`                   | [verbatim sequence](#verbatim-sequence) |
+| Escape Type Character    | Interpretation                          |
+| ------------------------ | --------------------------------------- |
+| u+0074 (`t`)             | horizontal tab (u+0009)                 |
+| u+006e (`n`)             | linefeed (u+000a)                       |
+| u+0072 (`r`)             | carriage return (u+000d)                |
+| u+0022 (`"`)             | double quote (u+0022)                   |
+| u+002a (`*`)             | asterisk (u+002a)                       |
+| u+002f (`/`)             | slash (u+002f)                          |
+| u+005c (`\`)             | backslash (u+005c)                      |
+| u+005f (`_`)             | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
+| u+002d (`-`)             | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
+| u+000a (linefeed)        | [continuation](#continuation)           |
+| u+000d (carriage return) | [continuation](#continuation)           |
+| u+002b (`+`)             | [Unicode codepoint](#unicode-codepoint) |
+| u+002e (`.`)             | [verbatim sequence](#verbatim-sequence) |
 
 Escape sequences **MUST** be converted before any other processing occurs during the decode process.
 
@@ -611,6 +614,8 @@ A Verbatim escape sequence works similarly to a "here" document in Bash. It's co
  * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator).
+
+**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** check that a LF follows. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
 
@@ -1094,14 +1099,14 @@ c1
 
 ### Padding
 
-Padding is not supported in CTE. Skip all padding when encoding to CTE.
+Padding is not supported in CTE. An encoder **MUST** skip all padding when converting CBE to CTE.
 
 
 
 Empty Document
 --------------
 
-An empty document in CTE is signified by using the [Null](#null) type as the top-level object:
+An empty document in CTE is signified by using [null](#null) type as the top-level object:
 
 ```cte
 c1
