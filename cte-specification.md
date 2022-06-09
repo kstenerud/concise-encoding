@@ -190,10 +190,10 @@ The unicode.org site provides an online utility to find confusable characters.
 
 The following is (as of 2022-06-09) a complete list of [lookalike Unicode characters](https://util.unicode.org/UnicodeJsps/confusables.jsp). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
 
-| Character                                                                | Lookalikes (codepoints)                                                |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| [`"`](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) | 02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02 |
-| [`\`](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) | 2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b |
+| Character | Lookalikes (codepoints)                                                |
+| --------- | ---------------------------------------------------------------------- |
+| `"` | [02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) |
+| `\` | [2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
 
 
 ### Line Endings
