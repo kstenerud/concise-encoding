@@ -643,8 +643,6 @@ The following element types are supported in typed arrays. For other types, use 
 | IEEE754 Binary Float | 32, 64               |
 | UID                  | 128                  |
 
-Array elements in [CTE](cte-specification.md) **CAN** be written using any of the representations allowed for the specified type and size.
-
 **Examples (in [CTE](cte-specification.md))**:
 
 ```cte
