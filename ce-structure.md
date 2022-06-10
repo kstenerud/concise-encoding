@@ -60,7 +60,7 @@ Contents
   - [Array Types](#array-types)
     - [String-like Arrays](#string-like-arrays)
       - [String Character Replacement](#string-character-replacement)
-      - [NUL](#nul)
+      - [NUL Character](#nul-character)
       - [Line Endings](#line-endings)
       - [String](#string)
       - [Resource Identifier](#resource-identifier)
@@ -593,7 +593,7 @@ String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences wh
 
 Special processing is required to replace escape sequences in string-like arrays in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur *before* any validation takes place.
 
-#### NUL
+#### NUL Character
 
 The NUL character (U+0000) is allowed in string-like arrays in documents, but because it is problematic on so many platforms, Concise Encoding imposes a special rule:
 
@@ -1206,7 +1206,7 @@ Examples of widely used and largely standardized conversion algorithms:
 It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
 
  * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
- * Platforms might not be able to handle the NUL character in strings. Please see the [NUL](#nul) section for how to deal with this.
+ * Platforms might not be able to handle the NUL character in strings. Please see the [NUL character](#nul-character) section for how to deal with this.
  * Platforms might not support UTF-8 encoding.
  * Platforms might have limitations on the size of numeric types.
  * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
@@ -1477,7 +1477,7 @@ This section collects in one place all required **OPTIONS** listed elsewhere in 
 
 | Option                                | Default   | Section                                       |
 | ------------------------------------- | --------- | --------------------------------------------- |
-| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul)                                   |
+| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                         |
 | Follow remote references              | disabled  | [Remote Reference](#remote-reference)         |
 | Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)       |
 | Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)       |
