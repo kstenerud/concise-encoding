@@ -66,10 +66,10 @@ Contents
     - [Node](#node)
   - [Other Types](#other-types)
     - [Null](#null)
+    - [Identifier](#identifier)
     - [RESERVED](#reserved)
   - [Peudo-Objects](#peudo-objects)
     - [Marker](#marker)
-      - [Marker ID](#marker-id)
     - [Reference](#reference)
       - [Local Reference](#local-reference)
       - [Remote Reference](#remote-reference)
@@ -164,7 +164,7 @@ The types are structured such that the most commonly used types and values encod
 |  76 | [RESERVED](#reserved)                           |                                          |
 |  77 | [Edge](#edge)                                   | Source, Description, Destination         |
 |  78 | [Node](#node)                                   | Value, Child Node ... End of Container   |
-|  79 | [Map](#map)                                     | (Key, value) ... End of Container        |
+|  79 | [Map](#map)                                     | (Key, Value) ... End of Container        |
 |  7a | [List](#list)                                   | Object ... End of Container              |
 |  7b | [End of Container](#container-types)            |                                          |
 |  7c | [Boolean False](#boolean)                       |                                          |
@@ -690,6 +690,26 @@ Other Types
 Null is encoded as `[7e]`.
 
 
+### Identifier
+
+Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+
+The length field **CANNOT** be 0.
+
+| Field        | Bits | Value             |
+| ------------ | ---- | ----------------- |
+| RESERVED     |   1  | 0                 |
+| Length       |   7  | 1-127             |
+| UTF-8 Data   |   ∞  | UTF-8 string data |
+
+**Note**: Identifiers are **not** standalone objects. They are always part of another object.
+
+**Examples**:
+
+    [07 73 6f 6d 65 5f 69 64] = some_id
+    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
+
+
 ### RESERVED
 
 This type is reserved for future expansion of the format, and **MUST NOT** be used.
@@ -701,7 +721,7 @@ Peudo-Objects
 
 ### Marker
 
-A marker begins with the marker type (0x97), followed by a [marker ID](#marker-id), and then the marked object.
+A marker begins with the marker type (0x97), followed by a marker [identifier](#identifier), and then the marked object.
 
     [97 (length) (ID string data) (marked object)]
 
@@ -711,27 +731,11 @@ A marker begins with the marker type (0x97), followed by a [marker ID](#marker-i
      65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
     = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
 
-#### Marker ID
-
-Marker IDs begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
-
-| Field        | Bits | Value             |
-| ------------ | ---- | ----------------- |
-| RESERVED     |   1  | 0                 |
-| Length       |   7  | 1-127             |
-| UTF-8 Data   |   ∞  | UTF-8 string data |
-
-**Examples**:
-
-    [07 73 6f 6d 65 5f 69 64] = some_id
-    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
-
-
 ### Reference
 
 #### Local Reference
 
-A local reference begins with the reference type (0x98), followed by a [marker ID](#marker-id).
+A local reference begins with the reference type (0x98), followed by a marker [identifier]](#identifier).
 
     [98 (length) (ID string data)]
 

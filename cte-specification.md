@@ -977,7 +977,7 @@ Pseudo-Objects
 A marker sequence consists of the following, with no whitespace in between:
 
  * `&` (the marker initiator)
- * A [marker ID](ce-structure.md#marker-identifier)
+ * A marker [identifier](ce-structure.md#identifier)
  * `:` (the marker separator)
  * The marked value
 
@@ -998,7 +998,7 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 #### Local Reference
 
-A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a [marker ID](ce-structure.md#marker-identifier) that has been defined elsewhere in the current document.
+A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier]](ce-structure.md#identifier) that has been defined elsewhere in the current document.
 
 **Example**:
 
@@ -1121,7 +1121,7 @@ Letter Case
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
  * [string-like arrays](#string-like-array-encoding) and comments **CAN** contain uppercase characters.
- * [Marker identifiers](ce-structure.md#marker-identifier) **CAN** contain uppercase characters.
+ * [Identifiers](ce-structure.md#identifier) **CAN** contain uppercase characters.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
 For the above situations, a CTE encoder **MUST** preserve letter case. In all other situations, a CTE encoder **MUST** convert to lower case.
@@ -1174,7 +1174,7 @@ Examples:
 
  * Before the [version specifier](#version-specifier).
  * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are invalid).
- * Between a [marker ID](ce-structure.md#marker-identifier) and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
+ * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
 

@@ -80,9 +80,10 @@ Contents
     - [Node](#node)
   - [Other Types](#other-types)
     - [Null](#null)
+    - [Identifier](#identifier)
+      - [Identifier Rules](#identifier-rules)
   - [Pseudo-Objects](#pseudo-objects)
     - [Marker](#marker)
-      - [Marker Identifier](#marker-identifier)
     - [Reference](#reference)
       - [Local Reference](#local-reference)
         - [Recursive References](#recursive-references)
@@ -963,6 +964,23 @@ Some uses for null in common operations:
 | Fetch     | From client: Match records where this field is not present.             |
 
 
+### Identifier
+
+An identifier uniquely identifies an instance of a particular type in the current document so that it can be referenced elsewhere. It is always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
+
+Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example a document cannot contain two [markers](#marker) with ID "a".
+
+#### Identifier Rules
+
+ * It **MUST** be a valid UTF-8 string.
+ * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), as well as the following symbol characters:
+   - `_` (underscore)
+   - `-` (dash)
+   - `.` (period)
+ * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
+ * Comparisons are **case insensitive**.
+
+
 
 Pseudo-Objects
 --------------
@@ -976,13 +994,13 @@ Pseudo-objects **CAN** be placed anywhere a full object can be placed, except in
 
 ### Marker
 
-A marker assigns a [marker identifier](#marker-identifier) to another object, which is then [referenceable](#reference) from another part of the document (or from a different document).
+A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which is then [referenceable](#reference) from anywhere the document (or from a different document).
 
-    [marker id] [marked object]
+    [marker identifier] [marked object]
 
  * Markers **CANNOT** stand-in for real objects.
  * Markers **CANNOT** mark other pseudo-objects, invisible objects, or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
- * The [marker identifier](#marker-identifier) used to mark the object **MUST** be unique within the current document.
+ * Marker [identifiers](#identifier) **MUST** be unique to all markers in the current document.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -996,19 +1014,6 @@ c1
 
 The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
 
-#### Marker Identifier
-
-A marker identifier uniquely identifies the marked object in the current document so that it can be [referenced](#reference) elsewhere. It is an integral part of the marker pseudo-object, and thus **CANNOT** be [marked](#marker) or be preceded by other objects, including [pseudo-objects](#pseudo-objects) and [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
-
- * It **MUST** be a valid UTF-8 string.
- * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
-   - `_` (underscore)
-   - `-` (dash)
-   - `.` (period)
- * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
- * Comparisons are **case insensitive**.
- * It **CANNOT** be a [reference](#reference).
-
 
 ### Reference
 
@@ -1019,7 +1024,7 @@ A reference acts as a stand-in for another object in the current document or ano
 
 #### Local Reference
 
-A local reference contains the [marker identifier](#marker-identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
+A local reference contains the marker [identifier](#identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
@@ -1059,7 +1064,7 @@ A remote reference refers to an object in another document. It acts like a [reso
 
  * A remote reference **MUST** point to either:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A [marker ID](#marker-identifier) inside of another CBE or CTE document, using the fragment section to specify the [marker ID](#marker-identifier) in the document being referenced.
+   - A marker [identifier]](#identifier) inside of another CBE or CTE document, using the fragment section to specify the marker identifier in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
 
