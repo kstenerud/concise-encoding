@@ -239,7 +239,7 @@ Represented by the text sequences `true` and `false`.
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values **MUST** be prefixed with a dash `-` as a sign character, and positive values **CAN** be prefixed with a plus (`+`). Encoders **MUST** write values in lower case.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases. Negative values **MUST** be prefixed with a dash `-` as a sign character. Encoders **MUST** write values in lower case.
 
 Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 require a prefix:
 
@@ -261,7 +261,7 @@ A floating point number is composed of an implied base (signified by an **OPTION
 
  * The significand and exponential portions are separated by an exponent marker (either `e` or `p`, depending on the base).
  * The whole and fractional parts of the significand are separated by a radix point (`.`).
- * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix), and a `+` **CAN** be prepended to positive values.
+ * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix).
 
 **Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
 
@@ -273,7 +273,7 @@ c1
     1.0
     5e-5
     -98.413e50
-    +3.14
+    3.14
 ]
 ```
 
@@ -503,7 +503,7 @@ Simply omit the time zone entirely, which causes the time zone to default to UTC
 
 #### UTC Offset
 
-UTC offsets are recorded by using a `+` or `-` character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
+UTC offsets are recorded by using a `+` (for positive offsets) or `-` (for negative offsets) character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
 
 **Examples (using timestamps)**:
 
