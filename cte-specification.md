@@ -1152,7 +1152,7 @@ Structural whitespace is a sequence of whitespace characters whose purpose is to
 **Structural Whitespace CAN occur**:
 
  * Around an object.
- * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`)
+ * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `(`, `)`)
 
 Examples:
 
