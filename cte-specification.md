@@ -890,7 +890,7 @@ c1
 
 ### Struct Template
 
-A struct template begins with `@`, followed by a template [identifier](#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
+A struct template begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
 
 There **MUST NOT** be whitespace at any point between the `@` and the opening `<` (e.g. `@my_struct<...>`, **not** `@ my_struct <...>`).
 
@@ -906,7 +906,7 @@ null
 
 ### Struct Instance
 
-A struct instance begins with `@`, followed by a template [identifier](#identifier), followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated template, and is terminated with `)`.
+A struct instance begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated template, and is terminated with `)`.
 
 There **MUST NOT** be whitespace at any point between the `@` and the opening `(` (e.g. `@my_struct(...)`, **not** `@ my_struct (...)`).
 
