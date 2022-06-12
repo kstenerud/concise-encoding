@@ -654,11 +654,11 @@ A map begins with 0x79, followed by a series of zero or more key-value pairs, an
 
 An edge always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
 
-    [76] [source] [description] [destination]
+    [77] [source] [description] [destination]
 
 **Example**:
 
-    [76 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
+    [77 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
      91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
      91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
     = the relationship graph: @(@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
@@ -666,13 +666,13 @@ An edge always consists of exactly three components, and therefore doesn't use a
 
 ### Node
 
-A node begins with 0x77, followed by a value object and zero or more child nodes, and is terminated with 0x7b (end of container).
+A node begins with 0x78, followed by a value object and zero or more child nodes, and is terminated with 0x7b (end of container).
 
-    [77] [value] [node] ... [7b]
+    [78] [value] [node] ... [7b]
 
 **Example**:
 
-    [77 01 77 03 77 05 7b 77 04 7b 7b 77 02 7b 7b]
+    [78 01 78 03 78 05 7b 78 04 7b 7b 78 02 7b 7b]
     = the binary tree:
       1
      / \
