@@ -50,48 +50,39 @@ c1
     "float32 array" = |f32 1.5e10 -8.31e-12|
 }
                 </code>
-            </pre></article><article id="references"><div class="horiz"><img class="example-icon"src="img/flag.svg"><div class="vert"><h2>References</h2></div></div><pre>
+            </pre></article><article id="structs"><div class="horiz"><img class="example-icon"src="img/blueprint.svg"><div class="vert"><h2>Structs</h2></div></div><pre>
                 <code>
 c1
-{
-    // Entire map will be referenced later as $id1
-    "marked object" = &id1:{
-        "recursive" = $id1
-    }
-    "ref1" = $id1
-    "ref2" = $id1
-
-    // Reference pointing to part of another document.
-    "outside ref" = $"https://xyz.com/document.cte#some_id"
-}
+[
+    @vehicle&lt;"make"   "model"    "drive" "sunroof"&gt;
+    @vehicle("Ford"   "Explorer" "4wd"   true     )
+    @vehicle("Toyota" "Corolla"  "fwd"   false    )
+    @vehicle("Honda"  "Civic"    "fwd"   false    )
+]
                 </code>
-            </pre></article><article id="edges"><div class="horiz"><img class="example-icon"src="img/graph.svg"><div class="vert"><h2>Graphs</h2></div></div><pre>
+            </pre>Which is equivalent to:<pre>
                 <code>
 c1
-//
-// The weighted graph:
-//
-//     b
-//    /|\
-//   4 1 1
-//  /  |  \
-// a-3-c-4-d
-//
-{
-    "vertices" = [
-        &ampa:{}
-        &ampb:{}
-        &ampc:{}
-        &ampd:{}
-    ]
-    "edges" = [
-        @($a {"weight"=4 "direction"="both"} $b)
-        @($a {"weight"=3 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $d)
-        @($c {"weight"=4 "direction"="both"} $d)
-    ]
-}
+[
+    {
+        "make" = "Ford"
+        "model" = "Explorer"
+        "drive" = "4wd"
+        "sunroof" = true
+    }
+    {
+        "make" = "Toyota"
+        "model" = "Corolla"
+        "drive" = "fwd"
+        "sunroof" = false
+    }
+    {
+        "make" = "Honda"
+        "model" = "Civic"
+        "drive" = "fwd"
+        "sunroof" = false
+    }
+]
                 </code>
             </pre></article><article id="nodes"><div class="horiz"><img class="example-icon"src="img/tree.svg"><div class="vert"><h2>Trees</h2></div></div><pre>
                 <code>
@@ -123,7 +114,50 @@ c1
     )
 )
                 </code>
-            </pre>Notice how the text looks like the tree it represents when rotated:<br><img src="img/tree-rotated.svg"></article><article id="custom_types"><div class="horiz"><img class="example-icon"src="img/custom.svg"><div class="vert"><h2>Custom Types</h2></div></div><pre>
+            </pre>Notice how the text looks like the tree it represents when rotated:<br><img src="img/tree-rotated.svg"></article><article id="edges"><div class="horiz"><img class="example-icon"src="img/graph.svg"><div class="vert"><h2>Graphs</h2></div></div><pre>
+                <code>
+c1
+//
+// The weighted graph:
+//
+//     b
+//    /|\
+//   4 1 1
+//  /  |  \
+// a-3-c-4-d
+//
+{
+    "vertices" = [
+        &ampa:{}
+        &ampb:{}
+        &ampc:{}
+        &ampd:{}
+    ]
+    "edges" = [
+        @($a {"weight"=4 "direction"="both"} $b)
+        @($a {"weight"=3 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $d)
+        @($c {"weight"=4 "direction"="both"} $d)
+    ]
+}
+                </code>
+            </pre></article><article id="references"><div class="horiz"><img class="example-icon"src="img/flag.svg"><div class="vert"><h2>References</h2></div></div><pre>
+                <code>
+c1
+{
+    // Entire map will be referenced later as $id1
+    "marked object" = &id1:{
+        "recursive" = $id1
+    }
+    "ref1" = $id1
+    "ref2" = $id1
+
+    // Reference pointing to part of another document.
+    "outside ref" = $"https://xyz.com/document.cte#some_id"
+}
+                </code>
+            </pre></article><article id="custom_types"><div class="horiz"><img class="example-icon"src="img/custom.svg"><div class="vert"><h2>Custom Types</h2></div></div><pre>
                 <code>
 c1
 {
