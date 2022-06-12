@@ -831,14 +831,14 @@ c1
 
 ### Struct
 
-A struct produces a [map](#map) from a template. Structs are composed of two parts: a [struct template](#struct-template) which defines what keys will be present, and [struct instances](#struct-instance) that combine the template's keys with a set of values to produce [maps](#map).
+A struct produces a [map](#map) from a template. Structs are composed of two parts: a [struct template](#struct-template) which defines what keys will be present, and [struct instances](#struct-instance) that combine the template's keys with a series of values to produce [maps](#map).
 
     Struct Template: <key1 key2 key3 ...>
     Struct Instance: (val1 val2 val3 ...)
     ----------------------------------------------------
     Produces Map:    {key1=val1 key2=val2 key3=val3 ...}
 
-Structs offer a more efficient way to encode payloads containing repeating instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50%.
+Structs offer a more efficient way to encode payloads containing repeating instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
 
 #### Struct Template
 
