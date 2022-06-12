@@ -778,7 +778,7 @@ If a container disallows duplicates, duplicate entries are [structural errors](#
 
 A sequential list of objects. List elements **CAN** be any type (including other containers), and do not all have to be the same type.
 
-By default, a list is ordered and allows duplicate values. Different rules **CAN** be set using a schema.
+By default, a list is [ordered and allows duplicate values](#container-properties). Different rules **CAN** be set using a schema.
 
 **Example**:
 
@@ -800,7 +800,7 @@ A map associates key objects with value objects. Keys **CAN** be any [keyable ty
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
-By default, a map is unordered and does not allow duplicate keys. Different rules **CAN** be set using a schema.
+By default, a map is [unordered and does not allow duplicate keys](#container-properties). Different rules **CAN** be set using a schema.
 
 #### Keyable types
 
@@ -1280,7 +1280,7 @@ Containers **MUST** be of the same type. For example, a map is never equivalent 
 
 Containers **MUST** contain the same number of elements, and their elements **MUST** be equivalent.
 
-By default, list types **MUST** be compared ordered, and map types compared unordered, unless their ordering was otherwise specified by the schema.
+By default, list types **MUST** be compared [ordered](#container-properties), and map types compared [unordered](#container-properties), unless their ordering was otherwise specified by the schema.
 
 #### Null
 
