@@ -240,53 +240,6 @@ c1
 ]
 ```
 
-#### References
-
-```cte
-c1
-{
-    // Entire map will be referenced later as $id1
-    "marked object" = &id1:{
-        "recursive" = $id1
-    }
-    "ref1" = $id1
-    "ref2" = $id1
-
-    // Reference pointing to part of another document.
-    "outside ref" = $"https://xyz.com/document.cte#some_id"
-}
-```
-
-#### Graphs
-
-```cte
-c1
-/* The weighted graph:
- *
- *     b
- *    /|\
- *   4 1 1
- *  /  |  \
- * a-3-c-4-d
- *
- */
-{
-    "vertices" = [
-        &a:{}
-        &b:{}
-        &c:{}
-        &d:{}
-    ]
-    "edges" = [
-        @($a {"weight"=4 "direction"="both"} $b)
-        @($a {"weight"=3 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $d)
-        @($c {"weight"=4 "direction"="both"} $d)
-    ]
-}
-```
-
 #### Trees
 
 ```cte
@@ -322,6 +275,53 @@ c1
 Notice how when rotated 90°, it resembles the tree it represents:
 
 ![Rotated](img/tree-rotated.svg)
+
+#### Graphs
+
+```cte
+c1
+/* The weighted graph:
+ *
+ *     b
+ *    /|\
+ *   4 1 1
+ *  /  |  \
+ * a-3-c-4-d
+ *
+ */
+{
+    "vertices" = [
+        &a:{}
+        &b:{}
+        &c:{}
+        &d:{}
+    ]
+    "edges" = [
+        @($a {"weight"=4 "direction"="both"} $b)
+        @($a {"weight"=3 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $c)
+        @($b {"weight"=1 "direction"="both"} $d)
+        @($c {"weight"=4 "direction"="both"} $d)
+    ]
+}
+```
+
+#### References
+
+```cte
+c1
+{
+    // Entire map will be referenced later as $id1
+    "marked object" = &id1:{
+        "recursive" = $id1
+    }
+    "ref1" = $id1
+    "ref2" = $id1
+
+    // Reference pointing to part of another document.
+    "outside ref" = $"https://xyz.com/document.cte#some_id"
+}
+```
 
 #### Custom Types
 
