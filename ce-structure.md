@@ -76,6 +76,10 @@ Contents
     - [List](#list)
     - [Map](#map)
       - [Keyable types](#keyable-types)
+    - [Struct](#struct)
+      - [Struct Template](#struct-template)
+      - [Struct Instance](#struct-instance)
+      - [Struct Validation](#struct-validation)
     - [Edge](#edge)
       - [Example](#example)
     - [Node](#node)
@@ -202,7 +206,7 @@ Every Concise Encoding document **MUST** contain one and only one top-level obje
 **Notes**:
 
  * A top-level object **CAN** be of any concrete type ([numeric](#numeric-types), [temporal](#temporal-types), [array](#array-types), [container](#container-types), or [other](#other-types)).
- * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects), and at most one [marker](#marker) that marks the top-level object.
+ * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects), [struct templates](#struct-template), and at most one [marker](#marker) that marks the top-level object, but the top-level object itself **MUST** be a real object.
  * To represent an [empty document](#empty-document), store [null](#null) as the top-level object.
 
 **Examples**:
@@ -825,6 +829,113 @@ c1
 ```
 
 
+### Struct
+
+A struct produces a [map](#map) from a template. Structs are composed of two parts: a [struct template](#struct-template) which defines what keys will be present, and [struct instances](#struct-instance) that combine the template's keys with a set of values to produce [maps](#map).
+
+    Struct Template: <key1 key2 key3 ...>
+    Struct Instance: (val1 val2 val3 ...)
+    ----------------------------------------------------
+    Produces Map:    {key1=val1 key2=val2 key3=val3 ...}
+
+Structs offer a more efficient way to encode payloads containing repeating instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50%.
+
+#### Struct Template
+
+A struct template is not a real object, but rather instructions for a decoder to build instances from, defining what keys will be present for any [struct instances](#struct-instance) that use it.
+
+A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
+
+ * Templates are [ordered, and **CANNOT** contain duplicate keys](#container-properties).
+ * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
+ * Template [identifiers](#identifier) **MUST** be unique to all struct templates in the current document.
+ * Templates and template keys **CANNOT** be [marked](#marker) (it's a template; not a concrete object).
+ * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#top-level-object).
+ * A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
+
+#### Struct Instance
+
+A struct instance builds a [map](#map) from a [struct template](#struct-template).
+
+A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
+
+ * Struct instances are [ordered, and **CAN** contain duplicates](#container-properties).
+ * The struct instance **MUST** define the same number of values as there are keys in the struct template.
+ * A struct instance **CANNOT** be placed before the [template](#struct-template) it references.
+
+**Example (in [CTE](cte-specification.md))**:
+
+```cte
+c1
+{
+    "year end" = 2018
+    "vehicles" = [
+        @vehicle<"make"       "model"      "drive" "sunroof">
+        @vehicle("Ford"       "Explorer"   "4wd"   true     )
+        @vehicle("Toyota"     "Corolla"    "fwd"   false    )
+        @vehicle("Honda"      "Civic"      "fwd"   false    )
+        @vehicle("Alfa Romeo" "Giulia 952" "awd"   true     )
+    ]
+    "phones" = [
+        @phone<"make"   "model"      "storage">
+        @phone("Apple"  "iPhone XS"   67108864)
+        @phone("Google" "Pixel 3 XL" 134217728)
+    ]
+}
+```
+
+The above document is equivalent to:
+
+```cte
+c1
+{
+    "year end" = 2018
+    "vehicles" = [
+        {
+            "make" = "Ford"
+            "model" = "Explorer"
+            "drive" = "4wd"
+            "sunroof" = true
+        }
+        {
+            "make" = "Toyota"
+            "model" = "Corolla"
+            "drive" = "fwd"
+            "sunroof" = false
+        }
+        {
+            "make" = "Honda"
+            "model" = "Civic"
+            "drive" = "fwd"
+            "sunroof" = false
+        }
+        {
+            "make" = "Alfa Romeo"
+            "model" = "Giulia 952"
+            "drive" = "awd"
+            "sunroof" = true
+        }
+    ]
+    "phones" = [
+        {
+            "make" = "Apple"
+            "model" = "iPhone XS"
+            "storage" = 67108864
+        }
+        {
+            "make" = "Google"
+            "model" = "Pixel 3 XL"
+            "storage" = 134217728
+        }
+    ]
+}
+```
+
+#### Struct Validation
+
+As struct templates and instances are only parts of the final object, they **CANNOT** be validated on their own; only the final [map](#map) they produce **CAN** be validated.
+
+
 ### Edge
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
@@ -973,7 +1084,7 @@ Some uses for null in common operations:
 
 An identifier uniquely identifies an instance of a particular type in the current document so that it can be referenced elsewhere. It is always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
 
-Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example a document cannot contain two [markers](#marker) with ID "a".
+Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
 
 #### Identifier Rules
 

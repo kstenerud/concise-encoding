@@ -62,6 +62,8 @@ Contents
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
+    - [Struct Template](#struct-template)
+    - [Struct Instance](#struct-instance)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
@@ -160,8 +162,8 @@ The types are structured such that the most commonly used types and values encod
 |  72 | [Binary Float (64 bit)](#binary-floating-point) | [[64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian] |
 |  73 | [UID](#uid)                                     | [128 bits of data, big endian]           |
 |  74 | [RESERVED](#reserved)                           |                                          |
-|  75 | [RESERVED](#reserved)                           |                                          |
-|  76 | [RESERVED](#reserved)                           |                                          |
+|  75 | [Struct Instance](#struct-instance)             | ID, (Key, Default) ... End of Container  |
+|  76 | [Struct Template](#struct-template)             | ID, Value ... End of Container           |
 |  77 | [Edge](#edge)                                   | Source, Description, Destination         |
 |  78 | [Node](#node)                                   | Value, Child Node ... End of Container   |
 |  79 | [Map](#map)                                     | (Key, Value) ... End of Container        |
@@ -648,6 +650,32 @@ A map begins with 0x79, followed by a series of zero or more key-value pairs, an
 **Example**:
 
     [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
+
+
+### Struct Template
+
+A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by key-value pairs representing the keys and default values of the template, and is terminated with 0x7b (end of container).
+
+    [76] [key1] [key2] [key3] ... [7b]
+
+**Example**:
+
+A struct template named "a", containing the key "b":
+
+    [76 01 61 81 62 7b]
+
+
+### Struct Instance
+
+A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template). The number of values **MUST** always match the number of keys in the [template](#struct-template), so a struct instance has no end-of-container marker.
+
+    [75] [val1] [val2] [val3] ...
+
+**Example**:
+
+A struct instance built from template "a", with the first key's associated value set to 5:
+
+    [75 01 61 05]
 
 
 ### Edge

@@ -62,6 +62,7 @@ Concise Encoding
 | Size Optimization     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
 | Cyclic Data           | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Time Zones            | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
+| Templates             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
 | Bin + Txt             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ✔️    | ✔️   |
 | Versioned             | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ⚠️   |
 
@@ -70,6 +71,7 @@ Concise Encoding
  * **Size Optimization**: The most common types and values use less space.
  * **Cyclic Data**: Supports cyclic (recursive) data structures.
  * **Time Zones**: Time types support real time zones.
+ * **Templates**: Templates for frequently occurring structures.
  * **Bin + Txt**: Has twin formats, and the binary format is 1:1 compatible with the text format.
  * **Versioned**: Documents are versioned to the specification they adhere to. (Ion supports versioning in the binary format only).
 
@@ -205,6 +207,37 @@ c1
     "uint16 hex"    = |u16x 91fe 443a 9c15|
     "float32 array" = |f32 1.5e10 -8.31e-12|
 }
+```
+
+#### Struct Templates
+
+```cte
+c1
+[
+    @vehicle<"make"   "model"    "drive" "sunroof">
+    @vehicle("Ford"   "Explorer" "4wd"   true     )
+    @vehicle("Toyota" "Corolla"  "fwd"   false    )
+]
+```
+
+Which is equivalent to:
+
+```cte
+c1
+[
+    {
+        "make" = "Ford"
+        "model" = "Explorer"
+        "drive" = "4wd"
+        "sunroof" = true
+    }
+    {
+        "make" = "Toyota"
+        "model" = "Corolla"
+        "drive" = "fwd"
+        "sunroof" = false
+    }
+]
 ```
 
 #### References

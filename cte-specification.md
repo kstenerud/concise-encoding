@@ -71,6 +71,8 @@ Contents
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
+    - [Struct Template](#struct-template)
+    - [Struct Instance](#struct-instance)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
@@ -94,6 +96,8 @@ Contents
       - [Indentation](#indentation)
       - [Lists](#lists)
       - [Maps](#maps)
+      - [Struct Template](#struct-template-1)
+      - [Struct Instance](#struct-instance-1)
       - [Node](#node-1)
       - [Edge](#edge-1)
       - [Strings](#strings)
@@ -884,6 +888,42 @@ c1
 ```
 
 
+### Struct Template
+
+A struct template begins with `@`, followed by a template [identifier](#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
+
+There **MUST NOT** be whitespace at any point between the `@` and the opening `<` (e.g. `@my_struct<...>`, **not** `@ my_struct <...>`).
+
+**Example**:
+
+```cte
+c1
+@vehicle<"make" "model" "drive" "sunroof">
+
+// Top-level object to make this a proper document
+null
+```
+
+### Struct Instance
+
+A struct instance begins with `@`, followed by a template [identifier](#identifier), followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated template, and is terminated with `)`.
+
+There **MUST NOT** be whitespace at any point between the `@` and the opening `(` (e.g. `@my_struct(...)`, **not** `@ my_struct (...)`).
+
+**Example**:
+
+```cte
+c1
+[
+    @vehicle<"make"       "model"      "drive" "sunroof">
+    @vehicle("Ford"       "Explorer"   "4wd"   true     )
+    @vehicle("Toyota"     "Corolla"    "fwd"   false    )
+    @vehicle("Honda"      "Civic"      "fwd"   false    )
+    @vehicle("Alfa Romeo" "Giulia 952" "awd"   true     )
+]
+```
+
+
 ### Edge
 
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
@@ -1152,7 +1192,7 @@ Structural whitespace is a sequence of whitespace characters whose purpose is to
 **Structural Whitespace CAN occur**:
 
  * Around an object.
- * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `(`, `)`)
+ * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `(`, `)`, `<`, `>`)
 
 Examples:
 
@@ -1177,6 +1217,7 @@ Examples:
  * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
+ * Anywhere between a [struct template](#struct-template) or [struct instance](#struct-instance) initiator and its opening character (`@ my_struct<>`, `@my_struct <>`, `@ my_struct()`,  and `@my_struct ()` are invalid).
 
 
 
@@ -1248,6 +1289,16 @@ Small maps containing small objects **MAY** be placed entirely on one line. In s
 c1
 {"a"="b" "c"="d"}
 ```
+
+
+#### Struct Template
+
+Struct templates **SHOULD** follow a similar pretty printing strategy to lists.
+
+
+#### Struct Instance
+
+Struct instances **SHOULD** follow a similar pretty printing strategy to lists.
 
 
 #### Node
