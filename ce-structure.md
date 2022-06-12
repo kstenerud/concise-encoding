@@ -32,6 +32,7 @@ Contents
     - [Versioning](#versioning)
       - [Prerelease Version](#prerelease-version)
   - [Document Structure](#document-structure)
+    - [Top-Level Object](#top-level-object)
   - [Schema](#schema)
   - [Document Version Specifier](#document-version-specifier)
   - [Numeric Types](#numeric-types)
@@ -190,24 +191,28 @@ Document Structure
 
 A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
 
-Documents begin with a [version specifier](#version-specifier), followed by a top-level object of any concrete type ([numeric](#numeric-types), [temporal](#temporal-types), [array](#array-types), [container](#container-types), or [other](#other-types)).
+Documents begin with a [version specifier](#version-specifier), followed by a [top-level object](#top-level-object).
 
-    [version specifier] [object]
+    [version specifier] [top-level object]
+
+### Top-Level Object
+
+Every Concise Encoding document **MUST** contain one and only one top-level object. Once the top-level object definition is complete, the document is considered ended. To store multiple objects in a document, use a [container](#container-types) as the top-level object and then store objects in that container.
 
 **Notes**:
 
- * To store multiple values in a document, use a [container](#container-types) as the top-level object and then store other objects in that container.
+ * A top-level object **CAN** be of any concrete type ([numeric](#numeric-types), [temporal](#temporal-types), [array](#array-types), [container](#container-types), or [other](#other-types)).
+ * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects), and at most one [marker](#marker) that marks the top-level object.
  * To represent an [empty document](#empty-document), store [null](#null) as the top-level object.
- * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects) and at most one [marker](#marker), but the top-level object itself **MUST** be a real object.
 
 **Examples**:
 
+ * A document containing a list with the integers 1, 2, 3:
+   - In [CTE](cte-specification.md): `c1 [1 2 3]`
+   - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
  * An empty document: 
    - In [CTE](cte-specification.md): `c1 null`
    - In [CBE](cbe-specification.md): [`81 01 7e`]
- * A document containing a top-level list:
-   - In [CTE](cte-specification.md): `c1 [1 2 3]`
-   - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
 
 
 
@@ -989,7 +994,7 @@ Pseudo-objects stand-in for real objects, or add additional context or meaning t
 
 Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
-**Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the top-level object.
+**Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the [top-level object](#top-level-object).
 
 
 ### Marker
@@ -1103,7 +1108,7 @@ Comments are allowed anywhere in a CTE document where a real object would be all
 **Examples (in [CTE](cte-specification.md))**:
 ```cte
 c1
-// Comment before top level object
+// Comment before top-level object
 {
     // Comment before the "name" object.
     // And another comment.
@@ -1140,7 +1145,7 @@ The padding type **CAN** occur any number of times where a CBE type field is val
 Empty Document
 --------------
 
-An empty document is signified by using the [Null](#null) type as the top-level object:
+An empty document is signified by using the [Null](#null) type as the [top-level object](#top-level-object):
 
 * In CBE: [`81 01 7e`]
 * In CTE: `c1 null`
@@ -1437,7 +1442,7 @@ A codec **MUST** provide at least the following **OPTIONS** to allow the user to
 | Max document size                 | In bytes                                 |
 | Max array size                    | For each array, in bytes                 |
 | Max object count                  | Not counting pseudo or invisible objects, an array is a single object. |
-| Max container depth               | 0 = no containers, 1 = top-level can be a container (but cannot contain containers), ... |
+| Max container depth               | 0 = no containers, 1 = [top-level object](#top-level-object) can be a container (but cannot contain containers), ... |
 | Max year digits                   |                                          |
 | Max integer digits                |                                          |
 | Max float coefficient digits      |                                          |
