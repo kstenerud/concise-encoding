@@ -85,8 +85,6 @@ Contents
     - [Node](#node)
   - [Other Types](#other-types)
     - [Null](#null)
-    - [Identifier](#identifier)
-      - [Identifier Rules](#identifier-rules)
   - [Pseudo-Objects](#pseudo-objects)
     - [Marker](#marker)
     - [Reference](#reference)
@@ -96,6 +94,9 @@ Contents
   - [Invisible Objects](#invisible-objects)
     - [Comment](#comment)
     - [Padding](#padding)
+  - [Structural Objects](#structural-objects)
+    - [Identifier](#identifier)
+      - [Identifier Rules](#identifier-rules)
   - [Empty Document](#empty-document)
   - [Unrepresentable Values](#unrepresentable-values)
     - [Lossy Conversions](#lossy-conversions)
@@ -1080,25 +1081,6 @@ Some uses for null in common operations:
 | Fetch     | From client: Match records where this field is not present.             |
 
 
-### Identifier
-
-An identifier is a structural object that has no meaning outside of the document itself; its only purpose is to link objects in a document.
-
-Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
-
-Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
-
-#### Identifier Rules
-
- * It **MUST** be a valid UTF-8 string.
- * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), as well as the following symbol characters:
-   - `_` (underscore)
-   - `-` (dash)
-   - `.` (period)
- * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
- * Comparisons are **case insensitive**.
-
-
 
 Pseudo-Objects
 --------------
@@ -1252,6 +1234,29 @@ c1
 Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning. CTE encoders **CANNOT** encode padding.
 
 The padding type **CAN** occur any number of times where a CBE type field is valid.
+
+
+
+Structural Objects
+------------------
+
+### Identifier
+
+An identifier is a structural object that has no meaning outside of the document itself; its only purpose is to link objects within a document.
+
+Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
+
+Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
+
+#### Identifier Rules
+
+ * It **MUST** be a valid UTF-8 string.
+ * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), as well as the following symbol characters:
+   - `_` (underscore)
+   - `-` (dash)
+   - `.` (period)
+ * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
+ * Comparisons are **case insensitive**.
 
 
 
