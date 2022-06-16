@@ -1082,7 +1082,9 @@ Some uses for null in common operations:
 
 ### Identifier
 
-An identifier uniquely identifies an instance of a particular type in the current document so that it can be referenced elsewhere. It is always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
+An identifier is a structural object that has no meaning outside of the document itself; its only purpose is to link objects in a document.
+
+Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
 
 Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
 
