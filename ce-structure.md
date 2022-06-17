@@ -64,9 +64,9 @@ Contents
       - [String Character Replacement](#string-character-replacement)
       - [NUL Character](#nul-character)
       - [Line Endings](#line-endings)
-      - [String](#string)
-      - [Resource Identifier](#resource-identifier)
-    - [Primitive Type Arrays](#primitive-type-arrays)
+      - [String Type](#string-type)
+      - [Resource Identifier Type](#resource-identifier-type)
+    - [Primitive Array Types](#primitive-array-types)
     - [Media](#media)
     - [Custom Types](#custom-types)
       - [Custom Type Forms](#custom-type-forms)
@@ -606,7 +606,7 @@ An array represents a contiguous sequence of fixed length elements (essentially 
 There are four kinds of array types in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
- * [Primitive type arrays](#primitive-type-arrays) represent elements of a fixed size and type.
+ * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
  * [Media](#media) encapsulates other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
  * [Custom types](#custom-types) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
@@ -615,8 +615,8 @@ There are four kinds of array types in Concise Encoding:
 
 String-like arrays are arrays of UTF-8 encoded bytes. The following types are string-like arrays:
 
- * [String](#string)
- * [Resource Identifier](#resource-identifier)
+ * [String](#string-type)
+ * [Resource Identifier](#resource-identifier-type)
  * [Remote Reference](#remote-reference)
  * [Custom Type (text form)](#custom-type-forms)
 
@@ -642,11 +642,11 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
  * Decoders **MUST** accept both line ending types as input.
  * Encoders **MUST** output LF only.
 
-#### String
+#### String Type
 
 A standard UTF-8 string.
 
-#### Resource Identifier
+#### Resource Identifier Type
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema or configuration, the default resource identifier type is IRI.
 
@@ -661,11 +661,11 @@ c1
 ```
 
 
-### Primitive Type Arrays
+### Primitive Array Types
 
-A primitive type array encodes an array of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
+A primitive array encodes an array of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
-The following element types are supported in primitive type arrays. For other types, use a [list](#list).
+The following element types are supported in primitive arrays. For other types, use a [list](#list).
 
 | Type                 | Element Sizes (bits) |
 | -------------------- | -------------------- |
@@ -835,8 +835,8 @@ Only the following types are allowed as keys in map-like containers:
 
 * [Numeric types](#numeric-types), except for NaN (not-a-number)
 * [Temporal types](#temporal-types)
-* [Strings](#string)
-* [Resource identifiers](#resource-identifier)
+* [Strings](#string-type)
+* [Resource identifiers](#resource-identifier-type)
 * [References](#reference) (only if the referenced value is keyable)
 
 **Example (in [CTE](cte-specification.md))**:
@@ -950,7 +950,7 @@ As struct templates and instances are only parts of the final object, they **CAN
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be null.
+ * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be null.
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be null.
 
@@ -1094,7 +1094,7 @@ Pseudo-Objects
 
 Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand in for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive type array's](#primitive-type-arrays) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
 **Note**: Like [data objects](#data-objects), pseudo-objects **MUST NOT** appear before the [version specifier](#document-version-specifier), and **MUST NOT** appear after the [top-level object](#document-structure).
 
@@ -1146,7 +1146,7 @@ c1
 
 #### Remote Reference
 
-A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier) that describes how to find the referenced object in an outside document.
+A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier-type) that describes how to find the referenced object in an outside document.
 
  * A remote reference **MUST** point to either:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
