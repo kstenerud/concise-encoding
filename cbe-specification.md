@@ -29,7 +29,7 @@ Contents
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Version Specifier](#version-specifier)
   - [Encoding](#encoding)
-      - [Type Field](#type-field)
+    - [Type Field](#type-field)
     - [Type Field (Plane 2)](#type-field-plane-2)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -62,22 +62,22 @@ Contents
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
-    - [Struct Template](#struct-template)
     - [Struct Instance](#struct-instance)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
     - [Null](#null)
-    - [Identifier](#identifier)
     - [RESERVED](#reserved)
   - [Peudo-Objects](#peudo-objects)
-    - [Marker](#marker)
-    - [Reference](#reference)
-      - [Local Reference](#local-reference)
-      - [Remote Reference](#remote-reference)
+    - [Local Reference](#local-reference)
+    - [Remote Reference](#remote-reference)
   - [Invisible Objects](#invisible-objects)
     - [Comment](#comment)
     - [Padding](#padding)
+  - [Structural Objects](#structural-objects)
+    - [Struct Template](#struct-template)
+    - [Marker](#marker)
+    - [Identifier](#identifier)
   - [Empty Document](#empty-document)
   - [Smallest Possible Size](#smallest-possible-size)
   - [Alignment](#alignment)
@@ -138,7 +138,7 @@ Containers and arrays can always be built incrementally (you don't need to know 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy capable in most places on little endian systems.
 
 
-#### Type Field
+### Type Field
 
 | Hex | Type                                            | Payload                                  |
 | --- | ----------------------------------------------- | ---------------------------------------- |
@@ -197,7 +197,7 @@ The types are structured such that the most commonly used types and values encod
 |  95 | [Array: Unsigned Int8](#supported-array-types)  | [chunk length] [8-bit elements] ...      |
 |  96 | [Array: Bit](#bit-array)                        | [chunk length] [1-bit elements] ...      |
 |  97 | [Marker](#marker)                               | [length] [UTF-8 data]                    |
-|  98 | [Reference](#reference)                         | [length] [UTF-8 data]                    |
+|  98 | [Local Reference](#local-reference)             | [length] [UTF-8 data]                    |
 |  99 | [Date](#date)                                   | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]            |
 |  9a | [Time](#time)                                   | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)]            |
 |  9b | [Timestamp](#timestamp)                         | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
@@ -652,19 +652,6 @@ A map begins with 0x79, followed by a series of zero or more key-value pairs, an
     [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
-### Struct Template
-
-A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by key-value pairs representing the keys and default values of the template, and is terminated with 0x7b (end of container).
-
-    [76] [key1] [key2] [key3] ... [7b]
-
-**Example**:
-
-A struct template named "a", containing the key "b":
-
-    [76 01 61 81 62 7b]
-
-
 ### Struct Instance
 
 A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template). The number of values **MUST** always match the number of keys in the [template](#struct-template), so a struct instance has no end-of-container marker.
@@ -718,26 +705,6 @@ Other Types
 Null is encoded as `[7e]`.
 
 
-### Identifier
-
-Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
-
-The length field **CANNOT** be 0.
-
-| Field        | Bits | Value             |
-| ------------ | ---- | ----------------- |
-| RESERVED     |   1  | 0                 |
-| Length       |   7  | 1-127             |
-| UTF-8 Data   |   ∞  | UTF-8 string data |
-
-**Note**: Identifiers are **not** standalone objects. They are always part of another object.
-
-**Examples**:
-
-    [07 73 6f 6d 65 5f 69 64] = some_id
-    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
-
-
 ### RESERVED
 
 This type is reserved for future expansion of the format, and **MUST NOT** be used.
@@ -747,21 +714,7 @@ This type is reserved for future expansion of the format, and **MUST NOT** be us
 Peudo-Objects
 -------------
 
-### Marker
-
-A marker begins with the marker type (0x97), followed by a marker [identifier](#identifier), and then the marked object.
-
-    [97 (length) (ID string data) (marked object)]
-
-**Example**:
-
-    [97 01 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
-     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
-    = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
-
-### Reference
-
-#### Local Reference
+### Local Reference
 
 A local reference begins with the reference type (0x98), followed by a marker [identifier]](#identifier).
 
@@ -771,7 +724,7 @@ A local reference begins with the reference type (0x98), followed by a marker [i
 
     [98 01 61] = reference to the object marked with ID "a"
 
-#### Remote Reference
+### Remote Reference
 
 A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e0]`).
 
@@ -800,6 +753,56 @@ Padding is encoded as type 0x7f. Repeat as many times as needed.
 **Example**:
 
     [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+
+
+
+Structural Objects
+------------------
+
+### Struct Template
+
+A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by key-value pairs representing the keys and default values of the template, and is terminated with 0x7b (end of container).
+
+    [76] [key1] [key2] [key3] ... [7b]
+
+**Example**:
+
+A struct template named "a", containing the key "b":
+
+    [76 01 61 81 62 7b]
+
+
+### Marker
+
+A marker begins with the marker type (0x97), followed by a marker [identifier](#identifier), and then the marked object.
+
+    [97 (length) (ID string data) (marked object)]
+
+**Example**:
+
+    [97 01 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
+     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
+    = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
+
+
+### Identifier
+
+Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+
+The length field **CANNOT** be 0.
+
+| Field        | Bits | Value             |
+| ------------ | ---- | ----------------- |
+| RESERVED     |   1  | 0                 |
+| Length       |   7  | 1-127             |
+| UTF-8 Data   |   ∞  | UTF-8 string data |
+
+**Note**: Identifiers are **not** standalone objects. They are always part of another object.
+
+**Examples**:
+
+    [07 73 6f 6d 65 5f 69 64] = some_id
+    [0f e7 99 bb e9 8c b2 e6 b8 88 e3 81 bf ef bc 95] = 登録済み５
 
 
 
@@ -847,7 +850,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
 
-Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
-License deed: https://creativecommons.org/licenses/by/4.0/
+Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).

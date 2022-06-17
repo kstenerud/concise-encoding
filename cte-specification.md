@@ -54,55 +54,55 @@ Contents
       - [UTC Offset](#utc-offset)
     - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
   - [Array Types](#array-types)
-    - [String-Like Array Encoding](#string-like-array-encoding)
+    - [String-Like Arrays](#string-like-arrays)
       - [Escape Sequences](#escape-sequences)
       - [Continuation](#continuation)
       - [Unicode Codepoint](#unicode-codepoint)
       - [Verbatim Sequence](#verbatim-sequence)
-    - [Elemental Array Encoding](#elemental-array-encoding)
-      - [Float Array Elements](#float-array-elements)
-    - [Standard Array Encoding](#standard-array-encoding)
+      - [String](#string)
+      - [Resource Identifier](#resource-identifier)
+    - [Primitive Type Arrays](#primitive-type-arrays)
+      - [Primitive Type Array Encoding](#primitive-type-array-encoding)
       - [Implied Prefix](#implied-prefix)
-    - [Media](#media)
-      - [Media Contents](#media-contents)
-    - [String](#string)
-    - [Resource Identifier](#resource-identifier)
-    - [Custom Types](#custom-types)
+      - [Float Array Elements](#float-array-elements)
+      - [Media](#media)
+        - [Media Contents](#media-contents)
+      - [Custom Types](#custom-types)
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
-    - [Struct Template](#struct-template)
     - [Struct Instance](#struct-instance)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
     - [Null](#null)
   - [Pseudo-Objects](#pseudo-objects)
-    - [Marker](#marker)
-    - [Reference](#reference)
-      - [Local Reference](#local-reference)
-      - [Remote Reference](#remote-reference)
+    - [Local Reference](#local-reference)
+    - [Remote Reference](#remote-reference)
   - [Invisible Objects](#invisible-objects)
     - [Comment](#comment)
       - [Single Line Comment](#single-line-comment)
       - [Multiline Comment](#multiline-comment)
     - [Padding](#padding)
+  - [Structural Objects](#structural-objects)
+    - [Struct Template](#struct-template)
+    - [Marker](#marker)
   - [Empty Document](#empty-document)
   - [Letter Case](#letter-case)
     - [Overriding Rule for Decoders](#overriding-rule-for-decoders)
   - [Structural Whitespace](#structural-whitespace)
   - [Pretty Printing](#pretty-printing)
-      - [Right Margin](#right-margin)
-      - [Indentation](#indentation)
-      - [Lists](#lists)
-      - [Maps](#maps)
-      - [Struct Template](#struct-template-1)
-      - [Struct Instance](#struct-instance-1)
-      - [Node](#node-1)
-      - [Edge](#edge-1)
-      - [Strings](#strings)
-      - [Typed Arrays](#typed-arrays)
-      - [Comments](#comments)
+    - [Right Margin](#right-margin)
+    - [Indentation](#indentation)
+    - [Pretty Printing Lists](#pretty-printing-lists)
+    - [Pretty Printing Maps](#pretty-printing-maps)
+    - [Pretty Printing Struct Templates](#pretty-printing-struct-templates)
+    - [Pretty Printing Struct Instances](#pretty-printing-struct-instances)
+    - [Pretty Printing Nodes](#pretty-printing-nodes)
+    - [Pretty Printing Edges](#pretty-printing-edges)
+    - [Pretty Printing Strings](#pretty-printing-strings)
+    - [Pretty Printing Primitive Type Arrays](#pretty-printing-primitive-type-arrays)
+    - [Pretty Printing Comments](#pretty-printing-comments)
   - [Version History](#version-history)
   - [License](#license)
 
@@ -183,7 +183,7 @@ Unassigned, reserved, and invalid codepoints **MUST NOT** be present at all, eve
 
 ### Lookalike Characters
 
-Lookalike characters are characters that look confusingly similar to [string-like array](#string-like-array-encoding) delimiters when viewed by a human. Such characters **MUST** be escaped in [string-like arrays](#string-like-array-encoding).
+Lookalike characters are characters that look confusingly similar to [string-like array](#string-like-arrays) delimiters when viewed by a human. Such characters **MUST** be escaped in [string-like arrays](#string-like-arrays).
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
@@ -535,10 +535,10 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-Array types are encoded in two primary forms: [string-like](#string-like-array-encoding) or [elemental](#elemental-array-encoding).
+Array types are encoded in two primary forms: [string-like](#string-like-arrays) or [primitive type](#primitive-type-arrays).
 
 
-### String-Like Array Encoding
+### String-Like Arrays
 
 A string-like array **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String-like arrays **CAN** contain [escape sequences](#escape-sequences).
 
@@ -552,7 +552,7 @@ When decoding a string-like array type, all [escape sequences](#escape-sequences
 
 #### Escape Sequences
 
-Within [string-like arrays](#string-like-array-encoding), escape sequences **CAN** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+Within [string-like arrays](#string-like-arrays), escape sequences **CAN** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
 
 | Escape Type Character    | Interpretation                          |
 | ------------------------ | --------------------------------------- |
@@ -587,9 +587,7 @@ c1 "The only people for me are the mad ones, the ones who are mad to live, mad t
 
 The above string is interpreted as:
 
-```
-The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
-```
+    The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 
 #### Unicode Codepoint
 
@@ -636,7 +634,9 @@ Whitespace (including "leading" whitespace) is also read verbatim.
 
 @@@Normal processing resumes after the terminator, so escape sequences\nare once again interpreted."
 ```
+
 Which decodes to:
+
 ```
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
@@ -650,24 +650,55 @@ Normal processing resumes after the terminator, so escape sequences
 are once again interpreted.
 ```
 
-### Elemental Array Encoding
+#### String
 
-An elemental array lists the array's contents as [structural whitespace](#structural-whitespace) separated elements:
+A string is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`).
+
+**Example**:
+
+```cte
+c1
+"Line 1\nLine 2\nLine 3"
+```
+
+
+#### Resource Identifier
+
+A resource identifier is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
+
+    @"contents"
+
+**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST NOT** be interpreted.
+
+**Example**:
+
+```cte
+c1
+[
+    // CTE decodes this as `http://x.y.z?quote="`
+    // The application layer interprets it as `http://x.y.z?quote="`
+    @"http://x.y.z?quote=\""
+
+    // CTE decodes this as `http://x.y.z?quote=%22`
+    // The application layer interprets it as `http://x.y.z?quote="`
+    @"http://x.y.z?quote=%22"
+]
+```
+
+
+### Primitive Type Arrays
+
+A primitive type array lists the array's contents as [structural whitespace](#structural-whitespace) separated elements:
 
     1 2 3 4 ...
 
 Any valid representation of the array's data type and size **CAN** be used to represent the element values.
 
-#### Float Array Elements
+#### Primitive Type Array Encoding
 
-Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
+Primitive type array encoding consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe.
 
-
-### Standard Array Encoding
-
-The standard array encoding format consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe.
-
-Depending on the kind of array, the contents are encoded as either [string-like](#string-like-array-encoding) or [elemental](#elemental-array-encoding):
+Depending on the kind of array, the contents are encoded as either [string-like](#string-like-arrays) or [primitive type](#primitive-type-arrays):
 
     |type elem1 elem2 elem3 ...|
     |type "string-like contents"|
@@ -739,10 +770,15 @@ c1
 ]
 ```
 
+#### Float Array Elements
 
-### Media
+Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
-A media object is a specialization of the typed array. It has the array type `m` and consists of two whitespace separated fields:
+
+
+#### Media
+
+A media object is encoded as a specialization of the [primitive type array](#primitive-type-arrays). It has the array type `m` and consists of two whitespace separated fields:
 
 | Field                                                                       | Required? |
 | --------------------------------------------------------------------------- | --------- |
@@ -755,9 +791,9 @@ Media with no contents represents the equivalent of an empty file.
 
 Media with no media type is invalid.
 
-#### Media Contents
+##### Media Contents
 
-If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented as a [string-like array](#string-like-array-encoding) by enclosing the contents within double-quote delimiters (`"`). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
+If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented as a [string-like array](#string-like-arrays) by enclosing the contents within double-quote delimiters (`"`). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
 * Text: `|m media/type "contents"|`
 * Binary: `|m media/type 63 6f 6e 74 65 6e 74 73|`
@@ -789,45 +825,9 @@ echo hello world
 ```
 
 
-### String
+#### Custom Types
 
-A string is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`).
-
-**Example**:
-
-```cte
-c1
-"Line 1\nLine 2\nLine 3"
-```
-
-
-### Resource Identifier
-
-A resource identifier is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
-
-    @"contents"
-
-**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST NOT** be interpreted.
-
-**Example**:
-
-```cte
-c1
-[
-    // CTE decodes this as `http://x.y.z?quote="`
-    // The application layer interprets it as `http://x.y.z?quote="`
-    @"http://x.y.z?quote=\""
-
-    // CTE decodes this as `http://x.y.z?quote=%22`
-    // The application layer interprets it as `http://x.y.z?quote="`
-    @"http://x.y.z?quote=%22"
-]
-```
-
-
-### Custom Types
-
-Custom data types are encoded using the typed array `c`, and can have a binary or textual form.
+Custom data types are encoded using the [primitive type array](#primitive-type-arrays) `c`, and can have a binary or textual form.
 
 The binary form is encoded like a u8x array (hex encoded byte elements).
 
@@ -838,7 +838,7 @@ c1
 |c 01 f6 28 3c 40 00 00 40 40|
 ```
 
-The textual form is encoded as a [string-like array](#string-like-array-encoding) inside of the typed array pipe (`|`) delimiters.
+The textual form is encoded as a [string-like array](#string-like-arrays) inside of the pipe (`|`) delimiters.
 
 **Example**:
 
@@ -888,22 +888,6 @@ c1
 ```
 
 
-### Struct Template
-
-A struct template begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
-
-There **MUST NOT** be whitespace at any point between the `@` and the opening `<` (e.g. `@my_struct<...>`, **not** `@ my_struct <...>`).
-
-**Example**:
-
-```cte
-c1
-@vehicle<"make" "model" "drive" "sunroof">
-
-// Top-level object to make this a proper document
-null
-```
-
 ### Struct Instance
 
 A struct instance begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated template, and is terminated with `)`.
@@ -928,7 +912,7 @@ c1
 
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
 
-Edges are most commonly used in conjunction with [references](#reference) to produce arbitrary graphs.
+Edges are most commonly used in conjunction with [references](#local-reference) or [resource identifiers](#resource-identifier) to produce arbitrary graphs.
 
 **Examples**:
 
@@ -994,6 +978,7 @@ c1
     )
 )
 ```
+
 Viewed rotated, it resembles the tree it describes:
 
 ![tree rotated](img/tree-rotated.svg)
@@ -1012,31 +997,7 @@ Null is encoded as `null`.
 Pseudo-Objects
 --------------
 
-### Marker
-
-A marker sequence consists of the following, with no whitespace in between:
-
- * `&` (the marker initiator)
- * A marker [identifier](ce-structure.md#identifier)
- * `:` (the marker separator)
- * The marked value
-
-Example:
-
-```cte
-c1
-[
-    &remember_me:"Remember this string"
-    &1:{"a" = 1}
-]
-```
-
-The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
-
-
-### Reference
-
-#### Local Reference
+### Local Reference
 
 A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier]](ce-structure.md#identifier) that has been defined elsewhere in the current document.
 
@@ -1057,9 +1018,10 @@ c1
 }
 ```
 
-#### Remote Reference
 
-A remote reference is encoded as a [string-like array](#string-like-array-encoding), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
+### Remote Reference
+
+A remote reference is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
     $"https://www.ietf.org/"
 
@@ -1143,6 +1105,49 @@ Padding is not supported in CTE. An encoder **MUST** skip all padding when conve
 
 
 
+Structural Objects
+------------------
+
+### Struct Template
+
+A struct template begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
+
+There **MUST NOT** be whitespace at any point between the `@` and the opening `<` (e.g. `@my_struct<...>`, **not** `@ my_struct <...>`).
+
+**Example**:
+
+```cte
+c1
+@vehicle<"make" "model" "drive" "sunroof">
+
+// Top-level object to make this a proper document
+null
+```
+
+
+### Marker
+
+A marker sequence consists of the following, with no whitespace in between:
+
+ * `&` (the marker initiator)
+ * A marker [identifier](ce-structure.md#identifier)
+ * `:` (the marker separator)
+ * The marked value
+
+Example:
+
+```cte
+c1
+[
+    &remember_me:"Remember this string"
+    &1:{"a" = 1}
+]
+```
+
+The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
+
+
+
 Empty Document
 --------------
 
@@ -1160,7 +1165,7 @@ Letter Case
 
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * [string-like arrays](#string-like-array-encoding) and comments **CAN** contain uppercase characters.
+ * [string-like arrays](#string-like-arrays) and comments **CAN** contain uppercase characters.
  * [Identifiers](ce-structure.md#identifier) **CAN** contain uppercase characters.
  * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
 
@@ -1205,7 +1210,7 @@ Examples:
 
  * Between the [version specifier](#version-specifier) and the first object.
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
- * Between a typed array element type specifier and the array contents, and between typed array elements.
+ * Between a primitive type array element type specifier and the array contents, and between array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
  * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is invalid).
 
@@ -1231,21 +1236,22 @@ Use [CBE](cbe-specification.md) wherever possible instead of minified CTE, and c
 The following sections describe how to pretty-print CTE documents.
 
 
-#### Right Margin
+### Right Margin
 
 The right margin (maximum column before breaking an object into multiple lines) **SHOULD** be kept "reasonable". "Reasonable" is difficult to define because it depends in part on the kind of data the document contains, and the container depth.
 
 In general, 120 columns **SHOULD** always be considered reasonable, with larger margins depending on the kind and depth of data the document is likely to contain.
 
 
-#### Indentation
+### Indentation
 
 The canonical indentation is 4 spaces (`    `). CTE encoders **SHOULD** always emit indentation unless the destination is a single-line log entry.
 
 
-#### Lists
+### Pretty Printing Lists
 
 Objects in a list **SHOULD** be placed on separate lines.
+
 ```cte
 c1
 [
@@ -1255,21 +1261,24 @@ c1
 ```
 
 If a list is empty, the closing `]` **SHOULD** be on the same line.
+
 ```cte
 c1
 []
 ```
 
 Short lists containing small objects **MAY** be placed entirely on one line.
+
 ```cte
 c1
 ["a" "b" "c" "d"]
 ```
 
 
-#### Maps
+### Pretty Printing Maps
 
 There **SHOULD** be a space between keys, values and the `=` in key-value pairs, and each key-value pair **SHOULD** be on a separate line.
+
 ```cte
 c1
 {
@@ -1279,29 +1288,31 @@ c1
 ```
 
 If a map is empty, the closing `}` **SHOULD** be on the same line.
+
 ```cte
 c1
 {}
 ```
 
 Small maps containing small objects **MAY** be placed entirely on one line. In such a case, omit the spaces around the `=`.
+
 ```cte
 c1
 {"a"="b" "c"="d"}
 ```
 
 
-#### Struct Template
+### Pretty Printing Struct Templates
 
-Struct templates **SHOULD** follow a similar pretty printing strategy to lists.
-
-
-#### Struct Instance
-
-Struct instances **SHOULD** follow a similar pretty printing strategy to lists.
+Struct templates **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
 
 
-#### Node
+### Pretty Printing Struct Instances
+
+Struct instances **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
+
+
+### Pretty Printing Nodes
 
 In order to keep the tree as readable as possible to a human:
 
@@ -1313,7 +1324,7 @@ In order to keep the tree as readable as possible to a human:
 See the example in [node](#node).
 
 
-#### Edge
+### Pretty Printing Edges
 
 Edge components **SHOULD** be broken up into multiple lines if they're too long.
 
@@ -1327,9 +1338,10 @@ c1
 ```
 
 
-#### Strings
+### Pretty Printing Strings
 
 Strings **SHOULD** use [continuations](#continuation) if the line is getting too long.
+
 ```cte
 c1
 [
@@ -1344,9 +1356,10 @@ c1
 ```
 
 
-#### Typed Arrays
+### Pretty Printing Primitive Type Arrays
 
-Typed arrays **SHOULD** be broken up into multiple indented lines if the line is getting too long.
+Primitive type arrays **SHOULD** be broken up into multiple indented lines if the line is getting too long.
+
 ```cte
 c1
 |u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
@@ -1355,11 +1368,12 @@ c1
 ```
 
 
-#### Comments
+### Pretty Printing Comments
 
 In the event that a machine generating CTE documents wants to also output comments, the following rules apply:
 
 Comments **SHOULD** have one space (u+0020) after the comment opening sequence. Multiline-style comments (`/* */`) **SHOULD** also have a space before the closing sequence.
+
 ```cte
 c1
 {
@@ -1370,6 +1384,7 @@ c1
 ```
 
 Long comments **SHOULD** be broken up to fit within the right margin.
+
 ```cte
 c1
 {
@@ -1380,6 +1395,7 @@ c1
 ```
 
 The object following a comment **SHOULD** be on a different line.
+
 ```cte
 c1
 {
@@ -1403,7 +1419,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
 
-Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
-License deed: https://creativecommons.org/licenses/by/4.0/
+Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).

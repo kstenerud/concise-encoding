@@ -7,6 +7,7 @@ This document describes the design choices that went into Concise Encoding, and 
 
 Contents
 --------
+
 - [Design Document](#design-document)
   - [Contents](#contents)
   - [Mission Statement](#mission-statement)
@@ -66,6 +67,7 @@ Problem Space
 -------------
 
 Current data encoding formats are becoming liabilities due to their security problems stemming from:
+
 - **Under-specification**, resulting in incompatible codecs or codecs with subtle behavioral differences that can be exploited.
 - **Missing types**, requiring custom secondary codecs (amplifying the compatibility and security problem).
 - **Lack of versioning**, so the format can't be updated without breakage when a new threat emerges (and in some cases can't be updated at all).
@@ -97,6 +99,7 @@ Primary Goals
 The older formats are no longer secure enough for today's world. Incomplete and vague specifications result in implementation differences that hackers are taking advantage of *today*. As new vulnerabilities are discovered, the existing formats can't be changed to mitigate them.
 
 Any new format **must** be designed to focus on security **first**:
+
 - It must be **tightly specified**.
 - It must be **changeable** without breaking existing implementations and documents.
 - It must have a **small attack surface**.
@@ -141,6 +144,7 @@ A format that's difficult for humans to read and write is a format that humans w
 ### Low Friction
 
 Many formats today require a bunch of extra steps before they can be used to transmit data, including:
+
 - Extra code generation or compilation steps.
 - Special format "descriptor" files whose syntax one must first learn.
 - Missing fundamental data types, requiring hand-rolled secondary codecs and special encoding methods to piggyback data onto them. This is the 21st century! **Base64 should NOT still be a thing**!
@@ -166,6 +170,7 @@ The only way to get compactness AND human friendliness is to develop twin binary
 99% of cases will be storing, reading, and sending binary data.
 
 The text format would cover the other 1% of cases (which are still important):
+
 - prototyping
 - initial data loads
 - debugging
@@ -191,6 +196,7 @@ There should ideally be only one way to do each thing.
 Every data format strikes a balance between encoded size and encoding complexity. The bigger the encoded size, the less efficiently it transmits data. The more complex the format, the more CPU power it takes to encode and decode, and the more bugs implementations will have.
 
 CBE tends more towards the simplicity side to:
+
 - Reduce CPU overhead
 - Minimize bugs and security issues
 - Encourage developers to build implementations
@@ -257,6 +263,7 @@ c1 {
 This CTE document encodes into a 105 byte CBE document due to the many text fields, but if we used a schema we could replace well-known text keys and values with numeric enumerations:
 
 **Fictional Schema**:
+
 * 0 = schema ID and version adherence: **(fourCC-style integer: "TSS" + version)**
 * 1 = temperature range: **(list of two integers)**
 * 2 = hazards: **(list of enumerated integers)**:
@@ -274,6 +281,7 @@ This CTE document encodes into a 105 byte CBE document due to the many text fiel
 * 9 = perishes after: **(date)**
 
 **Document (CTE)**:
+
 ```cte
 c1 {
     0 = 0x54535301 // Transport and Storage Schema version 1 ("TSS" + 1)
@@ -287,35 +295,34 @@ c1 {
     9 = 2022-12-05 // Perishes after Dec 5, 2022
 }
 ```
+
 Because integers from -100 to 100 encode into a single byte in CBE, you can achieve tremendous space savings using them as map keys. Doing so would reduce the CBE encoded size to 28 bytes, producing the document [81 00 79 00 6c 01 53 53 54 01 7a ec 05 7b 02 7a 04 06 13 7b 04 0f 09 99 85 59 00 7b], which we then encode into the QR code:
 
-```
-██████████████      ██      ██  ██  ██████████████
-██          ██    ██        ████    ██          ██
-██  ██████  ██  ██    ██    ██      ██  ██████  ██
-██  ██████  ██    ██      ██  ██    ██  ██████  ██
-██  ██████  ██    ██    ██      ██  ██  ██████  ██
-██          ██      ██████    ██    ██          ██
-██████████████  ██  ██  ██  ██  ██  ██████████████
-                ██        ████                    
-██████  ██████████    ██  ██  ██  ████      ██    
-██  ██    ██    ████    ██  ██  ████  ██  ████  ██
-      ██  ████████  ██  ██████  ██  ██  ██████████
-  ██  ██  ██      ██████  ████            ██  ██  
-████        ██  ██  ██  ██  ██  ██████████  ██  ██
-        ████  ██████████  ██  ██    ██    ██  ██  
-██  ██████  ██  ██                    ██    ██  ██
-  ██████████      ██  ██  ██      ██████          
-██  ██  ██████      ████    ██████████████      ██
-                ██    ████      ██      ██  ████  
-██████████████  ██  ██    ██  ████  ██  ██  ██    
-██          ██  ██  ██████████  ██      ████  ██  
-██  ██████  ██  ████    ██  ██  ██████████  ████  
-██  ██████  ██        ██            ██    ██      
-██  ██████  ██  ██    ██    ██████    ████████  ██
-██          ██  ████████    ████    ██  ██    ██  
-██████████████  ██    ██    ██  ██  ██  ██████████
-```
+    ██████████████      ██      ██  ██  ██████████████
+    ██          ██    ██        ████    ██          ██
+    ██  ██████  ██  ██    ██    ██      ██  ██████  ██
+    ██  ██████  ██    ██      ██  ██    ██  ██████  ██
+    ██  ██████  ██    ██    ██      ██  ██  ██████  ██
+    ██          ██      ██████    ██    ██          ██
+    ██████████████  ██  ██  ██  ██  ██  ██████████████
+                    ██        ████                    
+    ██████  ██████████    ██  ██  ██  ████      ██    
+    ██  ██    ██    ████    ██  ██  ████  ██  ████  ██
+          ██  ████████  ██  ██████  ██  ██  ██████████
+      ██  ██  ██      ██████  ████            ██  ██  
+    ████        ██  ██  ██  ██  ██  ██████████  ██  ██
+            ████  ██████████  ██  ██    ██    ██  ██  
+    ██  ██████  ██  ██                    ██    ██  ██
+      ██████████      ██  ██  ██      ██████          
+    ██  ██  ██████      ████    ██████████████      ██
+                    ██    ████      ██      ██  ████  
+    ██████████████  ██  ██    ██  ████  ██  ██  ██    
+    ██          ██  ██  ██████████  ██      ████  ██  
+    ██  ██████  ██  ████    ██  ██  ██████████  ████  
+    ██  ██████  ██        ██            ██    ██      
+    ██  ██████  ██  ██    ██    ██████    ████████  ██
+    ██          ██  ████████    ████    ██  ██    ██  
+    ██████████████  ██    ██    ██  ██  ██  ██████████
 
 A smart QR code reader could then scan, detect the first byte 0x81 (which is invalid ISO 8859-1), switch to CBE decoding and reverse the whole process.
 
@@ -365,6 +372,7 @@ ISO 8601 was considered and rejected. The format is too big and complicated, has
 RFC3339 was also considered, but rejected because it's a format designed to store values in the past (which is all that's needed for its use case), and also is missing time zones. It's good at what it was designed for, but not as a general purpose format.
 
 A general purpose time format requires:
+
 - True time zones
 - Gregorian time fields
 - Human friendly BC dates
@@ -385,6 +393,7 @@ The data formats in the text encoding are designed to be as human readable as po
 Zero-copy is a desirable aspect of a data format because it allows the receiving system to access data directly from the received document rather than having to make a separate copy first.
 
 The binary format is designed to support zero-copy as much as is possible in an ad-hoc format:
+
 - Multibyte data types are stored in little endian format (except for UUID, which is big endian as per the spec).
 - Standard format and sizing is available for the most common types (integers, binary floats, strings, arrays).
 - Strings can be artificially zero-terminated either while encoding (by inserting a [zero chunk](#zero-chunk)), or while decoding (by caching and then overwriting the next object's type code).
@@ -407,17 +416,18 @@ In the most common case, the array is sent in only one chunk containing the enti
 
 A zero chunk is a chunk header that specifies a length of 0 and a continuation of 0. The zero chunk is needed for the case where you've been progressively sending array chunks with continuation 1, but have suddenly hit the end of your source data and need to terminate the array somehow.
 
-The encoding of the zero chunk is 0x00 by design due to the usefulness of 0x00 as a string termination value in many languages (and thus useful for setting up string data from the encoder side for [zero copy](zero-copy))
+The encoding of the zero chunk is 0x00 by design due to the usefulness of 0x00 as a string termination value in many languages (and thus useful for setting up string data from the encoder side for [zero copy](#zero-copy))
 
 
 ### Padding
 
-Padding allows an encoder to adjust the alignment of encoded data in the document, which is useful for making documents [zero copy](zero-copy) friendly.
+Padding allows an encoder to adjust the alignment of encoded data in the document, which is useful for making documents [zero copy](#zero-copy) friendly.
 
 
 ### LEB128
 
 [LEB128](https://en.wikipedia.org/wiki/LEB128) is used for the following data fields in the binary format:
+
 - [Version specifier](cbe-specification.md#version-specifier)
 - [Multibyte integer length field](cbe-specification.md#variable-width)
 - [Array chunk header](cbe-specification.md#chunk-header)
@@ -488,9 +498,7 @@ Continuations are a convenience for representing long sequences of text that don
 
 The above string is interpreted as a single line:
 
-```
-The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
-```
+    The only people for me are the mad ones, the ones who are mad to live, mad to talk, mad to be saved, desirous of everything at the same time, the ones who never yawn or say a commonplace thing, but burn, burn, burn like fabulous yellow roman candles exploding like spiders across the stars.
 
 #### Unicode Escape Sequences
 
@@ -511,6 +519,7 @@ Unicode codepoint escape sequences consist of the following:
 - The `.` character, to terminate the sequence.
 
 Examples:
+
 - `\+0.` = NUL (0x00)
 - `\+c.` = FF (0x0c)
 - `\+7f.` = DEL (0x7f)
@@ -519,6 +528,7 @@ Examples:
 - `\+1f415.` = 🐕 (0x1f415)
 
 Advantages:
+
 - One encoding method for all codepoints.
 - It can be adopted into other languages (no other language currently defines `\+` as a string escape sequence).
 - You only need to encode as many digits as are actually needed to represent the codepoint (no need for zero padding).
@@ -528,7 +538,7 @@ Advantages:
 
 The only way to avoid byte stuffing (escaping) in a text format and get a true verbatim chunk of string data is to adopt a [here document](https://en.wikipedia.org/wiki/Here_document) style escape sequence.
 
-In the text format, [verbatim sequences](cte-specification#verbatim-sequence) are designed with human readers in mind, and so shorter sentinel sequences are preferred (unlike in HTTP). Usually 1-3 characters is enough (e.g. `"\.## some text##"`).
+In the text format, [verbatim sequences](cte-specification.md#verbatim-sequence) are designed with human readers in mind, and so shorter sentinel sequences are preferred (unlike in HTTP). Usually 1-3 characters is enough (e.g. `"\.## some text##"`).
 
 Whitespace was chosen as the initial sentinel terminator because it can never itself be a sentinel character, and also because in some circumstances it's more convenient to have the verbatim sequence on the same line, while in others it's preferable to start on a new line:
 
@@ -562,6 +572,7 @@ CTEST_OUTPUT_ON_FAILURE=1 make test
 @@@"
 }
 ```
+
 In the above example, using a newline terminator is preferable because:
 
 * The verbatim sequence looks and reads just like the original shell script.

@@ -149,7 +149,7 @@ Although Concise Encoding is nearing a release, it's currently a **draft** speci
 
 All examples are valid [Concise Text Encoding](cte-specification.md) documents that can be transparently 1:1 converted to/from [Concise Binary Encoding](cbe-specification.md).
 
-#### Numeric Types
+### Numeric Types
 
 ```cte
 c1
@@ -169,7 +169,7 @@ c1
 }
 ```
 
-#### String and String-Like
+### String and String-Like
 
 ```cte
 c1
@@ -180,7 +180,7 @@ c1
 }
 ```
 
-#### Other Basic Types
+### Other Basic Types
 
 ```cte
 c1
@@ -195,7 +195,7 @@ c1
 }
 ```
 
-#### Containers
+### Containers
 
 ```cte
 c1
@@ -209,7 +209,7 @@ c1
 }
 ```
 
-#### Struct Templates
+### Struct Templates
 
 ```cte
 c1
@@ -240,7 +240,7 @@ c1
 ]
 ```
 
-#### Trees
+### Trees
 
 ```cte
 c1
@@ -276,7 +276,7 @@ Notice how when rotated 90°, it resembles the tree it represents:
 
 ![Rotated](img/tree-rotated.svg)
 
-#### Graphs
+### Graphs
 
 ```cte
 c1
@@ -306,7 +306,7 @@ c1
 }
 ```
 
-#### References
+### References
 
 ```cte
 c1
@@ -323,7 +323,7 @@ c1
 }
 ```
 
-#### Custom Types
+### Custom Types
 
 ```cte
 c1

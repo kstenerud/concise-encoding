@@ -31,10 +31,11 @@ Contents
     - [Why Two Formats?](#why-two-formats)
     - [Versioning](#versioning)
       - [Prerelease Version](#prerelease-version)
-  - [Document Structure](#document-structure)
-    - [Top-Level Object](#top-level-object)
   - [Schema](#schema)
+  - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
+  - [Object Categories](#object-categories)
+  - [Data Objects](#data-objects)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -65,7 +66,7 @@ Contents
       - [Line Endings](#line-endings)
       - [String](#string)
       - [Resource Identifier](#resource-identifier)
-    - [Typed Array](#typed-array)
+    - [Primitive Type Arrays](#primitive-type-arrays)
     - [Media](#media)
     - [Custom Types](#custom-types)
       - [Custom Type Forms](#custom-type-forms)
@@ -77,7 +78,6 @@ Contents
     - [Map](#map)
       - [Keyable types](#keyable-types)
     - [Struct](#struct)
-      - [Struct Template](#struct-template)
       - [Struct Instance](#struct-instance)
       - [Struct Validation](#struct-validation)
     - [Edge](#edge)
@@ -86,7 +86,6 @@ Contents
   - [Other Types](#other-types)
     - [Null](#null)
   - [Pseudo-Objects](#pseudo-objects)
-    - [Marker](#marker)
     - [Reference](#reference)
       - [Local Reference](#local-reference)
         - [Recursive References](#recursive-references)
@@ -95,6 +94,8 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
+    - [Struct Template](#struct-template)
+    - [Marker](#marker)
     - [Identifier](#identifier)
       - [Identifier Rules](#identifier-rules)
   - [Empty Document](#empty-document)
@@ -105,14 +106,14 @@ Contents
   - [Truncated Document](#truncated-document)
   - [Equivalence](#equivalence)
     - [Relaxed Equivalence](#relaxed-equivalence)
-      - [Integers and floats](#integers-and-floats)
-      - [Custom Types](#custom-types-1)
-      - [Strings](#strings)
-      - [Arrays](#arrays)
-      - [Containers](#containers)
-      - [Null](#null-1)
-      - [Comments](#comments)
-      - [Padding](#padding-1)
+      - [Integer and Float Equivalence](#integer-and-float-equivalence)
+      - [Custom Type Equivalence](#custom-type-equivalence)
+      - [String Equivalence](#string-equivalence)
+      - [Array Equivalence](#array-equivalence)
+      - [Container Equivalence](#container-equivalence)
+      - [Null Equivalence](#null-equivalence)
+      - [Comment Equivalence](#comment-equivalence)
+      - [Padding Equivalence](#padding-equivalence)
     - [Strict Equivalence](#strict-equivalence)
   - [Error Processing](#error-processing)
     - [Structural Errors](#structural-errors)
@@ -191,40 +192,11 @@ During the pre-release phase, all documents **SHOULD** use version `0` so as not
 
 
 
-Document Structure
-------------------
-
-A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
-
-Documents begin with a [version specifier](#version-specifier), followed by a [top-level object](#top-level-object).
-
-    [version specifier] [top-level object]
-
-### Top-Level Object
-
-Every Concise Encoding document **MUST** contain one and only one top-level object. Once the top-level object definition is complete, the document is considered ended. To store multiple objects in a document, use a [container](#container-types) as the top-level object and then store objects in that container.
-
-**Notes**:
-
- * A top-level object **CAN** be of any concrete type ([numeric](#numeric-types), [temporal](#temporal-types), [array](#array-types), [container](#container-types), or [other](#other-types)).
- * The top-level object **CAN** be preceded by [invisible objects](#invisible-objects), [struct templates](#struct-template), and at most one [marker](#marker) that marks the top-level object, but the top-level object itself **MUST** be a real object.
- * To represent an [empty document](#empty-document), store [null](#null) as the top-level object.
-
-**Examples**:
-
- * A document containing a list with the integers 1, 2, 3:
-   - In [CTE](cte-specification.md): `c1 [1 2 3]`
-   - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
- * An empty document: 
-   - In [CTE](cte-specification.md): `c1 null`
-   - In [CBE](cbe-specification.md): [`81 01 7e`]
-
-
-
 Schema
 ------
 
 Schema research and development is still very much in its infancy. There are currently many schema languages in various stages of maturity, but they tend to focus on specific technologies, formats and use cases, which limits their utility in a general purpose data format:
+
 - [XML DTD](https://www.w3.org/XML/1998/06/xmlspec-report-v20.htm)
 - [XML Schema](https://www.w3.org/XML/Schema)
 - [RelaxNG](https://relaxng.org/)
@@ -242,6 +214,31 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 
 
 
+Document Structure
+------------------
+
+A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
+
+Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
+
+    [mandatory version specifier] [optional invisible and structural objects] [mandatory top-level data object]
+
+**Notes**:
+
+ * To store multiple [data objects](#data-objects) in a document, use a [container](#container-types) as the top-level object.
+ * To represent an [empty document](#empty-document), use [null](#null) as the top-level object.
+
+**Examples**:
+
+ * A document containing a list with the integers 1, 2, 3:
+   - In [CTE](cte-specification.md): `c1 [1 2 3]`
+   - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
+ * An empty document:
+   - In [CTE](cte-specification.md): `c1 null`
+   - In [CBE](cbe-specification.md): [`81 01 7e`]
+
+
+
 Document Version Specifier
 --------------------------
 
@@ -251,6 +248,31 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
 
  * [CTE](cte-specification.md) version 1: the character sequence `c1`
  * [CBE](cbe-specification.md) version 1: the byte sequence [`81 01`]
+
+
+
+Object Categories
+-----------------
+
+Concise Encoding documents support many kinds of objects that together offer rich expressivity. These objects are roughly split into four high-level categories based on their purpose:
+
+ * [Data objects](#data-objects) contain the actual data of the document.
+ * [Pseudo-objects](#pseudo-objects) serve as stand-ins for [data objects](#data-objects).
+ * [Invisible objects](#invisible-objects) provide helper functionality such as comments and alignment, but don't affect the document structure or data.
+ * [Structural objects](#structural-objects) affect the document's structure by providing linkages beween parts of the document.
+
+
+
+Data Objects
+------------
+
+Data objects hold the actual data of a document, and consist mainly of containers and primitives:
+
+ * [Numeric](#numeric-types)
+ * [Temporal](#temporal-types)
+ * [Arrays](#array-types)
+ * [Containers](#container-types)
+ * [Other](#other-types)
 
 
 
@@ -324,7 +346,7 @@ c1
 
 #### Binary Floating Point
 
-In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵). 
+In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵).
 
 Binary floating point is provided mainly to support legacy systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports three types of binary floating point values:
 
@@ -579,14 +601,14 @@ UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values.
 Array Types
 -----------
 
-An array represents a contiguous sequence of fixed length elements, and is essentially a space-optimized [list](#list). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
+An array represents a contiguous sequence of fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
 There are four kinds of array types in Concise Encoding:
 
- * [String-like arrays](#string-like-arrays), which contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
- * [Typed arrays](#typed-array), whose contents represent elements of a fixed size and type.
- * [Media](#media), whose contents encapsulate other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec if necessary).  Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
- * [Custom types](#custom-types), whose contents represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
+ * [Primitive type arrays](#primitive-type-arrays) represent elements of a fixed size and type.
+ * [Media](#media) encapsulates other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [Custom types](#custom-types) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
 
 ### String-like Arrays
@@ -639,11 +661,11 @@ c1
 ```
 
 
-### Typed Array
+### Primitive Type Arrays
 
-A typed array encodes an array of values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
+A primitive type array encodes an array of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
-The following element types are supported in typed arrays. For other types, use a [list](#list).
+The following element types are supported in primitive type arrays. For other types, use a [list](#list).
 
 | Type                 | Element Sizes (bits) |
 | -------------------- | -------------------- |
@@ -759,7 +781,7 @@ In [CBE](cbe-specification.md):
 Container Types
 ---------------
 
-Container types hold collections of other objects. 
+Container types hold collections of other objects.
 
 
 ### Container Properties
@@ -839,24 +861,11 @@ A struct produces a [map](#map) from a template. Structs are composed of two par
     ----------------------------------------------------
     Produces Map:    {key1=val1 key2=val2 key3=val3 ...}
 
-Structs offer a more efficient way to encode payloads containing repeating instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
-
-#### Struct Template
-
-A struct template is not a real object, but rather instructions for a decoder to build instances from, defining what keys will be present for any [struct instances](#struct-instance) that use it.
-
-A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
-
- * Templates are [ordered, and **CANNOT** contain duplicate keys](#container-properties).
- * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
- * Template [identifiers](#identifier) **MUST** be unique to all struct templates in the current document.
- * Templates and template keys **CANNOT** be [marked](#marker) (it's a template; not a concrete object).
- * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#top-level-object).
- * A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
+Structs offer a more efficient way to encode payloads containing many instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
 
 #### Struct Instance
 
-A struct instance builds a [map](#map) from a [struct template](#struct-template).
+A struct instance builds a [map](#map) from a [struct template](#struct-template) by assigning the template's keys to the instance's values.
 
 A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
 
@@ -1051,15 +1060,13 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 
 ![tree rotated](img/tree-rotated.svg)
 
-```
-      2
-     / \
-    5   7
-   /   /|\
-  9   6 1 2
- /   / \
-4   8   5
-```
+          2
+        / \
+        5   7
+      /   /|\
+      9   6 1 2
+    /   / \
+    4   8   5
 
 
 
@@ -1085,34 +1092,11 @@ Some uses for null in common operations:
 Pseudo-Objects
 --------------
 
-Pseudo-objects stand-in for real objects, or add additional context or meaning to a real object.
+Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand in for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a full object can be placed, except inside a [typed array's] contents (for example, `|u8x 11 22 $myref 44|` is invalid).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive type array's](#primitive-type-arrays) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
-**Note**: Like real objects, pseudo-objects **MUST NOT** appear before the [version specifier](#version-specifier), and **MUST NOT** appear after the [top-level object](#top-level-object).
-
-
-### Marker
-
-A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which is then [referenceable](#reference) from anywhere the document (or from a different document).
-
-    [marker identifier] [marked object]
-
- * Markers **CANNOT** stand-in for real objects.
- * Markers **CANNOT** mark other pseudo-objects, invisible objects, or marked objects (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
- * Marker [identifiers](#identifier) **MUST** be unique to all markers in the current document.
-
-**Example (in [CTE](cte-specification.md))**:
-
-```cte
-c1
-[
-    &remember_me:"Remember this string"
-    &1:{"a" = 1}
-]
-```
-
-The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
+**Note**: Like [data objects](#data-objects), pseudo-objects **MUST NOT** appear before the [version specifier](#document-version-specifier), and **MUST NOT** appear after the [top-level object](#document-structure).
 
 
 ### Reference
@@ -1128,6 +1112,7 @@ A local reference contains the marker [identifier](#identifier) of an object tha
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
+ * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid marker ID is a [structural error](#structural-errors).
  * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
 
 ##### Recursive References
@@ -1137,6 +1122,7 @@ Because cyclic graphs are potential denial-of-service attack vectors to a system
 When support is disabled, a recursive local reference is a [structural error](#structural-errors).
 
 **Examples (in [CTE](cte-specification.md))**:
+
 ```cte
 c1
 {
@@ -1160,15 +1146,17 @@ c1
 
 #### Remote Reference
 
-A remote reference refers to an object in another document. It acts like a [resource ID](#resource-id) that describes how to find the referenced object in an outside document.
+A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier) that describes how to find the referenced object in an outside document.
 
  * A remote reference **MUST** point to either:
    - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
    - A marker [identifier]](#identifier) inside of another CBE or CTE document, using the fragment section to specify the marker identifier in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
+ * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or fragment is a [structural error](#structural-errors).
 
 **Examples (in [CTE](cte-specification.md))**:
+
 ```cte
 c1
 {
@@ -1184,7 +1172,9 @@ c1
 Invisible Objects
 -----------------
 
-Invisible objects are objects that are not semantically relevant to the structure of the document. Their placement rules are not the same as for other objects or pseudo-objects, and they may not be available in both text and binary formats.
+Invisible objects are "invisible" to the structure of the document (they have no semantic relevance and could be removed without affecting the structure or data of the document). They provide utility functionality for convenience when building a document.
+
+Placement rules for invisible objects are not the same as for other objects or pseudo-objects, and they may not be available in both text and binary formats.
 
 Invisible objects **CANNOT** be used as real objects, and **CANNOT** be marked or referenced; they are completely invisible to the document structure.
 
@@ -1201,6 +1191,7 @@ CTE supports two forms of comments:
 Comments are allowed anywhere in a CTE document where a real object would be allowed, except between a [marker](#marker) and marked object (`&my_id:/*comment*/123456` is invalid).
 
 **Examples (in [CTE](cte-specification.md))**:
+
 ```cte
 c1
 // Comment before top-level object
@@ -1240,11 +1231,49 @@ The padding type **CAN** occur any number of times where a CBE type field is val
 Structural Objects
 ------------------
 
+Structural objects exist purely in support of the document structure itself. They have no meaning outside of the document.
+
+Structural objects do not represent data, and **CANNOT** be [marked](#marker). Any objects that make up a structural object's contents also **CANNOT** be [marked](#marker).
+
+
+### Struct Template
+
+A struct template provides instructions for a decoder to build instances from, defining what keys will be present for any [struct instances](#struct-instance) that use it.
+
+A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
+
+ * Templates are [ordered, and **CANNOT** contain duplicate keys](#container-properties).
+ * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
+ * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure).
+ * A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
+
+
+### Marker
+
+A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which is then [referenceable](#reference) from anywhere the document (or from a different document).
+
+    [marker identifier] [marked object]
+
+A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
+
+**Example (in [CTE](cte-specification.md))**:
+
+```cte
+c1
+[
+    &remember_me:"Remember this string"
+    &1:{"a" = 1}
+]
+```
+
+The string `"Remember this string"` is marked with the ID `remember_me`, and the map `{"a"=1}` is marked with the ID `1`.
+
+
 ### Identifier
 
-An identifier is a structural object that has no meaning outside of the document itself; its only purpose is to link objects within a document.
+Identifiers link objects within a document.
 
-Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be [marked](#marker) or be preceded [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
+Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
 
 Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
 
@@ -1263,7 +1292,7 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 Empty Document
 --------------
 
-An empty document is signified by using the [Null](#null) type as the [top-level object](#top-level-object):
+An empty document is signified by using the [Null](#null) type as the [top-level object](#document-structure):
 
 * In CBE: [`81 01 7e`]
 * In CTE: `c1 null`
@@ -1280,7 +1309,7 @@ Decoders are given a lot of leeway in how they represent a document's data after
 
 ### Lossy Conversions
 
-If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy". 
+If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy".
 
 **Lossy conversions that MUST be allowed**:
 
@@ -1325,7 +1354,7 @@ Examples of widely used and largely standardized conversion algorithms:
  * Guy L. Steele Jr. and Jon L. White: "Retrospective: How to print floating-point numbers accurately." ACM SIGPLAN Notices, Vol. 39, No. 4, April 2004, pp. 372–389
  * Florian Loitsch: "Printing floating-point numbers quickly and accurately with integers." In proceedings of 2010 ACM SIGPLAN Conference on Programming Language Design and Implementation, Toronto, ON, Canada, June 2010, pp. 233-243
  * Marc Andrysco, Ranjit Jhala, and Sorin Lerner: "Printing floating-point numbers: a faster, always correct method." ACM SIGPLAN Notices, Vol. 51, No. 1, January 2016, pp. 555-567
- * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282 
+ * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282
 
 ### Problematic Values
 
@@ -1370,7 +1399,7 @@ There are many things to consider when determining if two Concise Encoding docum
 
 Relaxed equivalence is concerned with the question: Does the data destined for machine use come out with essentially the same values, even if there are some type differences?
 
-#### Integers and floats
+#### Integer and Float Equivalence
 
 Integers and floats do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
 
@@ -1378,21 +1407,21 @@ Infinities with the same sign are considered equivalent.
 
 **Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Other than the signaling status, the NaN payload is disregarded when comparing.
 
-#### Custom Types
+#### Custom Type Equivalence
 
 Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared with custom binary values unless they can both first be converted to a type that the receiver can compare.
 
-#### Strings
+#### String Equivalence
 
 Strings are considered equivalent if their contents are equal after decoding escape sequences, etc. Comparisons are case sensitive unless otherwise specified by the schema.
 
-#### Arrays
+#### Array Equivalence
 
 Arrays **MUST** contain the same number of elements, and those elements **MUST** be equivalent.
 
 The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
 
-#### Containers
+#### Container Equivalence
 
 Containers **MUST** be of the same type. For example, a map is never equivalent to a list.
 
@@ -1400,15 +1429,15 @@ Containers **MUST** contain the same number of elements, and their elements **MU
 
 By default, list types **MUST** be compared [ordered](#container-properties), and map types compared [unordered](#container-properties), unless their ordering was otherwise specified by the schema.
 
-#### Null
+#### Null Equivalence
 
 [Null](#null) values are always considered equivalent to each other.
 
-#### Comments
+#### Comment Equivalence
 
 Comments are always ignored when testing for equivalence.
 
-#### Padding
+#### Padding Equivalence
 
 Padding is always ignored when testing for equivalence.
 
@@ -1502,25 +1531,21 @@ The first three approaches are dangerous and lead to security issues. Only rejec
 
 For example, given the map:
 
-```
-{
-    "purchase-ids" = [1004 102062 94112]
-    "total" = 91.44
-    "total" = 0
-}
-```
+    {
+        "purchase-ids" = [1004 102062 94112]
+        "total" = 91.44
+        "total" = 0
+    }
 
 As a seller, you'd want your billing system to choose the first instance of "total". As a buyer, you'd much prefer the second!
 
-**Note**: Key collisions could also occur as a result of [data loss](#data-loss) or even [default type conversions](#default-type-conversions):
+**Note**: Key collisions could also occur as a result of [data loss](#induced-data-loss) or even [default type conversions](#default-type-conversions):
 
-```
-{
-    "purchase-ids" = [1004 102062 94112]
-    "total" = 91.44
-    "total\+D800." = 0
-}
-```
+    {
+        "purchase-ids" = [1004 102062 94112]
+        "total" = 91.44
+        "total\+D800." = 0
+    }
 
 In this case, if the system truncated bad Unicode characters *after* checking for duplicate keys, it would be vulnerable to exploitation.
 
@@ -1560,7 +1585,7 @@ A codec **MUST** provide at least the following **OPTIONS** to allow the user to
 | Max document size                 | In bytes                                 |
 | Max array size                    | For each array, in bytes                 |
 | Max object count                  | Not counting pseudo or invisible objects, an array is a single object. |
-| Max container depth               | 0 = no containers, 1 = [top-level object](#top-level-object) can be a container (but cannot contain containers), ... |
+| Max container depth               | 0 = no containers, 1 = [top-level object](#document-structure) can be a container (but cannot contain containers), ... |
 | Max year digits                   |                                          |
 | Max integer digits                |                                          |
 | Max float coefficient digits      |                                          |
@@ -1677,7 +1702,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
 
-Distributed under the Creative Commons Attribution License: https://creativecommons.org/licenses/by/4.0/legalcode
-License deed: https://creativecommons.org/licenses/by/4.0/
+Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).
