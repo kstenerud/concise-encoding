@@ -632,7 +632,7 @@ String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences wh
 
 #### String Character Replacement
 
-Special processing is required to replace escape sequences in string-like arrays in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur *before* any validation takes place.
+Special processing is required to replace escape sequences in string-like arrays in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur _before_ any validation takes place.
 
 #### NUL Character
 
@@ -1564,7 +1564,7 @@ As a seller, you'd want your billing system to choose the first instance of "tot
         "total\+D800." = 0
     }
 
-In this case, if the system truncated bad Unicode characters *after* checking for duplicate keys, it would be vulnerable to exploitation.
+In this case, if the system truncated bad Unicode characters _after_ checking for duplicate keys, it would be vulnerable to exploitation.
 
 #### Deserialization Complexity
 

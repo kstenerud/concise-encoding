@@ -637,7 +637,7 @@ Whitespace (including "leading" whitespace) is also read verbatim.
 
 Which decodes to:
 
-```
+```text
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
