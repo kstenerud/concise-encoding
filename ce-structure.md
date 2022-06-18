@@ -219,11 +219,13 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 Document Structure
 ------------------
 
-Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion. It is stored serially, and can be progressively read or written.
+Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion, stored serially, and can be progressively read or written.
 
 Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
 
     [mandatory version specifier] [optional invisible and structural objects] [mandatory top-level data object]
+
+Once the top-level object is fully decoded, the document is considered ended.
 
 [Objects](#object-categories) **MUST NOT** be placed before the version specifier or after the top-level object.
 
