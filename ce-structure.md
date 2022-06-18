@@ -159,7 +159,7 @@ Terms and Conventions
 **Sample data will generally be represented as follows**:
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
- * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Byte sequences are represented as a series of two-digit hex values enclosed within backticks and square brackets: [`f1 33 91`]
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
@@ -173,11 +173,13 @@ Concise Encoding is a general purpose, human and machine friendly, compact repre
 
 ### Why Two Formats?
 
-Internally, machines represent data in binary, but binary formats are very difficult for humans to read and write, and humans sometimes need to be able to inspect and modify the data being stored and transmitted by machines.
+Binary formats are more compact and _much_ easier for machines to read and write, but they're also very difficult for _humans_ to read and write (and humans do need to be able to inspect and modify the data from time to time). In the past, we compromised by using text formats (XML, JSON, etc), but text formats are _incredibly_ inefficient, and it's costing us dearly in our new energy conscious world.
 
-In the past, we've compromised by transmitting and storing data in text formats (XML, JSON, etc), but text formats are *incredibly* inefficient. Concise Encoding instead adopts the philosophy: **Not a human data format that a machine can read, but rather a machine data format that a human can read**.
+"**Human data format that a computer can read**" doesn't work anymore, so Concise Encoding turns it on its head: "**Machine data format that a human can read**". Twin formats make it easy and efficient for machines to read and write data (as binary), and _also_ provide a way for humans to easily and intuitively read and write that same data (as text).
 
-Data should ideally be stored and transmitted in a binary format, and only converted to/from text format in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
+Data should ideally be stored and transmitted in a binary format, and only converted to/from text in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
+
+![Example binary and text data flow](img/dataflow.svg)
 
 
 ### Versioning
@@ -217,11 +219,13 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 Document Structure
 ------------------
 
-A Concise Encoding document is a binary or text encoded document containing data arranged in an ad-hoc hierarchical fashion. Data is stored serially, and can be progressively read or written.
+Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion. It is stored serially, and can be progressively read or written.
 
 Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
 
     [mandatory version specifier] [optional invisible and structural objects] [mandatory top-level data object]
+
+[Objects](#object-categories) **MUST NOT** be placed before the version specifier or after the top-level object.
 
 **Notes**:
 
@@ -254,12 +258,12 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
 Object Categories
 -----------------
 
-Concise Encoding documents support many kinds of objects that together offer rich expressivity. These objects are roughly split into four high-level categories based on their purpose:
+Concise Encoding documents support many kinds of objects, the combinations of which offer rich expressivity. These objects are roughly split into four high-level categories based on their purpose:
 
  * [Data objects](#data-objects) contain the actual data of the document.
  * [Pseudo-objects](#pseudo-objects) serve as stand-ins for [data objects](#data-objects).
  * [Invisible objects](#invisible-objects) provide helper functionality such as comments and alignment, but don't affect the document structure or data.
- * [Structural objects](#structural-objects) affect the document's structure by providing linkages beween parts of the document.
+ * [Structural objects](#structural-objects) provide linkages beween parts of the document and ways to reduce redundancy.
 
 
 
@@ -268,20 +272,22 @@ Data Objects
 
 Data objects hold the actual data of a document, and consist mainly of containers and primitives:
 
- * [Numeric](#numeric-types)
- * [Temporal](#temporal-types)
- * [Arrays](#array-types)
- * [Containers](#container-types)
- * [Other](#other-types)
+ * [Numeric Types](#numeric-types)
+ * [Temporal Types](#temporal-types)
+ * [Array Types](#array-types)
+ * [Container Types](#container-types)
+ * [Other Types](#other-types)
 
 
 
 Numeric Types
 -------------
 
-The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that any limits chosen are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
+Numeric types comprise the basic scalar numeric types present in most computer systems.
 
 An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the final numeric value remains the same (i.e. it can still be converted back to the original type and size with no data loss).
+
+**Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that any limits chosen are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
 
 
 ### Boolean
@@ -603,7 +609,7 @@ Array Types
 
 An array represents a contiguous sequence of fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
-There are four kinds of array types in Concise Encoding:
+There are four main array styles in Concise Encoding:
 
  * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
  * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
@@ -646,6 +652,12 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
 
 A standard UTF-8 string.
 
+**Example (in [CTE](cte-specification.md))**:
+
+```cte
+c1 "I'm just a boring string."
+```
+
 #### Resource Identifier Type
 
 A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema or configuration, the default resource identifier type is IRI.
@@ -663,7 +675,7 @@ c1
 
 ### Primitive Array Types
 
-A primitive array encodes an array of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
+A primitive array encodes a sequence of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
 The following element types are supported in primitive arrays. For other types, use a [list](#list).
 
@@ -698,7 +710,7 @@ A media object encapsulates a foreign media object/file (encoded as a binary str
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with an associated media type, and passes it along as such.
 
-Implementations **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error; it is the application layer's job to decide such things.
+Codecs **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error; it is the application layer's job to decide such things.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
 
@@ -865,7 +877,7 @@ Structs offer a more efficient way to encode payloads containing many instances 
 
 #### Struct Instance
 
-A struct instance builds a [map](#map) from a [struct template](#struct-template) by assigning the template's keys to the instance's values.
+A struct instance builds a [map](#map) from a [struct template](#struct-template) by assigning the values from the instance to the keys from the template.
 
 A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
 
@@ -1039,6 +1051,15 @@ Nodes are recorded in a **depth-first**, **node-right-left** order, which ensure
 
 ```cte
 c1
+// The tree:
+//       2
+//      / \
+//     5   7
+//    /   /|\
+//   9   6 1 2
+//  /   / \
+// 4   8   5
+//
 (2
     (7
         2
@@ -1059,14 +1080,6 @@ c1
 When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
 
 ![tree rotated](img/tree-rotated.svg)
-
-          2
-        / \
-        5   7
-      /   /|\
-      9   6 1 2
-    /   / \
-    4   8   5
 
 
 
@@ -1096,8 +1109,6 @@ Pseudo-objects are not [data objects](#data-objects) themselves, but rather stan
 
 Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
-**Note**: Like [data objects](#data-objects), pseudo-objects **MUST NOT** appear before the [version specifier](#document-version-specifier), and **MUST NOT** appear after the [top-level object](#document-structure).
-
 
 ### Reference
 
@@ -1108,7 +1119,7 @@ A reference acts as a stand-in for another object in the current document or ano
 
 #### Local Reference
 
-A local reference contains the marker [identifier](#identifier) of an object that has been [marked](#marker) elsewhere inside of the current document.
+A local reference contains the marker [identifier](#identifier) of an object that has been [marked](#marker) elsewhere in the current document.
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
@@ -1149,11 +1160,11 @@ c1
 A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier-type) that describes how to find the referenced object in an outside document.
 
  * A remote reference **MUST** point to either:
-   - Another CBE or CTE document (using no fragment section, thus referring to the entire document)
-   - A marker [identifier]](#identifier) inside of another CBE or CTE document, using the fragment section to specify the marker identifier in the document being referenced.
+   - Another Concise Encoding document (using no fragment section, thus referring to the top-level object in the document)
+   - A [marker identifier](#marker) inside of another Concise Encoding document, using the fragment section to specify the [marker identifier](#marker) in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
- * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or fragment is a [structural error](#structural-errors).
+ * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or valid [marker identifier](#marker) inside the document is a [structural error](#structural-errors).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1174,7 +1185,7 @@ Invisible Objects
 
 Invisible objects are "invisible" to the structure of the document (they have no semantic relevance and could be removed without affecting the structure or data of the document). They provide utility functionality for convenience when building a document.
 
-Placement rules for invisible objects are not the same as for other objects or pseudo-objects, and they may not be available in both text and binary formats.
+Invisible objects may not be available in both text and binary formats.
 
 Invisible objects **CANNOT** be used as real objects, and **CANNOT** be marked or referenced; they are completely invisible to the document structure.
 
@@ -1188,7 +1199,7 @@ CTE supports two forms of comments:
  * Single-line comments, which end at the line end (`// a comment`).
  * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment */`).
 
-Comments are allowed anywhere in a CTE document where a real object would be allowed, except between a [marker](#marker) and marked object (`&my_id:/*comment*/123456` is invalid).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, and can also be placed in [primitive arrays](#primitive-array-types) alongside array elements (but not between the opening pipe and the [array type specifier](cte-specification.md#primitive-type-array-encoding)).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1212,8 +1223,10 @@ c1
 
     "data" =
     // A comment before some binary data
-    |u8x 01 02 03 // A comment inside the binary array
-         04 05 06 07 /* Another comment inside */ 08 09 0a|
+    |u8x // Comment at the start of the array
+         01 02 03 // A comment inside the binary array
+         04 05 06 07 /* Another comment inside */ 08 09 0a
+         /* One more before closing */|
 
     // Comment before the end of the top-level object (the map), but not after!
 }
@@ -1224,7 +1237,7 @@ c1
 
 Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning. CTE encoders **CANNOT** encode padding.
 
-The padding type **CAN** occur any number of times where a CBE type field is valid.
+The padding type **CAN** occur any number of times where a [CBE type field](cbe-specification.md#type-field) is valid.
 
 
 
@@ -1233,7 +1246,7 @@ Structural Objects
 
 Structural objects exist purely in support of the document structure itself. They have no meaning outside of the document.
 
-Structural objects do not represent data, and **CANNOT** be [marked](#marker). Any objects that make up a structural object's contents also **CANNOT** be [marked](#marker).
+Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 
 ### Struct Template
@@ -1256,6 +1269,8 @@ A marker assigns a unique (to the current document) marker [identifier](#identif
 
 A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
 
+Other objects **CANNOT** be placed between a marker and the object it marks, regardless of type (e.g. `&my_id:/*comment*/123456` is invalid).
+
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
@@ -1271,7 +1286,7 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 ### Identifier
 
-Identifiers link objects within a document.
+Identifiers provide the linkage mechanism between objects.
 
 Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
 

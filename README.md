@@ -10,7 +10,7 @@ Concise Encoding
 
 **Times are different from the carefree days that brought us XML and JSON:**
 
-### Security
+### Security (protect your data and infrastructure)
 
 <ul>
 
@@ -18,29 +18,31 @@ Concise Encoding
 
   The existing ad-hoc data formats are [too loosely defined to be secure](ce-structure.md#attack-vectors), and can't be fixed because they're not versioned.
 
-  **Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats**.
+  **Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats.**
 
 </ul>
 
-### Efficiency AND ease-of-use
+### Efficiency (but not at the cost of convenience)
 
 <ul>
 
   We send so much data now that efficiency is critical, but switching to binary means giving up the ease of text formats.
 
-  **Concise Encoding gives you ease and efficiency with its 1:1 compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats.**
+  ... or does it?
 
-  **`Edit text. Transmit binary.`**
+  **Concise Encoding gives you ease _and_ efficiency with its 1:1 compatible [text](cte-specification.md) and [binary](cbe-specification.md) formats.**
 
 </ul>
 
-### Types
+### Types (we shouldn't have to stringify anymore)
 
 <ul>
 
-  Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens new security holes.
+  Lack of types forces everyone to add extra encoding steps to send their data, which is buggy, reduces compatibility, and opens even more security holes.
 
-  **Concise Encoding supports all of the common types natively**.
+  We live in the 21st century - base64 should be a footnote in history by now!
+
+  **Concise Encoding supports all of the common types natively. No more encoding things into strings.**
 
 </ul>
 
