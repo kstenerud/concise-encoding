@@ -74,7 +74,7 @@ Concise Encoding
  * **Cyclic Data**: Supports cyclic (recursive) data structures.
  * **Time Zones**: Time types support real time zones.
  * **Templates**: Templates for frequently occurring structures.
- * **Bin + Txt**: Has twin formats, and the binary format is 1:1 compatible with the text format.
+ * **Bin + Txt**: Has twin binary and text formats that are 1:1 convertible to each other without data loss.
  * **Versioned**: Documents are versioned to the specification they adhere to. (Ion supports versioning in the binary format only).
 
 ### Type Support
