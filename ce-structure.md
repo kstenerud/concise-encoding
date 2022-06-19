@@ -1297,7 +1297,7 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 #### Identifier Rules
 
  * It **MUST** be a valid UTF-8 string.
- * It **MUST** contain only codepoints from letter, numeric, and mark characters ([base categories "L", "M", and "N" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), as well as the following symbol characters:
+ * It **MUST** contain only codepoints from letter, mark, numeric, and format characters ([base categories "L", "M", "N", and "Cf" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), as well as the following symbol characters:
    - `_` (underscore)
    - `-` (dash)
    - `.` (period)
