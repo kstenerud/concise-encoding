@@ -99,6 +99,7 @@ Contents
     - [Identifier](#identifier)
       - [Identifier Rules](#identifier-rules)
   - [Empty Document](#empty-document)
+  - [Character Safety](#character-safety)
   - [Unrepresentable Values](#unrepresentable-values)
     - [Lossy Conversions](#lossy-conversions)
       - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
@@ -1296,14 +1297,9 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 
 #### Identifier Rules
 
- * It **MUST** be a valid UTF-8 string.
- * It **MUST** contain only codepoints from letter, mark, numeric, and format characters ([base categories "L", "M", "N", and "Cf" in Unicode](https://unicodebook.readthedocs.io/unicode.html#categories)), and the following symbol characters:
-   - `_` (u+005f: underscore)
-   - `-` (u+002d: dash)
-   - `.` (u+002e: period)
+ * It **MUST** be a valid UTF-8 string and contain only [identifier safe](#character-safety) characters.
  * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
  * Comparisons are **case insensitive**.
-
 
 
 Empty Document
@@ -1313,6 +1309,43 @@ An empty document is signified by using the [Null](#null) type as the [top-level
 
 * In CBE: [`81 01 7e`]
 * In CTE: `c1 null`
+
+
+
+Character Safety
+----------------
+
+Because [CTE](cte-specification.md) documents **MUST** be editable by a human without losing information, there are certain codepoints that **MUST NOT** be present in a [CTE](cte-specification.md) document. These restrictions can be worked around in some contexts by encoding them as [escape sequences](cte-specification.md#escape-sequences).
+
+All unassigned, reserved, and invalid Unicode codepoints **MUST NOT** be present in a [CBE](cbe-specification.md) or [CTE](cte-specification.md) document at all (even in escaped form).
+
+[Identifiers](#identifier) have even stricter restrictions, and do not support [escape sequences](cte-specification.md#escape-sequences).
+
+The following table lists the CTE and identifier safety of Unicode characters based on [category](https://unicode.org/glossary/#general_category) or codepoint. The more specific categories or codepoints override the safety status of the broader categories. Any category or codepoint not covered by this list is both CTE _and_ identifier **unsafe**:
+
+| Category or Character | CTE Safe? | Identifier Safe? |
+| --------------------- | --------- | ---------------- |
+| Cf (format)           |     Y     |        Y         |
+| L (letter)            |     Y     |        Y         |
+| M (mark)              |     Y     |        Y         |
+| N (number)            |     Y     |        Y         |
+| P (punctuation)       |     Y     |        -         |
+| S (symbol)            |     Y     |        -         |
+| Zs (space separators) |     Y     |        -         |
+| U+0009 (TAB)          |     Y     |        -         |
+| U+000a (LF)           |     Y     |        -         |
+| U+000d (CR)           |     Y     |        -         |
+| U+002d (`-`)          |     Y     |        Y         |
+| U+002e (`.`)          |     Y     |        Y         |
+| U+005f (`_`)          |     Y     |        Y         |
+| U+00ad (SHY)          |     -     |        -         |
+| U+200b (ZWSP)         |     -     |        -         |
+| U+2060 (WJ)           |     -     |        -         |
+| U+2061 to U+2064      |     -     |        -         |
+| U+206a to U+206f      |     -     |        -         |
+| U+feff (BOM)          |     -     |        -         |
+| U+fff9 to U+fffb      |     Y     |        -         |
+| U+e0001 to U+e0007f   |     -     |        -         |
 
 
 

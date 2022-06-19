@@ -28,7 +28,6 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
   - [Text Format](#text-format)
-    - [Text Safety](#text-safety)
     - [Lookalike Characters](#lookalike-characters)
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
@@ -144,7 +143,7 @@ Text Format
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-All characters in a CTE document **MUST** be [text-safe](#text-safety). Validation of text-safety **MUST** occur before all other processing (such as [escape-sequences](#escape-sequences)).
+All characters in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation of CTE safety **MUST** occur _before_ all other processing (such as [escape-sequences](#escape-sequences)).
 
 [Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). In [maps](#map), the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace). Extraneous [structural whitespace](#structural-whitespace) is ignored.
 
@@ -154,32 +153,6 @@ All characters in a CTE document **MUST** be [text-safe](#text-safety). Validati
  * CTE v1 document containing the top-level integer value 1000: `c1 1000`
  * CTE v1 document containing a top-level list: `c1 ["a" "b" "c"]`
  * CTE v1 document containing a top-level map: `c1 {"a"=1 "b"=2 "c"=3}`
-
-
-### Text Safety
-
-A CTE document **MUST** be editable by a human. This means that it **MUST** contain only valid UTF-8 characters and sequences that can actually be viewed and edited in most UTF-8 capable text editors without potentially losing information. Such characters are referred to as "text safe" characters.
-
-The following table lists the text safety of Unicode characters based on [general category](https://unicode.org/glossary/#general_category) or character. More specific categories or characters override the text safety of the broader categories:
-
-| Category or Character | Text Safe? |
-| --------------------- | ---------- |
-| L (letter)            |     Y      |
-| M (mark)              |     Y      |
-| N (number)            |     Y      |
-| P (punctuation)       |     Y      |
-| S (symbol)            |     Y      |
-| Z (separators)        |     N      |
-| Zs (space separators) |     Y      |
-| C (control & other)   |     N      |
-| Cf (format)           |     Y      |
-| TAB (u+0009)          |     Y      |
-| LF (u+000a)           |     Y      |
-| CR (u+000d)           |     Y      |
-
-Text-unsafe characters **MUST NOT** appear in their raw form in a CTE document. If the type allows [escape sequences](#escape-sequences), such characters **MUST** be represented as [escape sequences](#escape-sequences).
-
-Unassigned, reserved, and invalid codepoints **MUST NOT** be present at all, even in escaped form.
 
 
 ### Lookalike Characters
@@ -545,7 +518,7 @@ A string-like array **MUST** contain only valid UTF-8 characters. The contents a
 
     "contents"
 
-[Text-unsafe](#text-safety) characters **MUST** always be escaped.
+[CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be escaped.
 
 Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well.
 
@@ -613,7 +586,7 @@ The escape sequence begins with a backslash (`\`) character, followed by a plus 
 A Verbatim escape sequence works similarly to a "here" document in Bash. It's composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence sentinel, which is a sequence of [text-safe](#text-safety), non-whitespace characters.
+ * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
  * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator).
@@ -1047,7 +1020,7 @@ Invisible Objects
 
 Comments **CAN** be written in single-line or multi-line form, and do not process escape sequences.
 
-Comments **MUST ONLY** contain [text-safe](#text-safety) characters.
+Comments **MUST ONLY** contain [CTE safe](ce-structure.md#character-safety) characters.
 
 #### Single Line Comment
 
