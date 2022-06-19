@@ -1321,7 +1321,7 @@ All unassigned, reserved, and invalid Unicode codepoints **MUST NOT** be present
 
 [Identifiers](#identifier) have even stricter restrictions, and do not support [escape sequences](cte-specification.md#escape-sequences).
 
-The following table lists the CTE and identifier safety of Unicode characters based on [category](https://unicode.org/glossary/#general_category) or codepoint. The more specific categories or codepoints override the safety status of the broader categories. Any category or codepoint not covered by this list is both CTE _and_ identifier **unsafe**:
+The following table lists the CTE and identifier safety of Unicode characters based on [category](https://unicode.org/glossary/#general_category) or codepoint. The more specific categories or codepoints override the safety status of the broader categories. Any character not covered by this list is both CTE _and_ identifier **unsafe**:
 
 | Category or Character | CTE Safe? | Identifier Safe? |
 | --------------------- | --------- | ---------------- |
