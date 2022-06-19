@@ -172,6 +172,7 @@ The following table lists the text safety of Unicode characters based on [genera
 | Z (separators)        |     N      |
 | Zs (space separators) |     Y      |
 | C (control & other)   |     N      |
+| Cf (format)           |     Y      |
 | TAB (u+0009)          |     Y      |
 | LF (u+000a)           |     Y      |
 | CR (u+000d)           |     Y      |
