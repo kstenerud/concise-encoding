@@ -1706,7 +1706,7 @@ The following options are recommended, but not required:
 | Option                                | Default   | Section                                            |
 | ------------------------------------- | --------- | -------------------------------------------------- |
 | Resource Identifier Type              | IRI       | [Resource Identifier](#resource-identifier-type)   |
-| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer))           |
+| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)            |
 | CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
 | CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
 
