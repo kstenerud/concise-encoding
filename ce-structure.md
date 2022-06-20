@@ -133,8 +133,8 @@ Contents
     - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
   - [Appendix A: List of Codec Options](#appendix-a-list-of-codec-options)
     - [Mandatory Options](#mandatory-options)
-    - [Recommended options](#recommended-options)
-    - [User-controllable limits](#user-controllable-limits-1)
+    - [Mandatory User-controllable limits](#mandatory-user-controllable-limits)
+    - [Recommended Options](#recommended-options)
     - [Schema Options](#schema-options)
   - [Appendix B: How to Record Time](#appendix-b-how-to-record-time)
     - [Absolute Time](#absolute-time)
@@ -1699,21 +1699,9 @@ The following options **MUST** be present in a conformant Concise Encoding codec
 | Data error response                   | terminate | [Error Processing](#error-processing)              |
 
 
-### Recommended options
+### Mandatory [User-controllable limits](#user-controllable-limits)
 
-The following options are recommended, but not required:
-
-| Option                                | Default   | Section                                            |
-| ------------------------------------- | --------- | -------------------------------------------------- |
-| Resource Identifier Type              | IRI       | [Resource Identifier](#resource-identifier-type)   |
-| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)            |
-| CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
-| CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
-
-
-### [User-controllable limits](#user-controllable-limits)
-
-The following options will need to be revisited from time to time based on the environment of your application:
+The following options **MUST** be present in a conformant Concise Encoding codec, but their defaults will need to be revisited from time to time based on the capabilities of your environment:
 
 | Option                            | Recommended Default |
 | --------------------------------- | ------------------- |
@@ -1727,6 +1715,18 @@ The following options will need to be revisited from time to time based on the e
 | Max object count                  | 1,000,000           |
 | Max reference count               | 10,000              |
 | Max year digits                   | 11                  |
+
+
+### Recommended Options
+
+The following options are recommended, but not required:
+
+| Option                                | Default   | Section                                            |
+| ------------------------------------- | --------- | -------------------------------------------------- |
+| Resource Identifier Type              | IRI       | [Resource Identifier](#resource-identifier-type)   |
+| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)            |
+| CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
+| CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
 
 
 ### Schema Options
