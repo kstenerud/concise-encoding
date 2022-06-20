@@ -1344,7 +1344,7 @@ The following table lists the CTE and identifier safety of Unicode characters ba
 | U+202a to U+202e      |     -     |        -         |
 | U+2060 to U+206f      |     -     |        -         |
 | U+feff (BOM)          |     -     |        -         |
-| U+fff9 to U+fffb      |     Y     |        -         |
+| U+fff9 to U+fffb      |     -     |        -         |
 | U+e0001 to U+e0007f   |     -     |        -         |
 
 
