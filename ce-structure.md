@@ -1340,9 +1340,9 @@ The following table lists the CTE and identifier safety of Unicode characters ba
 | U+005f (`_`)          |     Y     |        Y         |
 | U+00ad (SHY)          |     -     |        -         |
 | U+200b (ZWSP)         |     -     |        -         |
-| U+2060 (WJ)           |     -     |        -         |
-| U+2061 to U+2064      |     -     |        -         |
-| U+206a to U+206f      |     -     |        -         |
+| U+200e to U+200f      |     -     |        -         |
+| U+202a to U+202e      |     -     |        -         |
+| U+2060 to U+206f      |     -     |        -         |
 | U+feff (BOM)          |     -     |        -         |
 | U+fff9 to U+fffb      |     Y     |        -         |
 | U+e0001 to U+e0007f   |     -     |        -         |
