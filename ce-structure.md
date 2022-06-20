@@ -132,6 +132,10 @@ Contents
       - [User-Controllable Limits](#user-controllable-limits)
     - [Mitigations: Application Guidelines](#mitigations-application-guidelines)
   - [Appendix A: List of Codec Options](#appendix-a-list-of-codec-options)
+    - [Mandatory Options](#mandatory-options)
+    - [Recommended options](#recommended-options)
+    - [User-controllable limits](#user-controllable-limits-1)
+    - [Schema Options](#schema-options)
   - [Appendix B: How to Record Time](#appendix-b-how-to-record-time)
     - [Absolute Time](#absolute-time)
     - [Fixed Time](#fixed-time)
@@ -1413,6 +1417,7 @@ It's best to think ahead about types and values that might be problematic on the
  * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL character](#nul-character) section for how to deal with this.
  * Platforms might not support UTF-8 encoding.
+ * Platforms might not support the full range of Unicode codepoints.
  * Platforms might have limitations on the size of numeric types.
  * Platform temporal types might not support the same kinds of time zones, or might not support subsecond values to the same resolution.
  * Platforms might not support data with cyclical references.
@@ -1430,10 +1435,10 @@ A codec **MUST** provide an **OPTION** to artificially complete a truncated [CBE
 
 **To artificially complete a truncated document**:
 
- * Incomplete fields that are not containers **MUST** be discarded.
- * Any still-open containers **MUST** be artificially closed.
+ * Incomplete objects that are not containers **MUST** be discarded.
+ * Any still-open containers **MUST** be artificially closed by inserting appropriate "end of container" events until the top-level object is closed.
 
-The artificialy completed document is returned to the caller along with an indication that the document was truncated.
+The artificialy completed document is returned to the caller along with an indication that the document has been truncated.
 
 
 
@@ -1674,20 +1679,41 @@ For application developers, security is a frame of mind. You **SHOULD** always b
 Appendix A: List of Codec Options
 ---------------------------------
 
-This section collects in one place all required **OPTIONS** listed elsewhere in the document:
+This section collects in one place all codec **OPTIONS** listed elsewhere in the specification.
 
-| Option                                | Default   | Section                                       |
-| ------------------------------------- | --------- | --------------------------------------------- |
-| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                         |
-| Follow remote references              | disabled  | [Remote Reference](#remote-reference)         |
-| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)       |
-| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)       |
-| Recursive references                  | forbidden | [Recursive References](#recursive-references) |
-| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)       |
-| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)     |
-| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)       |
 
-The following [user-controllable limit](#user-controllable-limits) **OPTIONS** have default values given as recommendations only:
+### Mandatory Options
+
+The following options **MUST** be present in a conformant Concise Encoding codec:
+
+| Option                                | Default   | Section                                            |
+| ------------------------------------- | --------- | -------------------------------------------------- |
+| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                              |
+| Follow remote references              | disabled  | [Remote Reference](#remote-reference)              |
+| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)            |
+| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)            |
+| Recursive references                  | forbidden | [Recursive References](#recursive-references)      |
+| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)            |
+| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)          |
+| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)            |
+| Data error response                   | terminate | [Error Processing](#error-processing)              |
+
+
+### Recommended options
+
+The following options are recommended, but not required:
+
+| Option                                | Default   | Section                                            |
+| ------------------------------------- | --------- | -------------------------------------------------- |
+| Resource Identifier Type              | IRI       | [Resource Identifier](#resource-identifier-type)   |
+| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer))           |
+| CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
+| CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
+
+
+### [User-controllable limits](#user-controllable-limits)
+
+The following options will need to be revisited from time to time based on the environment of your application:
 
 | Option                            | Recommended Default |
 | --------------------------------- | ------------------- |
@@ -1701,6 +1727,18 @@ The following [user-controllable limit](#user-controllable-limits) **OPTIONS** h
 | Max object count                  | 1,000,000           |
 | Max reference count               | 10,000              |
 | Max year digits                   | 11                  |
+
+
+### Schema Options
+
+The following options **CAN** be set on a per-object basis by a schema (if the schema language supports it):
+
+| Option                                | Default   | Section                                            |
+| ------------------------------------- | --------- | -------------------------------------------------- |
+| List Ordering                         | ordered   | [List](#list)                                      |
+| List Duplicates                       | allowed   | [List](#list)                                      |
+| Map Ordering                          | unordered | [Map](#map)                                        |
+| Map Key Duplicates                    | forbidden | [Map](#map)                                        |
 
 
 
