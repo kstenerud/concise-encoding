@@ -242,7 +242,9 @@ A floating point number is composed of an implied base (signified by an **OPTION
  * The whole and fractional parts of the significand are separated by a radix point (`.`).
  * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix).
 
-**Note**: A value with no fractional part and no exponential portion will be interpreted as an integer.
+**Note**: A float value that contains only a whole significand portion (fractional part = 0 and exponent = 1) will be interpreted/printed as an integer.
+
+CTE encoders **MUST** provide a configuration **OPTION** for how to output binary floating point values (base 10 or 16), with a default of [base-16 notation](#base-16-notation).
 
 **Examples**:
 
@@ -510,7 +512,7 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-Array types are encoded in two primary forms: [string-like](#string-like-arrays) or [primitive type](#primitive-type-arrays).
+Array types are encoded in two primary forms: [string-like](#string-like-arrays) and [primitive type](#primitive-type-arrays).
 
 
 ### String-Like Arrays
@@ -525,10 +527,11 @@ Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalik
 
 #### String-Like Array Validation
 
-Validating a string-like array in CTE is a two-step process:
+Validating a string-like array in CTE is a multi-step process:
 
 1. Validate the raw string contents for [CTE safety](ce-structure.md#character-safety).
-2. Decode all escape sequences and validate the resulting [string-like array](ce-structure.md#string-like-arrays).
+2. Decode all [escape sequences](#escape-sequences) to produce a final string.
+3. [Validate the final string](ce-structure.md#string-like-arrays).
 
 #### Escape Sequences
 
@@ -549,8 +552,6 @@ Within [string-like arrays](#string-like-arrays), escape sequences **CAN** be us
 | u+000d (carriage return) | [continuation](#continuation)           |
 | u+002b (`+`)             | [Unicode codepoint](#unicode-codepoint) |
 | u+002e (`.`)             | [verbatim sequence](#verbatim-sequence) |
-
-Escape sequences **MUST** be converted before any other processing occurs during the decode process.
 
 #### Continuation
 

@@ -1689,25 +1689,26 @@ This section collects in one place all codec **OPTIONS** listed elsewhere in the
 
 ### Mandatory Options
 
-The following options **MUST** be present in a conformant Concise Encoding codec:
+The following options **MUST** be present in a Concise Encoding codec:
 
-| Option                                | Default   | Section                                            |
-| ------------------------------------- | --------- | -------------------------------------------------- |
-| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                              |
-| Follow remote references              | disabled  | [Remote Reference](#remote-reference)              |
-| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)            |
-| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)            |
-| Recursive references                  | forbidden | [Recursive References](#recursive-references)      |
-| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)            |
-| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)          |
-| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)            |
-| Data error response                   | terminate | [Error Processing](#error-processing)              |
-| Default Resource Identifier Kind      | IRI       | [Resource Identifier](#resource-identifier-type)   |
+| Option                                | Default   | Section                                             |
+| ------------------------------------- | --------- | --------------------------------------------------- |
+| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                               |
+| Follow remote references              | disabled  | [Remote Reference](#remote-reference)               |
+| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)             |
+| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)             |
+| Recursive references                  | forbidden | [Recursive References](#recursive-references)       |
+| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)             |
+| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)           |
+| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)             |
+| Data error response                   | terminate | [Error Processing](#error-processing)               |
+| Default Resource Identifier Kind      | IRI       | [Resource Identifier](#resource-identifier-type)    |
+| CTE: Binary float output format       | base 16   | [Binary Float](cte-specification.md#floating-point) |
 
 
 ### Mandatory [User-controllable limits](#user-controllable-limits)
 
-The following options **MUST** be present in a conformant Concise Encoding codec, but their defaults will need to be revisited from time to time based on the capabilities of your environment:
+The following options **MUST** be present in a Concise Encoding codec, but their defaults will need to be revisited from time to time based on the capabilities of machines of the era:
 
 | Option                            | Recommended Default |
 | --------------------------------- | ------------------- |
