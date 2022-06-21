@@ -1396,7 +1396,7 @@ Conversion between binary and decimal float values **MUST** be done using a meth
 1. Convert the source value to its string-based decimal float encoding.
 2. Convert the string value into the destination type.
 
-Where conversion between binary float and string representation follows one of the commonly accepted conversion algorithms present in most standard libraries, for example:
+Where conversion between binary float and decimal string representation follows one of the commonly accepted conversion algorithms present in most standard libraries, for example:
 
  * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
  * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
