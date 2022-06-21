@@ -54,6 +54,7 @@ Contents
     - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
   - [Array Types](#array-types)
     - [String-Like Arrays](#string-like-arrays)
+      - [String-Like Array Validation](#string-like-array-validation)
       - [Escape Sequences](#escape-sequences)
       - [Continuation](#continuation)
       - [Unicode Codepoint](#unicode-codepoint)
@@ -522,7 +523,12 @@ A string-like array **MUST** contain only valid UTF-8 characters. The contents a
 
 Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well.
 
-When decoding a string-like array type, all [escape sequences](#escape-sequences) **MUST** be converted before any other type-specific processing occurs.
+#### String-Like Array Validation
+
+Validating a string-like array in CTE is a two-step process:
+
+1. Validate the raw string contents for [CTE safety](ce-structure.md#character-safety).
+2. Decode all escape sequences and validate the resulting [string-like array](ce-structure.md#string-like-arrays).
 
 #### Escape Sequences
 

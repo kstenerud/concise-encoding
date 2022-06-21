@@ -61,11 +61,10 @@ Contents
       - [UTC Offset](#utc-offset)
   - [Array Types](#array-types)
     - [String-like Arrays](#string-like-arrays)
-      - [String Character Replacement](#string-character-replacement)
       - [NUL Character](#nul-character)
       - [Line Endings](#line-endings)
-      - [String Type](#string-type)
-      - [Resource Identifier Type](#resource-identifier-type)
+      - [String (Type)](#string-type)
+      - [Resource Identifier (Type)](#resource-identifier-type)
     - [Primitive Array Types](#primitive-array-types)
     - [Media](#media)
     - [Custom Types](#custom-types)
@@ -126,7 +125,7 @@ Contents
       - [Induced Omission](#induced-omission)
       - [Key Collisions](#key-collisions)
       - [Deserialization Complexity](#deserialization-complexity)
-      - [Other Vulnerabilities](#other-vulnerabilities)
+      - [Payload Size](#payload-size)
     - [Mitigations: Concise Encoding Codecs](#mitigations-concise-encoding-codecs)
       - [Validation](#validation)
       - [User-Controllable Limits](#user-controllable-limits)
@@ -230,7 +229,7 @@ Documents begin with a [version specifier](#document-version-specifier), possibl
 
     [mandatory version specifier] [optional invisible and structural objects] [mandatory top-level data object]
 
-Once the top-level object is fully decoded, the document is considered ended.
+Once the top-level object is fully decoded, the document is considered finished.
 
 [Objects](#object-categories) **MUST NOT** be placed before the version specifier or after the top-level object.
 
@@ -292,7 +291,7 @@ Numeric Types
 
 Numeric types comprise the basic scalar numeric types present in most computer systems.
 
-An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the final numeric value remains the same (i.e. it can still be converted back to the original type and size with no data loss).
+An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss.
 
 **Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that any limits chosen are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
 
@@ -415,7 +414,7 @@ An implementation **MUST** preserve the signaling/quiet status of a NaN, and **M
 
 A universal identifier. This identifier is designed to be unique across all identifiers in the universe.
 
-Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) as the universal identifier implementation.
+Concise encoding uses [rfc4122 UUID](https://tools.ietf.org/html/rfc4122) (and future updates to rfc4122) as the universal identifier implementation.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -635,10 +634,6 @@ String-like arrays are arrays of UTF-8 encoded bytes. The following types are st
 
 String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
-#### String Character Replacement
-
-Special processing is required to replace escape sequences in string-like arrays in [CTE](cte-specification.md) documents with their encoded values. This processing **MUST** occur _before_ any validation takes place.
-
 #### NUL Character
 
 The NUL character (U+0000) is allowed in string-like arrays in documents, but because it is problematic on so many platforms, Concise Encoding imposes a special rule:
@@ -646,7 +641,7 @@ The NUL character (U+0000) is allowed in string-like arrays in documents, but be
  * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`].
  * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
 
-This ensures a default of uniform behavior across platforms.
+This ensures a default of uniform behavior across all platforms that sidesteps the null-termination problem.
 
 #### Line Endings
 
@@ -655,7 +650,7 @@ Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to 
  * Decoders **MUST** accept both line ending types as input.
  * Encoders **MUST** output LF only.
 
-#### String Type
+#### String (Type)
 
 A standard UTF-8 string.
 
@@ -665,9 +660,11 @@ A standard UTF-8 string.
 c1 "I'm just a boring string."
 ```
 
-#### Resource Identifier Type
+#### Resource Identifier (Type)
 
-A resource identifier is a text-based (UTF-8) universally unique identifier that can be resolved by a machine. The most common resource identifier types are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of the resource ID is done according to its type. If unspecified by a schema or configuration, the default resource identifier type is IRI.
+A resource identifier is a text-based universally unique identifier that can be resolved by a machine. The most common kinds of resource identifiers are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of a resource ID is done according to its kind. If not specified by a schema, the default kind is assumed.
+
+Codecs **MUST** provide an **OPTION** to set the default kind of resource identifier, and the default setting **MUST** be [IRI](https://tools.ietf.org/html/rfc3987).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -711,7 +708,7 @@ c1
 
 ### Media
 
-A media object encapsulates a foreign media object/file (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
+A media object encapsulates foreign media data (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
 
     [media type] [data]
 
@@ -719,7 +716,7 @@ The media object's internal encoding is not the concern of a Concise Encoding co
 
 Codecs **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error; it is the application layer's job to decide such things.
 
-**Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are not supported, as there's no unified way to unambiguously represent them as a single byte stream.
+**Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -747,7 +744,7 @@ Adding custom types restricts interoperability to only those implementations tha
 
 #### Custom Type Forms
 
-Custom types can be represented in either a binary or a textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
+Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
 
 [CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** output the textual form if it's available.
 
@@ -819,12 +816,14 @@ An implementation **MUST** disregard the type and size of integers and floats wh
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
+Ordering and duplicates policies in [lists](#list) and [maps](#map) **CAN** be set by a schema, per-instance and globally.
+
 
 ### List
 
 A sequential list of objects. List elements **CAN** be any type (including other containers), and do not all have to be the same type.
 
-By default, a list is [ordered and allows duplicate values](#container-properties). Different rules **CAN** be set using a schema.
+By default, a list is [ordered and allows duplicate values](#container-properties).
 
 **Example**:
 
@@ -846,7 +845,7 @@ A map associates key objects with value objects. Keys **CAN** be any [keyable ty
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
-By default, a map is [unordered and does not allow duplicate keys](#container-properties). Different rules **CAN** be set using a schema.
+By default, a map is [unordered and does not allow duplicate keys](#container-properties).
 
 #### Keyable types
 
@@ -888,7 +887,7 @@ A struct instance builds a [map](#map) from a [struct template](#struct-template
 
 A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
 
- * Struct instances are [ordered, and **CAN** contain duplicates](#container-properties).
+ * Struct instances are always [ordered, and **CAN** contain duplicates](#container-properties).
  * The struct instance **MUST** define the same number of values as there are keys in the struct template.
  * A struct instance **CANNOT** be placed before the [template](#struct-template) it references.
 
@@ -1046,7 +1045,7 @@ c1
 A node is the basic building block for unweighted directed graphs. It consists of:
 
  * A value (any object).
- * A collection of zero or more children (directionality is always from the node to its children).
+ * An [ordered](#container-properties) collection of zero or more children (directionality is always from the node to its children).
 
 If a child is not of type node, it is treated as though it were the value portion of a node with no children.
 
@@ -1262,7 +1261,7 @@ A struct template provides instructions for a decoder to build instances from, d
 
 A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
 
- * Templates are [ordered, and **CANNOT** contain duplicate keys](#container-properties).
+ * Templates are always [ordered, and **CANNOT** contain duplicate keys](#container-properties).
  * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
  * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure).
  * A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
@@ -1387,19 +1386,17 @@ Disallowed lossy conversions are [data errors](#data-errors).
 
 #### Binary and Decimal Float Conversions
 
-Binary and decimal float values can rarely be converted to each other without data loss, but such conversions can sometimes be necessary:
+Binary and decimal float values can rarely be converted to each other without data loss, but conversions can sometimes be necessary:
 
  * The destination platform might not support one of the types.
  * The destination object's required type might not match.
 
-Such conversions **MUST** be done using either the following algorithm, or an algorithm that ultimately yields the same result in the destination type:
+Such conversions **MUST** be done using a method that effectively produces the same result in the destination type as the following algorithm would:
 
- * Convert the source value to its string-based decimal exponent encoding.
- * Convert the string value into the destination type.
+1. Convert the source value to its string-based decimal float encoding.
+2. Convert the string value into the destination type.
 
-Binary float <-> string conversions **MUST** be done using standard conversion algorithms (or equivalent). These are usually provided as part of the standard library. This helps to minimize exploitable behavioral differences between implementations.
-
-Examples of widely used and largely standardized conversion algorithms:
+Where conversion between binary float and string representation follows a commonly accepted conversion algorithm present in most standard libraries, for example:
 
  * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
  * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
@@ -1409,6 +1406,9 @@ Examples of widely used and largely standardized conversion algorithms:
  * Florian Loitsch: "Printing floating-point numbers quickly and accurately with integers." In proceedings of 2010 ACM SIGPLAN Conference on Programming Language Design and Implementation, Toronto, ON, Canada, June 2010, pp. 233-243
  * Marc Andrysco, Ranjit Jhala, and Sorin Lerner: "Printing floating-point numbers: a faster, always correct method." ACM SIGPLAN Notices, Vol. 51, No. 1, January 2016, pp. 555-567
  * Ulf Adams: "Ryū: fast float-to-string conversion." ACM SIGPLAN Notices, Vol. 53, No. 4, April 2018, pp. 270-282
+
+This helps to minimize exploitable behavioral differences between implementations.
+
 
 ### Problematic Values
 
@@ -1468,7 +1468,7 @@ Unless the schema specifies otherwise, custom types are compared byte-by-byte, w
 
 #### String Equivalence
 
-Strings are considered equivalent if their contents are equal after decoding escape sequences, etc. Comparisons are case sensitive unless otherwise specified by the schema.
+Strings are considered equivalent if their contents are equal after decoding escape sequences, [NUL stuffing](#nul-character), etc. Comparisons are case sensitive unless otherwise specified by the schema.
 
 #### Array Equivalence
 
@@ -1544,7 +1544,7 @@ Although Concise Encoding supports a wide range of data types and values, any gi
 
 ### Attack Vectors
 
-There are many vectors that attackers could take advantage of when they control the data your system is receiving, the most common of which are induced data loss, field omission, key collisions, and exploitation of algorithmic complexity.
+There are many vectors that attackers could take advantage of when they control the data your system is receiving, the most common of which are [induced data loss](#induced-data-loss), [default type conversions](#default-type-conversions), [field omission](#induced-omission), [key collisions](#key-collisions), [exploitation of algorithmic complexity](#deserialization-complexity), and [payload size](#payload-size).
 
 #### Induced Data Loss
 
@@ -1608,13 +1608,13 @@ In this case, if the system truncated bad Unicode characters _after_ checking fo
 
 Depending on the implementation, some operations could get expensive very quickly the larger the object is, exhibiting O(n²) or sometimes even O(n³) behavior. This is particularly true of "big int" type structures in many languages. Even attempting to deserialize values as small as 10^1000 into a BigInt could DOS some systems.
 
-#### Other Vulnerabilities
+#### Payload Size
 
-Attack documents could threaten a system in other ways, too. For example:
+Attackers can exploit payload size limitations (either leveraging differences between implementations, or directly attacking an implementation for overflows and such). For example:
 
- * Extremely large objects (for example a 1TB array).
- * Documents with too many objects.
- * Documents with too much container depth (attempting to overflow the decoder's stack).
+ * Extremely large objects (like a 1TB array).
+ * High object count.
+ * Deep container depth (attempting to overflow the decoder's stack).
 
 
 ### Mitigations: Concise Encoding Codecs
@@ -1635,18 +1635,23 @@ All decoded values **MUST** be validated for the following before being passed t
 
 A codec **MUST** provide at least the following **OPTIONS** to allow the user to control various limits and ranges, with sane defaults to guard against denial-of-service attacks:
 
-| Limit                             | Notes                                    |
+| Limit                             | Clarification                            |
 | ---------------------             | ---------------------------------------- |
 | Max document size                 | In bytes                                 |
-| Max array size                    | For each array, in bytes                 |
-| Max object count                  | Not counting pseudo or invisible objects, an array is a single object. |
-| Max container depth               | 0 = no containers, 1 = [top-level object](#document-structure) can be a container (but cannot contain containers), ... |
+| Max array size                    | Per array, in bytes                      |
+| Max object count                  |                                          |
+| Max container depth               | 0 = [top-level object](#document-structure) cannot contain other objects, 1 = [top-level object](#document-structure) can contain objects (which cannot themselves contain other objects), ... |
 | Max year digits                   |                                          |
 | Max integer digits                |                                          |
 | Max float coefficient digits      |                                          |
-| Max decimal float exponent digits | Max binary float exponent digits = `decimal_digits × 10 ÷ 3` rounded down. |
+| Max decimal float exponent digits | Max binary float exponent digits = `max_decimal_digits × 10 ÷ 3` rounded down. |
 | Max marker count                  |                                          |
 | Max reference count               |                                          |
+
+**Notes**:
+
+ * An array along with its contents constitute a _single_ object.
+ * [Referenced](#reference) containers are **not** double-counted (the reference itself is counted as an object, but the container and contents it references are not counted again, and do not count towards the container depth).
 
 It's impossible to prescribe what default limits are sane and reasonable for all decoders because different systems will have different constraints, and system capabilities in general keep improving as time goes on. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
 
@@ -1697,6 +1702,7 @@ The following options **MUST** be present in a conformant Concise Encoding codec
 | Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)          |
 | Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)            |
 | Data error response                   | terminate | [Error Processing](#error-processing)              |
+| Default Resource Identifier Kind      | IRI       | [Resource Identifier](#resource-identifier-type)   |
 
 
 ### Mandatory [User-controllable limits](#user-controllable-limits)
@@ -1723,7 +1729,6 @@ The following options are recommended, but not required:
 
 | Option                                | Default   | Section                                            |
 | ------------------------------------- | --------- | -------------------------------------------------- |
-| Resource Identifier Type              | IRI       | [Resource Identifier](#resource-identifier-type)   |
 | CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)            |
 | CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
 | CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
@@ -1731,14 +1736,14 @@ The following options are recommended, but not required:
 
 ### Schema Options
 
-The following options **CAN** be set on a per-object basis by a schema (if the schema language supports it):
+The following options **CAN** be set globally and on a per-object basis by a schema (if the schema language supports it):
 
 | Option                                | Default   | Section                                            |
 | ------------------------------------- | --------- | -------------------------------------------------- |
-| List Ordering                         | ordered   | [List](#list)                                      |
-| List Duplicates                       | allowed   | [List](#list)                                      |
-| Map Ordering                          | unordered | [Map](#map)                                        |
-| Map Key Duplicates                    | forbidden | [Map](#map)                                        |
+| List Ordering                         | ordered   | [List](#container-properties)                      |
+| List Duplicates                       | allowed   | [List](#container-properties)                      |
+| Map Ordering                          | unordered | [Map](#container-properties)                       |
+| Map Key Duplicates                    | forbidden | [Map](#container-properties)                       |
 
 
 
