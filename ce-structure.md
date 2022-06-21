@@ -1371,7 +1371,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 **Lossy conversions that MUST NOT be allowed**:
 
  * String character substitution or omission
- * Truncation from storing in a type that cannot hold all of the data (except where listed as configurable - see below)
+ * Truncation from storing in a type that cannot hold all of the data (except where decided based on configuration - see below)
 
 **Lossy conversions that MUST be decided based on configuration**:
 
@@ -1386,17 +1386,17 @@ Disallowed lossy conversions are [data errors](#data-errors).
 
 #### Binary and Decimal Float Conversions
 
-Binary and decimal float values can rarely be converted to each other without data loss, but conversions can sometimes be necessary:
+Binary and decimal float values can rarely be converted to each other without data loss, but conversions are sometimes necessary:
 
- * The destination platform might not support one of the types.
- * The destination object's required type might not match.
+ * The destination platform might not support the requested type.
+ * The struct being decoded into might only have a partially compatible type.
 
-Such conversions **MUST** be done using a method that effectively produces the same result in the destination type as the following algorithm would:
+Conversion between binary and decimal float values **MUST** be done using a method that effectively produces the same result in the destination type as the following algorithm would:
 
 1. Convert the source value to its string-based decimal float encoding.
 2. Convert the string value into the destination type.
 
-Where conversion between binary float and string representation follows a commonly accepted conversion algorithm present in most standard libraries, for example:
+Where conversion between binary float and string representation follows one of the commonly accepted conversion algorithms present in most standard libraries, for example:
 
  * Jerome T. Coonen: "An Implementation Guide to a Proposed Standard for Floating-Point Arithmetic." Computer, Vol. 13, No. 1, January 1980, pp. 68-79
  * Guy. L. Steele Jr. and J. L. White: "How to print floating-point numbers accurately". In proceedings of ACM SIGPLAN '90 Conference on Programming Language Design and Implementation, White Plains, New York, June 1990, pp. 112-126
