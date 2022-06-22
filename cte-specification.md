@@ -14,7 +14,7 @@ This Document
 
 This document describes the encoding format of Concise Text Encoding (CTE), and how codecs of this format must behave.
 
-The logical structure of [Concise Encoding](ce-structure.md) is described in its own document.
+The logical structure of Concise Encoding is described [in its own document](ce-structure.md).
 
 
 
@@ -31,6 +31,7 @@ Contents
     - [Lookalike Characters](#lookalike-characters)
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
+  - [Document Structure](#document-structure)
   - [Version Specifier](#version-specifier)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -192,12 +193,21 @@ In the spirit of human editability:
 
 
 
+Document Structure
+------------------
+
+Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by the top-level [data object](#data-objects).
+
+    [version specifier] [optional invisible and structural objects] [top-level data object]
+
+
+
 Version Specifier
 -----------------
 
-A CTE document begins with a version specifier, which is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
+The version specifier is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
 
-**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder must also accept uppercase `C` (u+0043).
+**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder **MUST** also accept uppercase `C` (u+0043).
 
 The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace).
 

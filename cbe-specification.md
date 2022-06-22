@@ -14,7 +14,7 @@ This Document
 
 This document describes the encoding format of Concise Binary Encoding (CBE), and how codecs of this format must behave.
 
-The logical structure of [Concise Encoding](ce-structure.md) is described in its own document.
+The logical structure of Concise Encoding is described [in its own document](ce-structure.md).
 
 
 
@@ -27,8 +27,9 @@ Contents
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
+  - [Document Structure](#document-structure)
   - [Version Specifier](#version-specifier)
-  - [Encoding](#encoding)
+  - [Object Encoding](#object-encoding)
     - [Type Field](#type-field)
     - [Type Field (Plane 2)](#type-field-plane-2)
   - [Numeric Types](#numeric-types)
@@ -117,10 +118,19 @@ The binary format aims for compactness and machine processing efficiency while m
 
 
 
+Document Structure
+------------------
+
+Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by the top-level [data object](#data-objects).
+
+    [version specifier] [optional invisible and structural objects] [top-level data object]
+
+
+
 Version Specifier
 -----------------
 
-A CBE document begins with a version specifier, which is composed of the octet `0x81`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
+The version specifier is composed of the octet `0x81`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
 **Example**:
 
@@ -128,10 +138,10 @@ A CBE document begins with a version specifier, which is composed of the octet `
 
 
 
-Encoding
---------
+Object Encoding
+---------------
 
-A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found in a single pass.
+A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
 
 Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
 
@@ -349,7 +359,7 @@ Temporal Types
 
 Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
 
-**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed in CBE!
+**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed in CBE.
 
 
 ### Date
@@ -440,7 +450,7 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
 
 #### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Most array types have both short and chunked forms.
+Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
 
 **Examples**:
 
@@ -563,7 +573,7 @@ Resource identifiers are encoded like a long-form [string](#string), but with ty
 
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), with the first element of the array stored in the least significant bit of the first byte of the encoding. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), with the first element of the array stored in the least significant bit of the first byte of the encoded elements. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -573,7 +583,7 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 #### Media
 
-The media array is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
+The media object is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
 
 | Field        | Description                                  |
 | ------------ | -------------------------------------------- |
@@ -623,8 +633,8 @@ Custom types are encoded as binary data with the array type 0x92.
     = binary data representing a fictional custom "cplx" struct
       {
           type:uint8 = 1
-          real:float32 = 2.94
-          imag:float32 = 3.0
+          real:float32 = 2.94 (40 3c 28 f6)
+          imag:float32 = 3.0  (40 40 00 00)
       }
 
 
@@ -761,7 +771,7 @@ Structural Objects
 
 ### Struct Template
 
-A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by key-value pairs representing the keys and default values of the template, and is terminated with 0x7b (end of container).
+A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with 0x7b (end of container).
 
     [76] [key1] [key2] [key3] ... [7b]
 
