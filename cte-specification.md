@@ -32,7 +32,7 @@ Contents
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
   - [Document Structure](#document-structure)
-  - [Version Specifier](#version-specifier)
+  - [Document Version Specifier](#document-version-specifier)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -196,14 +196,14 @@ In the spirit of human editability:
 Document Structure
 ------------------
 
-Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by the top-level [data object](#data-objects).
+Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
     [version specifier] [optional invisible and structural objects] [top-level data object]
 
 
 
-Version Specifier
------------------
+Document Version Specifier
+--------------------------
 
 The version specifier is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
 
@@ -1199,7 +1199,7 @@ Examples:
 
 **Structural Whitespace MUST occur**:
 
- * Between the [version specifier](#version-specifier) and the first object.
+ * Between the [version specifier](#document-version-specifier) and the first object.
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a primitive type array element type specifier and the array contents, and between array elements.
  * Between values in a [list](#list) (`["one""two"]` is invalid).
@@ -1208,7 +1208,7 @@ Examples:
 
 **Whitespace MUST NOT occur**:
 
- * Before the [version specifier](#version-specifier).
+ * Before the [version specifier](#document-version-specifier).
  * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are invalid).
  * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).

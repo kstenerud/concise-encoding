@@ -28,7 +28,7 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Document Structure](#document-structure)
-  - [Version Specifier](#version-specifier)
+  - [Document Version Specifier](#document-version-specifier)
   - [Object Encoding](#object-encoding)
     - [Type Field](#type-field)
     - [Type Field (Plane 2)](#type-field-plane-2)
@@ -121,14 +121,14 @@ The binary format aims for compactness and machine processing efficiency while m
 Document Structure
 ------------------
 
-Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by the top-level [data object](#data-objects).
+Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
     [version specifier] [optional invisible and structural objects] [top-level data object]
 
 
 
-Version Specifier
------------------
+Document Version Specifier
+--------------------------
 
 The version specifier is composed of the octet `0x81`, followed by a version number (an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) representing which version of this specification the document adheres to).
 
