@@ -49,11 +49,6 @@
         <p class="title-subtitle">The secure data format for a modern world</p>
         <div class="title-bgimage">
     </header>
-    <section class="updates-container">
-        <div>
-            <span class="badge-warning">Release Status</span> <span class="release-number">Draft</span> (Please help by <a href="https://github.com/kstenerud/concise-encoding">reviewing the specs</a> and <a href="https://github.com/kstenerud/concise-encoding/issues">submitting issues</a>!)
-        </div>
-    </section>
 
     <main>
         <section>
@@ -102,7 +97,7 @@
                 </div>
             </div>
             <p>State actors, criminal organizations and mercenaries are now actively hacking governments, companies and individuals to steal secrets, plant malware, and hold your data hostage.</p>
-            <p>The existing ad-hoc data formats are <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md#attack-vectors">too loosely defined to be secure</a>, and can't be fixed because they're not versioned.</p>
+            <p>The existing ad-hoc data formats are <a href="releases/${spec_version}/ce-structure-v${spec_version}.html#attack-vectors">too loosely defined to be secure</a>, and can't be fixed because they're not versioned.</p>
             <p><strong>Concise Encoding is designed for security, and is versioned so that it can be updated to handle new threats.</strong></p>
         </article>
 
@@ -118,7 +113,7 @@
             </div>
             <p>We send so much data these days that efficiency is critical, but switching to binary means giving up the ease of text formats.</p>
             <p>... or does it?</p>
-            <p><strong>Concise Encoding gives you ease <em>and</em> efficiency with its 1:1 compatible <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">text</a> and <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">binary</a> formats.</strong></p>
+            <p><strong>Concise Encoding gives you ease <em>and</em> efficiency with its 1:1 compatible <a href="releases/${spec_version}/cte-specification-v${spec_version}.html">text</a> and <a href="releases/${spec_version}/cbe-specification-v${spec_version}.html">binary</a> formats.</strong></p>
         </article>
 
         <article>
@@ -148,42 +143,59 @@
             <h2>Specifications</h2>
         </div>
 
-        <article>
-            <div class="resource">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md"><img class="resource-img" src="img/structure.svg" alt="Structure"></a>
-                <div class="resource-desc" style="display: block;">
-                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/ce-structure.md">Concise Encoding (Structual Specification)</a>
-                  <br>
-                  <span>Both formats follow this structure.</span>
-                </div>
-            </div>
-        </article>
-
-        <article>
-            <div class="resource">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md"><img class="resource-img" src="img/binary-doc.svg" alt="Binary"></a>
-                <div class="resource-desc" style="display: block;">
-                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>
-                  <br>
-                  <span>Use this for data storage and transmission.</span>
-                </div>
-            </div>
-        </article>
-
-        <article>
-            <div class="resource">
-                <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md"><img class="resource-img" src="img/text-doc.svg" alt="Text"></a>
-                <div class="resource-desc" style="display: block;">
-                  <a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a>
-                  <br>
-                  <span>Use this where humans are involved.</span>
-                </div>
-            </div>
-        </article>
+        <div class="centered-items">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Specification</th>
+                        <th>Markdown</th>
+                        <th>HTML</th>
+                        <th>PDF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Concise Encoding (Structure)</td>
+                        <td class="centered"><a href="releases/${spec_version}/ce-structure-v${spec_version}.md"><img src="img/md.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/ce-structure-v${spec_version}.html"><img src="img/html.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/ce-structure-v${spec_version}.a4.pdf"><img src="img/pdf-a4.svg">
+                            <a href="releases/${spec_version}/ce-structure-v${spec_version}.letter.pdf"><img src="img/pdf-ltr.svg"></a></td>
+                    </tr>
+                    <tr>
+                        <td>Concise Binary Encoding</td>
+                        <td class="centered"><a href="releases/${spec_version}/cbe-specification-v${spec_version}.md"><img src="img/md.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/cbe-specification-v${spec_version}.html"><img src="img/html.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/cbe-specification-v${spec_version}.a4.pdf"><img src="img/pdf-a4.svg">
+                            <a href="releases/${spec_version}/cbe-specification-v${spec_version}.letter.pdf"><img src="img/pdf-ltr.svg"></a></td>
+                    </tr>
+                    <tr>
+                        <td>Concise Text Encoding</td>
+                        <td class="centered"><a href="releases/${spec_version}/cte-specification-v${spec_version}.md"><img src="img/md.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/cte-specification-v${spec_version}.html"><img src="img/html.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/cte-specification-v${spec_version}.a4.pdf"><img src="img/pdf-a4.svg">
+                            <a href="releases/${spec_version}/cte-specification-v${spec_version}.letter.pdf"><img src="img/pdf-ltr.svg"></a></td>
+                    </tr>
+                    <tr>
+                        <td>Compact Float</td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-float-specification.md"><img src="img/md.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-float-specification.html"><img src="img/html.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-float-specification.a4.pdf"><img src="img/pdf-a4.svg">
+                            <a href="releases/${spec_version}/compact-float-specification.letter.pdf"><img src="img/pdf-ltr.svg"></a></td>
+                    </tr>
+                    <tr>
+                        <td>Compact Time</td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-time-specification.md"><img src="img/md.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-time-specification.html"><img src="img/html.svg"></a></td>
+                        <td class="centered"><a href="releases/${spec_version}/compact-time-specification.a4.pdf"><img src="img/pdf-a4.svg">
+                            <a href="releases/${spec_version}/compact-time-specification.letter.pdf"><img src="img/pdf-ltr.svg"></a></td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
 
         <div class="blurb extra-space">
             <h2>Examples</h2>
-            <p class="blurb-text"><a href="https://github.com/kstenerud/concise-encoding/blob/master/cte-specification.md">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="https://github.com/kstenerud/concise-encoding/blob/master/cbe-specification.md">Concise Binary Encoding</a>.</p>
+            <p class="blurb-text"><a href="releases/${spec_version}/cte-specification-v${spec_version}.html">Concise Text Encoding</a> documents that can be transparently 1:1 converted to/from <a href="releases/${spec_version}/cbe-specification-v${spec_version}.html">Concise Binary Encoding</a>.</p>
         </div>
 
         <article id="numeric_types">
@@ -394,11 +406,11 @@ c1
         &ampd:{}
     ]
     "edges" = [
-        @($a {"weight"=4 "direction"="both"} $b)
-        @($a {"weight"=3 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $c)
-        @($b {"weight"=1 "direction"="both"} $d)
-        @($c {"weight"=4 "direction"="both"} $d)
+        @($$a {"weight"=4 "direction"="both"} $$b)
+        @($$a {"weight"=3 "direction"="both"} $$c)
+        @($$b {"weight"=1 "direction"="both"} $$c)
+        @($$b {"weight"=1 "direction"="both"} $$d)
+        @($$c {"weight"=4 "direction"="both"} $$d)
     ]
 }
                 </code>
@@ -416,15 +428,15 @@ c1
                 <code>
 c1
 {
-    // Entire map will be referenced later as $id1
+    // Entire map will be referenced later as $$id1
     "marked object" = &id1:{
-        "recursive" = $id1
+        "recursive" = $$id1
     }
-    "ref1" = $id1
-    "ref2" = $id1
+    "ref1" = $$id1
+    "ref2" = $$id1
 
     // Reference pointing to part of another document.
-    "outside ref" = $"https://xyz.com/document.cte#some_id"
+    "outside ref" = $$"https://xyz.com/document.cte#some_id"
 }
                 </code>
             </pre>
