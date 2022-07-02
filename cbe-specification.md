@@ -172,9 +172,9 @@ The types are structured such that the most commonly used types and values encod
 |  72 | [Binary Float (64 bit)](#binary-floating-point) | [[64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian] |
 |  73 | [UID](#uid)                                     | [128 bits of data, big endian]           |
 |  74 | [RESERVED](#reserved)                           |                                          |
-|  75 | [Struct Instance](#struct-instance)             | ID, (Key, Default) ... End of Container  |
-|  76 | [Struct Template](#struct-template)             | ID, Value ... End of Container           |
-|  77 | [Edge](#edge)                                   | Source, Description, Destination         |
+|  75 | [Struct Instance](#struct-instance)             | ID, Value ... End of Container           |
+|  76 | [Struct Template](#struct-template)             | ID, Key ... End of Container             |
+|  77 | [Edge](#edge)                                   | Source, Description, Destination, End of Container |
 |  78 | [Node](#node)                                   | Value, Child Node ... End of Container   |
 |  79 | [Map](#map)                                     | (Key, Value) ... End of Container        |
 |  7a | [List](#list)                                   | Object ... End of Container              |
@@ -664,9 +664,9 @@ A map begins with 0x79, followed by a series of zero or more key-value pairs, an
 
 ### Struct Instance
 
-A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template). The number of values **MUST** always match the number of keys in the [template](#struct-template), so a struct instance has no end-of-container marker.
+A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x7b (end of container).
 
-    [75] [val1] [val2] [val3] ...
+    [75] [val1] [val2] [val3] ... [7b]
 
 **Example**:
 
@@ -677,9 +677,9 @@ A struct instance built from template "a", with the first key's associated value
 
 ### Edge
 
-An edge always consists of exactly three components, and therefore doesn't use an end-of-container terminator.
+An edge consists of a source, then a description, then a destination, and is terminated with 0x7b (end of container).
 
-    [77] [source] [description] [destination]
+    [77] [source] [description] [destination] [7b]
 
 **Example**:
 

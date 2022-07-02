@@ -888,7 +888,7 @@ A struct instance builds a [map](#map) from a [struct template](#struct-template
 A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
 
  * Struct instances are always [ordered, and **CAN** contain duplicates](#container-properties).
- * The struct instance **MUST** define the same number of values as there are keys in the struct template.
+ * The struct instance **MUST** define the same number of values as there are keys in the struct template. A mismatch is a [structural error](#structural-errors).
  * A struct instance **CANNOT** be placed before the [template](#struct-template) it references.
 
 **Example (in [CTE](cte-specification.md))**:
@@ -971,6 +971,8 @@ An edge describes a relationship between vertices in a graph. It is composed of 
  * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be null.
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be null.
+
+If any of these parts are missing, it is a [structural error](#structural-errors).
 
 Directionality is from the source to the destination unless the description or schema specifies otherwise.
 
