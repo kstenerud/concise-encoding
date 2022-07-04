@@ -1265,8 +1265,9 @@ A struct template contains a unique (to the current document) template [identifi
 
  * Templates are always [ordered, and **CANNOT** contain duplicate keys](#container-properties).
  * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
- * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure).
- * A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
+ * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure), but there are some restrictions:
+   - Templates **CANNOT** be placed inside other templates.
+   - A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
 
 
 ### Marker
