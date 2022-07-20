@@ -326,7 +326,7 @@ c1
 
  * Encoders **MUST** output exponent portion markers in lowercase only (`e` or `p`).
  * Decoders **MUST** accept uppercase (`E` or `P`) and lowercase (`e` or `p`) exponent portion markers.
- * There **MUST** be at least one digit on each side of a radix point (`.`).
+ * There **MUST** be at least one digit on each side of a radix point (`.`) when present.
 
 | Invalid      | Valid     | Notes                                                    |
 | ------------ | --------- | -------------------------------------------------------- |

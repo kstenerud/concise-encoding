@@ -1305,7 +1305,7 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 
  * It **MUST** be a valid, visible UTF-8 string and contain only [identifier safe](#character-safety) characters.
  * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
- * Comparisons are **case insensitive**.
+ * Comparisons are **case sensitive**.
 
 
 Empty Document
