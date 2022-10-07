@@ -31,7 +31,7 @@ Contents
   - [Document Version Specifier](#document-version-specifier)
   - [Object Encoding](#object-encoding)
     - [Type Field](#type-field)
-    - [Type Field (Plane 2)](#type-field-plane-2)
+    - [Type Field (Plane 7f)](#type-field-plane-7f)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -148,17 +148,15 @@ Containers and arrays can always be built incrementally (you don't need to know 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy capable in most places on little endian systems.
 
 
-### Type Field
-
 | Hex | Type                                            | Payload                                  |
 | --- | ----------------------------------------------- | ---------------------------------------- |
 |  00 | [Integer value 0](#small-int)                   |                                          |
 |  01 | [Integer value 1](#small-int)                   |                                          |
 | ... | ...                                             |                                          |
 |  64 | [Integer value 100](#small-int)                 |                                          |
-|  65 | [Decimal Float](#decimal-floating-point)        | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  67 | [Negative Integer](#variable-width-int)         | [byte length] [little endian bytes]      |
+|  65 | [UID](#uid)                                     | [128 bits of data, big endian]           |
 |  66 | [Positive Integer](#variable-width-int)         | [byte length] [little endian bytes]      |
+|  67 | [Negative Integer](#variable-width-int)         | [byte length] [little endian bytes]      |
 |  68 | [Positive Integer (8 bit)](#fixed-width-int)    | [8-bit unsigned integer]                 |
 |  69 | [Negative Integer (8 bit)](#fixed-width-int)    | [8-bit unsigned integer]                 |
 |  6a | [Positive Integer (16 bit)](#fixed-width-int)   | [16-bit unsigned integer, little endian] |
@@ -170,19 +168,19 @@ The types are structured such that the most commonly used types and values encod
 |  70 | [Binary Float (16 bit)](#binary-floating-point) | [16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
 |  71 | [Binary Float (32 bit)](#binary-floating-point) | [[32-bit ieee754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), little endian] |
 |  72 | [Binary Float (64 bit)](#binary-floating-point) | [[64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian] |
-|  73 | [UID](#uid)                                     | [128 bits of data, big endian]           |
+|  73 | [RESERVED](#reserved)                           |                                          |
 |  74 | [RESERVED](#reserved)                           |                                          |
-|  75 | [Struct Instance](#struct-instance)             | ID, Value ... End of Container           |
-|  76 | [Struct Template](#struct-template)             | ID, Key ... End of Container             |
-|  77 | [Edge](#edge)                                   | Source, Description, Destination, End of Container |
-|  78 | [Node](#node)                                   | Value, Child Node ... End of Container   |
-|  79 | [Map](#map)                                     | (Key, Value) ... End of Container        |
-|  7a | [List](#list)                                   | Object ... End of Container              |
-|  7b | [End of Container](#container-types)            |                                          |
-|  7c | [Boolean False](#boolean)                       |                                          |
-|  7d | [Boolean True](#boolean)                        |                                          |
-|  7e | [Null](#null)                                   |                                          |
-|  7f | [Padding](#padding)                             |                                          |
+|  75 | [RESERVED](#reserved)                           |                                          |
+|  76 | [Decimal Float](#decimal-floating-point)        | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  77 | [Local Reference](#local-reference)             | [length] [UTF-8 data]                    |
+|  78 | [Boolean False](#boolean)                       |                                          |
+|  79 | [Boolean True](#boolean)                        |                                          |
+|  7a | [Date](#date)                                   | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]           |
+|  7b | [Time](#time)                                   | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)]           |
+|  7c | [Timestamp](#timestamp)                         | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
+|  7d | [Null](#null)                                   |                                          |
+|  7e | [RESERVED](#reserved)                           |                                          |
+|  7f | [Plane 7f](#type-field-plane-7f)                | (See [Plane 7f](#type-field-plane-7f))   |
 |  80 | [String: 0 bytes](#string)                      |                                          |
 |  81 | [String: 1 byte](#string)                       | [1 octet of UTF-8 data]                  |
 |  82 | [String: 2 bytes](#string)                      | [2 octets of UTF-8 data]                 |
@@ -202,75 +200,78 @@ The types are structured such that the most commonly used types and values encod
 |  90 | [String](#string)                               | [chunk length] [UTF-8 data] ...          |
 |  91 | [Resource Identifier](#resource-identifier)     | [chunk length] [UTF-8 data] ...          |
 |  92 | [Custom Type](#custom-types)                    | [chunk length] [data] ...                |
-|  93 | [RESERVED](#reserved)                           |                                          |
-|  94 | [Plane 2](#type-field-plane-2)                  | (See [Plane 2](#type-field-plane-2))     |
-|  95 | [Array: Unsigned Int8](#supported-array-types)  | [chunk length] [8-bit elements] ...      |
-|  96 | [Array: Bit](#bit-array)                        | [chunk length] [1-bit elements] ...      |
-|  97 | [Marker](#marker)                               | [length] [UTF-8 data]                    |
-|  98 | [Local Reference](#local-reference)             | [length] [UTF-8 data]                    |
-|  99 | [Date](#date)                                   | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]            |
-|  9a | [Time](#time)                                   | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)]            |
-|  9b | [Timestamp](#timestamp)                         | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
+|  93 | [Array: Unsigned Int8](#supported-array-types)  | [chunk length] [8-bit elements] ...      |
+|  94 | [Array: Bit](#bit-array)                        | [chunk length] [1-bit elements] ...      |
+|  95 | [Padding](#padding)                             |                                          |
+|  96 | [Struct Instance](#struct-instance)             | ID, Value ... End of Container           |
+|  97 | [Edge](#edge)                                   | Source, Description, Destination, End of Container |
+|  98 | [Node](#node)                                   | Value, Child Node ... End of Container   |
+|  99 | [Map](#map)                                     | (Key, Value) ... End of Container        |
+|  9a | [List](#list)                                   | Object ... End of Container              |
+|  9b | [End of Container](#container-types)            |                                          |
 |  9c | [Integer value -100](#small-int)                |                                          |
 | ... | ...                                             |                                          |
 |  fe | [Integer value -2](#small-int)                  |                                          |
 |  ff | [Integer value -1](#small-int)                  |                                          |
 
 
-### Type Field (Plane 2)
+### Type Field (Plane 7f)
 
-Types from plane 2 are represented using two bytes instead of one, with the prefix `[94]`. For example, the type for signed 16-bit array with 8 elements is `[94 28]`, and the type for media is `[94 e1]`.
+Types from plane 7f are represented using two bytes instead of one, with the prefix `[7f]`. For example, the type for signed 16-bit array with 8 elements is `[7f 28]`, and the type for media is `[7f e1]`.
 
 | Hex | Type                                            | Elems | Payload                                   |
 | --- | ----------------------------------------------- | ----- | ----------------------------------------- |
-|  00 | [Array: Signed Int8](#supported-array-types)    |    0  | [8-bit element] x0                        |
+|  00 | [Array: UID](#supported-array-types)            |    0  | [128-bit big endian element] x0           |
 | ... | ...                                             |  ...  | ...                                       |
-|  0f | [Array: Signed Int8](#supported-array-types)    |   15  | [8-bit element] x15                       |
-|  10 | [Array: Unsigned Int16](#supported-array-types) |    0  | [16-bit little endian element] x0         |
+|  0f | [Array: UID](#supported-array-types)            |   15  | [128-bit big endian element] x15          |
+|  10 | [Array: Signed Int8](#supported-array-types)    |    0  | [8-bit element] x0                        |
 | ... | ...                                             |  ...  | ...                                       |
-|  1f | [Array: Unsigned Int16](#supported-array-types) |   15  | [16-bit little endian element] x15        |
-|  20 | [Array: Signed Int16](#supported-array-types)   |    0  | [16-bit little endian element] x0         |
+|  1f | [Array: Signed Int8](#supported-array-types)    |   15  | [8-bit element] x15                       |
+|  20 | [Array: Unsigned Int16](#supported-array-types) |    0  | [16-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  2f | [Array: Signed Int16](#supported-array-types)   |   15  | [16-bit little endian element] x15        |
-|  30 | [Array: Unsigned Int32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+|  2f | [Array: Unsigned Int16](#supported-array-types) |   15  | [16-bit little endian element] x15        |
+|  30 | [Array: Signed Int16](#supported-array-types)   |    0  | [16-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  3f | [Array: Unsigned Int32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
-|  40 | [Array: Signed Int32](#supported-array-types)   |    0  | [32-bit little endian element] x0         |
+|  3f | [Array: Signed Int16](#supported-array-types)   |   15  | [16-bit little endian element] x15        |
+|  40 | [Array: Unsigned Int32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  4f | [Array: Signed Int32](#supported-array-types)   |   15  | [32-bit little endian element] x15        |
-|  50 | [Array: Unsigned Int64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+|  4f | [Array: Unsigned Int32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
+|  50 | [Array: Signed Int32](#supported-array-types)   |    0  | [32-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  5f | [Array: Unsigned Int64](#supported-array-types) |   15  | [64-bit little endian element] x15        |
-|  60 | [Array: Signed Int64](#supported-array-types)   |    0  | [64-bit little endian element] x0         |
+|  5f | [Array: Signed Int32](#supported-array-types)   |   15  | [32-bit little endian element] x15        |
+|  60 | [Array: Unsigned Int64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  6f | [Array: Signed Int64](#supported-array-types)   |   15  | [64-bit little endian element] x15        |
-|  70 | [Array: BFloat16](#supported-array-types)       |    0  | [16-bit little endian element] x0         |
+|  6f | [Array: Unsigned Int64](#supported-array-types) |   15  | [64-bit little endian element] x15        |
+|  70 | [Array: Signed Int64](#supported-array-types)   |    0  | [64-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  7f | [Array: BFloat16](#supported-array-types)       |   15  | [16-bit little endian element] x15        |
-|  80 | [Array: Binary Float32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+|  7f | [Array: Signed Int64](#supported-array-types)   |   15  | [64-bit little endian element] x15        |
+|  80 | [Array: BFloat16](#supported-array-types)       |    0  | [16-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  8f | [Array: Binary Float32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
-|  90 | [Array: Binary Float64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+|  8f | [Array: BFloat16](#supported-array-types)       |   15  | [16-bit little endian element] x15        |
+|  90 | [Array: Binary Float32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  9f | [Array: Bin Float64](#supported-array-types)    |   15  | [64-bit little endian element] x15        |
-|  a0 | [Array: UID](#supported-array-types)            |    0  | [128-bit big endian element] x0           |
+|  9f | [Array: Binary Float32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
+|  a0 | [Array: Binary Float64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  af | [Array: UID](#supported-array-types)            |   15  | [128-bit big endian element] x15          |
+|  af | [Array: Bin Float64](#supported-array-types)    |   15  | [64-bit little endian element] x15        |
 | ... | [RESERVED](#reserved)                           |       |                                           |
-|  e0 | [Remote Reference](#remote-reference)           |    1  | [resource id]                             |
-|  e1 | [Media](#media)                                 |    ∞  | [media type] [chunk length] [data] ...    |
+|  e0 | [Array: UID](#supported-array-types)            |    ∞  | [chunk length] [128-bit B-E elements] ... |
+|  e1 | [Array: Signed Int8](#supported-array-types)    |    ∞  | [chunk length] [8-bit elements] ...       |
+|  e2 | [Array: Unsigned Int16](#supported-array-types) |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  e3 | [Array: Signed Int16](#supported-array-types)   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  e4 | [Array: Unsigned Int32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  e5 | [Array: Signed Int32](#supported-array-types)   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  e6 | [Array: Unsigned Int64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  e7 | [Array: Signed Int64](#supported-array-types)   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  e8 | [Array: BFloat16](#supported-array-types)       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
+|  e9 | [Array: Binary Float32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
+|  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
 | ... | [RESERVED](#reserved)                           |       |                                           |
-|  f5 | [Array: UID](#supported-array-types)            |    ∞  | [chunk length] [128-bit B-E elements] ... |
-|  f6 | [Array: Binary Float64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  f7 | [Array: Binary Float32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  f8 | [Array: BFloat16](#supported-array-types)       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  f9 | [Array: Signed Int64](#supported-array-types)   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  fa | [Array: Unsigned Int64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  fb | [Array: Signed Int32](#supported-array-types)   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  fc | [Array: Unsigned Int32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  fd | [Array: Signed Int16](#supported-array-types)   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  fe | [Array: Unsigned Int16](#supported-array-types) |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  ff | [Array: Signed Int8](#supported-array-types)    |    ∞  | [chunk length] [8-bit elements] ...       |
+|  f0 | [Marker](#marker)                               |    1  | [length] [UTF-8 data]                     |
+|  f1 | [Struct Template](#struct-template)             |    ∞  | ID, Key ... End of Container              |
+|  f2 | [Remote Reference](#remote-reference)           |    1  | [resource id]                             |
+|  f3 | [Media](#media)                                 |    ∞  | [media type] [chunk length] [data] ...    |
+| ... | [RESERVED](#reserved)                           |       |                                           |
 
 
 
@@ -283,11 +284,23 @@ True or false.
 
 **Examples**:
 
-    [7c] = false
-    [7d] = true
+    [78] = false
+    [79] = true
 
 
 ### Integer
+
+CBE encoders **MUST** output integer values in the smallest form possible, unless explicitly configured to do otherwise:
+
+| Values                                 | Form                    |
+| -------------------------------------- | ----------------------- |
+| ± 0 - 100                              | [small int](#small-int) |
+| ± 0x65 - 0xff                          | types 0x68, 0x69        |
+| ± 0x100 - 0xffff                       | types 0x6a, 0x6b        |
+| ± 0x10000 - 0xffffffff                 | types 0x6c, 0x6d        |
+| ± 0x100000000 - 0xffffffffffff         | types 0x66, 0x67        |
+| ± 0x1000000000000 - 0xffffffffffffffff | types 0x6e, 0x6f        |
+| ± 0x10000000000000000 and up           | types 0x66, 0x67        |
 
 Integers are encoded in three possible ways:
 
@@ -327,8 +340,8 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 
 **Examples**:
 
-    [65 07 4b] = -7.5
-    [65 ac 02 d0 9e 38] = 9.21424e+80
+    [76 07 4b] = -7.5
+    [76 ac 02 d0 9e 38] = 9.21424e+80
 
 
 ### Binary Floating Point
@@ -350,7 +363,7 @@ A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/r
 
 **Example**:
 
-    [73 12 3e 45 67 e8 9b 12 d3 a4 56 42 66 55 44 00 00] = UID 123e4567-e89b-12d3-a456-426655440000
+    [65 12 3e 45 67 e8 9b 12 d3 a4 56 42 66 55 44 00 00] = UID 123e4567-e89b-12d3-a456-426655440000
 
 
 
@@ -368,7 +381,7 @@ Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blo
 
 **Example**:
 
-    [99 56 cd 00] = Oct 22, 2051
+    [7a 56 cd 00] = Oct 22, 2051
 
 
 ### Time
@@ -377,7 +390,7 @@ Time values are stored in [compact time](https://github.com/kstenerud/compact-ti
 
 **Example**:
 
-    [9a f7 58 74 fc f6 a7 fd 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
+    [7b f7 58 74 fc f6 a7 fd 10 45 2f 42 65 72 6c 69 6e] = 13:15:59.529435422/E/Berlin
 
 
 ### Timestamp
@@ -386,7 +399,7 @@ Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compac
 
 **Example**:
 
-    [9b 81 ac a0 b5 03 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
+    [7c 81 ac a0 b5 03 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
 
@@ -407,50 +420,52 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 
 **Primary plane, short form**:
 
-| Field        | Bits | Description                                    |
-| ------------ | ---- | ---------------------------------------------- |
-| Type         |    4 | Upper 4 bits in [primary plane](#type-field)   |
-| Length       |    4 | Number of elements (0-15)                      |
-| Elements     |    ∞ | The elements as a sequence of octets           |
+| Field        | Bits | Description                                      |
+| ------------ | ---- | ------------------------------------------------ |
+| Type         |    4 | Upper 4 bits in [primary plane](#type-field)     |
+| Length       |    4 | Number of elements (0-15)                        |
+| Elements     |    ∞ | The elements as a sequence of octets             |
 
 **Primary plane, chunked form**:
 
-| Field        | Bits | Description                                    |
-| ------------ | ---- | ---------------------------------------------- |
-| Type         |   8  | Type in [primary plane](#type-field)           |
-| Chunk Header |   ∞  | The number of elements in this chunk           |
-| Elements     |   ∞  | The elements as a sequence of octets           |
-| ...          |   ∞  | Possibly more chunks                           |
+| Field        | Bits | Description                                      |
+| ------------ | ---- | ------------------------------------------------ |
+| Type         |   8  | Type in [primary plane](#type-field)             |
+| Chunk Header |   ∞  | The number of elements in this chunk             |
+| Elements     |   ∞  | The elements as a sequence of octets             |
+| ...          |   ∞  | Possibly more chunks                             |
 
-**Plane 2, short form**:
+**Plane 7f, short form**:
 
-| Field        | Bits | Description                                    |
-| ------------ | ---- | ---------------------------------------------- |
-| Type (plane) |    8 | 0x94 (plane 2)                                 |
-| Type         |    4 | Upper 4 bits in [plane 2](#type-field-plane-2) |
-| Length       |    4 | Number of elements (0-15)                      |
-| Elements     |    ∞ | The elements as a sequence of octets           |
+| Field        | Bits | Description                                      |
+| ------------ | ---- | ------------------------------------------------ |
+| Type (plane) |    8 | 0x7f (plane 7f)                                  |
+| Type         |    4 | Upper 4 bits in [plane 7f](#type-field-plane-7f) |
+| Length       |    4 | Number of elements (0-15)                        |
+| Elements     |    ∞ | The elements as a sequence of octets             |
 
-**Plane 2, chunked form**:
+**Plane 7f, chunked form**:
 
-| Field        | Bits | Description                                    |
-| ------------ | ---- | ---------------------------------------------- |
-| Type (plane) |   8  | 0x94 (plane 2)                                 |
-| Type         |   8  | Type in [plane 2](#type-field-plane-2)         |
-| Chunk Header |   ∞  | The number of elements in this chunk           |
-| Elements     |   ∞  | The elements as a sequence of octets           |
-| ...          |   ∞  | Possibly more chunks                           |
+| Field        | Bits | Description                                      |
+| ------------ | ---- | ------------------------------------------------ |
+| Type (plane) |   8  | 0x7f (plane 7f)                                  |
+| Type         |   8  | Type in [plane 7f](#type-field-plane-7f)         |
+| Chunk Header |   ∞  | The number of elements in this chunk             |
+| Elements     |   ∞  | The elements as a sequence of octets             |
+| ...          |   ∞  | Possibly more chunks                             |
 
 The length represents the number of **elements** (not bytes) in the array/chunk.
 
 **Examples**:
 
- * `[95 04 01 02]` = unsigned 8-bit array with elements 1, 2
- * `[94 12 01 00 02 00]` = unsigned 16-bit array with elements 1, 2
+ * `[93 04 01 02]` = unsigned 8-bit array with elements 1, 2
+ * `[7f 22 01 00 02 00]` = unsigned 16-bit array (note: plane 7f) with elements 1, 2
 
 #### Short Form
 
 Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
+
+CBE encoders **MUST** use the short form whenever it is possible to do so, unless explicitly configured to do otherwise.
 
 **Examples**:
 
@@ -579,7 +594,7 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 **Example**:
 
-    [96 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
+    [94 16 76 06] = bit array {0,1,1,0,1,1,1,0,0,1,1}
 
 #### Media
 
@@ -587,7 +602,7 @@ The media object is composed of two sub-arrays: an implied string containing the
 
 | Field        | Description                                  |
 | ------------ | -------------------------------------------- |
-| Plane 2      | The type code 0x94                           |
+| Plane 7f     | The type code 0x7f                           |
 | Type         | The type code 0xe1 (media)                   |
 | Chunk Header | The number of media type bytes in this chunk |
 | Elements     | The characters as a sequence of octets       |
@@ -599,7 +614,7 @@ The media object is composed of two sub-arrays: an implied string containing the
 **Example**:
 
      *1 *2 *3 *4                                              *5
-    [94 e1 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 
+    [7f f3 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 
 
      *6
      23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
@@ -608,8 +623,8 @@ Points of interest:
 
 | Point | Description                                      |
 | ----- | ------------------------------------------------ |
-|  *1   | Type (0x94 = plane 2)                            |
-|  *2   | Plane 2 type (0xe1 = media)                      |
+|  *1   | Type (0x7f = plane 7f)                           |
+|  *2   | Plane 7f subtype (0xf3 = media)                  |
 |  *3   | Chunk Header (0x20 = length 16, no continuation) |
 |  *4   | String Data `application/x-sh`                   |
 |  *5   | Chunk Header (0x38 = length 28, no continuation) |
@@ -648,44 +663,46 @@ A list begins with 0x7a, followed by a series of zero or more objects, and is te
 
 **Example**:
 
-    [7a 01 6a 88 13 7b] = A list containing integers (1, 5000)
+    [9a 01 6a 88 13 9b] = A list containing integers (1, 5000)
 
 
 ### Map
 
 A map begins with 0x79, followed by a series of zero or more key-value pairs, and is terminated with 0x7b (end of container).
 
-    [79] [key-1] [value-1] [key-2] [value-2] ... [7b]
+    [99] [key-1] [value-1] [key-2] [value-2] ... [9b]
 
 **Example**:
 
-    [79 81 61 01 81 62 02 7b] = A map containg the key-value pairs ("a", 1) ("b", 2)
+    [99 81 61 01 81 62 02 9b] = A map containg the key-value pairs ("a", 1) ("b", 2)
 
 
 ### Struct Instance
 
 A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x7b (end of container).
 
-    [75] [val1] [val2] [val3] ... [7b]
+    [96] [val1] [val2] [val3] ... [9b]
 
 **Example**:
 
 A struct instance built from template "a", with the first key's associated value set to 5:
 
-    [75 01 61 05]
+    [96 01 61 05 9b]
 
 
 ### Edge
 
 An edge consists of a source, then a description, then a destination, and is terminated with 0x7b (end of container).
 
-    [77] [source] [description] [destination] [7b]
+    [97] [source] [description] [destination] [9b]
 
 **Example**:
 
-    [77 91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
+    [97
+     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 68 6f 6d 65 72
      91 22 68 74 74 70 3a 2f 2f 65 2e 6f 72 67 2f 77 69 66 65
-     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65]
+     91 24 68 74 74 70 3a 2f 2f 73 2e 67 6f 76 2f 6d 61 72 67 65
+     9b]
     = the relationship graph: @(@"http://s.gov/homer" @"http://e.org/wife" @"http://s.gov/marge")
 
 
@@ -693,11 +710,11 @@ An edge consists of a source, then a description, then a destination, and is ter
 
 A node begins with 0x78, followed by a value object and zero or more child nodes, and is terminated with 0x7b (end of container).
 
-    [78] [value] [node] ... [7b]
+    [98] [value] [node] ... [9b]
 
 **Example**:
 
-    [78 01 78 03 78 05 7b 78 04 7b 7b 78 02 7b 7b]
+    [98 01 98 03 98 05 9b 98 04 9b 9b 98 02 9b 9b]
     = the binary tree:
       1
      / \
@@ -712,7 +729,7 @@ Other Types
 
 ### Null
 
-Null is encoded as `[7e]`.
+Null is encoded as `[7d]`.
 
 
 ### RESERVED
@@ -726,24 +743,24 @@ Peudo-Objects
 
 ### Local Reference
 
-A local reference begins with the reference type (0x98), followed by a marker [identifier]](#identifier).
+A local reference begins with the reference type (0x77), followed by a marker [identifier]](#identifier).
 
-    [98 (length) (ID string data)]
+    [77 (length) (ID string data)]
 
 **Examples**:
 
-    [98 01 61] = reference to the object marked with ID "a"
+    [77 01 61] = reference to the object marked with ID "a"
 
 ### Remote Reference
 
-A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[94 e0]`).
+A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code (`[7f f2]`).
 
 **Examples**:
 
-    [94 e0 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
+    [7f f2 24 63 6f 6d 6d 6f 6e 2e 63 65 23 6c 65 67 61 6c 65 73 65]
     = reference to relative file "common.ce", ID "legalese" (common.ce#legalese)
 
-    [94 e0 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
+    [7f f2 4e 68 74 74 70 73 3a 2f 2f 65 78 61 6d 70 6c 65 2e 6f 72 67 2f 63 69 74 69 65 73 2f 66 72 61 6e 63 65 23 70 61 72 69 73]
     = remote reference to https://example.org/cities/france#paris, where "paris" is the local marker ID in that document
 
 
@@ -758,11 +775,11 @@ Comments are not supported in CBE. An encoder **MUST** skip all comments when co
 
 ### Padding
 
-Padding is encoded as type 0x7f. Repeat as many times as needed.
+Padding is encoded as type 0x95. Repeat as many times as needed.
 
 **Example**:
 
-    [7f 7f 7f 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
+    [95 95 95 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
 
 
 
@@ -771,27 +788,30 @@ Structural Objects
 
 ### Struct Template
 
-A struct template begins with 0x76, followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with 0x7b (end of container).
+The struct template type is in plane 7f, subtype f1, followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with 0x9b (end of container).
 
-    [76] [key1] [key2] [key3] ... [7b]
+    [7f f1] [key1] [key2] [key3] ... [9b]
 
 **Example**:
 
 A struct template named "a", containing the key "b":
 
-    [76 01 61 81 62 7b]
+    [7f f1 01 61 81 62 9b]
 
 
 ### Marker
 
-A marker begins with the marker type (0x97), followed by a marker [identifier](#identifier), and then the marked object.
+The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#identifier), and then the marked object.
 
-    [97 (length) (ID string data) (marked object)]
+    [7f f0 (length) (ID string data) (marked object)]
 
 **Example**:
 
-    [97 01 61 79 8a 73 6f 6d 65 5f 76 61 6c 75 65 90 22 72
-     65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65 7b]
+    [7f f0 01 61
+     99
+     8a 73 6f 6d 65 5f 76 61 6c 75 65
+     90 22 72 65 70 65 61 74 20 74 68 69 73 20 76 61 6c 75 65
+     9b]
     = the map {"some_value" = "repeat this value"}, tagged with the ID "a".
 
 
@@ -821,7 +841,7 @@ Empty Document
 
 An empty document in CBE is signified by using [null](#null) type the top-level object:
 
-    [81 01 7e]
+    [81 01 7d]
 
 
 
@@ -841,7 +861,7 @@ Applications might require data to be aligned in some cases for optimal decoding
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
-| 7f | 7f | 7f | 67 | 00 | 00 | 00 | 8f |
+| 95 | 95 | 95 | 67 | 00 | 00 | 00 | 8f |
 
 Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It's mostly an optimization for closed systems.
 

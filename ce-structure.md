@@ -240,12 +240,12 @@ Once the top-level object is fully decoded, the document is considered finished.
 
 **Examples**:
 
- * A document containing a list with the integers 1, 2, 3:
+ * A document (CE version 1) containing a list with the integers 1, 2, 3:
    - In [CTE](cte-specification.md): `c1 [1 2 3]`
-   - In [CBE](cbe-specification.md): [`81 01 7a 01 02 03 7b`]
- * An empty document:
+   - In [CBE](cbe-specification.md): [`81 01 9a 01 02 03 9b`]
+ * An empty document (CE version 1):
    - In [CTE](cte-specification.md): `c1 null`
-   - In [CBE](cbe-specification.md): [`81 01 7e`]
+   - In [CBE](cbe-specification.md): [`81 01 7d`]
 
 
 
@@ -1313,7 +1313,7 @@ Empty Document
 
 An empty document is signified by using the [Null](#null) type as the [top-level object](#document-structure):
 
-* In CBE: [`81 01 7e`]
+* In CBE: [`81 01 7d`]
 * In CTE: `c1 null`
 
 
