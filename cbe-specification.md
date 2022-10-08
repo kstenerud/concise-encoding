@@ -291,15 +291,15 @@ True or false.
 
 CBE encoders **MUST** output integer values in the smallest form possible, unless explicitly configured to do otherwise:
 
-| Values                                 | Form                                          |
-| -------------------------------------- | --------------------------------------------- |
-| ± 0 - 100                              | [small integer](#small-int)                   |
-| ± 0x65 - 0xff                          | [8-bit integer](#fixed-width-int)             |
-| ± 0x100 - 0xffff                       | [16-bit integer](#fixed-width-int)            |
-| ± 0x10000 - 0xffffffff                 | [32-bit integer](#fixed-width-int)            |
-| ± 0x100000000 - 0xffffffffffff         | [variable width integer](#variable-width-int) |
-| ± 0x1000000000000 - 0xffffffffffffffff | [64-bit integer](#fixed-width-int)            |
-| ± 0x10000000000000000 and up           | [variable width integer](#variable-width-int) |
+| Values                                     | Form                                          |
+| ------------------------------------------ | --------------------------------------------- |
+| ± `0` - `100`                              | [small integer](#small-int)                   |
+| ± `0x65` - `0xff`                          | [8-bit integer](#fixed-width-int)             |
+| ± `0x100` - `0xffff`                       | [16-bit integer](#fixed-width-int)            |
+| ± `0x10000` - `0xffffffff`                 | [32-bit integer](#fixed-width-int)            |
+| ± `0x100000000` - `0xffffffffffff`         | [variable width integer](#variable-width-int) |
+| ± `0x1000000000000` - `0xffffffffffffffff` | [64-bit integer](#fixed-width-int)            |
+| ± `0x10000000000000000` and up             | [variable width integer](#variable-width-int) |
 
 Integers are encoded in three possible ways:
 
