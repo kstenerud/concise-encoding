@@ -30,7 +30,6 @@ Contents
   - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
   - [Object Encoding](#object-encoding)
-    - [Type Field](#type-field)
     - [Type Field (Plane 7f)](#type-field-plane-7f)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -295,11 +294,11 @@ CBE encoders **MUST** output integer values in the smallest form possible, unles
 | Values                                 | Form                                                             |
 | -------------------------------------- | ---------------------------------------------------------------- |
 | ± 0 - 100                              | [small integer](#small-int)                                      |
-| ± 0x65 - 0xff                          | [fixed width integer](#fixed-width-int) (types 0x68, 0x69)       |
-| ± 0x100 - 0xffff                       | [fixed width integer](#fixed-width-int) (types 0x6a, 0x6b)       |
-| ± 0x10000 - 0xffffffff                 | [fixed width integer](#fixed-width-int) (types 0x6c, 0x6d)       |
+| ± 0x65 - 0xff                          | [8-bit integer](#fixed-width-int) (types 0x68, 0x69)             |
+| ± 0x100 - 0xffff                       | [16-bit integer](#fixed-width-int) (types 0x6a, 0x6b)            |
+| ± 0x10000 - 0xffffffff                 | [32-bit integer](#fixed-width-int) (types 0x6c, 0x6d)            |
 | ± 0x100000000 - 0xffffffffffff         | [variable width integer](#variable-width-int) (types 0x66, 0x67) |
-| ± 0x1000000000000 - 0xffffffffffffffff | [fixed width integer](#fixed-width-int) (types 0x6e, 0x6f)       |
+| ± 0x1000000000000 - 0xffffffffffffffff | [64-bit integer](#fixed-width-int) (types 0x6e, 0x6f)            |
 | ± 0x10000000000000000 and up           | [variable width integer](#variable-width-int) (types 0x66, 0x67) |
 
 Integers are encoded in three possible ways:
