@@ -1305,7 +1305,7 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 #### Identifier Rules
 
  * It **MUST** be a valid, visible UTF-8 string and contain only [identifier safe](#character-safety) characters.
- * It **MUST** be from 1 to 127 (inclusive) **bytes** (not characters) long.
+ * It **CANNOT** be empty (0 bytes long).
  * Comparisons are **case sensitive**.
 
 
@@ -1639,18 +1639,19 @@ All decoded values **MUST** be validated for the following before being passed t
 
 A codec **MUST** provide at least the following **OPTIONS** to allow the user to control various limits and ranges, with sane defaults to guard against denial-of-service attacks:
 
-| Limit                             | Clarification                            |
-| ---------------------             | ---------------------------------------- |
-| Max document size                 | In bytes                                 |
-| Max array size                    | Per array, in bytes                      |
-| Max object count                  |                                          |
-| Max container depth               | 0 = [top-level object](#document-structure) cannot contain other objects, 1 = [top-level object](#document-structure) can contain objects (which cannot themselves contain other objects), ... |
-| Max year digits                   |                                          |
-| Max integer digits                |                                          |
-| Max float coefficient digits      |                                          |
-| Max decimal float exponent digits | Max binary float exponent digits = `max_decimal_digits × 10 ÷ 3` rounded down. |
-| Max marker count                  |                                          |
-| Max reference count               |                                          |
+| Limit                                | Clarification                            |
+| ------------------------------------ | ---------------------------------------- |
+| Max document size                    | In bytes                                 |
+| Max array size                       | Per array, in bytes                      |
+| Max object count                     |                                          |
+| Max container depth                  | 0 = [top-level object](#document-structure) cannot contain other objects, 1 = [top-level object](#document-structure) can contain objects (which cannot themselves contain other objects), ... |
+| Max year digits                      |                                          |
+| Max integer digits                   |                                          |
+| Max float coefficient digits         |                                          |
+| Max decimal float exponent digits    | Max binary float exponent digits = `max_decimal_digits × 10 ÷ 3` rounded down. |
+| Max marker count                     |                                          |
+| Max reference count                  |                                          |
+| Max [identifier](#identifier) length | In bytes                                 |
 
 **Notes**:
 
@@ -1671,6 +1672,7 @@ It's impossible to prescribe what default limits are sane and reasonable for all
 | Max decimal float exponent digits | 5         |
 | Max marker count                  | 10,000    |
 | Max reference count               | 10,000    |
+| Max identifier length             | 1000      |
 
 
 ### Mitigations: Application Guidelines

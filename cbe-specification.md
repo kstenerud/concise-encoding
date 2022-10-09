@@ -819,15 +819,11 @@ The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#iden
 
 ### Identifier
 
-Identifiers begin with an 8-bit header containing a 7-bit length (min length 1 byte, max length 127 bytes). The high bit of the header field **MUST** be cleared to 0. The length header is followed by that many **bytes** of UTF-8 data.
+Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) length field (min length 1 byte), followed by that many **bytes** of UTF-8 data.
+
+    [length] [UTF-8 string data]
 
 The length field **CANNOT** be 0.
-
-| Field        | Bits | Value             |
-| ------------ | ---- | ----------------- |
-| RESERVED     |   1  | 0                 |
-| Length       |   7  | 1-127             |
-| UTF-8 Data   |   ∞  | UTF-8 string data |
 
 **Note**: Identifiers are **not** standalone objects. They are always part of another object.
 
