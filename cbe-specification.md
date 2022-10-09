@@ -36,7 +36,7 @@ Contents
     - [Integer](#integer)
       - [Small Integer](#small-integer)
       - [Fixed Width Integer](#fixed-width-integer)
-      - [Variable width Integer](#variable-width-integer)
+      - [Variable Width Integer](#variable-width-integer)
     - [Decimal Floating Point](#decimal-floating-point)
     - [Binary Floating Point](#binary-floating-point)
     - [UID](#uid)
@@ -268,7 +268,7 @@ Types from plane 7f are represented using two bytes instead of one, with the pre
 | ... | [RESERVED](#reserved)                           |       |                                           |
 |  f0 | [Marker](#marker)                               |    1  | [length] [UTF-8 data]                     |
 |  f1 | [Struct Template](#struct-template)             |    ∞  | ID, Key ... End of Container              |
-|  f2 | [Remote Reference](#remote-reference)           |    1  | [resource id]                             |
+|  f2 | [Remote Reference](#remote-reference)           |    1  | [chunk length] [UTF-8 data] ...           |
 |  f3 | [Media](#media)                                 |    ∞  | [media type] [chunk length] [data] ...    |
 | ... | [RESERVED](#reserved)                           |       |                                           |
 
@@ -315,7 +315,7 @@ Fixed width integers are stored as their absolute values in widths of 8, 16, 32,
 
 **Note**: Because the sign is encoded into the type field, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments, so care must be taken after decoding to ensure that the sign is not lost (the most common approach is to convert it to a floating point type).
 
-#### Variable width Integer
+#### Variable Width Integer
 
 Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
