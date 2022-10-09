@@ -198,7 +198,7 @@ The types are structured such that the most commonly used types and values encod
 |  8f | [String: 15 bytes](#string)                       | [15 octets of UTF-8 data]                |
 |  90 | [String](#string)                                 | [chunk length] [UTF-8 data] ...          |
 |  91 | [Resource Identifier](#resource-identifier)       | [chunk length] [UTF-8 data] ...          |
-|  92 | [Custom Type](#custom-types)                      | [chunk length] [data] ...                |
+|  92 | [Custom Type](#custom-types)                      | [type] [chunk length] [data] ...         |
 |  93 | [Array: Unsigned Int8](#supported-array-types)    | [chunk length] [8-bit elements] ...      |
 |  94 | [Array: Bit](#bit-array)                          | [chunk length] [1-bit elements] ...      |
 |  95 | [Padding](#padding)                               |                                          |
@@ -639,14 +639,17 @@ echo hello world
 
 #### Custom Types
 
-Custom types are encoded as binary data with the array type 0x92.
+Custom types are encoded like binary data with the array type 0x92, except that they also have a custom type field.
+
+    [`92`] [type] [chunk length] [chunk data] ...
+
+The type field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
 
 **Example**:
 
-    [92 12 01 f6 28 3c 40 00 00 40 40]
-    = binary data representing a fictional custom "cplx" struct
+    [92 01 10 f6 28 3c 40 00 00 40 40]
+    = binary data representing a fictional custom "cplx" struct, encoded using type code 1
       {
-          type:uint8 = 1
           real:float32 = 2.94 (40 3c 28 f6)
           imag:float32 = 3.0  (40 40 00 00)
       }

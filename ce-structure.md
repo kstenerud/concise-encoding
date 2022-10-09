@@ -68,6 +68,7 @@ Contents
     - [Primitive Array Types](#primitive-array-types)
     - [Media](#media)
     - [Custom Types](#custom-types)
+      - [Custom Type Code](#custom-type-code)
       - [Custom Type Forms](#custom-type-forms)
   - [Container Types](#container-types)
     - [Container Properties](#container-properties)
@@ -740,7 +741,11 @@ There are some situations where a custom data type is preferable to the standard
 
 Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** report it as a [data error](#data-errors).
 
-**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they likely won't represent an array at all.
+**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
+
+#### Custom Type Code
+
+All custom type values must have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
 
 #### Custom Type Forms
 
@@ -760,21 +765,17 @@ Suppose we wanted to encode a fictional "complex number" type:
         imaginary: float32
     }
 
-For our textual encoding scheme, we could represent complex numbers using something like this: `cplx(REAL+IMAGINARYi)`, where `REAL` and `IMAGINARY` are floats.
+For our textual encoding scheme, we could represent complex numbers using something like this: `REAL+IMAGINARYi`, where `REAL` and `IMAGINARY` are floats.
 
-For our binary encoding scheme, we could just write the two float32 values directly. However, we might find later on that we need more than one custom type, so it's a good idea to include a type field as the first byte to differentiate it from any future types we might add later (let's choose type `1` to represent our complex type).
+For our binary encoding scheme, we could just write the two float32 values directly:
 
-Our data sequence is therefore:
-
-    [type: uint8] [real: float32] [imaginary: float32]
-
-     01 78 56 34 12 78 56 34 12 <-- in little endian byte order
-     || |---------| |---------|
-    type   real      imaginary
+    78 56 34 12 78 56 34 12 <-- in little endian byte order
+    |---------| |---------|
+       real      imaginary
 
 **Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
 
-With the above encoding scheme, a complex number such as 2.94 + 3i would be represented as follows:
+In this example, we'll assign the custom type code 1 to this complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
 
 Our data:
 
@@ -784,12 +785,12 @@ Our data:
 
 In [CTE](cte-specification.md):
 
- * Binary form: `|c 01 f6 28 3c 40 00 00 40 40|`
- * Textual form: `|c "cplx(2.94+3i)"|`
+ * Binary form:  `|c1 f6 28 3c 40 00 00 40 40|`
+ * Textual form: `|c1 "2.94+3i"|`
 
 In [CBE](cbe-specification.md):
 
- * Binary form: [`92 12 01 f6 28 3c 40 00 00 40 40`]
+ * Binary form: [`92 01 10 f6 28 3c 40 00 00 40 40`]
  * Textual form not supported in CBE
 
 

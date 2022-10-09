@@ -825,24 +825,24 @@ echo hello world
 
 #### Custom Types
 
-Custom data types are encoded using the [primitive type array](#primitive-type-arrays) `c`, and can have a binary or textual form.
+Custom data types are encoded using the [primitive type array](#primitive-type-arrays) `c` followed immediately by a decimal unsigned integer custom type code (no whitespace), and can have a binary or textual form.
 
 The binary form is encoded like a u8x array (hex encoded byte elements).
 
-**Example**:
+**Example: Binary encoded custom type value with type code 7**:
 
 ```cte
 c1
-|c 01 f6 28 3c 40 00 00 40 40|
+|c7 01 f6 28 3c 40 00 00 40 40|
 ```
 
 The textual form is encoded as a [string-like array](#string-like-arrays) inside of the pipe (`|`) delimiters.
 
-**Example**:
+**Example: Text encoded custom type value with type code 7**:
 
 ```cte
 c1
-|c "cplx(2.94+3i)"|
+|c7 "2.94+3i"|
 ```
 
 
