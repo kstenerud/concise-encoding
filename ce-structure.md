@@ -747,6 +747,8 @@ Adding custom types restricts interoperability to only those implementations tha
 
 All custom type values must have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
 
+A custom type code **MUST** be an unsigned integer in the range of 0 to 4294967295 (inclusive).
+
 #### Custom Type Forms
 
 Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
