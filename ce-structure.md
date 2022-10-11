@@ -1100,7 +1100,7 @@ Other Types
 
 In programming languages, `null` most commonly denotes a [null reference](https://en.wikipedia.org/wiki/Null_pointer). This is **not** the purpose of `null` in Concise Encoding!
 
-Like in data query and manipulation languages, Concise Encoding uses `null` to denote the absence of data ("no data at this field or index"). Its purpose is to support data operations that would otherwise be difficult to specify.
+Like in [data query and manipulation languages](https://en.wikipedia.org/wiki/Null_(SQL)), Concise Encoding uses `null` to denote the absence of data ("no data at this field or index"). Its purpose is to support data operations that would otherwise be difficult to specify.
 
 Uses for `null` in common operations:
 
