@@ -1104,13 +1104,13 @@ Like in data query and manipulation languages, Concise Encoding uses `null` to d
 
 Uses for `null` in common operations:
 
-| Operation | Data Source | Meaning when field value = `null`                          |
-| --------- | ------------| ---------------------------------------------------------- |
-| Create    | Client      | Do not create this field (overrides any default value).    |
-| Read      | Server      | This field has been removed since the previous checkpoint. |
-| Update    | Client      | Remove this field.                                         |
-| Delete    | Client      | Match records where this field is absent.                  |
-| Fetch     | Client      | Match records where this field is absent.                  |
+| Operation | Data Source | Meaning when field value = `null`                           |
+| --------- | ------------| ----------------------------------------------------------- |
+| Create    | Client      | Do not create this field (overrides any default value).     |
+| Read      | Server      | This field has been removed since the specified checkpoint. |
+| Update    | Client      | Remove this field.                                          |
+| Delete    | Client      | Match records where this field is absent.                   |
+| Fetch     | Client      | Match records where this field is absent.                   |
 
 Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "there is no data for this field"):
 
