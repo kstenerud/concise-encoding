@@ -1112,7 +1112,7 @@ Uses for `null` in common operations:
 | Delete    | Client      | Match records where this field is absent.                   |
 | Fetch     | Client      | Match records where this field is absent.                   |
 
-Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "there is no data for this field"):
+Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "no data specified for this field"):
 
 ```cte
 c1
