@@ -863,7 +863,6 @@ c1
     "two"
     3.1
     {}
-    null
 ]
 ```
 
@@ -1116,10 +1115,14 @@ There **MUST NOT** be whitespace at any point between the `@` and the opening `<
 
 ```cte
 c1
-@vehicle<"make" "model" "drive" "sunroof">
+// Define a struct template:
+@dog<"name" "gender">
 
-// Top-level object to make this a proper document
-null
+// Now we can create instances of this struct:
+[
+    @dog("Fido" "m")
+    @dog("Fifi" "f")
+]
 ```
 
 

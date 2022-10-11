@@ -510,7 +510,7 @@ Array chunks for string-like data (UTF-8) **MUST** always end on a character bou
 
 ##### Zero Chunk
 
-The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the null terminator for C-style strings. An encoder may use this feature to artificially null-terminate strings in order to create immutable-friendly zero-copy documents that support C-style string implementations.
+The chunk header 0x00 indicates a chunk of length 0 with continuation 0, effectively terminating any array. It's no coincidence that 0x00 also acts as the NUL terminator for C-style strings. An encoder may use this feature to artificially NUL-terminate strings in order to create immutable-friendly zero-copy documents that support C-style string implementations.
 
     [90 20 m i s u n d e r s t a n d i n g ...]
 
@@ -526,7 +526,7 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
     case string (length 4):      // 0x84 = string (length 4)
       cachedType = buffer[5]     // 0x6a (16-bit positive int type)
       buffer[5] = 0              // buffer = [84 t e s t 00 10 a0 ...]
-      notifyString(buffer+1)     // [t e s t 00 ...] = null-terminated string "test"
+      notifyString(buffer+1)     // [t e s t 00 ...] = NUL-terminated string "test"
       next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
 
 

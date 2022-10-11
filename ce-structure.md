@@ -642,7 +642,7 @@ The NUL character (U+0000) is allowed in string-like arrays in documents, but be
  * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`].
  * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
 
-This ensures a default of uniform behavior across all platforms that sidesteps the null-termination problem.
+This ensures a default of uniform behavior across all platforms that sidesteps the NUL-termination problem.
 
 #### Line Endings
 
@@ -837,7 +837,6 @@ c1
     "two"
     3.1
     {}
-    null
 ]
 ```
 
@@ -971,9 +970,9 @@ As struct templates and instances are only parts of the final object, they **CAN
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be null.
+ * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be [null](#null).
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
- * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be null.
+ * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null).
 
 If any of these parts are missing, it is a [structural error](#structural-errors).
 
@@ -1095,21 +1094,39 @@ When rotated 90 degrees clockwise, one can recognize the tree structure this rep
 
 
 Other Types
-------------
+-----------
 
 ### Null
 
-Null signals that the specified field or index is absent. It is used to support data operations that would otherwise be difficult to indicate.
+In programming languages, `null` most commonly denotes a [null reference](https://en.wikipedia.org/wiki/Null_pointer). This is **not** the purpose of `null` in Concise Encoding!
 
-Some uses for null in common operations:
+Like in data query and manipulation languages, Concise Encoding uses `null` to denote the absence of data ("no data at this field or index"). Its purpose is to support data operations that would otherwise be difficult to specify.
 
-| Operation | Meaning when field value = null                                         |
+Uses for `null` in common operations:
+
+| Operation | Meaning when field value = `null`                                       |
 | --------- | ----------------------------------------------------------------------- |
 | Create    | From client: Do not create this field (overrides any default value).    |
 | Read      | From server: This field has been removed since the previous checkpoint. |
 | Update    | From client: Remove this field.                                         |
-| Delete    | From client: Match records where this field is not present.             |
-| Fetch     | From client: Match records where this field is not present.             |
+| Delete    | From client: Match records where this field is absent.                  |
+| Fetch     | From client: Match records where this field is absent.                  |
+
+Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "there is no data for this field"):
+
+```cte
+c1
+[
+    // Define the "Employee" record (struct template):
+    @Employee<"name" "department" "parking stall">
+
+    // Add some employee records (struct instances):
+    @Employee( "John Marcos" "Marketing" 34     )
+    @Employee( "Judy McGill" "Executive"  5     )
+    // Jane works from home, and uses guest parking when at the office
+    @Employee( "Jane Morgan" "Sales"     null )
+]
+```
 
 
 
@@ -1314,7 +1331,7 @@ Identifier definitions **MUST** be unique to the type they identify for in the c
 Empty Document
 --------------
 
-An empty document is signified by using the [Null](#null) type as the [top-level object](#document-structure):
+An empty document is signified by using [null](#null) as the [top-level object](#document-structure):
 
 * In CBE: [`81 01 7d`]
 * In CTE: `c1 null`
