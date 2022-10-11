@@ -1121,8 +1121,8 @@ c1
     @Employee<"name" "department" "parking stall">
 
     // Add some employee records (struct instances):
-    @Employee( "John Marcos" "Marketing" 34     )
-    @Employee( "Judy McGill" "Executive"  5     )
+    @Employee( "John Marcos" "Marketing" 34   )
+    @Employee( "Judy McGill" "Executive"  5   )
     // Jane works from home, and uses guest parking when at the office
     @Employee( "Jane Morgan" "Sales"     null )
 ]
