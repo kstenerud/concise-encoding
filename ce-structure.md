@@ -1128,6 +1128,8 @@ c1
 ]
 ```
 
+**Note**: One could argue that the above record structure does not adequately capture reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
+
 
 
 Pseudo-Objects
