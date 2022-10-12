@@ -1126,7 +1126,7 @@ c1
     @Employee( "Jane Morgan" "Sales"     null )
 ]
 ```
-**Note**: One might argue that the above example record structure does not adequately capture reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
+**Note**: One might argue that the above example record structure does not adequately reflect reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
 
 
 
