@@ -1105,7 +1105,7 @@ Like in [data query and manipulation languages](https://en.wikipedia.org/wiki/Nu
 Uses for `null` in common operations:
 
 | Operation | Data Source | Meaning when field value = `null`                           |
-| --------- | ------------| ----------------------------------------------------------- |
+| --------- | ----------- | ----------------------------------------------------------- |
 | Create    | Client      | Do not create this field (overrides any default value).     |
 | Read      | Server      | This field has been removed since the specified checkpoint. |
 | Update    | Client      | Remove this field.                                          |
@@ -1126,7 +1126,7 @@ c1
     @Employee( "Jane Morgan" "Sales"     null )
 ]
 ```
-**Note**: One could argue that the above example record structure does not adequately capture reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
+**Note**: One might argue that the above example record structure does not adequately capture reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
 
 
 
