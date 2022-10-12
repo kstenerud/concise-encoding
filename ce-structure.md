@@ -1151,8 +1151,8 @@ A local reference contains the marker [identifier](#identifier) of an object tha
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
- * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid marker ID is a [structural error](#structural-errors).
- * A local reference used as a map key **MUST** refer to a [keyable type](#keyable-types).
+ * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid or undefined marker ID is a [structural error](#structural-errors).
+ * A local reference used as a map key **MUST** refer to a marked [keyable object](#keyable-types).
 
 ##### Recursive References
 
