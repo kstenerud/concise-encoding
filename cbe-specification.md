@@ -269,7 +269,7 @@ Types from plane 7f are represented using two bytes instead of one, with the pre
 |  f0 | [Marker](#marker)                               |    1  | [length] [UTF-8 data]                     |
 |  f1 | [Struct Template](#struct-template)             |    ∞  | ID, Key ... End of Container              |
 |  f2 | [Remote Reference](#remote-reference)           |    1  | [chunk length] [UTF-8 data] ...           |
-|  f3 | [Media](#media)                                 |    ∞  | [media type] [chunk length] [data] ...    |
+|  f3 | [Media](#media)                                 |    ∞  | [length] [media type] [chunk length] [data] ... |
 | ... | [RESERVED](#reserved)                           |       |                                           |
 
 
@@ -597,37 +597,38 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 #### Media
 
-The media object is composed of two sub-arrays: an implied string containing the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and an implied uint8 array containing the media object's contents. Since the sub-array's types are already known, they do not themselves contain array type fields (the types are implied).
+A media object is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
-| Field        | Description                                  |
-| ------------ | -------------------------------------------- |
-| Plane 7f     | The type code 0x7f                           |
-| Type         | The type code 0xe1 (media)                   |
-| Chunk Header | The number of media type bytes in this chunk |
-| Elements     | The characters as a sequence of octets       |
-| ...          | Possibly more chunks until continuation = 0  |
-| Chunk Header | The number of media bytes in this chunk      |
-| Elements     | The bytes as a sequence of octets            |
-| ...          | Possibly more chunks until continuation = 0  |
+    [media type length] [media type] [chunk header] [chunk contents] ...
+
+| Field             | Description                                             |
+| ----------------- | ------------------------------------------------------- |
+| Type              | Type code 0x7f: Plane 7f                                |
+| Plane 7f Subtype  | Type code 0xf3: Media                                   |
+| Media Type Length | [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) |
+| Media Type Data   | UTF-8 string data                                       |
+| Chunk Header      | Continuation + number of media bytes in this chunk      |
+| Elements          | The bytes as a sequence of octets                       |
+| ...               | Possibly more chunks until continuation = 0             |
 
 **Example**:
 
      *1 *2 *3 *4                                              *5
-    [7f f3 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 
+    [7f f3 10 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 2d 73 68 38 
 
      *6
      23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 
 Points of interest:
 
-| Point | Description                                      |
-| ----- | ------------------------------------------------ |
-|  *1   | Type (0x7f = plane 7f)                           |
-|  *2   | Plane 7f subtype (0xf3 = media)                  |
-|  *3   | Chunk Header (0x20 = length 16, no continuation) |
-|  *4   | String Data `application/x-sh`                   |
-|  *5   | Chunk Header (0x38 = length 28, no continuation) |
-|  *6   | Media bytes                                      |
+| Point | Description                                     |
+| ----- | ----------------------------------------------- |
+|  *1   | Primary type: 0x7f = Plane 7f                   |
+|  *2   | Plane 7f subtype: 0xf3 = Media                  |
+|  *3   | Media Type length: 16 (bytes)                   |
+|  *4   | String Data: `application/x-sh`                 |
+|  *5   | Chunk Header: 0x38 = length 28, no continuation |
+|  *6   | Media bytes                                     |
 
 The media in this example is the shell script (media type "application/x-sh"):
 
