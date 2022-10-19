@@ -192,8 +192,8 @@ c1
     "time"      = 18:04:00.948/Europe/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
-    "media"     = |m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
-                    65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+    "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+                   65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
 ```
 
@@ -331,7 +331,9 @@ c1
 c1
 {
     // Custom types are user-defined, with user-supplied codecs.
-    "custom text"   = |c "cplx(2.94+3i)"|
-    "custom binary" = |c 04 f6 28 3c 40 00 00 40 40|
+    // In this example, we assume that custom type 12 is registered
+    // via a schema to a custom "complex number" type.
+    "custom text"   = |c12 "2.94+3i"|
+    "custom binary" = |c12 04 f6 28 3c 40 00 00 40 40|
 }
 ```

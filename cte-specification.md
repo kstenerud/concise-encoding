@@ -62,9 +62,11 @@ Contents
       - [Verbatim Sequence](#verbatim-sequence)
       - [String](#string)
       - [Resource Identifier](#resource-identifier)
-    - [Primitive Type Arrays](#primitive-type-arrays)
-      - [Primitive Type Array Encoding](#primitive-type-array-encoding)
+    - [General Array Encoding](#general-array-encoding)
+      - [General Array Forms](#general-array-forms)
+      - [General Array Types](#general-array-types)
       - [Implied Prefix](#implied-prefix)
+      - [Bit Array Elements](#bit-array-elements)
       - [Float Array Elements](#float-array-elements)
       - [Media](#media)
         - [Media Contents](#media-contents)
@@ -522,10 +524,12 @@ RFC 3339 is designed for timestamped internet events, and is well suited to that
 Array Types
 -----------
 
-Array types are encoded in two primary forms: [string-like](#string-like-arrays) and [primitive type](#primitive-type-arrays).
+Array types are encoded in two primary forms: [general form](#general-array-encoding) and [string-like form](#string-like-arrays).
 
 
 ### String-Like Arrays
+
+String-like arrays are a special convenience encoding for commonly used string types.
 
 A string-like array **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String-like arrays **CAN** contain [escape sequences](#escape-sequences).
 
@@ -677,39 +681,36 @@ c1
 ```
 
 
-### Primitive Type Arrays
+### General Array Encoding
 
-A primitive type array lists the array's contents as [structural whitespace](#structural-whitespace) separated elements:
+The general form of array encoding consists of an array type and array contents separated by [structural whitespace](#structural-whitespace), all enclosed between pipe (`|`) characters:
 
-    1 2 3 4 ...
+    |array-type array-contents|
 
-Any valid representation of the array's data type and size **CAN** be used to represent the element values.
+The array type field **MUST** only contain characters that are allowed in [media types](https://www.rfc-editor.org/rfc/rfc6838#section-4.2).
 
-#### Primitive Type Array Encoding
+#### General Array Forms
 
-Primitive type array encoding consists of a pipe character (`|`), followed by the array type, mandatory [structural whitespace](#structural-whitespace), the contents, and finally a closing pipe.
+Depending on the kind of array, the contents are encoded in elemental form as [whitespace](#structural-whitespace)-separated elements, or in string form as quoted string contents following the same rules as [string-like arrays](#string-like-arrays):
 
-Depending on the kind of array, the contents are encoded as either [string-like](#string-like-arrays) or [primitive type](#primitive-type-arrays):
-
-    |type elem1 elem2 elem3 ...|
-    |type "string-like contents"|
+    |type elem1 elem2 elem3 ...| // elemental form
+    |type "string-like contents"| // string form
 
 An empty array has a type but no contents:
 
     |type|
 
-Bit array elements are represented using `0` for false and `1` for true. [structural whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array:
+In elemental form, array elements **CAN** be written using any valid representation of the array's element type and size:
 
-    |b 1 0 0 1|
-    |b 1001|
+```cte
+c1
+[
+    |i16 -1000 1000 15000|
+    |f32 1.5 3.914e+20 nan|
+]
+```
 
-Float array elements **CAN** be written using [special float values](#special-floating-point-values):
-
-    |f32x 1.5da nan -inf c.1f3p38|
-
-**Note**: Some string-like array types ([string](#string), [resource identifier](#resource-identifier), and [remote reference](#remote-reference)) omit the enclosing pipes entirely, and do not explicitly denote their type:
-
-    "strings, for example, aren't enclosed in pipes, and their type is implied"
+#### General Array Types
 
 The following array types are available:
 
@@ -728,13 +729,12 @@ The following array types are available:
 | `f32`        | 32-bit floating point (ieee754)             | Element                |
 | `f64`        | 64-bit floating point (ieee754)             | Element                |
 | `u`          | 128-bit UID                                 | Element                |
-| `c`          | [Custom Types](#custom-types)               | Element or string-Like |
-| `m`          | [Media](#media)                             | Element or string-Like |
-| implied      | String                                      | String-like            |
-| implied      | Resource ID                                 | String-like            |
-| implied      | Remote Reference                            | String-like            |
+| `c<id>`      | [Custom Types](#custom-types)               | Element or string-Like |
+| `<type/sub>` | [Media](#media)                             | Element or string-Like |
 
-Array types are lowercase, but a decoder **MUST** [accept uppercase as well](#letter-case)).
+Array types are [case-insensitive](#letter-case).
+
+If an array type field contains a slash (`/`), it **MUST** be interpreted as a media object (e.g. `|a/b "stuff"|` is a media object, regardless of the validity of the media type "a/b").
 
 #### Implied Prefix
 
@@ -763,7 +763,23 @@ c1
 ]
 ```
 
+#### Bit Array Elements
+
+Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array:
+
+```cte
+c1
+[
+    |b 1 0 0 1| // bits 1, 0, 0, 1
+    |b 1001|    // bits 1, 0, 0, 1
+]
+```
+
 #### Float Array Elements
+
+Like their standalone counterparts, [special float values](#special-floating-point-values) are allowed in floating point arrays:
+
+    |f32 0x1.5da nan -inf 0xc.1f3p38|
 
 Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
@@ -776,38 +792,36 @@ CTE encoders **MUST** output float array elements in [base-16 notation](#base-16
 
 #### Media
 
-A media object is encoded as a specialization of the [primitive type array](#primitive-type-arrays). It has the array type `m` and consists of two whitespace separated fields:
+In media objects, the [array type field](#general-array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) field contains the media data:
 
-| Field                                                                       | Required? |
-| --------------------------------------------------------------------------- | --------- |
-| [Media type](http://www.iana.org/assignments/media-types/media-types.xhtml) |     Y     |
-| Contents                                                                    |     N     |
-
-Media with no contents represents the equivalent of an empty file.
-
-    |m text/plain|
-
-Media with no media type is invalid.
+```cte
+c1
+[
+    |text/plain "stuff"|        // text encoded media
+    |text/plain 73 74 75 66 66| // byte encoded media
+    |text/plain|                // empty media
+]
+```
 
 ##### Media Contents
 
-If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented as a [string-like array](#string-like-arrays) by enclosing the contents within double-quote delimiters (`"`). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
+If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#general-array-forms). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
-* Text: `|m media/type "contents"|`
-* Binary: `|m media/type 63 6f 6e 74 65 6e 74 73|`
+* Text: `|type/subtype "contents"|`
+* Binary: `|type/subtype 63 6f 6e 74 65 6e 74 73|`
 
 **Example**:
 
 ```cte
 c1
-|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is equivalent to:
 
 ```cte
 c1
-|m application/x-sh "\.@@
+|application/x-sh "\.@@
 #!/bin/sh
 
 echo hello world
@@ -825,24 +839,24 @@ echo hello world
 
 #### Custom Types
 
-Custom data types are encoded using the [primitive type array](#primitive-type-arrays) `c` followed immediately by a decimal unsigned integer custom type code (no whitespace), and can have a binary or textual form.
+In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a [binary or textual form](#general-array-forms).
 
 The binary form is encoded like a u8x array (hex encoded byte elements).
 
-**Example: Binary encoded custom type value with type code 7**:
+**Example: Binary encoded custom type value with type code 99**:
 
 ```cte
 c1
-|c7 01 f6 28 3c 40 00 00 40 40|
+|c99 01 f6 28 3c 40 00 00 40 40|
 ```
 
-The textual form is encoded as a [string-like array](#string-like-arrays) inside of the pipe (`|`) delimiters.
+The textual form is encoded using a quoted string.
 
-**Example: Text encoded custom type value with type code 7**:
+**Example: Text encoded custom type value with type code 99**:
 
 ```cte
 c1
-|c7 "2.94+3i"|
+|c99 "2.94+3i"|
 ```
 
 

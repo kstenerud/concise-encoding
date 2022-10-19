@@ -713,9 +713,11 @@ A media object encapsulates foreign media data (encoded as a binary stream), alo
 
     [media type] [data]
 
-The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes with an associated media type, and passes it along as such.
+The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
-Codecs **MUST NOT** attempt to validate the media type beyond ensuring that it contains only the allowed character range described in [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An unrecognized media type is **not** a decoding error; it is the application layer's job to decide such things.
+The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is a [data error](#data-errors).
+
+**Note**: An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
 
 **Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
 
@@ -723,7 +725,7 @@ Codecs **MUST NOT** attempt to validate the media type beyond ensuring that it c
 
 ```cte
 c1
-|m application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is the shell script:
@@ -753,7 +755,7 @@ A custom type code **MUST** be an unsigned integer in the range of 0 to 42949672
 
 Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
 
-[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** output the textual form if it's available.
+[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
 
 Custom type implementations **MUST** provide at least a binary form, and **SHOULD** also provide a textual form. When both binary and textual forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
 
@@ -777,22 +779,22 @@ For our binary encoding scheme, we could just write the two float32 values direc
 
 **Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
 
-In this example, we'll assign the custom type code 1 to this complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
+In this example, we'll assign the custom type code 99 to our complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
 
 Our data:
 
- * Type: `1`
+ * Type: `99`
  * Real: `2.94`, float32 bit pattern `0x403c28f6`, in little endian `f6 28 3c 40`
  * Imaginary: `3`, float32 bit pattern `0x40400000`, in little endian `00 00 40 40`
 
 In [CTE](cte-specification.md):
 
- * Binary form:  `|c1 f6 28 3c 40 00 00 40 40|`
- * Textual form: `|c1 "2.94+3i"|`
+ * Binary form:  `|c99 f6 28 3c 40 00 00 40 40|`
+ * Textual form: `|c99 "2.94+3i"|`
 
 In [CBE](cbe-specification.md):
 
- * Binary form: [`92 01 10 f6 28 3c 40 00 00 40 40`]
+ * Binary form: [`92 63 10 f6 28 3c 40 00 00 40 40`]
  * Textual form not supported in CBE
 
 
@@ -1113,6 +1115,7 @@ Uses for `null` in common operations:
 | Fetch     | Client      | Match records where this field is absent.                   |
 
 Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "no data specified for this field"). For example:
+
 ```cte
 c1
 [
@@ -1126,6 +1129,7 @@ c1
     @Employee( "Jane Morgan" "Sales"     null )
 ]
 ```
+
 **Note**: One might argue that the above example record structure does not adequately reflect reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
 
 

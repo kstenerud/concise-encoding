@@ -640,16 +640,16 @@ echo hello world
 
 #### Custom Types
 
-Custom types are encoded like binary data with the array type 0x92, except that they also have a custom type field.
+Custom types are encoded like binary data with the array type 0x92, except that they also have a custom type code field.
 
-    [`92`] [type] [chunk length] [chunk data] ...
+    [`92`] [custom type code] [chunk length] [chunk data] ...
 
-The type field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
+The custom type code field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
 
 **Example**:
 
     [92 01 10 f6 28 3c 40 00 00 40 40]
-    = binary data representing a fictional custom "cplx" struct, encoded using type code 1
+    = binary data representing a fictional custom "cplx" struct, assigned to custom type code 1
       {
           real:float32 = 2.94 (40 3c 28 f6)
           imag:float32 = 3.0  (40 40 00 00)
