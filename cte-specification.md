@@ -511,9 +511,16 @@ c1
 
 ### Why not ISO 8601 or RFC 3339?
 
-[RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) was developed as a greatly simplified profile of [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to be used in internet protocols. RFC 3339's criticisms of ISO 8601 are valid: it has bad defaults, tries to do too many things, and offers too much optional functionality (most of which is unused in the real world), rendering it overcomplicated and prone to misinterpretation and bugs. It's also non-free, which makes it even harder to write compliant, bug-free implementations (or trust any that claim to be).
+[RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) was developed as a greatly simplified profile of [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to be used in internet protocols. RFC 3339's criticisms of ISO 8601 are valid:
 
-RFC 3339 is designed for timestamped internet events, and is well suited to that purpose. However, it lacks functionality that a general purpose date format would require:
+- It has bad defaults.
+- It tries to do too many things.
+- It has too much optional functionality (most of which is unused in the real world).
+- It's non-free, making it even harder to write compliant, bug-free implementations (or trust any that claim to be).
+
+This renders ISO 8601 overcomplicated and prone to misinterpretation, incompatibilities, and bugs.
+
+RFC 3339 is a much simpler design for timestamped internet events, and is well suited to that purpose. However, it lacks functionality that a general purpose date format would require:
 
 - It only supports time offsets (+01:00, -13:00, etc), not real time zones.
 - It doesn't support BCE dates.
