@@ -30,6 +30,7 @@ Contents
   - [Document Structure](#document-structure)
   - [Document Version Specifier](#document-version-specifier)
   - [Object Encoding](#object-encoding)
+    - [Type Field](#type-field)
     - [Type Field (Plane 7f)](#type-field-plane-7f)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -140,12 +141,16 @@ The version specifier is composed of the octet `0x81`, followed by a version num
 Object Encoding
 ---------------
 
-A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types always begin with length fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
+A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types begin with length determining fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
 
 Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy capable in most places on little endian systems.
 
+
+### Type Field
+
+All objects begin with a type field, followed by a possible payload (depending on the type).
 
 | Hex | Type                                              | Payload                                  |
 | --- | ------------------------------------------------- | ---------------------------------------- |
@@ -216,7 +221,9 @@ The types are structured such that the most commonly used types and values encod
 
 ### Type Field (Plane 7f)
 
-Types from plane 7f are represented using two bytes instead of one, with the prefix `[7f]`. For example, the type for signed 16-bit array with 8 elements is `[7f 28]`, and the type for media is `[7f e1]`.
+Some bulkier or less common types are encoded into a second type plane, adding a second byte to the type code.
+
+Types from plane 7f begin with the type code prefix `[7f]`, followed by their type code in that plane. For example, the type for signed 16-bit array with 8 elements is `[7f 28]`, and the type for [media](#media) is `[7f f3]`.
 
 | Hex | Type                                            | Elems | Payload                                   |
 | --- | ----------------------------------------------- | ----- | ----------------------------------------- |
@@ -279,7 +286,7 @@ Numeric Types
 
 ### Boolean
 
-True or false.
+Represents true or false.
 
 **Examples**:
 
@@ -309,7 +316,7 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 #### Fixed Width Integer
 
-Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field implies the sign of the integer.
+Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field holds the sign of the integer.
 
     [type] [byte 1 (low)] ... [byte x (high)]
 
@@ -457,8 +464,9 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
 
 **Examples**:
 
- * `[93 04 01 02]` = unsigned 8-bit array with elements 1, 2
- * `[7f 22 01 00 02 00]` = unsigned 16-bit array (note: plane 7f) with elements 1, 2
+ * `[82 61 62]` = string (short form, length 2) with elements 'a', 'b'
+ * `[93 04 01 02]` = unsigned 8-bit array (chunked form, length 2 - see [chunk header](#chunk-header)) with elements 1, 2.
+ * `[7f 22 01 00 02 00]` = unsigned 16-bit array (plane 7f, short form, length 2) with elements 1, 2
 
 #### Short Form
 
@@ -502,11 +510,11 @@ All array chunks are preceded by a header containing the chunk length and a cont
 
 ##### Bit Array Chunks
 
-Bit array chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that the chunk data begins and ends on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size.
+Bit array chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size.
 
 ##### String-like Array Chunks
 
-Array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks). Decoders **MAY** validate string data on every chunk received, which will fail if a chunk ends on an incomplete character.
+To ensure compatibility across all platforms (and to aid in debugging), array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks).
 
 ##### Zero Chunk
 
@@ -520,7 +528,7 @@ vs
 
 Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
 
-If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type:
+If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type code:
 
     ...                          // buffer = [84 t e s t 6a 10 a0 ...]
     case string (length 4):      // 0x84 = string (length 4)
@@ -575,7 +583,7 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 #### Resource Identifier
 
-Resource identifiers are encoded like a long-form [string](#string), but with type `[91]`.
+Resource identifiers are encoded similarly to a long-form [string](#string), but with type `[91]`.
 
 **Example**:
 
@@ -607,8 +615,8 @@ A media object is composed of a length-prefixed [media type](http://www.iana.org
 | Plane 7f Subtype  | Type code 0xf3: Media                                   |
 | Media Type Length | [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) |
 | Media Type Data   | UTF-8 string data                                       |
-| Chunk Header      | Continuation + number of media bytes in this chunk      |
-| Elements          | The bytes as a sequence of octets                       |
+| Chunk Header      | Number of media bytes in this chunk, continuation bit   |
+| Elements          | Bytes of media data                                     |
 | ...               | Possibly more chunks until continuation = 0             |
 
 **Example**:
@@ -625,7 +633,7 @@ Points of interest:
 | ----- | ----------------------------------------------- |
 |  *1   | Primary type: 0x7f = Plane 7f                   |
 |  *2   | Plane 7f subtype: 0xf3 = Media                  |
-|  *3   | Media Type length: 16 (bytes)                   |
+|  *3   | Media Type length: 0x10 = 16 bytes              |
 |  *4   | String Data: `application/x-sh`                 |
 |  *5   | Chunk Header: 0x38 = length 28, no continuation |
 |  *6   | Media bytes                                     |
@@ -640,20 +648,33 @@ echo hello world
 
 #### Custom Types
 
-Custom types are encoded like binary data with the array type 0x92, except that they also have a custom type code field.
+Custom type values are composed of the type code 0x92, followed by a custom type code, followed by a byte array containing the custom data.
 
     [`92`] [custom type code] [chunk length] [chunk data] ...
 
 The custom type code field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
 
-**Example**:
+**Example**: a fictional cutom "complex number" with real and imaginary components represented using float32, assigned to custom type code 1
 
-    [92 01 10 f6 28 3c 40 00 00 40 40]
-    = binary data representing a fictional custom "cplx" struct, assigned to custom type code 1
       {
-          real:float32 = 2.94 (40 3c 28 f6)
-          imag:float32 = 3.0  (40 40 00 00)
+          real:      float32 = 2.94 (40 3c 28 f6)
+          imaginary: float32 = 3.0  (40 40 00 00)
       }
+
+Encoded as a custom type (Note: multibyte values are encoded in little endian byte order):
+
+     *1 *2 *3 *4          *5
+    [92 01 10 f6 28 3c 40 00 00 40 40]
+
+Points of interest:
+
+| Point | Description                                                  |
+| ----- | ------------------------------------------------------------ |
+|  *1   | Primary type: 0x92 = Custom                                  |
+|  *2   | Custom type: 0x01                                            |
+|  *3   | Chunk Header: 0x10 = length 8, no continuation               |
+|  *4   | Custom data (the first 4 bytes contain the "real" portion)   |
+|  *5   | The "imaginary" portion of our fictional complex number type |
 
 
 
@@ -662,7 +683,7 @@ Container Types
 
 ### List
 
-A list begins with 0x7a, followed by a series of zero or more objects, and is terminated with 0x7b (end of container).
+A list begins with 0x9a, followed by a series of zero or more objects, and is terminated with 0x9b (end of container).
 
 **Example**:
 
@@ -671,7 +692,7 @@ A list begins with 0x7a, followed by a series of zero or more objects, and is te
 
 ### Map
 
-A map begins with 0x79, followed by a series of zero or more key-value pairs, and is terminated with 0x7b (end of container).
+A map begins with 0x99, followed by a series of zero or more key-value pairs, and is terminated with 0x9b (end of container).
 
     [99] [key-1] [value-1] [key-2] [value-2] ... [9b]
 
@@ -682,7 +703,7 @@ A map begins with 0x79, followed by a series of zero or more key-value pairs, an
 
 ### Struct Instance
 
-A struct instance begins with 0x75, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x7b (end of container).
+A struct instance begins with 0x96, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x9b (end of container).
 
     [96] [val1] [val2] [val3] ... [9b]
 
@@ -695,7 +716,7 @@ A struct instance built from template "a", with the first key's associated value
 
 ### Edge
 
-An edge consists of a source, then a description, then a destination, and is terminated with 0x7b (end of container).
+An edge begins with 0x97, followed by a source, then a description, then a destination, and is terminated with 0x9b (end of container).
 
     [97] [source] [description] [destination] [9b]
 
@@ -711,7 +732,7 @@ An edge consists of a source, then a description, then a destination, and is ter
 
 ### Node
 
-A node begins with 0x78, followed by a value object and zero or more child nodes, and is terminated with 0x7b (end of container).
+A node begins with 0x98, followed by a value object and zero or more child nodes, and is terminated with 0x9b (end of container).
 
     [98] [value] [node] ... [9b]
 
@@ -838,7 +859,7 @@ The length field **CANNOT** be 0.
 Empty Document
 --------------
 
-An empty document in CBE is signified by using [null](#null) type the top-level object:
+An empty document in CBE is signified by using [null](#null) as the top-level object:
 
     [81 01 7d]
 
@@ -849,20 +870,20 @@ Smallest Possible Size
 
 Preservation of the original numeric data type information is not considered important by default. Encoders **SHOULD** use the smallest encoding that stores a value without data loss.
 
-Specialized applications **MAY** wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder.
+Specialized applications **MAY** wish to preserve more numeric type information to distinguish floats from integers, or even to distinguish between data sizes. This is allowed, as it will make no difference to a generic decoder (although it will bloat the document).
 
 
 
 Alignment
 ---------
 
-Applications might require data to be aligned in some cases for optimal decoding performance. For example, some processors might not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert [padding](#padding) when encoding certain data:
+Applications might require data to be aligned in some cases for optimal decoding performance. For example, some processors might not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert [padding](#padding) when encoding certain data, trading document size for encoding/decoding efficiency:
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |
 | 95 | 95 | 95 | 67 | 00 | 00 | 00 | 8f |
 
-Alignment tuning is usually only useful when the target decoding environment is known prior to encoding. It's mostly an optimization for closed systems.
+Alignment tuning is usually only useful when the target decoding environment is known prior to encoding (It's mostly an optimization for closed systems).
 
 
 
