@@ -123,7 +123,7 @@ Document Structure
 
 Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
-    [version specifier] [optional invisible and structural objects] [top-level data object]
+    [81 (version) (optional invisible and structural objects) (top-level data object)]
 
 
 
@@ -158,60 +158,60 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  01 | [Integer value 1](#small-integer)                 |                                          |
 | ... | ...                                               |                                          |
 |  64 | [Integer value 100](#small-integer)               |                                          |
-|  65 | [UID](#uid)                                       | [128 bits of data, big endian]           |
-|  66 | [Positive Integer](#variable-width-integer)       | [byte length] [little endian bytes]      |
-|  67 | [Negative Integer](#variable-width-integer)       | [byte length] [little endian bytes]      |
-|  68 | [Positive Integer (8 bit)](#fixed-width-integer)  | [8-bit unsigned integer]                 |
-|  69 | [Negative Integer (8 bit)](#fixed-width-integer)  | [8-bit unsigned integer]                 |
-|  6a | [Positive Integer (16 bit)](#fixed-width-integer) | [16-bit unsigned integer, little endian] |
-|  6b | [Negative Integer (16 bit)](#fixed-width-integer) | [16-bit unsigned integer, little endian] |
-|  6c | [Positive Integer (32 bit)](#fixed-width-integer) | [32-bit unsigned integer, little endian] |
-|  6d | [Negative Integer (32 bit)](#fixed-width-integer) | [32-bit unsigned integer, little endian] |
-|  6e | [Positive Integer (64 bit)](#fixed-width-integer) | [64-bit unsigned integer, little endian] |
-|  6f | [Negative Integer (64 bit)](#fixed-width-integer) | [64-bit unsigned integer, little endian] |
-|  70 | [Binary Float (16 bit)](#binary-floating-point)   | [16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
-|  71 | [Binary Float (32 bit)](#binary-floating-point)   | [[32-bit ieee754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), little endian] |
-|  72 | [Binary Float (64 bit)](#binary-floating-point)   | [[64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian] |
+|  65 | [UID](#uid)                                       | (128 bits of data, big endian)           |
+|  66 | [Positive Integer](#variable-width-integer)       | (byte length) (little endian bytes)      |
+|  67 | [Negative Integer](#variable-width-integer)       | (byte length) (little endian bytes)      |
+|  68 | [Positive Integer (8 bit)](#fixed-width-integer)  | (8-bit unsigned integer)                 |
+|  69 | [Negative Integer (8 bit)](#fixed-width-integer)  | (8-bit unsigned integer)                 |
+|  6a | [Positive Integer (16 bit)](#fixed-width-integer) | (16-bit unsigned integer, little endian) |
+|  6b | [Negative Integer (16 bit)](#fixed-width-integer) | (16-bit unsigned integer, little endian) |
+|  6c | [Positive Integer (32 bit)](#fixed-width-integer) | (32-bit unsigned integer, little endian) |
+|  6d | [Negative Integer (32 bit)](#fixed-width-integer) | (32-bit unsigned integer, little endian) |
+|  6e | [Positive Integer (64 bit)](#fixed-width-integer) | (64-bit unsigned integer, little endian) |
+|  6f | [Negative Integer (64 bit)](#fixed-width-integer) | (64-bit unsigned integer, little endian) |
+|  70 | [Binary Float (16 bit)](#binary-floating-point)   | (16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
+|  71 | [Binary Float (32 bit)](#binary-floating-point)   | ([32-bit ieee754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), little endian) |
+|  72 | [Binary Float (64 bit)](#binary-floating-point)   | ([64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian) |
 |  73 | [RESERVED](#reserved)                             |                                          |
 |  74 | [RESERVED](#reserved)                             |                                          |
 |  75 | [RESERVED](#reserved)                             |                                          |
-|  76 | [Decimal Float](#decimal-floating-point)          | [[Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  77 | [Local Reference](#local-reference)               | [length] [UTF-8 data]                    |
+|  76 | [Decimal Float](#decimal-floating-point)          | ([compact float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
+|  77 | [Local Reference](#local-reference)               | (byte length) (UTF-8 data)               |
 |  78 | [Boolean False](#boolean)                         |                                          |
 |  79 | [Boolean True](#boolean)                          |                                          |
-|  7a | [Date](#date)                                     | [[Compact Date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date)]           |
-|  7b | [Time](#time)                                     | [[Compact Time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time)]           |
-|  7c | [Timestamp](#timestamp)                           | [[Compact Timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)] |
+|  7a | [Date](#date)                                     | ([compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date))           |
+|  7b | [Time](#time)                                     | ([compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time))           |
+|  7c | [Timestamp](#timestamp)                           | ([compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)) |
 |  7d | [Null](#null)                                     |                                          |
 |  7e | [RESERVED](#reserved)                             |                                          |
 |  7f | [Plane 7f](#type-field-plane-7f)                  | (See [Plane 7f](#type-field-plane-7f))   |
 |  80 | [String: 0 bytes](#string)                        |                                          |
-|  81 | [String: 1 byte](#string)                         | [1 octet of UTF-8 data]                  |
-|  82 | [String: 2 bytes](#string)                        | [2 octets of UTF-8 data]                 |
-|  83 | [String: 3 bytes](#string)                        | [3 octets of UTF-8 data]                 |
-|  84 | [String: 4 bytes](#string)                        | [4 octets of UTF-8 data]                 |
-|  85 | [String: 5 bytes](#string)                        | [5 octets of UTF-8 data]                 |
-|  86 | [String: 6 bytes](#string)                        | [6 octets of UTF-8 data]                 |
-|  87 | [String: 7 bytes](#string)                        | [7 octets of UTF-8 data]                 |
-|  88 | [String: 8 bytes](#string)                        | [8 octets of UTF-8 data]                 |
-|  89 | [String: 9 bytes](#string)                        | [9 octets of UTF-8 data]                 |
-|  8b | [String: 11 bytes](#string)                       | [11 octets of UTF-8 data]                |
-|  8a | [String: 10 bytes](#string)                       | [10 octets of UTF-8 data]                |
-|  8c | [String: 12 bytes](#string)                       | [12 octets of UTF-8 data]                |
-|  8d | [String: 13 bytes](#string)                       | [13 octets of UTF-8 data]                |
-|  8e | [String: 14 bytes](#string)                       | [14 octets of UTF-8 data]                |
-|  8f | [String: 15 bytes](#string)                       | [15 octets of UTF-8 data]                |
-|  90 | [String](#string)                                 | [chunk length] [UTF-8 data] ...          |
-|  91 | [Resource Identifier](#resource-identifier)       | [chunk length] [UTF-8 data] ...          |
-|  92 | [Custom Type](#custom-types)                      | [type] [chunk length] [data] ...         |
-|  93 | [Array: Unsigned Int8](#supported-array-types)    | [chunk length] [8-bit elements] ...      |
-|  94 | [Array: Bit](#bit-array)                          | [chunk length] [1-bit elements] ...      |
+|  81 | [String: 1 byte](#string)                         | (1 octet of UTF-8 data)                  |
+|  82 | [String: 2 bytes](#string)                        | (2 octets of UTF-8 data)                 |
+|  83 | [String: 3 bytes](#string)                        | (3 octets of UTF-8 data)                 |
+|  84 | [String: 4 bytes](#string)                        | (4 octets of UTF-8 data)                 |
+|  85 | [String: 5 bytes](#string)                        | (5 octets of UTF-8 data)                 |
+|  86 | [String: 6 bytes](#string)                        | (6 octets of UTF-8 data)                 |
+|  87 | [String: 7 bytes](#string)                        | (7 octets of UTF-8 data)                 |
+|  88 | [String: 8 bytes](#string)                        | (8 octets of UTF-8 data)                 |
+|  89 | [String: 9 bytes](#string)                        | (9 octets of UTF-8 data)                 |
+|  8b | [String: 11 bytes](#string)                       | (11 octets of UTF-8 data)                |
+|  8a | [String: 10 bytes](#string)                       | (10 octets of UTF-8 data)                |
+|  8c | [String: 12 bytes](#string)                       | (12 octets of UTF-8 data)                |
+|  8d | [String: 13 bytes](#string)                       | (13 octets of UTF-8 data)                |
+|  8e | [String: 14 bytes](#string)                       | (14 octets of UTF-8 data)                |
+|  8f | [String: 15 bytes](#string)                       | (15 octets of UTF-8 data)                |
+|  90 | [String](#string)                                 | (chunk header) (UTF-8 data) ...          |
+|  91 | [Resource Identifier](#resource-identifier)       | (chunk header) (UTF-8 data) ...          |
+|  92 | [Custom Type](#custom-types)                      | (type) (chunk header) (data) ...         |
+|  93 | [Array: Unsigned Int8](#supported-array-types)    | (chunk header) (8-bit elements) ...      |
+|  94 | [Array: Bit](#bit-array)                          | (chunk header) (1-bit elements) ...      |
 |  95 | [Padding](#padding)                               |                                          |
-|  96 | [Struct Instance](#struct-instance)               | ID, Value ... End of Container           |
-|  97 | [Edge](#edge)                                     | Source, Description, Destination, End of Container |
-|  98 | [Node](#node)                                     | Value, Child Node ... End of Container   |
-|  99 | [Map](#map)                                       | (Key, Value) ... End of Container        |
-|  9a | [List](#list)                                     | Object ... End of Container              |
+|  96 | [Struct Instance](#struct-instance)               | (ID) (value) ... (end container)         |
+|  97 | [Edge](#edge)                                     | (source) (description) (destination) (end container) |
+|  98 | [Node](#node)                                     | (value) (child node) ... (end container) |
+|  99 | [Map](#map)                                       | (key, value) ... (end container)         |
+|  9a | [List](#list)                                     | (value) ... (end container)              |
 |  9b | [End of Container](#container-types)              |                                          |
 |  9c | [Integer value -100](#small-integer)              |                                          |
 | ... | ...                                               |                                          |
@@ -227,56 +227,56 @@ Types from plane 7f begin with the type code prefix `[7f]`, followed by their ty
 
 | Hex | Type                                            | Elems | Payload                                   |
 | --- | ----------------------------------------------- | ----- | ----------------------------------------- |
-|  00 | [Array: UID](#supported-array-types)            |    0  | [128-bit big endian element] x0           |
+|  00 | [Array: UID](#supported-array-types)            |    0  | (128-bit big endian element) x0           |
 | ... | ...                                             |  ...  | ...                                       |
-|  0f | [Array: UID](#supported-array-types)            |   15  | [128-bit big endian element] x15          |
-|  10 | [Array: Signed Int8](#supported-array-types)    |    0  | [8-bit element] x0                        |
+|  0f | [Array: UID](#supported-array-types)            |   15  | (128-bit big endian element) x15          |
+|  10 | [Array: Signed Int8](#supported-array-types)    |    0  | (8-bit element) x0                        |
 | ... | ...                                             |  ...  | ...                                       |
-|  1f | [Array: Signed Int8](#supported-array-types)    |   15  | [8-bit element] x15                       |
-|  20 | [Array: Unsigned Int16](#supported-array-types) |    0  | [16-bit little endian element] x0         |
+|  1f | [Array: Signed Int8](#supported-array-types)    |   15  | (8-bit element) x15                       |
+|  20 | [Array: Unsigned Int16](#supported-array-types) |    0  | (16-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  2f | [Array: Unsigned Int16](#supported-array-types) |   15  | [16-bit little endian element] x15        |
-|  30 | [Array: Signed Int16](#supported-array-types)   |    0  | [16-bit little endian element] x0         |
+|  2f | [Array: Unsigned Int16](#supported-array-types) |   15  | (16-bit little endian element) x15        |
+|  30 | [Array: Signed Int16](#supported-array-types)   |    0  | (16-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  3f | [Array: Signed Int16](#supported-array-types)   |   15  | [16-bit little endian element] x15        |
-|  40 | [Array: Unsigned Int32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+|  3f | [Array: Signed Int16](#supported-array-types)   |   15  | (16-bit little endian element) x15        |
+|  40 | [Array: Unsigned Int32](#supported-array-types) |    0  | (32-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  4f | [Array: Unsigned Int32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
-|  50 | [Array: Signed Int32](#supported-array-types)   |    0  | [32-bit little endian element] x0         |
+|  4f | [Array: Unsigned Int32](#supported-array-types) |   15  | (32-bit little endian element) x15        |
+|  50 | [Array: Signed Int32](#supported-array-types)   |    0  | (32-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  5f | [Array: Signed Int32](#supported-array-types)   |   15  | [32-bit little endian element] x15        |
-|  60 | [Array: Unsigned Int64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+|  5f | [Array: Signed Int32](#supported-array-types)   |   15  | (32-bit little endian element) x15        |
+|  60 | [Array: Unsigned Int64](#supported-array-types) |    0  | (64-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  6f | [Array: Unsigned Int64](#supported-array-types) |   15  | [64-bit little endian element] x15        |
-|  70 | [Array: Signed Int64](#supported-array-types)   |    0  | [64-bit little endian element] x0         |
+|  6f | [Array: Unsigned Int64](#supported-array-types) |   15  | (64-bit little endian element) x15        |
+|  70 | [Array: Signed Int64](#supported-array-types)   |    0  | (64-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  7f | [Array: Signed Int64](#supported-array-types)   |   15  | [64-bit little endian element] x15        |
-|  80 | [Array: BFloat16](#supported-array-types)       |    0  | [16-bit little endian element] x0         |
+|  7f | [Array: Signed Int64](#supported-array-types)   |   15  | (64-bit little endian element) x15        |
+|  80 | [Array: BFloat16](#supported-array-types)       |    0  | (16-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  8f | [Array: BFloat16](#supported-array-types)       |   15  | [16-bit little endian element] x15        |
-|  90 | [Array: Binary Float32](#supported-array-types) |    0  | [32-bit little endian element] x0         |
+|  8f | [Array: BFloat16](#supported-array-types)       |   15  | (16-bit little endian element) x15        |
+|  90 | [Array: Binary Float32](#supported-array-types) |    0  | (32-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  9f | [Array: Binary Float32](#supported-array-types) |   15  | [32-bit little endian element] x15        |
-|  a0 | [Array: Binary Float64](#supported-array-types) |    0  | [64-bit little endian element] x0         |
+|  9f | [Array: Binary Float32](#supported-array-types) |   15  | (32-bit little endian element) x15        |
+|  a0 | [Array: Binary Float64](#supported-array-types) |    0  | (64-bit little endian element) x0         |
 | ... | ...                                             |  ...  | ...                                       |
-|  af | [Array: Bin Float64](#supported-array-types)    |   15  | [64-bit little endian element] x15        |
+|  af | [Array: Bin Float64](#supported-array-types)    |   15  | (64-bit little endian element) x15        |
 | ... | [RESERVED](#reserved)                           |       |                                           |
-|  e0 | [Array: UID](#supported-array-types)            |    ∞  | [chunk length] [128-bit B-E elements] ... |
-|  e1 | [Array: Signed Int8](#supported-array-types)    |    ∞  | [chunk length] [8-bit elements] ...       |
-|  e2 | [Array: Unsigned Int16](#supported-array-types) |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  e3 | [Array: Signed Int16](#supported-array-types)   |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  e4 | [Array: Unsigned Int32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  e5 | [Array: Signed Int32](#supported-array-types)   |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  e6 | [Array: Unsigned Int64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  e7 | [Array: Signed Int64](#supported-array-types)   |    ∞  | [chunk length] [64-bit L-E elements] ...  |
-|  e8 | [Array: BFloat16](#supported-array-types)       |    ∞  | [chunk length] [16-bit L-E elements] ...  |
-|  e9 | [Array: Binary Float32](#supported-array-types) |    ∞  | [chunk length] [32-bit L-E elements] ...  |
-|  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | [chunk length] [64-bit L-E elements] ...  |
+|  e0 | [Array: UID](#supported-array-types)            |    ∞  | (chunk header) (128-bit B-E elements) ... |
+|  e1 | [Array: Signed Int8](#supported-array-types)    |    ∞  | (chunk header) (8-bit elements) ...       |
+|  e2 | [Array: Unsigned Int16](#supported-array-types) |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e3 | [Array: Signed Int16](#supported-array-types)   |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e4 | [Array: Unsigned Int32](#supported-array-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  e5 | [Array: Signed Int32](#supported-array-types)   |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  e6 | [Array: Unsigned Int64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
+|  e7 | [Array: Signed Int64](#supported-array-types)   |    ∞  | (chunk header) (64-bit L-E elements) ...  |
+|  e8 | [Array: BFloat16](#supported-array-types)       |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e9 | [Array: Binary Float32](#supported-array-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
 | ... | [RESERVED](#reserved)                           |       |                                           |
-|  f0 | [Marker](#marker)                               |    1  | [length] [UTF-8 data]                     |
-|  f1 | [Struct Template](#struct-template)             |    ∞  | ID, Key ... End of Container              |
-|  f2 | [Remote Reference](#remote-reference)           |    1  | [chunk length] [UTF-8 data] ...           |
-|  f3 | [Media](#media)                                 |    ∞  | [length] [media type] [chunk length] [data] ... |
+|  f0 | [Marker](#marker)                               |    1  | (byte length) (UTF-8 data)                |
+|  f1 | [Struct Template](#struct-template)             |    ∞  | (ID) (key) ... (end container)            |
+|  f2 | [Remote Reference](#remote-reference)           |    1  | (chunk header) (UTF-8 data) ...           |
+|  f3 | [Media](#media)                                 |    ∞  | (byte length) (UTF-8 data) (chunk header) (bytes) ... |
 | ... | [RESERVED](#reserved)                           |       |                                           |
 
 
@@ -296,7 +296,7 @@ Represents true or false.
 
 ### Integer
 
-CBE encoders **MUST** output integer values in the smallest form possible, unless explicitly configured to do otherwise:
+CBE encoders **MUST** output integer values in the smallest form possibleby default:
 
 | Values                                     | Form                                              |
 | ------------------------------------------ | ------------------------------------------------- |
@@ -318,7 +318,7 @@ Values from -100 to +100 ("small int") are encoded into the type field itself, a
 
 Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field holds the sign of the integer.
 
-    [type] [byte 1 (low)] ... [byte x (high)]
+    [(type) (low byte) ... (high byte)]
 
 **Note**: Because the sign is encoded into the type field, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments, so care must be taken after decoding to ensure that the sign is not lost (the most common approach is to convert it to a floating point type).
 
@@ -326,7 +326,7 @@ Fixed width integers are stored as their absolute values in widths of 8, 16, 32,
 
 Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
 
-    [type] [length] [byte 1 (low)] ... [byte x (high)]
+    [(66 or 67) (length) (low byte) ... (high byte)]
 
 **Examples**:
 
@@ -484,15 +484,15 @@ CBE encoders **MUST** use the short form whenever it is possible to do so, unles
 
 In chunked form, array data is "chunked", meaning that it is represented as a series of chunks of data, each with its own [header](#chunk-header) containing the number of elements in the chunk and a continuation bit that tells if more chunks follow the current one:
 
-    [chunk-header-a] [chunk-elements-a] [chunk-header-b] [chunk-elements-b] ...
+    [(array type) (chunk-header-a) (chunk-elements-a) (chunk-header-b) (chunk-elements-b) ...]
 
 An array **CAN** contain any number of chunks, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
 
 **Example**:
 
-    [1d] (14 elements of data) [08] (4 elements of data)
+    [(array type) 1d (14 elements of data) 08 (4 elements of data)]
 
-In this case, the first chunk of the array has 14 elements and has a continuation bit of 1. The second chunk has 4 elements and a continuation bit of 0. The total length of the array is 18 elements (element size depends on the array type), split across two chunks.
+In this example, the first chunk of the array has 14 elements and has a continuation bit of 1 (chunk header 0x1d). The second chunk has 4 elements and a continuation bit of 0 (chunk header 0x08). The total length of the array is thus 18 elements (element size depends on the array type), split across two chunks.
 
 ##### Chunk Header
 
@@ -540,25 +540,25 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
 
 ### Supported Array Types
 
-| Array Type                                                                                   | Size (bits) | Byte Order    |
-| -------------------------------------------------------------------------------------------- | ----------- | ------------- |
-| Unsigned int                                                                                 | 8           | -             |
-| Unsigned int                                                                                 | 16          | Little Endian |
-| Unsigned int                                                                                 | 32          | Little Endian |
-| Unsigned int                                                                                 | 64          | Little Endian |
-| 2's complement signed int                                                                    | 8           | -             |
-| 2's complement signed int                                                                    | 16          | Little Endian |
-| 2's complement signed int                                                                    | 32          | Little Endian |
-| 2's complement signed int                                                                    | 64          | Little Endian |
-| [Bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)                     | 16          | Little Endian |
-| [IEEE754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) | 32          | Little Endian |
-| [IEEE754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) | 64          | Little Endian |
-| [RFC4122 UUID](https://tools.ietf.org/html/rfc4122#section-4.1.2)                            | 128         | Big Endian    |
-| [String](#string)                                                                            | 8           | -             |
-| [Resource ID](#resource-identifier)                                                          | 8           | -             |
-| [Bit](#bit-array)                                                                            | 1           | Little Endian |
-| [Media](#media)                                                                              | 8           | -             |
-| [Custom Type](#custom-types)                                                                 | 8           | -             |
+| Array Type                                                                                   | Element Size (bits) | Byte Order    |
+| -------------------------------------------------------------------------------------------- | ------------------- | ------------- |
+| Unsigned int                                                                                 | 8                   | -             |
+| Unsigned int                                                                                 | 16                  | Little Endian |
+| Unsigned int                                                                                 | 32                  | Little Endian |
+| Unsigned int                                                                                 | 64                  | Little Endian |
+| 2's complement signed int                                                                    | 8                   | -             |
+| 2's complement signed int                                                                    | 16                  | Little Endian |
+| 2's complement signed int                                                                    | 32                  | Little Endian |
+| 2's complement signed int                                                                    | 64                  | Little Endian |
+| [Bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)                     | 16                  | Little Endian |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) | 32                  | Little Endian |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) | 64                  | Little Endian |
+| [RFC4122 UUID](https://tools.ietf.org/html/rfc4122#section-4.1.2)                            | 128                 | Big Endian    |
+| [String](#string)                                                                            | 8                   | -             |
+| [Resource ID](#resource-identifier)                                                          | 8                   | -             |
+| [Bit](#bit-array)                                                                            | 1                   | Little Endian |
+| [Media](#media)                                                                              | 8                   | -             |
+| [Custom Type](#custom-types)                                                                 | 8                   | -             |
 
 #### String
 
@@ -566,13 +566,13 @@ Strings are encoded as UTF-8.
 
 The general string encoding form is:
 
-    [90] [chunk header] [Octet 0] ... [Octet (Length-1)]
+    [90 (chunk header) (octet 0) ... (octet n-1)]
 
 Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
 
     [80]
-    [81] [octet 0]
-    [82] [octet 0] [octet 1]
+    [81 (octet 0)]
+    [82 (octet 0) (octet 1)]
     ...
 
 **Examples**:
@@ -607,7 +607,7 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 A media object is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
-    [media type length] [media type] [chunk header] [chunk contents] ...
+    [7f f3 (media type length) (media type) (chunk header) (chunk contents) ...]
 
 | Field             | Description                                             |
 | ----------------- | ------------------------------------------------------- |
@@ -650,7 +650,7 @@ echo hello world
 
 Custom type values are composed of the type code 0x92, followed by a custom type code, followed by a byte array containing the custom data.
 
-    [`92`] [custom type code] [chunk length] [chunk data] ...
+    [`92` (custom type code) (chunk header) (chunk contents) ...]
 
 The custom type code field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
 
@@ -694,7 +694,7 @@ A list begins with 0x9a, followed by a series of zero or more objects, and is te
 
 A map begins with 0x99, followed by a series of zero or more key-value pairs, and is terminated with 0x9b (end of container).
 
-    [99] [key-1] [value-1] [key-2] [value-2] ... [9b]
+    [99 (key-1, value-1) (key-2, value-2) ... 9b]
 
 **Example**:
 
@@ -705,7 +705,7 @@ A map begins with 0x99, followed by a series of zero or more key-value pairs, an
 
 A struct instance begins with 0x96, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x9b (end of container).
 
-    [96] [val1] [val2] [val3] ... [9b]
+    [96 (value-1) (value-2) (value-3) ... 9b]
 
 **Example**:
 
@@ -718,7 +718,7 @@ A struct instance built from template "a", with the first key's associated value
 
 An edge begins with 0x97, followed by a source, then a description, then a destination, and is terminated with 0x9b (end of container).
 
-    [97] [source] [description] [destination] [9b]
+    [97 (source) (description) (destination) 9b]
 
 **Example**:
 
@@ -734,7 +734,7 @@ An edge begins with 0x97, followed by a source, then a description, then a desti
 
 A node begins with 0x98, followed by a value object and zero or more child nodes, and is terminated with 0x9b (end of container).
 
-    [98] [value] [node] ... [9b]
+    [98 (value) (child node) ... 9b]
 
 **Example**:
 
@@ -767,9 +767,9 @@ Peudo-Objects
 
 ### Local Reference
 
-A local reference begins with the reference type (0x77), followed by a marker [identifier]](#identifier).
+A local reference begins with the reference type (0x77), followed by a marker [identifier](#identifier).
 
-    [77 (length) (ID string data)]
+    [77 (byte length) (ID: UTF-8 string data)]
 
 **Examples**:
 
@@ -814,7 +814,7 @@ Structural Objects
 
 The struct template type is in plane 7f, subtype f1, followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with 0x9b (end of container).
 
-    [7f f1] [key1] [key2] [key3] ... [9b]
+    [7f f1 (key-1) (key-2) (key-3) ... 9b]
 
 **Example**:
 
@@ -827,7 +827,7 @@ A struct template named "a", containing the key "b":
 
 The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#identifier), and then the marked object.
 
-    [7f f0 (length) (ID string data) (marked object)]
+    [7f f0 (byte length) (ID: UTF-8 string data) (marked object)]
 
 **Example**:
 
@@ -843,7 +843,7 @@ The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#iden
 
 Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) length field (min length 1 byte), followed by that many **bytes** of UTF-8 data.
 
-    [length] [UTF-8 string data]
+    [(byte length) (ID: UTF-8 string data)]
 
 The length field **CANNOT** be 0.
 

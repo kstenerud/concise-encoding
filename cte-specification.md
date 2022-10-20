@@ -241,7 +241,7 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
-CTE encoders **MUST** output integers in base 10 unless explicitly configured otherwise.
+CTE encoders **MUST** output integers in base 10 by default.
 
 
 ### Floating Point
@@ -256,7 +256,7 @@ A floating point number is composed of an implied base (signified by an **OPTION
 
 **Note**: A float value that contains only a whole significand portion (fractional part = 0 and exponent = 1) will be interpreted/printed as an integer.
 
-CTE encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) unless explicitly configured otherwise.
+CTE encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default.
 
 **Examples**:
 
@@ -755,9 +755,9 @@ An invalid array type field is a [data error](ce-structure#data-errors).
 | `o`         | `0o`                   | `\|i16o -7445 644\|`            |
 | `x`         | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
 
-CTE encoders **MUST NOT** use implied prefix arrays unless explicitly configured to do so.
+CTE encoders **MUST NOT** use implied prefix arrays by default.
 
-CTE encoders **MUST** output integer array elements of non-implied arrays in [base-10 notation](#base-10-notation) unless explicitly configured otherwise.
+CTE encoders **MUST** output integer array elements of non-implied arrays in [base-10 notation](#base-10-notation) by default.
 
 **Examples**:
 
@@ -794,9 +794,9 @@ Float array element values written in decimal form will be **silently rounded** 
 
 Float arrays **MAY** be written using the [implied prefix](#implied-prefix) `x`.
 
-CTE encoders **MUST NOT** use implied prefix arrays unless explicitly configured to do so.
+CTE encoders **MUST NOT** use implied prefix arrays by default.
 
-CTE encoders **MUST** output float array elements in [base-16 notation](#base-16-notation) unless explicitly configured to do otherwise.
+CTE encoders **MUST** output float array elements in [base-16 notation](#base-16-notation) by default.
 
 
 #### Media
