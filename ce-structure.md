@@ -161,10 +161,11 @@ Terms and Conventions
 | **OPTIONAL(LY)** | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 | **OPTION(S)**    | Configuration option(s) that implementations **MUST** provide.                                                        |
 
-**Sample data will generally be represented as follows**:
+**Data descriptions and samples will generally be represented as follows**:
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
- * Byte sequences are represented as a series of two-digit hex values enclosed within backticks and square brackets: [`f1 33 91`]
+ * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Data placeholders are put `(between parentheses)`
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
@@ -228,7 +229,7 @@ Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashio
 
 Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
 
-    [mandatory version specifier] [optional invisible and structural objects] [mandatory top-level data object]
+    (version specifier) (optional invisible and structural objects) (top-level data object)
 
 Once the top-level object is fully decoded, the document is considered finished.
 
@@ -711,7 +712,7 @@ c1
 
 A media object encapsulates foreign media data (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
 
-    [media type] [data]
+    (media type) (data)
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
@@ -1298,7 +1299,7 @@ A struct template contains a unique (to the current document) template [identifi
 
 A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which is then [referenceable](#reference) from anywhere the document (or from a different document).
 
-    [marker identifier] [marked object]
+    (marker identifier) (marked object)
 
 A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
 

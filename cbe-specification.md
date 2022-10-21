@@ -102,10 +102,11 @@ Terms and Conventions
 | **OPTIONAL(LY)** | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 | **OPTION(S)**    | Configuration option(s) that implementations **MUST** provide.                                                        |
 
-**Sample data will generally be represented as follows**:
+**Data descriptions and samples will generally be represented as follows**:
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Data placeholders are put `(between parentheses)`
 
 
 
@@ -221,7 +222,7 @@ All objects begin with a type field, followed by a possible payload (depending o
 
 ### Type Field (Plane 7f)
 
-Some bulkier or less common types are encoded into a second type plane, adding a second byte to the type code.
+Bulkier or less common types are encoded into a secondary type plane, which adds a second byte to the type code.
 
 Types from plane 7f begin with the type code prefix `[7f]`, followed by their type code in that plane. For example, the type for signed 16-bit array with 8 elements is `[7f 28]`, and the type for [media](#media) is `[7f f3]`.
 
@@ -296,9 +297,9 @@ Represents true or false.
 
 ### Integer
 
-CBE encoders **MUST** by default output integer values in the smallest type possible:
+CBE encoders **MUST** by default output integer values in the smallest type they'll fit into:
 
-| Values                                     | Type                                              |
+| Values                                     | Best Fit Type                                     |
 | ------------------------------------------ | ------------------------------------------------- |
 | ± `0` - `100`                              | [small integer](#small-integer)                   |
 | ± `0x65` - `0xff`                          | [8-bit integer](#fixed-width-integer)             |
@@ -417,7 +418,7 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 ### Array Elements
 
-Array elements have a fixed size determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte).
+Array elements have a fixed type and size, determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte).
 
 
 ### Array Forms
@@ -428,7 +429,7 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 
 | Field        | Bits | Description                                         |
 | ------------ | ---- | --------------------------------------------------- |
-| Type         |    4 | Upper 4 bits in [primary plane](#object-encoding)   |
+| Type         |    4 | Upper 4 bits in the [primary plane](#type-field)    |
 | Length       |    4 | Number of elements (0-15)                           |
 | Elements     |    ∞ | The elements as a sequence of octets                |
 
@@ -436,7 +437,7 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 
 | Field        | Bits | Description                                         |
 | ------------ | ---- | --------------------------------------------------- |
-| Type         |   8  | Type in [primary plane](#object-encoding)           |
+| Type         |   8  | Type in the [primary plane](#type-field)            |
 | Chunk Header |   ∞  | The number of elements in this chunk + continuation |
 | Elements     |   ∞  | The elements as a sequence of octets                |
 | ...          |   ∞  | More chunks if continuation is 1                    |
@@ -595,7 +596,7 @@ Resource identifiers are encoded similarly to a long-form [string](#string), but
 
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), with the first element of the array stored in the least significant bit of the first byte of the encoded elements. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), in little endian byte order, with the first element of the array stored in the least significant bit of the first byte of the encoded elements. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1c 7a]` with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -607,7 +608,7 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to `[1
 
 A media object is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
-    [7f f3 (media type length) (media type) (chunk header) (chunk contents) ...]
+    [7f f3 (media type length) (media type) (chunk header, chunk contents) ...]
 
 | Field             | Description                                             |
 | ----------------- | ------------------------------------------------------- |
@@ -650,11 +651,11 @@ echo hello world
 
 Custom type values are composed of the type code 0x92, followed by a custom type code, followed by a byte array containing the custom data.
 
-    [92 (custom type code) (chunk header) (chunk contents) ...]
+    [92 (custom type code) (chunk header, chunk contents) ...]
 
 The custom type code field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
 
-**Note**: Custom data in [text form](ce-structure.md#custom-type-forms) **MUST** be converted to binary form before being encoded into CBE.
+**Note**: Custom data in [text form](ce-structure.md#custom-type-forms) **MUST** be converted to binary form before being encoded into CBE, as CBE does **not** support the text form.
 
 **Example**: a fictional cutom "complex number" with real and imaginary components represented using float32, assigned to custom type code 1
 

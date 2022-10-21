@@ -126,10 +126,11 @@ Terms and Conventions
 | **OPTIONAL(LY)** | The implementation **MUST** support both the existence and the absence of the specified item.                         |
 | **OPTION(S)**    | Configuration option(s) that implementations **MUST** provide.                                                        |
 
-**Sample data will generally be represented as follows**:
+**Data descriptions and samples will generally be represented as follows**:
 
  * Character sequences are enclosed within backticks: `this is a character sequence`
- * Byte sequences are represented as a series of two-digit hexadecimal values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
+ * Data placeholders are put `(between parentheses)`
 
 
 
@@ -200,7 +201,7 @@ Document Structure
 
 Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
-    [version specifier] [optional invisible and structural objects] [top-level data object]
+    (version specifier) (optional invisible and structural objects) (top-level data object)
 
 
 
@@ -1019,7 +1020,7 @@ Pseudo-Objects
 
 ### Local Reference
 
-A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier]](ce-structure.md#identifier) that has been defined elsewhere in the current document.
+A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier](ce-structure.md#identifier) that has been defined elsewhere in the current document.
 
 **Example**:
 
