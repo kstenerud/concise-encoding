@@ -169,14 +169,14 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  6d | [Negative Integer (32 bit)](#fixed-width-integer) | (32-bit unsigned integer, little endian) |
 |  6e | [Positive Integer (64 bit)](#fixed-width-integer) | (64-bit unsigned integer, little endian) |
 |  6f | [Negative Integer (64 bit)](#fixed-width-integer) | (64-bit unsigned integer, little endian) |
-|  70 | [Binary Float (16 bit)](#binary-floating-point)   | (16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian] |
+|  70 | [Binary Float (16 bit)](#binary-floating-point)   | (16-bit [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format), little endian) |
 |  71 | [Binary Float (32 bit)](#binary-floating-point)   | ([32-bit ieee754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), little endian) |
 |  72 | [Binary Float (64 bit)](#binary-floating-point)   | ([64-bit ieee754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format), little endian) |
 |  73 | [RESERVED](#reserved)                             |                                          |
 |  74 | [RESERVED](#reserved)                             |                                          |
 |  75 | [RESERVED](#reserved)                             |                                          |
-|  76 | [Decimal Float](#decimal-floating-point)          | ([compact float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)] |
-|  77 | [Local Reference](#local-reference)               | (byte length) (UTF-8 data)               |
+|  76 | [Decimal Float](#decimal-floating-point)          | ([compact float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md)) |
+|  77 | [Local Reference](#local-reference)               | (identifier)                             |
 |  78 | [Boolean False](#boolean)                         |                                          |
 |  79 | [Boolean True](#boolean)                          |                                          |
 |  7a | [Date](#date)                                     | ([compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date))           |
@@ -203,11 +203,11 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  8f | [String: 15 bytes](#string)                       | (15 octets of UTF-8 data)                |
 |  90 | [String](#string)                                 | (chunk header) (UTF-8 data) ...          |
 |  91 | [Resource Identifier](#resource-identifier)       | (chunk header) (UTF-8 data) ...          |
-|  92 | [Custom Type](#custom-types)                      | (type) (chunk header) (data) ...         |
+|  92 | [Custom Type](#custom-types)                      | (type code) (chunk header) (data) ...    |
 |  93 | [Array: Unsigned Int8](#supported-array-types)    | (chunk header) (8-bit elements) ...      |
 |  94 | [Array: Bit](#bit-array)                          | (chunk header) (1-bit elements) ...      |
 |  95 | [Padding](#padding)                               |                                          |
-|  96 | [Struct Instance](#struct-instance)               | (ID) (value) ... (end container)         |
+|  96 | [Struct Instance](#struct-instance)               | (identifier) (value) ... (end container) |
 |  97 | [Edge](#edge)                                     | (source) (description) (destination) (end container) |
 |  98 | [Node](#node)                                     | (value) (child node) ... (end container) |
 |  99 | [Map](#map)                                       | (key, value) ... (end container)         |
@@ -296,9 +296,9 @@ Represents true or false.
 
 ### Integer
 
-CBE encoders **MUST** output integer values in the smallest form possibleby default:
+CBE encoders **MUST** by default output integer values in the smallest type possible:
 
-| Values                                     | Form                                              |
+| Values                                     | Type                                              |
 | ------------------------------------------ | ------------------------------------------------- |
 | ± `0` - `100`                              | [small integer](#small-integer)                   |
 | ± `0x65` - `0xff`                          | [8-bit integer](#fixed-width-integer)             |
@@ -417,7 +417,7 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 ### Array Elements
 
-Array elements have a fixed size determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uin32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element).
+Array elements have a fixed size determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte).
 
 
 ### Array Forms
@@ -426,39 +426,39 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 
 **Primary plane, short form**:
 
-| Field        | Bits | Description                                       |
-| ------------ | ---- | ------------------------------------------------- |
-| Type         |    4 | Upper 4 bits in [primary plane](#object-encoding) |
-| Length       |    4 | Number of elements (0-15)                         |
-| Elements     |    ∞ | The elements as a sequence of octets              |
+| Field        | Bits | Description                                         |
+| ------------ | ---- | --------------------------------------------------- |
+| Type         |    4 | Upper 4 bits in [primary plane](#object-encoding)   |
+| Length       |    4 | Number of elements (0-15)                           |
+| Elements     |    ∞ | The elements as a sequence of octets                |
 
 **Primary plane, chunked form**:
 
-| Field        | Bits | Description                                       |
-| ------------ | ---- | ------------------------------------------------- |
-| Type         |   8  | Type in [primary plane](#object-encoding)         |
-| Chunk Header |   ∞  | The number of elements in this chunk              |
-| Elements     |   ∞  | The elements as a sequence of octets              |
-| ...          |   ∞  | Possibly more chunks                              |
+| Field        | Bits | Description                                         |
+| ------------ | ---- | --------------------------------------------------- |
+| Type         |   8  | Type in [primary plane](#object-encoding)           |
+| Chunk Header |   ∞  | The number of elements in this chunk + continuation |
+| Elements     |   ∞  | The elements as a sequence of octets                |
+| ...          |   ∞  | More chunks if continuation is 1                    |
 
 **Plane 7f, short form**:
 
-| Field        | Bits | Description                                       |
-| ------------ | ---- | ------------------------------------------------- |
-| Type (plane) |    8 | 0x7f (plane 7f)                                   |
-| Type         |    4 | Upper 4 bits in [plane 7f](#type-field-plane-7f)  |
-| Length       |    4 | Number of elements (0-15)                         |
-| Elements     |    ∞ | The elements as a sequence of octets              |
+| Field        | Bits | Description                                         |
+| ------------ | ---- | --------------------------------------------------- |
+| Type (plane) |    8 | 0x7f (plane 7f)                                     |
+| Type         |    4 | Upper 4 bits in [plane 7f](#type-field-plane-7f)    |
+| Length       |    4 | Number of elements (0-15)                           |
+| Elements     |    ∞ | The elements as a sequence of octets                |
 
 **Plane 7f, chunked form**:
 
-| Field        | Bits | Description                                       |
-| ------------ | ---- | ------------------------------------------------- |
-| Type (plane) |   8  | 0x7f (plane 7f)                                   |
-| Type         |   8  | Type in [plane 7f](#type-field-plane-7f)          |
-| Chunk Header |   ∞  | The number of elements in this chunk              |
-| Elements     |   ∞  | The elements as a sequence of octets              |
-| ...          |   ∞  | Possibly more chunks                              |
+| Field        | Bits | Description                                         |
+| ------------ | ---- | --------------------------------------------------- |
+| Type (plane) |   8  | 0x7f (plane 7f)                                     |
+| Type         |   8  | Type in [plane 7f](#type-field-plane-7f)            |
+| Chunk Header |   ∞  | The number of elements in this chunk + continuation |
+| Elements     |   ∞  | The elements as a sequence of octets                |
+| ...          |   ∞  | More chunks if continuation is 1                    |
 
 The length represents the number of **elements** (not bytes) in the array/chunk.
 
@@ -492,7 +492,7 @@ An array **CAN** contain any number of chunks, and the chunks don't have to be t
 
     [(array type) 1d (14 elements of data) 08 (4 elements of data)]
 
-In this example, the first chunk of the array has 14 elements and has a continuation bit of 1 (chunk header 0x1d). The second chunk has 4 elements and a continuation bit of 0 (chunk header 0x08). The total length of the array is thus 18 elements (element size depends on the array type), split across two chunks.
+In this example, the first chunk of the array has 14 elements and has a continuation bit of 1 (chunk header 0x1d). The second chunk has 4 elements and a continuation bit of 0 (chunk header 0x08). The total length of the array is thus 18 elements, split across two chunks.
 
 ##### Chunk Header
 
@@ -617,7 +617,7 @@ A media object is composed of a length-prefixed [media type](http://www.iana.org
 | Media Type Data   | UTF-8 string data                                       |
 | Chunk Header      | Number of media bytes in this chunk, continuation bit   |
 | Elements          | Bytes of media data                                     |
-| ...               | Possibly more chunks until continuation = 0             |
+| ...               | More chunks if continuation is 1                        |
 
 **Example**:
 
@@ -650,9 +650,11 @@ echo hello world
 
 Custom type values are composed of the type code 0x92, followed by a custom type code, followed by a byte array containing the custom data.
 
-    [`92` (custom type code) (chunk header) (chunk contents) ...]
+    [92 (custom type code) (chunk header) (chunk contents) ...]
 
 The custom type code field is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128).
+
+**Note**: Custom data in [text form](ce-structure.md#custom-type-forms) **MUST** be converted to binary form before being encoded into CBE.
 
 **Example**: a fictional cutom "complex number" with real and imaginary components represented using float32, assigned to custom type code 1
 
@@ -661,7 +663,7 @@ The custom type code field is encoded as an [unsigned LEB128](https://en.wikiped
           imaginary: float32 = 3.0  (40 40 00 00)
       }
 
-Encoded as a custom type (Note: multibyte values are encoded in little endian byte order):
+Encoded as a custom type (Note: the multibyte values are encoded in little endian byte order):
 
      *1 *2 *3 *4          *5
     [92 01 10 f6 28 3c 40 00 00 40 40]
@@ -685,6 +687,8 @@ Container Types
 
 A list begins with 0x9a, followed by a series of zero or more objects, and is terminated with 0x9b (end of container).
 
+    [9a (element-1) (element-2) ... 9b]
+
 **Example**:
 
     [9a 01 6a 88 13 9b] = A list containing integers (1, 5000)
@@ -705,11 +709,11 @@ A map begins with 0x99, followed by a series of zero or more key-value pairs, an
 
 A struct instance begins with 0x96, followed by a template [identifier](#identifier), followed by a series of values to match the order that their keys are defined in the associated [template](#struct-template), and is terminated with 0x9b (end of container).
 
-    [96 (value-1) (value-2) (value-3) ... 9b]
+    [96 (template identifier) (value-1) (value-2) (value-3) ... 9b]
 
 **Example**:
 
-A struct instance built from template "a", with the first key's associated value set to 5:
+A struct instance built from the template identified by "a" (defined elsewhere), with the first key's associated value set to 5:
 
     [96 01 61 05 9b]
 
@@ -769,7 +773,7 @@ Peudo-Objects
 
 A local reference begins with the reference type (0x77), followed by a marker [identifier](#identifier).
 
-    [77 (byte length) (ID: UTF-8 string data)]
+    [77 (identifier)]
 
 **Examples**:
 
@@ -814,7 +818,7 @@ Structural Objects
 
 The struct template type is in plane 7f, subtype f1, followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with 0x9b (end of container).
 
-    [7f f1 (key-1) (key-2) (key-3) ... 9b]
+    [7f f1 (identifier) (key-1) (key-2) (key-3) ... 9b]
 
 **Example**:
 
@@ -827,7 +831,7 @@ A struct template named "a", containing the key "b":
 
 The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#identifier), and then the marked object.
 
-    [7f f0 (byte length) (ID: UTF-8 string data) (marked object)]
+    [7f f0 (identifier) (marked object)]
 
 **Example**:
 
@@ -843,11 +847,11 @@ The marker is in plane 7f, subtype 0xf0, followed by a marker [identifier](#iden
 
 Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) length field (min length 1 byte), followed by that many **bytes** of UTF-8 data.
 
-    [(byte length) (ID: UTF-8 string data)]
+    [(byte length) (UTF-8 string data)]
 
 The length field **CANNOT** be 0.
 
-**Note**: Identifiers are **not** standalone objects. They are always part of another object.
+**Note**: Identifiers are **not** standalone objects; they are always part of another object.
 
 **Examples**:
 
