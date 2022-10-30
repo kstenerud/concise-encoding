@@ -815,7 +815,7 @@ Structural Objects
 
 ### Struct Template
 
-A struct template has type code [`7f f1`], followed by a template [identifier](#identifier), followed by keys of the template, and is terminated with [`9b`] (end of container).
+A struct template has type code [`7f f1`], followed by a template [identifier](#identifier), followed by a series of keys, and is terminated with [`9b`] (end of container).
 
     [7f f1 (identifier) (key-1) (key-2) (key-3) ... 9b]
 
