@@ -14,7 +14,8 @@ This Document
 
 This document describes the Concise Text Encoding (CTE) format, and how codecs for this format must behave.
 
-The logical structure of Concise Encoding is described [in its own document](ce-structure.md).
+ * The Concise Binary Encoding (CBE) format is described in [this document](cbe-specification.md).
+ * The logical structure of Concise Encoding is described in [this document](ce-structure.md).
 
 
 
