@@ -14,8 +14,8 @@ This Document
 
 This document describes the logical structure of the Concise Encoding formats and the data types they support.
 
- * The Concise Binary Encoding (CBE) format is described in [this document](cbe-specification.md).
- * The Concise Text Encoding (CTE) format is described in [this document](cte-specification.md).
+ * The Concise Binary Encoding (CBE) format is described in [cbe-specification.md](cbe-specification.md).
+ * The Concise Text Encoding (CTE) format is described in [cte-specification.md](cte-specification.md).
 
 
 
