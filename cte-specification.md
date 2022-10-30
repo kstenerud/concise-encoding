@@ -12,7 +12,7 @@ Version 0 (prerelease)
 This Document
 -------------
 
-This document describes the encoding format of Concise Text Encoding (CTE), and how codecs of this format must behave.
+This document describes the Concise Text Encoding (CTE) format, and how codecs for this format must behave.
 
 The logical structure of Concise Encoding is described [in its own document](ce-structure.md).
 
@@ -114,11 +114,11 @@ Contents
 Terms and Conventions
 ---------------------
 
-**The following bolded, capitalized terms have specific meanings in this specification**:
+**The following bolded, capitalized terms have specific meanings in this document**:
 
 | Term             | Meaning                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
 | **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
 | **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
 | **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |

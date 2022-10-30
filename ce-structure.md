@@ -12,9 +12,9 @@ Version 0 (prerelease)
 This Document
 -------------
 
-This document describes the logical structure of the Concise Encoding formats, and the data types it supports.
+This document describes the logical structure of the Concise Encoding formats and the data types they support.
 
-The actual encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in their respective documents.
+The actual encoding of the [text (CTE)](cte-specification.md) and [binary (CBE)](cbe-specification.md) formats are described in their own respective documents.
 
 
 
@@ -149,11 +149,11 @@ Contents
 Terms and Conventions
 ---------------------
 
-**The following bolded, capitalized terms have specific meanings in this specification**:
+**The following bolded, capitalized terms have specific meanings in this document**:
 
 | Term             | Meaning                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid/non-conformant.                        |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
 | **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
 | **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
 | **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
