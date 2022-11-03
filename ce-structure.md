@@ -294,9 +294,9 @@ Numeric Types
 
 Numeric types comprise the basic scalar numeric types present in most computer systems.
 
-An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss.
+An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss (other than the original type information).
 
-**Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that any limits chosen are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
+**Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that all chosen limits are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
 
 
 ### Boolean
@@ -324,6 +324,7 @@ Integer values **CAN** be positive or negative, and **CAN** be represented in va
 c1
 [
     42
+    0xff
     -1000000000000000000000000000000000000000000000000000
 ]
 ```
@@ -363,7 +364,7 @@ c1
 
 In a binary floating point number, the exponent represents 2 to the power of the exponent value (for example 7.403 x 2¹⁵).
 
-Binary floating point is provided mainly to support legacy systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports three types of binary floating point values:
+Binary floating point is provided mainly to support legacy and specialized systems (to ensure that no further rounding occurs when transmitting the values). Concise Encoding supports three types of binary floating point values:
 
  * [16-bit bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
  * [32-bit ieee754 binary](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)
@@ -524,7 +525,7 @@ c1
 
 ### Time Zones
 
-A time zone refers to the political designation of a location having a specific time offset from UTC at a particular time. Time zones are in a continual state of flux, and could change at any time for many reasons.
+A time zone refers to the political designation of a location as having a specific time offset from UTC during a particular time period. Time zones are in a continual state of flux, and could change at any time for many reasons.
 
 Time zone data can be denoted in the following ways:
 
@@ -616,13 +617,13 @@ UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values.
 Array Types
 -----------
 
-An array represents a contiguous sequence of fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
+An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
 There are four main array styles in Concise Encoding:
 
- * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is in bytes, not characters).
+ * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is counted in bytes, not characters).
  * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
- * [Media](#media) encapsulates other file formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
  * [Custom types](#custom-types) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
 
@@ -648,10 +649,13 @@ This ensures a default of uniform behavior across all platforms that sidesteps t
 
 #### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for data transmission the canonical format is LF only.
+Line endings in string-like types **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms.
 
- * Decoders **MUST** accept both line ending types as input.
- * Encoders **MUST** output LF only.
+Codecs **MUST** provide the following **OPTIONS** for converting line endings in string-like types:
+
+ * Convert CRLF to LF (default)
+ * Convert LF to CRLF
+ * Perform no conversion
 
 #### String (Type)
 
@@ -665,7 +669,7 @@ c1 "I'm just a boring string."
 
 #### Resource Identifier (Type)
 
-A resource identifier is a text-based universally unique identifier that can be resolved by a machine. The most common kinds of resource identifiers are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of a resource ID is done according to its kind. If not specified by a schema, the default kind is assumed.
+A resource identifier is a text-based universally unique identifier that can be resolved by a machine. The most common kinds of resource identifiers are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of a resource ID is done according to its kind. If not specified by a schema, the configured default kind is assumed.
 
 Codecs **MUST** provide an **OPTION** to set the default kind of resource identifier, and the default setting **MUST** be [IRI](https://tools.ietf.org/html/rfc3987).
 
@@ -684,7 +688,7 @@ c1
 
 A primitive array encodes a sequence of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
-The following element types are supported in primitive arrays. For other types, use a [list](#list).
+The following element types are supported in primitive arrays. For other types or mixed types, use a [list](#list).
 
 | Type                 | Element Sizes (bits) |
 | -------------------- | -------------------- |
@@ -711,7 +715,7 @@ c1
 
 ### Media
 
-A media object encapsulates foreign media data (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) (encoded as a string).
+A media object encapsulates foreign media data (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
 
     (media type) (data)
 
@@ -743,13 +747,13 @@ echo hello world
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** report it as a [data error](#data-errors).
+Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type envelope, and then report it as a [data error](#data-errors).
 
 **Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
 
 #### Custom Type Code
 
-All custom type values must have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
+All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
 
 A custom type code **MUST** be an unsigned integer in the range of 0 to 4294967295 (inclusive).
 
@@ -819,18 +823,18 @@ For list-like containers, a duplicate means any object that is [equivalent](#equ
 
 For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what the key's associated value is.
 
-An implementation **MUST** disregard the type and size of integers and floats when comparing them to one other. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is not a duplicate because it is a string, not an integer or float.
+An implementation **MUST** disregard the type and size of integers and floats when comparing them to one other. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it is a string, not an integer or float.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
-Ordering and duplicates policies in [lists](#list) and [maps](#map) **CAN** be set by a schema, per-instance and globally.
+Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be set by a schema, per-instance and globally.
 
 
 ### List
 
 A sequential list of objects. List elements **CAN** be any type (including other containers), and do not all have to be the same type.
 
-By default, a list is [ordered and allows duplicate values](#container-properties).
+By default, a list is [ordered, and allows duplicate values](#container-properties).
 
 **Example**:
 
@@ -851,13 +855,13 @@ A map associates key objects with value objects. Keys **CAN** be any [keyable ty
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
-By default, a map is [unordered and does not allow duplicate keys](#container-properties).
+By default, a map is [unordered, and does not allow duplicate keys](#container-properties).
 
 #### Keyable types
 
 Only the following types are allowed as keys in map-like containers:
 
-* [Numeric types](#numeric-types), except for NaN (not-a-number)
+* [Numeric types](#numeric-types), except for [NaNs and `-0`](#special-floating-point-values)
 * [Temporal types](#temporal-types)
 * [Strings](#string-type)
 * [Resource identifiers](#resource-identifier-type)
@@ -891,11 +895,11 @@ Structs offer a more efficient way to encode payloads containing many instances 
 
 A struct instance builds a [map](#map) from a [struct template](#struct-template) by assigning the values from the instance to the keys from the template.
 
-A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template.
+A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template. [Null](#null) values **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
 
  * Struct instances are always [ordered, and **CAN** contain duplicates](#container-properties).
  * The struct instance **MUST** define the same number of values as there are keys in the struct template. A mismatch is a [structural error](#structural-errors).
- * A struct instance **CANNOT** be placed before the [template](#struct-template) it references.
+ * A struct instance **CANNOT** occur earlier in the document than the [template](#struct-template) it references.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -975,12 +979,12 @@ As struct templates and instances are only parts of the final object, they **CAN
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
  * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be [null](#null).
- * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other arbitrary data. If the edge has no properties, use [null](#null).
+ * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other application-specific data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null).
 
 If any of these parts are missing, it is a [structural error](#structural-errors).
 
-Directionality is from the source to the destination unless the description or schema specifies otherwise.
+Directionality is by default from the source to the destination unless the description or schema specifies otherwise.
 
 Because graphs can take so many forms, there is no default interpretation for edges. Both sender and receiver **MUST** have a common understanding of what the graph edges represent, and how to interpret the data. For directed graphs with no edge descriptions, it's better to use [nodes](#node) instead.
 
@@ -1006,7 +1010,7 @@ c1
 
 From the above data, we understand that Homer Simpson's wife is Marge Simpson, and that Homer Simpson's employer is the nuclear power plant.
 
-More complex graph data can be succinctly represented by mixing in other CE features such as [references](#reference), [lists](#list), and [maps](#map).
+More complex graph data can be succinctly represented by mixing in other types such as [references](#reference), [lists](#list), and [maps](#map).
 
 ```cte
 c1
@@ -1108,7 +1112,7 @@ Like in [data query and manipulation languages](https://en.wikipedia.org/wiki/Nu
 
 Uses for `null` in common operations:
 
-| Operation | Data Source | Meaning when field value = `null`                           |
+| Operation | Data Source | Meaning when a field value = `null`                         |
 | --------- | ----------- | ----------------------------------------------------------- |
 | Create    | Client      | Do not create this field (overrides any default value).     |
 | Read      | Server      | This field has been removed since the specified checkpoint. |
@@ -1132,14 +1136,14 @@ c1
 ]
 ```
 
-**Note**: One might argue that the above example record structure does not adequately reflect reality, but data modeling is about finding an acceptable compromise between reality and processing efficiency.
+**Note**: One might argue that the above example record structure does not adequately reflect reality (parking stall should allow for no stall to be assigned), but data modeling is about finding an acceptable compromise between reality and processing efficiency, and the result is often impure.
 
 
 
 Pseudo-Objects
 --------------
 
-Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand in for [data objects](#data-objects).
+Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand-ins for [data objects](#data-objects).
 
 Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
 
@@ -1195,7 +1199,7 @@ A remote reference refers to an object in another document. It acts like a [reso
 
  * A remote reference **MUST** point to either:
    - Another Concise Encoding document (using no fragment section, thus referring to the top-level object in the document)
-   - A [marker identifier](#marker) inside of another Concise Encoding document, using the fragment section to specify the [marker identifier](#marker) in the document being referenced.
+   - A [marked object](#marker) inside of another Concise Encoding document, using the fragment section to specify the [marker identifier](#marker) of the object in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
  * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or valid [marker identifier](#marker) inside the document is a [structural error](#structural-errors).
@@ -1217,7 +1221,7 @@ c1
 Invisible Objects
 -----------------
 
-Invisible objects are "invisible" to the structure of the document (they have no semantic relevance and could be removed without affecting the structure or data of the document). They provide utility functionality for convenience when building a document.
+Invisible objects are "invisible" to the structure of the document (they have no semantic relevance, and could be removed without affecting the document's structure or data). They provide utility functionality for convenience when building a document.
 
 Invisible objects may not be available in both text and binary formats.
 
@@ -1233,7 +1237,7 @@ CTE supports two forms of comments:
  * Single-line comments, which end at the line end (`// a comment`).
  * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment */`).
 
-Comments are allowed anywhere in a CTE document where a real object would be allowed, and can also be placed in [primitive arrays](#primitive-array-types) alongside array elements (but not between the opening pipe and the [array type specifier](cte-specification.md#primitive-type-array-encoding)).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, and can also be placed inside [primitive arrays](#primitive-array-types) alongside array elements (but not between the opening pipe and the [array type specifier](cte-specification.md#primitive-type-array-encoding)).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1289,7 +1293,7 @@ A struct template provides instructions for a decoder to build instances from, d
 
 A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
 
- * Templates are always [ordered, and **CANNOT** contain duplicate keys](#container-properties).
+ * Templates **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
  * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
  * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure), but there are some restrictions:
    - Templates **CANNOT** be placed inside other templates.
@@ -1298,7 +1302,7 @@ A struct template contains a unique (to the current document) template [identifi
 
 ### Marker
 
-A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which is then [referenceable](#reference) from anywhere the document (or from a different document).
+A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which can then be [referenced](#reference) from elsewhere the document (or from a different document).
 
     (marker identifier) (marked object)
 
@@ -1323,15 +1327,14 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 Identifiers provide the linkage mechanism between objects.
 
-Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/* comment */mymarker:"Marked string"` is invalid).
-
-Identifier definitions **MUST** be unique to the type they identify for in the current document. So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
+Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is invalid).
 
 #### Identifier Rules
 
  * It **MUST** be a valid, visible UTF-8 string and contain only [identifier safe](#character-safety) characters.
  * It **CANNOT** be empty (0 bytes long).
  * Comparisons are **case sensitive**.
+ * Identifier definitions **MUST** be unique to the current document (isolated to the type they identify for). So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
 
 
 Empty Document
@@ -1386,18 +1389,18 @@ Unrepresentable Values
 
 Although Concise Encoding strives to support the most common and fundamental information types, there's no guarantee that all values of all types will be representable on a particular platform.
 
-Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without data loss, it **MUST** be processed according to the [lossy conversion rules](#lossy-conversions).
+Decoders are given a lot of leeway in how they represent a document's data after decoding in order to minimize these sorts of problems, but there will sometimes be situations where there is no type available that can represent the value. If a value in a Concise Encoding document cannot be represented in the designated type on the destination platform or in any acceptable substitute type without inducing data loss (other than type information), it **MUST** be processed according to the [lossy conversion rules](#lossy-conversions).
 
 
 ### Lossy Conversions
 
-If, after decoding and storing a value, it is no longer possible to encode it back into the exact same bit pattern due to data loss, the conversion is considered to be "lossy".
+If, after decoding and storing a value, it is no longer possible to encode it back into the exact same original bit pattern due to data loss, the conversion is considered to be "lossy".
 
-**Lossy conversions that MUST be allowed**:
+**Lossy conversions that MUST always be allowed**:
 
  * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
 
-**Lossy conversions that MUST NOT be allowed**:
+**Lossy conversions that MUST NOT be allowed ever**:
 
  * String character substitution or omission
  * Truncation from storing in a type that cannot hold all of the data (except where decided based on configuration - see below)
@@ -1411,7 +1414,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 Implementations **MUST** provide a configuration **OPTION** for each configurable lossy conversion that can occur on its platform, and each option **MUST** default to disabled.
 
-Disallowed lossy conversions are [data errors](#data-errors).
+Disallowed or disabled lossy conversions are [data errors](#data-errors).
 
 #### Binary and Decimal Float Conversions
 
@@ -1441,7 +1444,7 @@ This helps to minimize exploitable behavioral differences between implementation
 
 ### Problematic Values
 
-It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach, or a common configuration across all codecs to conform to the same [limits](#security-and-limits). Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach. Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
 
  * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL character](#nul-character) section for how to deal with this.
@@ -1452,6 +1455,7 @@ It's best to think ahead about types and values that might be problematic on the
  * Platforms might not support data with cyclical references.
  * Platforms might not provide some of the less common data types such as [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
  * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
+ * Applications **SHOULD** always decide upon a common configuration across all codecs in all platforms they use so that they conform to the same [limits](#security-and-limits).
 
 
 
@@ -1481,7 +1485,7 @@ There are many things to consider when determining if two Concise Encoding docum
 
 ### Relaxed Equivalence
 
-Relaxed equivalence is concerned with the question: Does the data destined for machine use come out with essentially the same values, even if there are some type differences?
+Relaxed equivalence is concerned with the question: Does the data come out with essentially the same values, even if there are some type differences?
 
 #### Integer and Float Equivalence
 
@@ -1493,7 +1497,7 @@ Infinities with the same sign are considered equivalent.
 
 #### Custom Type Equivalence
 
-Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared with custom binary values unless they can both first be converted to a type that the receiver can compare.
+Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared to custom binary values unless they can both first be converted to a common type that the receiver can compare.
 
 #### String Equivalence
 
@@ -1501,7 +1505,7 @@ Strings are considered equivalent if their contents are equal after decoding esc
 
 #### Array Equivalence
 
-Arrays **MUST** contain the same number of elements, and those elements **MUST** be equivalent.
+Arrays **MUST** contain the same number of elements in the same order, and each element **MUST** be equivalent.
 
 The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
 
@@ -1588,7 +1592,7 @@ The most common sources of deserialization data loss are:
 
 Any part of your system that allows data loss is a potential security hole, because different parts of your system will likely handle the same loss-inducing data in different ways, and those differences could be exploited by an attacker using specially crafted documents.
 
-As a contrived example, consider a fictional system where the access control subsystem running on platform A leaves bad characters as-is or replaces them with u+fffd, and the storage subsystem running on platform B truncates bad characters. If an attacker is able to send a "create user" or "change user" command with a group of `admin\U+D800` (which would pass access control validation because `admin\U+D800` != `admin`), he could set up an admin user because the storage subsystem truncates bad characters and stores the group `admin\U+D800` as `admin`. The next time that user is loaded, it will be in group `admin`.
+As a contrived example, consider a fictional system where the access control subsystem running on platform A leaves bad characters as-is or replaces them with u+fffd, and the storage subsystem running on platform B truncates bad characters. If an attacker is able to send a "change user's group" command with a group of `admin\U+D800` (which would pass access control validation because `admin\U+D800` != `admin`), he could set up an admin user because the storage subsystem truncates bad characters and stores the group `admin\U+D800` as `admin`. The next time that user is loaded, it will be in group `admin`.
 
 Numbers could also suffer data loss depending on how the decoded values are stored internally. For example, attempting to load the value 0x123456789 into a 32-bit unsigned integer would in many languages silently overflow to a result of 0x23456789. Similarly, the value 0x87654321 (2271560481) stored in a 32-bit ieee754 binary float field would be silently truncated to 2271560448, losing precision and changing the effective value because it only has 24 bits available for the siginificand.
 
@@ -1708,7 +1712,7 @@ For application developers, security is a frame of mind. You **SHOULD** always b
  * Use a common schema to ensure that your validation rules are consistent across your infrastructure.
  * Treat received values as all-or-nothing. If you're unable to store it in its entirety without data loss, it **SHOULD** be rejected. Allowing data loss means opening your system to key collisions and other exploits.
  * Guard against unintentional default conversions (for example string values converting to 0 or true in comparisons).
- * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise, either truncating or omitting data, which opens your system to exploitation.
+ * When in doubt, toss it out. The safest course of action with foreign data is all-or-nothing. Not rejecting the entire document means that you'll have to compromise (either truncating or omitting data), which opens your system to exploitation.
 
 
 
@@ -1722,19 +1726,20 @@ This section collects in one place all codec **OPTIONS** listed elsewhere in the
 
 The following options **MUST** be present in a Concise Encoding codec:
 
-| Option                                | Default   | Section                                             |
-| ------------------------------------- | --------- | --------------------------------------------------- |
-| Convert NUL to [`c0 80`]              | enabled   | [NUL](#nul-character)                               |
-| Follow remote references              | disabled  | [Remote Reference](#remote-reference)               |
-| Lossy binary decimal float conversion | forbidden | [Lossy Conversions](#lossy-conversions)             |
-| Lossy conversion to smaller float     | forbidden | [Lossy Conversions](#lossy-conversions)             |
-| Recursive references                  | forbidden | [Recursive References](#recursive-references)       |
-| Subsecond truncation                  | forbidden | [Lossy Conversions](#lossy-conversions)             |
-| Terminate truncated documents         | disabled  | [Truncated Document](#truncated-document)           |
-| Time zone to time offset conversion   | forbidden | [Lossy Conversions](#lossy-conversions)             |
-| Data error response                   | terminate | [Error Processing](#error-processing)               |
-| Default Resource Identifier Kind      | IRI       | [Resource Identifier](#resource-identifier-type)    |
-| CTE: Binary float output format       | base 16   | [Binary Float](cte-specification.md#floating-point) |
+| Option                                | Default    | Section                                             |
+| ------------------------------------- | ---------- | --------------------------------------------------- |
+| Convert NUL to [`c0 80`]              | enabled    | [NUL](#nul-character)                               |
+| Convert line endings                  | CRLF to LF | [Line Endings](#line-endings)                       |
+| Follow remote references              | disabled   | [Remote Reference](#remote-reference)               |
+| Lossy binary decimal float conversion | forbidden  | [Lossy Conversions](#lossy-conversions)             |
+| Lossy conversion to smaller float     | forbidden  | [Lossy Conversions](#lossy-conversions)             |
+| Recursive references                  | forbidden  | [Recursive References](#recursive-references)       |
+| Subsecond truncation                  | forbidden  | [Lossy Conversions](#lossy-conversions)             |
+| Terminate truncated documents         | disabled   | [Truncated Document](#truncated-document)           |
+| Time zone to time offset conversion   | forbidden  | [Lossy Conversions](#lossy-conversions)             |
+| Data error response                   | terminate  | [Error Processing](#error-processing)               |
+| Default Resource Identifier Kind      | IRI        | [Resource Identifier](#resource-identifier-type)    |
+| CTE: Binary float output format       | base 16    | [Binary Float](cte-specification.md#floating-point) |
 
 
 ### Mandatory [User-controllable limits](#user-controllable-limits)
