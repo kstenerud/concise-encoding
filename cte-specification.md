@@ -149,7 +149,7 @@ Text Format
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-All characters in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation of CTE safety **MUST** occur _before_ all other processing (such as [escape-sequences](#escape-sequences)).
+All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation of CTE safety **MUST** occur _before_ all other processing (such as [escape-sequence](#escape-sequences) decoding).
 
 [Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). In [maps](#map), the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace). Extraneous [structural whitespace](#structural-whitespace) is ignored.
 
@@ -169,7 +169,7 @@ Lookalike characters are characters that look confusingly similar to [string-lik
 | -------------- | ------------------- |
 | `"A” string"`  | `"A\+201d. string"` |
 
-The unicode.org site provides an online utility to find confusable characters.
+The unicode.org site provides an [online utility](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) to find confusable characters.
 
 
 The following is (as of 2022-06-09) a complete list of [lookalike Unicode characters](https://util.unicode.org/UnicodeJsps/confusables.jsp). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
@@ -185,7 +185,7 @@ The following is (as of 2022-06-09) a complete list of [lookalike Unicode charac
 Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for document sharing purposes the canonical format is LF only.
 
  * Decoders **MUST** accept both line ending types as input.
- * Encoders **MUST** output LF only.
+ * Encoders **MUST** output LF only by default. Encoders **MAY** offer an option to output CR+LF line endings.
 
 
 ### Human Editability
@@ -243,7 +243,7 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
-CTE encoders **MUST** output integers in base 10 by default.
+Encoders **MUST** output integers in base 10 by default.
 
 
 ### Floating Point
@@ -258,7 +258,7 @@ A floating point number is composed of an implied base (signified by an **OPTION
 
 **Note**: A float value that contains only a whole significand portion (fractional part = 0 and exponent = 1) will be interpreted/printed as an integer.
 
-CTE encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default.
+Encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default.
 
 **Examples**:
 
@@ -482,15 +482,15 @@ An area/location time zone is written in the form `Area/Location`.
 
 #### Global Coordinates
 
-Global coordinates are written as latitude and longitude to a precision of hundredths of degrees, separated by a slash character (`/`).
+Global coordinates are written as latitude and longitude in degrees to a precision of hundredths, separated by a slash character (`/`).
 
  * Negative values **MUST** be prefixed with a dash character (`-`)
  * A period (`.`) is used as a fractional separator.
 
 **Examples**:
 
- * `51.60/11.11`
- * `-13.53/-172.37`
+ * `50.45/30.52` (Kyiv, near Independence Square)
+ * `-13.53/-172.37` (Samoa)
 
 #### UTC
 
@@ -631,7 +631,7 @@ c1
 \.@@@
 In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
-Characters like " and \ are no longer special: See \n and \t appear as-is.
+Characters like " and \ are no longer special: \n and \t appear as-is.
 
 Whitespace (including "leading" whitespace) is also read verbatim.
           For example, this line really is indented 10 spaces.
@@ -645,7 +645,7 @@ Which decodes to:
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
-Characters like " and \ are no longer special: See \n and \t appear as-is.
+Characters like " and \ are no longer special: \n and \t appear as-is.
 
 Whitespace (including "leading" whitespace) is also read verbatim.
           For example, this line really is indented 10 spaces.
@@ -665,6 +665,13 @@ c1
 "Line 1\nLine 2\nLine 3"
 ```
 
+Which is a document containing the string:
+
+```text
+Line 1
+Line 2
+Line 3
+```
 
 #### Resource Identifier
 
@@ -702,7 +709,7 @@ The array type field **MUST** only contain characters that are allowed in [media
 
 Depending on the kind of array, the contents are encoded in elemental form as [whitespace](#structural-whitespace)-separated elements, or in string form as quoted string contents following the same rules as [string-like arrays](#string-like-arrays):
 
-    |type elem1 elem2 elem3 ...| // elemental form
+    |type elem1 elem2 elem3 ...|  // elemental form
     |type "string-like contents"| // string form
 
 An empty array has a type but no contents:
@@ -723,23 +730,23 @@ c1
 
 The following array types are available:
 
-| Denoted Type | Description                                 | Encoding Kind          |
-| ------------ | ------------------------------------------- | ---------------------- |
-| `b`          | Bit                                         | Element                |
-| `u8`         | 8-bit unsigned integer                      | Element                |
-| `u16`        | 16-bit unsigned integer                     | Element                |
-| `u32`        | 32-bit unsigned integer                     | Element                |
-| `u64`        | 64-bit unsigned integer                     | Element                |
-| `i8`         | 8-bit signed integer                        | Element                |
-| `i16`        | 16-bit signed integer                       | Element                |
-| `i32`        | 32-bit signed integer                       | Element                |
-| `i64`        | 64-bit signed integer                       | Element                |
-| `f16`        | 16-bit floating point (bfloat)              | Element                |
-| `f32`        | 32-bit floating point (ieee754)             | Element                |
-| `f64`        | 64-bit floating point (ieee754)             | Element                |
-| `u`          | 128-bit UID                                 | Element                |
-| `c<id>`      | [Custom Types](#custom-types)               | Element or string-Like |
-| `<type/sub>` | [Media](#media)                             | Element or string-Like |
+| Denoted Type | Prefix? | Description                   | Encoding Kind          |
+| ------------ | ------- | ----------------------------- | ---------------------- |
+| `b`          |         | Bit                           | Element                |
+| `u8`         | b, o, x | 8-bit unsigned integer        | Element                |
+| `u16`        | b, o, x | 16-bit unsigned integer       | Element                |
+| `u32`        | b, o, x | 32-bit unsigned integer       | Element                |
+| `u64`        | b, o, x | 64-bit unsigned integer       | Element                |
+| `i8`         | b, o, x | 8-bit signed integer          | Element                |
+| `i16`        | b, o, x | 16-bit signed integer         | Element                |
+| `i32`        | b, o, x | 32-bit signed integer         | Element                |
+| `i64`        | b, o, x | 64-bit signed integer         | Element                |
+| `f16`        | x       | 16-bit binary float (bfloat)  | Element                |
+| `f32`        | x       | 32-bit binary float (ieee754) | Element                |
+| `f64`        | x       | 64-bit binary float (ieee754) | Element                |
+| `u`          |         | 128-bit UID                   | Element                |
+| `c<id>`      |         | [Custom Types](#custom-types) | Element or string-Like |
+| `<type/sub>` |         | [Media](#media)               | Element or string-Like |
 
 Array types are [case-insensitive](#letter-case).
 
@@ -747,9 +754,11 @@ If an array type field contains a slash (`/`), it **MUST** be interpreted as a m
 
 An invalid array type field is a [data error](ce-structure#data-errors).
 
+For some types, array elements **MAY** be represented in different bases by applying a prefix (`0b`, `0o`, `0x`) to the element.
+
 #### Implied Prefix
 
-**OPTIONALLY**, a suffix **CAN** be appended to the type specifier (if the type supports it) to indicate that all element values **MUST** be considered to have an implicit prefix (except for [special float values](#special-floating-point-values)).
+**OPTIONALLY**, a suffix **CAN** be appended to the type specifier itself (if the type supports it) to indicate that _all_ element values **MUST** be considered to have an implicit prefix (except for [special float values](#special-floating-point-values)).
 
 | Type Suffix | Implied element prefix | Example                         |
 | ----------- | ---------------------- | ------------------------------- |
@@ -783,6 +792,7 @@ c1
 [
     |b 1 0 0 1| // bits 1, 0, 0, 1
     |b 1001|    // bits 1, 0, 0, 1
+    |b 10 01|   // bits 1, 0, 0, 1
 ]
 ```
 
@@ -818,8 +828,8 @@ c1
 
 If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#general-array-forms). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
-* Text: `|type/subtype "contents"|`
-* Binary: `|type/subtype 63 6f 6e 74 65 6e 74 73|`
+* As text: `|type/subtype "contents"|`
+* As binary: `|type/subtype 63 6f 6e 74 65 6e 74 73|`
 
 **Example**:
 
@@ -1191,9 +1201,10 @@ Letter Case
 
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * [string-like arrays](#string-like-arrays) and comments **CAN** contain uppercase characters.
- * [Identifiers](ce-structure.md#identifier) **CAN** contain uppercase characters.
- * [Time zones](#time-zones) are case sensitive, and usually contain both uppercase and lowercase characters.
+ * [String-like arrays](#string-like-arrays) **CAN** contain uppercase and lowercase characters.
+ * [Comments](#comment) **CAN** contain uppercase and lowercase characters.
+ * [Identifiers](ce-structure.md#identifier) **CAN** contain uppercase and lowercase characters.
+ * [Time zones](#time-zones) are case sensitive, and usually contain uppercase and lowercase characters.
 
 For the above situations, a CTE encoder **MUST** preserve letter case. In all other situations, a CTE encoder **MUST** convert to lower case.
 

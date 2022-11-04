@@ -590,8 +590,8 @@ This method has the advantage of being temporally unambiguous, which could be us
 
 **Examples (in [CTE](cte-specification.md))**:
 
- * `51.60/11.11`
- * `-13.53/-172.37`
+ * `50.45/30.52` (Kyiv, near Independence Square)
+ * `-13.53/-172.37` (Samoa)
 
 #### UTC
 
