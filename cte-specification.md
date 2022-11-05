@@ -475,7 +475,7 @@ An area/location time zone is written in the form `Area/Location`.
 **Examples**:
 
  * `E/Paris`
- * `America/Vancouver`
+ * `Asia/Tokyo`
  * `America/Indiana/Petersburg` (which has area `America` and location `Indiana/Petersburg`)
  * `Etc/UTC` == `Zero` == `Z`
  * `L`
@@ -621,7 +621,7 @@ A Verbatim escape sequence works similarly to a "here" document in Bash. It's co
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator).
 
-**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** check that a LF follows. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
+**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause the LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
 
@@ -1082,22 +1082,28 @@ Comments **MUST ONLY** contain [CTE safe](ce-structure.md#character-safety) char
 
 #### Single Line Comment
 
-A single line comment begins at the sequence `//` and continues until the next line end - LF (u+000a) or CRLF (u+000d u+000a) - is encountered. No checks for nested comments are performed.
+A single line comment begins at the sequence `//` and continues until the next LF (u+000a) or CR (u+000d) is encountered. No checks for nested comments are performed.
 
 #### Multiline Comment
 
-A multiline comment begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
+A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-**Note**: Commenting out strings containing the sequences `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
+**Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
 
 ```cte
 c1
 {
+    // Pre-emptively escape the "/" to avoid a false nested comment end
+    "comment end" = "*\/"
+
     // Pre-emptively escape the "*" to avoid a false nested comment begin
     "comment begin" = "/\*"
 
-    // Pre-emptively escape the "/" to avoid a false nested comment end
+/*
+    // When block-commented out, it still parses properly
     "comment end" = "*\/"
+    "comment begin" = "/\*"
+*/
 }
 ```
 
@@ -1168,7 +1174,7 @@ A marker sequence consists of the following, with no whitespace in between:
  * `&` (the marker initiator)
  * A marker [identifier](ce-structure.md#identifier)
  * `:` (the marker separator)
- * The marked value
+ * The marked data object
 
 Example:
 
@@ -1212,7 +1218,7 @@ For the above situations, a CTE encoder **MUST** preserve letter case. In all ot
 
 Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
 
-A CTE decoder **MUST** accept data that breaks letter case restrictions (including hexadecimal digits, array types, escape sequences, etc).
+A CTE decoder **MUST** accept documents that break lowercase requirements (including hexadecimal digits, array types, escape sequences, etc).
 
 
 

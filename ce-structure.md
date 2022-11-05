@@ -577,6 +577,7 @@ The following special pseudo-areas **CAN** also be used. They do not contain a l
 
 **Examples**:
 
+ * `Europe/Paris`
  * `E/Paris`
  * `America/Vancouver`
  * `Etc/UTC` == `Zero` == `Z`
