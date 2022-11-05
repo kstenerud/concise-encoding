@@ -1242,7 +1242,7 @@ C1
 However, the following would be invalid:
 
  * `4:00:00/ASIA/TOKYO` (time zones are case sensitive)
- * `[ &a:"marked text" $A ]` (identifier comparisons are case sensitive)
+ * `[ &a:"marked text" $A ]` (identifiers are case sensitive)
  * `"\.ZZZ terminated by zzz"` (verbatim sentinels are case sensitive)
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
