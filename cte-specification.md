@@ -1218,8 +1218,33 @@ For the above situations, a CTE encoder **MUST** preserve letter case. In all ot
 
 Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
 
-A CTE decoder **MUST** accept documents that break lowercase requirements (including hexadecimal digits, array types, escape sequences, etc).
+A CTE decoder **MUST** accept documents that break lowercase requirements (including version specifier, hexadecimal digits, array types, escape sequences, etc).
 
+**Example**:
+
+A CTE decoder **MUST** accept documents such as:
+
+```cte
+C1
+[
+    |U8 0XF1 0X5A|
+    "Some text\Nwith a newline and a \+1F415."
+    0XFFFF
+    0B10010101
+    INF
+    NAN
+    1.8E+22
+]
+```
+
+However, the following would be invalid:
+
+ * `4:00:00/ASIA/TOKYO` (time zones are case sensitive)
+ * `[ &a:"marked text" $A ]` (identifier comparisons are case sensitive)
+
+And the following would likely fail at the application layer (but _not_ in the CTE decoder):
+
+ * `|TEXT/XML "<xml/>"|` ([IANA registered](http://www.iana.org/assignments/media-types/media-types.xhtml) as `text/xml`, not `TEXT/XML`)
 
 
 Structural Whitespace
