@@ -621,6 +621,8 @@ A Verbatim escape sequence works similarly to a "here" document in Bash. It's co
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator).
 
+**Note**: Verbatim sequence sentinels are **case sensitive**.
+
 **Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause the LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
@@ -1241,6 +1243,7 @@ However, the following would be invalid:
 
  * `4:00:00/ASIA/TOKYO` (time zones are case sensitive)
  * `[ &a:"marked text" $A ]` (identifier comparisons are case sensitive)
+ * `"\.ZZZ terminated by zzz"` (verbatim sentinels are case sensitive)
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
 
