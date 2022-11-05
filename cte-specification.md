@@ -167,7 +167,7 @@ Lookalike characters are characters that look confusingly similar to [string-lik
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
-| `"A” string"`  | `"A\+201d. string"` |
+| `"A” string"`  | `"A\{201d} string"` |
 
 The unicode.org site provides an [online utility](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) to find confusable characters.
 
@@ -573,7 +573,7 @@ Within [string-like arrays](#string-like-arrays), escape sequences **CAN** be us
 | u+002d (`-`)             | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
 | u+000a (linefeed)        | [continuation](#continuation)           |
 | u+000d (carriage return) | [continuation](#continuation)           |
-| u+002b (`+`)             | [Unicode codepoint](#unicode-codepoint) |
+| u+002b (`{`)             | [Unicode codepoint](#unicode-codepoint) |
 | u+002e (`.`)             | [verbatim sequence](#verbatim-sequence) |
 
 #### Continuation
@@ -597,19 +597,19 @@ The above string is interpreted as:
 
 A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
 
-The escape sequence begins with a backslash (`\`) character, followed by a plus (`+`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a dot character (`.`).
+The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`).
 
 **Examples**:
 
 | Sequence   | Digits | Codepoint | Character     |
 | ---------- | ------ | --------- | ------------- |
-| `\+c.`     | 1      | u+000c    | Form Feed     |
-| `\+df.`    | 2      | u+00df    | ß  (Eszett)   |
-| `\+101.`   | 3      | u+0101    | ā  (a macron) |
-| `\+2191.`  | 4      | u+2191    | ↑  (up arrow) |
-| `\+1f415.` | 5      | u+1f415   | 🐕 (dog)      |
+| `\{c}`     | 1      | u+000c    | Form Feed     |
+| `\{df}`    | 2      | u+00df    | ß  (Eszett)   |
+| `\{101}`   | 3      | u+0101    | ā  (a macron) |
+| `\{2191}`  | 4      | u+2191    | ↑  (up arrow) |
+| `\{1f415}` | 5      | u+1f415   | 🐕 (dog)      |
 
-`"gro\+df.e"` = `"große"`
+`"gro\{df}e"` = `"große"`
 
 #### Verbatim Sequence
 
@@ -1230,7 +1230,7 @@ A CTE decoder **MUST** accept documents such as:
 C1
 [
     |U8 0XF1 0X5A|
-    "Some text\Nwith a newline and a \+1F415."
+    "Some text\Nwith a newline and a \{1F415}"
     0XFFFF
     0B10010101
     INF

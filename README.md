@@ -177,7 +177,7 @@ c1
 ```cte
 c1
 {
-    "string" = "Strings support escape sequences: \n \t \+1f415."
+    "string" = "Strings support escape sequences: \n \t \{1f415}"
     "url"    = @"https://example.com/"
     "email"  = @"mailto:me@somewhere.com"
 }

@@ -1633,7 +1633,7 @@ As a seller, you'd want your billing system to choose the first instance of "tot
     {
         "purchase-ids" = [1004 102062 94112]
         "total" = 91.44
-        "total\+D800." = 0
+        "total\{D800}" = 0
     }
 
 In this case, if the system truncated bad Unicode characters _after_ checking for duplicate keys, it would be vulnerable to exploitation.
