@@ -643,8 +643,8 @@ Characters like " and \ are no longer special: \n and \t appear as-is.
 Continuations are also not processed in a verbatim sequence. \
           For example, this line really is indented 10 spaces.
 
-Normal processing resumes after the terminator@@@, so escape sequences\nare once again \
-          interpreted."
+Normal processing resumes after the terminator@@@, so escape \
+          sequences\nare once again interpreted."
 ```
 
 Which decodes to:
