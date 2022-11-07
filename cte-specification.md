@@ -599,7 +599,7 @@ A Unicode codepoint escape sequence represents a single Unicode character as a h
 
 The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`). Leading zeroes are allowed for stylistic purposes (e.g. `\{0020}`).
 
-**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\{10000000000000020}` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20).
+**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\{10000000000000020}` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
 
 **Examples**:
 
