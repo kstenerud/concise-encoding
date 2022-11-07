@@ -1788,13 +1788,13 @@ The following options **CAN** be set globally and on a per-object basis by a sch
 Appendix B: Recording Time
 --------------------------
 
-Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of recording the time is.
+Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of storing the time value is.
 
 There are three main kinds of time:
 
 ### Absolute Time
 
-Absolute time is a time that is fixed relative to UTC (or an offset from UTC). It is not affected by daylight savings time, nor will it be affected if an area's time zone changes through political action. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone is now fixed at the time of the event, so it probably no longer matters what specific time zone was in effect).
+Absolute time is a time that is locked to UTC (or an offset from UTC). It is not affected by daylight savings time, nor will it be affected if an area's time zone changes through political action. Absolute time is best recorded in the UTC time zone, and is mostly useful for events in the past (because the time zone that was in effect when the event happened is forever locked in, no longer affecting the time's interpretation).
 
 ### Fixed Time
 
@@ -1807,7 +1807,7 @@ Floating (or local) time is always relative to the time zone of the observer. If
 
 ### Where each kind fits best
 
-Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important.
+Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important information to your system.
 
 | Situation                            | Kind                                            |
 | ------------------------------------ | ----------------------------------------------- |
