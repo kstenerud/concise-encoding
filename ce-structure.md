@@ -137,11 +137,11 @@ Contents
     - [Mandatory User-controllable limits](#mandatory-user-controllable-limits)
     - [Recommended Options](#recommended-options)
     - [Schema Options](#schema-options)
-  - [Appendix B: How to Record Time](#appendix-b-how-to-record-time)
+  - [Appendix B: Recording Time](#appendix-b-recording-time)
     - [Absolute Time](#absolute-time)
     - [Fixed Time](#fixed-time)
     - [Floating Time](#floating-time)
-    - [When to Use Each Kind](#when-to-use-each-kind)
+    - [Where each kind fits best](#where-each-kind-fits-best)
   - [Version History](#version-history)
   - [License](#license)
 
@@ -1785,8 +1785,8 @@ The following options **CAN** be set globally and on a per-object basis by a sch
 
 
 
-Appendix B: How to Record Time
-------------------------------
+Appendix B: Recording Time
+--------------------------
 
 Time is one of the most difficult data types to get right. Aside from issues of synchronization, leap seconds, data container limitations and such, it's important to choose what **kind** of time you need to store, and the right kind depends on what the purpose of recording the time is.
 
@@ -1805,7 +1805,7 @@ Fixed time is fixed to a particular place. If the time zone at that place change
 Floating (or local) time is always relative to the time zone of the observer. If you travel and change time zones, floating time changes time zones with you. If two observers in different time zones observe the same floating time, they will convert that same floating time to different absolute times. An example would be an 8:00 morning workout.
 
 
-### When to Use Each Kind
+### Where each kind fits best
 
 Use whichever kind of time most succinctly handles your time needs. Don't depend on time zone information as a proxy for a location (that would be depending upon a side effect, which is always brittle). Always store location information separately if it's important.
 
