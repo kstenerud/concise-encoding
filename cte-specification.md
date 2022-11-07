@@ -761,7 +761,7 @@ Array types are [case-insensitive](#letter-case).
 
 If an array type field contains a slash (`/`), it **MUST** be interpreted as a media object (e.g. `|a/b "stuff"|` is a media object, regardless of whether media type "a/b" is known or [registered](http://www.iana.org/assignments/media-types/media-types.xhtml)). If the array type field does not contain a slash, it **MUST NOT** be interpreted as a media object.
 
-An invalid array type field is a [data error](ce-structure#data-errors).
+An invalid array type field is a [structural error](ce-structure#structural-errors).
 
 For some types, array elements **MAY** be represented in different bases by applying a prefix (`0b`, `0o`, `0x`) to the element.
 
