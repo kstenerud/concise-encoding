@@ -619,7 +619,7 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
- * A whitespace terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * An unescaped whitespace terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
