@@ -615,32 +615,33 @@ The escape sequence begins with a backslash (`\`) character, followed by an open
 
 #### Verbatim Sequence
 
-A Verbatim escape sequence works similarly to a "here" document in Bash. It's composed as follows:
+A Verbatim escape sequence works similarly to a ["here document" in Bash](https://www.gnu.org/software/bash/manual/bash.html#Here-Documents). It's composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
- * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`, but **not** CR alone).
  * The string contents.
- * A second instance of the end-of-sequence sentinel (without whitespace terminator).
+ * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in Bash, this sequence does _not_ have to occur alone on its own line.
 
 **Note**: Verbatim sequence sentinels are **case sensitive**.
 
-**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause the LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
+**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause an LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
 
 ```cte
 c1
-"Verbatim sequences can occur anywhere escapes are allowed.\n\
-\.@@@
+"Verbatim sequences can occur anywhere escapes are allowed.\n\.@@@
 In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
+
 Characters like " and \ are no longer special: \n and \t appear as-is.
 
-Whitespace (including "leading" whitespace) is also read verbatim.
+Continuations are also not processed in a verbatim sequence. \
           For example, this line really is indented 10 spaces.
 
-@@@Normal processing resumes after the terminator, so escape sequences\nare once again interpreted."
+Normal processing resumes after the terminator@@@, so escape sequences\nare once again \
+          interpreted."
 ```
 
 Which decodes to:
@@ -649,9 +650,10 @@ Which decodes to:
 Verbatim sequences can occur anywhere escapes are allowed.
 In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
+
 Characters like " and \ are no longer special: \n and \t appear as-is.
 
-Whitespace (including "leading" whitespace) is also read verbatim.
+Continuations are also not processed in a verbatim sequence. \
           For example, this line really is indented 10 spaces.
 
 Normal processing resumes after the terminator, so escape sequences
