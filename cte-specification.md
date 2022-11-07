@@ -619,13 +619,15 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
- * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`, but **not** CR alone).
+ * A whitespace terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, LF `u+000a`, or CR+LF `u+000d u+000a`).
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
-**Note**: Verbatim sequence sentinels are **case sensitive**.
+**Notes**:
 
-**Note**: CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause an LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
+ * Verbatim sequence sentinels are **case sensitive**.
+ * TAB (`u+0009`) **MUST NOT** be used as an end-of-sequence sentinel terminator because any editor that converts tabs to spaces would effectively alter the verbatim contents (only the first space would terminate the sentinel; the other spaces would become part of the verbatim data).
+ * CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause an LF to be included as part of the verbatim data. A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
 
