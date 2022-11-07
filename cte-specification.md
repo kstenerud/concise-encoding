@@ -631,8 +631,8 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
 
 ```cte
 c1
-"Verbatim sequences can occur anywhere escapes are allowed.\n\.@@@
-In verbatim sequences, everything is interpreted literally until the
+"Verbatim sequences can occur anywhere escapes are allowed.\n
+\.@@@ In verbatim sequences, everything is interpreted literally until the
 end-of-string sentinel is encountered (in this case three @ characters).
 
 Characters like " and \ are no longer special: \n and \t appear as-is.
