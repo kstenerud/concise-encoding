@@ -615,7 +615,7 @@ The escape sequence begins with a backslash (`\`) character, followed by an open
 
 #### Verbatim Sequence
 
-A Verbatim escape sequence works similarly to a ["here document"](https://en.wikipedia.org/wiki/Here_document). It's composed as follows:
+A verbatim escape sequence works like a ["here document"](https://en.wikipedia.org/wiki/Here_document). It's composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
  * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
