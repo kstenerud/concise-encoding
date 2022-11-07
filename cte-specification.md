@@ -524,7 +524,7 @@ This renders ISO 8601 overcomplicated and prone to misinterpretation, incompatib
 
 RFC 3339 is a much simpler design for timestamped internet events, and is well suited to that purpose. However, it lacks functionality that a general purpose date format would require:
 
-- It only supports time offsets (+01:00, -13:00, etc), not real time zones.
+- It only supports time offsets (+01:00, -13:00, etc), not real time zones ([link: why this is important](ce-structure.md#appendix-b-recording-time)).
 - It doesn't support BCE dates.
 - It allows multiple interpretations of year values less than 4 digits long, which is a security risk and a source of bugs.
 
