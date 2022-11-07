@@ -544,7 +544,7 @@ A string-like array **MUST** contain only valid UTF-8 characters. The contents a
 
     "contents"
 
-[CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be escaped.
+[CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be [escaped](#escape-sequences).
 
 Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well.
 
