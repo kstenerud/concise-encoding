@@ -621,7 +621,7 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
  * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
  * A [structural whitespace](#structural-whitespace) terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, TAB `u+0009`, LF `u+000a`, or CR+LF `u+000d u+000a`, but **not** CR alone).
  * The string contents.
- * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in Bash, this sequence does _not_ have to occur alone on its own line.
+ * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
 **Note**: Verbatim sequence sentinels are **case sensitive**.
 
