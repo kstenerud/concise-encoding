@@ -1146,7 +1146,7 @@ Pseudo-Objects
 
 Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand-ins for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is invalid).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is a [structural error](#structural-errors)).
 
 
 ### Reference
@@ -1307,9 +1307,9 @@ A marker assigns a unique (to the current document) marker [identifier](#identif
 
     (marker identifier) (marked object)
 
-A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are invalid).
+A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are [structural errors](#structural-errors)).
 
-Other objects **CANNOT** be placed between a marker and the object it marks, regardless of type (e.g. `&my_id:/*comment*/123456` is invalid).
+Other objects **CANNOT** be placed between a marker and the object it marks, regardless of type (e.g. `&my_id:/*comment*/123456` is a [structural error](#structural-errors)).
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -1328,7 +1328,7 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 Identifiers provide the linkage mechanism between objects.
 
-Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is invalid).
+Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is a [structural error](#structural-errors)).
 
 #### Identifier Rules
 

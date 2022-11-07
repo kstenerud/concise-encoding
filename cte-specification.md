@@ -546,7 +546,7 @@ A string-like array **MUST** contain only valid UTF-8 characters. The contents a
 
 [CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be [escaped](#escape-sequences).
 
-Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well.
+Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
 
 #### String-Like Array Validation
 
@@ -915,7 +915,7 @@ c1
 
 A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace) separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is invalid.
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
 
@@ -1248,9 +1248,9 @@ C1
 
 However, the following would be invalid:
 
- * `4:00:00/ASIA/TOKYO` (time zones are case sensitive)
- * `[ &a:"marked text" $A ]` (identifiers are case sensitive)
- * `"\.ZZZ terminated by zzz"` (verbatim sentinels are case sensitive)
+ * `4:00:00/ASIA/TOKYO` ([data error](ce-structure.md#data-errors): time zones are case sensitive)
+ * `[ &a:"marked text" $A ]` ([structural error](ce-structure.md#structural-errors): identifiers are case sensitive)
+ * `"\.ZZZ terminated by zzz"` ([structural error](ce-structure.md#structural-errors): verbatim sentinels are case sensitive)
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
 
@@ -1289,18 +1289,18 @@ Examples:
  * Between the [version specifier](#document-version-specifier) and the first object.
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a primitive type array element type specifier and the array contents, and between array elements.
- * Between values in a [list](#list) (`["one""two"]` is invalid).
- * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is invalid).
+ * Between values in a [list](#list) (`["one""two"]` is a [structural error](ce-structure.md#structural-errors)).
+ * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is a [structural error](ce-structure.md#structural-errors)).
 
 
 **Whitespace MUST NOT occur**:
 
  * Before the [version specifier](#document-version-specifier).
- * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are invalid).
- * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are invalid).
- * In time values (`2018-07-01-10 :53:22.001481/Z` is invalid).
- * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are invalid). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
- * Anywhere between a [struct template](#struct-template) or [struct instance](#struct-instance) initiator and its opening character (`@ my_struct<>`, `@my_struct <>`, `@ my_struct()`,  and `@my_struct ()` are invalid).
+ * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are [structural errors](ce-structure.md#structural-errors)).
+ * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are [structural errors](ce-structure.md#structural-errors)).
+ * In time values (`2018-07-01-10 :53:22.001481/Z` is a [structural error](ce-structure.md#structural-errors)).
+ * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are [structural errors](ce-structure.md#structural-errors)). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
+ * Anywhere between a [struct template](#struct-template) or [struct instance](#struct-instance) initiator and its opening character (`@ my_struct<>`, `@my_struct <>`, `@ my_struct()`,  and `@my_struct ()` are [structural errors](ce-structure.md#structural-errors)).
 
 
 
