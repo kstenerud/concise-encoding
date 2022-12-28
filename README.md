@@ -217,9 +217,9 @@ c1
 ```cte
 c1
 [
-    @vehicle<"make"   "model"    "drive" "sunroof">
-    @vehicle("Ford"   "Explorer" "4wd"   true     )
-    @vehicle("Toyota" "Corolla"  "fwd"   false    )
+    @vehicle<"make"   "model"    "drive" "sunroof"> // template
+    @vehicle("Ford"   "Explorer" "4wd"   true     ) // instance
+    @vehicle("Toyota" "Corolla"  "fwd"   false    ) // instance
 ]
 ```
 
