@@ -1,0 +1,206 @@
+kbnf_v1 utf-8
+- identifier  = cbe_v1
+- description = Concise Binary Encoding, version 1
+- kbnf_spec   = https://github.com/kstenerud/kbnf/blob/master/kbnf.md
+
+document              = version_header & data_object;
+
+version_header        = u8(0x81) & uleb(version);
+version               = 1;
+
+object                = intangible_type | reference_type | data_type;
+data_object           = intangible_type* & ((marker? data_type) | reference_type);
+keyable_object        = intangible_type* & ((marker? keyable_type) | local_reference);
+non_null_object       = intangible_type* & ((marker? non_null_data_type) | reference_type);
+key_value             = keyable_object & data_object;
+
+data_type             = non_null_data_type | null;
+non_null_data_type    = keyable_type | array | media | custom_type | list | map | record | edge | node;
+keyable_type          = boolean | integer | float | uid | date | time | timestamp | string | resource_id;
+reference_type        = local_reference | remote_reference;
+intangible_type       = padding | record_definition;
+
+boolean               = true | false;
+false                 = u8(0x78);
+true                  = u8(0x79);
+integer               = int_small
+                      | int_8_positive
+                      | int_8_negative
+                      | int_16_positive
+                      | int_16_negative
+                      | int_32_positive
+                      | int_32_negative
+                      | int_64_positive
+                      | int_64_negative
+                      | int_variable_positive
+                      | int_variable_negative
+                      ;
+float                 = decimal_float
+                      | binary_float_16
+                      | binary_float_32
+                      | binary_float_64
+                      ;
+int_small             = s8(-100~100);
+int_8_positive        = u8(0x68) & u8(~);
+int_8_negative        = u8(0x69) & u8(~);
+int_16_positive       = u8(0x6a) & u16(~);
+int_16_negative       = u8(0x6b) & u16(~);
+int_32_positive       = u8(0x6c) & u32(~);
+int_32_negative       = u8(0x6d) & u32(~);
+int_64_positive       = u8(0x6e) & u64(~);
+int_64_negative       = u8(0x6f) & u64(~);
+int_variable_positive = u8(0x66) & uleb(bind(length, 1~)) & u(length*8, ~);
+int_variable_negative = u8(0x67) & uleb(bind(length, 1~)) & u(length*8, ~);
+decimal_float         = u8(0x76) & compact_float(~);
+binary_float_16       = u8(0x70) & f16(~);
+binary_float_32       = u8(0x71) & f32(~);
+binary_float_64       = u8(0x72) & f64(~);
+uid                   = u8(0x65) & uint(128, ~}; # Note: big endian
+
+date                  = u8(0x7a) & compact_date;
+time                  = u8(0x7b) & compact_time;
+timestamp             = u8(0x7c) & compact_timestamp;
+
+array                 = array_chunked_u8
+                      | array_short_s8  | array_chunked_s8
+                      | array_short_s16 | array_chunked_s16
+                      | array_short_s32 | array_chunked_s32
+                      | array_short_s64 | array_chunked_s64
+                      | array_short_u8  | array_chunked_u8
+                      | array_short_u16 | array_chunked_u16
+                      | array_short_u32 | array_chunked_u32
+                      | array_short_u64 | array_chunked_u64
+                      | array_short_f16 | array_chunked_f16
+                      | array_short_f32 | array_chunked_f32
+                      | array_short_f64 | array_chunked_f64
+                      | array_short_uid | array_chunked_uid
+                      | array_bit
+                      ;
+
+array_chunked_u8      = u8(0x93) & array_chunk_u8;
+array_chunk_u8        = array_chunk(u8(~), array_chunk_u8);
+
+array_short_uid       = u8(0x7f) & u4(0) & u4(bind(count, ~)) & uid(~){count};
+array_chunked_uid     = plane7f(0xe0) & array_chunk_uid;
+array_chunk_uid       = array_chunk(uid(~), array_chunk_uid);
+
+array_short_s8        = u8(0x7f) & u4(1) & u4(bind(count, ~)) & s8(~){count};
+array_chunked_s8      = plane7f(0xe1) & array_chunk_s8;
+array_chunk_s8        = array_chunk(s8(~), array_chunk_s8);
+
+array_short_u16       = u8(0x7f) & u4(2) & u4(bind(count, ~)) & u16(~){count};
+array_chunked_u16     = plane7f(0xe2) & array_chunk_u16;
+array_chunk_u16       = array_chunk(u16(~), array_chunk_u16);
+
+array_short_s16       = u8(0x7f) & u4(3) & u4(bind(count, ~)) & s16(~){count};
+array_chunked_s16     = plane7f(0xe3) & array_chunk_s16;
+array_chunk_s16       = array_chunk(s16(~), array_chunk_s16);
+
+array_short_u32       = u8(0x7f) & u4(4) & u4(bind(count, ~)) & u32(~){count};
+array_chunked_u32     = plane7f(0xe4) & array_chunk_u32;
+array_chunk_u32       = array_chunk(u32(~), array_chunk_u32);
+
+array_short_s32       = u8(0x7f) & u4(5) & u4(bind(count, ~)) & s32(~){count};
+array_chunked_s32     = plane7f(0xe5) & array_chunk_s32;
+array_chunk_s32       = array_chunk(s32(~), array_chunk_s32);
+
+array_short_u64       = u8(0x7f) & u4(6) & u4(bind(count, ~)) & u64(~){count};
+array_chunked_u64     = plane7f(0xe6) & array_chunk_u64;
+array_chunk_u64       = array_chunk(u64(~), array_chunk_u64);
+
+array_short_s64       = u8(0x7f) & u4(7) & u4(bind(count, ~)) & s64(~){count};
+array_chunked_s64     = plane7f(0xe7) & array_chunk_s64;
+array_chunk_s64       = array_chunk(s64(~), array_chunk_s64);
+
+array_short_f16       = u8(0x7f) & u4(8) & u4(bind(count, ~)) & f16(~){count};
+array_chunked_f16     = plane7f(0xe8) & array_chunk_f16;
+array_chunk_f16       = array_chunk(f16(~), array_chunk_f16);
+
+array_short_f32       = u8(0x7f) & u4(9) & u4(bind(count, ~)) & f32(~){count};
+array_chunked_f32     = plane7f(0xe9) & array_chunk_f32;
+array_chunk_f32       = array_chunk(f32(~), array_chunk_f32);
+
+array_short_f64       = u8(0x7f) & u4(10) & u4(bind(count, ~)) & f64(~){count};
+array_chunked_f64     = plane7f(0xea) & array_chunk_f64;
+array_chunk_f64       = array_chunk(f64(~), array_chunk_f64);
+
+array_chunk_header    = uleb128(unsigned(0,bind(count, ~)) & u1(bind(continuation, ~));
+array_chunk(elem_type, chunk_type) = bind(header, array_chunk_header)
+                                   & elem_type{header.count}
+                                   & when(header.continuation = 1, chunk_type)
+                                   ;
+
+array_bit             = u8(0x94) & array_bit_chunk;
+array_bit_chunk       = bind(header, array_chunk_header)
+                      & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
+                      & when(header.continuation = 1, array_bit_chunk)
+                      ;
+
+array_chunk_string    = bind(header, array_chunk_header)
+                      & sized(header.count*8, char_string*)
+                      & when(header.continuation = 1, array_chunk_string)
+                      ;
+
+string                = string_short | string_chunked;
+string_short          = u4(8) & u4(bind(count, ~)) & sized(count*8, char_string*);
+string_chunked        = u8(0x90) & array_chunk_string;
+resource_id           = u8(0x91) & array_chunk_string;
+media                 = plane7f(0xf3)
+                      & uleb(bind(mt_length, 1~))
+                      & sized(mt_length*8, media_type) & array_chunk_u8
+                      ;
+media_type            = media_type_word & '/' & media_type_word;
+media_type_word       = char_media_first & char_media*;
+custom_type           = u8(0x92) & custom_type_code & array_chunk_u8;
+custom_type_code      = uleb(~);
+list                  = u8(0x9a) & object* & end_container;
+map                   = u8(0x99) & key_value* & end_container;
+record                = u8(0x96) & identifier & object* & end_container;
+edge                  = u8(0x97) & non_null_object & data_object & non_null_object & end_container;
+node                  = u8(0x98) & data_object & (node | data_object)* & end_container;
+end_container         = u8(0x9b);
+null                  = u8(0x7d);
+local_reference       = u8(0x77) & identifier;
+remote_reference      = plane7f(0xf2) & array_chunk_string;
+padding               = u8(0x95);
+record_definition     = plane7f(0xf1) & identifier & keyable_object* & end_container;
+marked_object         = plane7f(0xf0) & identifier & concrete_object;
+identifier            = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+byte                  = u8(~);
+char_string           = unicode(C,L,M,N,P,S,Z);
+char_identifier       = unicode(Cf,L,M,N) | '_' | '.' | '-';
+
+# https://www.rfc-editor.org/rfc/rfc2045#section-5.1
+char_media_first      = 'a'~'z' | 'A'~'Z';
+char_media            = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
+                                     | '@' | ',' | ';' | ':'
+                                     | '\' | '"' | '/' | '['
+                                     | ']' | '?' | '='
+                                     )
+                      ;
+
+plane7f(v)            = u8(0x7f) & u8(v);
+
+s(bit_count, v)       = swapped(sint(bit_count, v));
+s8(v)                 = s(8, v);
+s16(v)                = s(16, v);
+s32(v)                = s(32, v);
+s64(v)                = s(64, v);
+u(bit_count, v)       = swapped(uint(bit_count, v));
+u1(v)                 = u(1, v);
+u4(v)                 = u(4, v);
+u8(v)                 = u(8, v);
+u16(v)                = u(16, v);
+u32(v)                = u(32, v);
+u64(v)                = u(64, v);
+f16(v)                = swapped(bfloat(v));
+f32(v)                = swapped(float(32, v));
+f64(v)                = swapped(float(64, v));
+uleb(v)               = uleb128(uint(0,v));
+
+bfloat(v: real): expression        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
+uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+compact_float(v: real): expression = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
+compact_date: expression           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
+compact_time: expression           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
+compact_timestamp: expression      = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";

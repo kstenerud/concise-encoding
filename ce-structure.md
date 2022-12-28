@@ -28,14 +28,15 @@ Contents
   - [Contents](#contents)
   - [Terms and Conventions](#terms-and-conventions)
   - [Introduction](#introduction)
-    - [What is Concise Encoding?](#what-is-concise-encoding)
+  - [Design Goals](#design-goals)
     - [Why Two Formats?](#why-two-formats)
-    - [Versioning](#versioning)
-      - [Prerelease Version](#prerelease-version)
   - [Schema](#schema)
   - [Document Structure](#document-structure)
-  - [Document Version Specifier](#document-version-specifier)
+  - [Version Header](#version-header)
+    - [Prerelease Version](#prerelease-version)
   - [Object Categories](#object-categories)
+    - [Concrete Objects](#concrete-objects)
+    - [Intangible Objects](#intangible-objects)
   - [Data Objects](#data-objects)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
@@ -60,17 +61,16 @@ Contents
       - [Global Coordinates](#global-coordinates)
       - [UTC](#utc)
       - [UTC Offset](#utc-offset)
+  - [String Types](#string-types)
+    - [NUL Character](#nul-character)
+    - [String](#string)
+    - [Resource Identifier](#resource-identifier)
   - [Array Types](#array-types)
-    - [String-like Arrays](#string-like-arrays)
-      - [NUL Character](#nul-character)
-      - [Line Endings](#line-endings)
-      - [String (Type)](#string-type)
-      - [Resource Identifier (Type)](#resource-identifier-type)
     - [Primitive Array Types](#primitive-array-types)
     - [Media](#media)
-    - [Custom Types](#custom-types)
-      - [Custom Type Code](#custom-type-code)
-      - [Custom Type Forms](#custom-type-forms)
+  - [Custom Types](#custom-types)
+    - [Custom Type Code](#custom-type-code)
+    - [Custom Type Forms](#custom-type-forms)
   - [Container Types](#container-types)
     - [Container Properties](#container-properties)
       - [Ordering](#ordering)
@@ -78,9 +78,9 @@ Contents
     - [List](#list)
     - [Map](#map)
       - [Keyable types](#keyable-types)
-    - [Struct](#struct)
-      - [Struct Instance](#struct-instance)
-      - [Struct Validation](#struct-validation)
+    - [Records](#records)
+      - [Record](#record)
+      - [Record Validation](#record-validation)
     - [Edge](#edge)
       - [Example](#example)
     - [Node](#node)
@@ -95,7 +95,7 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Struct Template](#struct-template)
+    - [Record Definition](#record-definition)
     - [Marker](#marker)
     - [Identifier](#identifier)
       - [Identifier Rules](#identifier-rules)
@@ -167,37 +167,50 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
+ * Some explanations will include [KBNF notation](https://github.com/kstenerud/kbnf/blob/master/kbnf.md) for illustrative purposes only (this document doesn't describe actual encodings).
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
 Introduction
 ------------
 
-### What is Concise Encoding?
-
 Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
+
+
+
+Design Goals
+------------
+
+Primary Goals:
+
+ * It must be easy for a machine to parse and produce (low runtime energy use, low implementation complexity).
+ * It must be easy for a human to parse and produce.
+ * It must be compact (produce small encoded documents).
+ * It must be secure (secure defaults, no implicit behavior, one way to do each thing, reject bad data).
+ * It must be future proof.
+ * It must support the most commonly used types and the funtamental types natively.
+ * It must support unlimited numeric value ranges.
+ * It must support cyclic data.
+ * It must support ad-hoc data structures and progressive document building.
+ * It must be simple to use from code (no special compilation or code generation steps, no descriptor files, etc).
+ * Schemas must be optional.
+
+Secondary Goals:
+
+ * It must be zero-copy friendly.
+ * It must use little endian byte ordering wherever possible.
+ * It must be identifiable within the first few bytes of the document.
+ * It must support inter-document linking.
+
 
 
 ### Why Two Formats?
 
-Binary formats are more compact and _much_ easier for machines to read and write, but they're also very difficult for _humans_ to read and write (and humans do need to be able to inspect and modify the data from time to time). In the past, we compromised by using text formats (XML, JSON, etc), but text formats are _incredibly_ inefficient, and it's costing us dearly in our new energy conscious world.
-
-"**Human data format that a computer can read**" doesn't work anymore, so Concise Encoding turns it on its head: "**Machine data format that a human can read**". Twin formats make it easy and efficient for machines to read and write data (as binary), and _also_ provide a way for humans to easily and intuitively read and write that same data (as text).
+The first two primary goals cannot be satisfied by a single format. A binary format is easy for a machine and hard for a human. A text format is easy for a human and hard for a machine. Twin formats make it easy and efficient for machines to read and write data (as binary), and _also_ provide a way for humans to read and write that same data (as text).
 
 Data should ideally be stored and transmitted in a binary format, and only converted to/from text in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
 
 ![Example binary and text data flow](img/dataflow.svg)
-
-
-### Versioning
-
-Concise Encoding is versioned, meaning that every Concise Encoding document contains the version of the Concise Encoding specification it adheres to. This ensures that any future incompatible changes to the format will not break existing implementations.
-
-The Concise Encoding version is a single positive integer value, starting at 1.
-
-#### Prerelease Version
-
-During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired and considered invalid (there shall be no backwards compatibility to the prerelease spec).
 
 
 
@@ -226,15 +239,15 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 Document Structure
 ------------------
 
-Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion, stored serially, and can be progressively read or written.
+Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion, and can be progressively read or written.
 
-Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](#invisible-objects) and [structural](#structural-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
+Documents begin with a [version header](#version-header), followed by possible [intangible](#intangible-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
 
-    (version specifier) (optional invisible and structural objects) (top-level data object)
+Once the top-level data object is fully decoded, the document is considered finished.
 
-Once the top-level object is fully decoded, the document is considered finished.
-
-[Objects](#object-categories) **MUST NOT** be placed before the version specifier or after the top-level object.
+<pre>
+document = <a href="#version-header">version_header</a> & <a href="#intangible-objects">intangible_object</a>* & <a href="#data-objects">data_object</a>;
+</pre>
 
 **Notes**:
 
@@ -252,10 +265,16 @@ Once the top-level object is fully decoded, the document is considered finished.
 
 
 
-Document Version Specifier
---------------------------
+Version Header
+--------------
 
-The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for CTE, 0x81 for CBE - followed by the [version number](#version), which is an unsigned integer representing the version of this specification that the document adheres to.
+Concise Encoding is versioned, meaning that every Concise Encoding document contains the version of the Concise Encoding specification it adheres to. This ensures that any future incompatible changes to the format will not break existing implementations.
+
+A version header consists of a signature byte - 0x63 (`c`) for CTE, 0x81 for CBE - followed by the version number, which is an unsigned integer representing the [version of this specification](#version) that the document adheres to.
+
+<pre>
+version-header = signature_byte & unsigned_integer;
+</pre>
 
 **Example**:
 
@@ -263,17 +282,41 @@ The version specifier is composed of a 1-byte type identifier - 0x63 (`c`) for C
  * [CBE](cbe-specification.md) version 1: the byte sequence [`81 01`]
 
 
+### Prerelease Version
+
+During the pre-release phase, all documents **SHOULD** use version `0` so as not to cause potential compatibility problems once V1 is released. After release, version 0 will be permanently retired and considered invalid (there shall be no backwards compatibility to the prerelease spec).
+
+
 
 Object Categories
 -----------------
 
-Concise Encoding documents support many kinds of objects, the combinations of which offer rich expressivity. These objects are roughly split into four high-level categories based on their purpose:
+Concise Encoding documents support many kinds of objects, the combinations of which offer rich expressivity. The object types are roughly split into the following categories based on their purpose:
 
- * [Data objects](#data-objects) contain the actual data of the document.
+
+### Concrete Objects
+
+Concrete objects either are data, or point to data.
+
+ * [Data objects](#data-objects) contain actual data.
  * [Pseudo-objects](#pseudo-objects) serve as stand-ins for [data objects](#data-objects).
- * [Invisible objects](#invisible-objects) provide helper functionality such as comments and alignment, but don't affect the document structure or data.
- * [Structural objects](#structural-objects) provide linkages beween parts of the document and ways to reduce redundancy.
 
+Wherever a concrete object can be placed, any number of intangible objects can be placed before it.
+
+<pre>
+concrete-object = <a href="#intangible-objects">intangible_object</a>* & (<a href="#data-objects">data_object</a> | <a href="#pseudo-objects">pseudo_object</a>);
+</pre>
+
+### Intangible Objects
+
+Intangible objects are either meta-information or structural helpers, but do not themselves count as actual data when structurally interpreting the document (i.e. they cannot fill containers).
+
+ * [Invisible objects](#invisible-objects) provide helper functionality such as comments and byte alignment, but don't affect the document structure or data.
+ * [Structural objects](#structural-objects) provide linkages beween parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
+
+<pre>
+intangible-object = <a href="#invisible-objects">invisible_object</a> | <a href="#structural-objects">structural_object</a>;
+</pre>
 
 
 Data Objects
@@ -283,10 +326,20 @@ Data objects hold the actual data of a document, and consist mainly of container
 
  * [Numeric Types](#numeric-types)
  * [Temporal Types](#temporal-types)
+ * [String Types](#string-types)
  * [Array Types](#array-types)
  * [Container Types](#container-types)
  * [Other Types](#other-types)
 
+<pre>
+data-object = <a href="#numeric-types">numeric_type</a>
+            | <a href="#temporal-types">temporal_type</a>
+            | <a href="#string-types">string_type</a>
+            | <a href="#array-types">array_type</a>
+            | <a href="#container-types">container_type</a>
+            | <a href="#other-types">other_type</a>
+            ;
+</pre>
 
 
 Numeric Types
@@ -294,7 +347,7 @@ Numeric Types
 
 Numeric types comprise the basic scalar numeric types present in most computer systems.
 
-An implementation **MAY** alter the type and storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss (other than the original type information).
+An implementation **MAY** alter the type and/or storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss (except for NaN payload information other than the quiet bit).
 
 **Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that all chosen limits are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
 
@@ -375,7 +428,7 @@ Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-**Note**: Be careful not to set the rest of a binary float payload to all zeroes on a signaling NaN, as this signifies [infinity in ieee754-binary, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
+**Note**: Be careful not to set the rest of the bits of an ieee754 binary float payload to all zeroes on a signaling NaN, as this signifies [infinity, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -391,10 +444,10 @@ c1
 
 Floating point types support the following ranges:
 
-| Type    | Significant Digits | Exponent Min | Exponent Max |
-| ------- | ------------------ | ------------ | ------------ |
-| Binary  | up to 15.95        | up to -1022  | up to 1023   |
-| Decimal | ∞                  | -∞           | ∞            |
+| Type    | Significant Digits | Exponent Range |
+| ------- | ------------------ | -------------- |
+| Binary  | up to 15.95        | -1022 to 1023  |
+| Decimal | ∞                  | ∞              |
 
 **Notes**:
 
@@ -432,7 +485,7 @@ c1
 Temporal Types
 --------------
 
-Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even then, it's still a veritable minefield that can be your system's undoing if you haven't planned **very** carefully for [the purposes you need to keep time for](#appendix-b-how-to-record-time), and the implications thereof.
+Temporal types are some of the most difficult to implement and use correctly. A thorough understanding of how time works physically, politically, conventionally, and socially gets you halfway there. But even then, it's still a veritable minefield that can be your system's undoing if you haven't planned **very** carefully for [the purposes you need to keep time for](#appendix-b-recording-time), and the implications thereof.
 
 Temporal types are represented using the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) (or the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar) for dates prior to 15 October 1582) and a [24h clock](https://en.wikipedia.org/wiki/24-hour_clock). Temporal types can have precision to the nanosecond, and also support [leap years](https://en.wikipedia.org/wiki/Leap_year) and [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
 
@@ -615,50 +668,37 @@ UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values.
 
 
 
-Array Types
------------
+String Types
+------------
 
-An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
+String types contain [UTF-8 encoded](https://en.wikipedia.org/wiki/UTF-8) string data. All [Unicode](https://en.wikipedia.org/wiki/Unicode) codepoints except for surrogates and those marked permanently as noncharacters are allowed:
 
-There are four main array styles in Concise Encoding:
+<pre>
+string_type = char_string*;
+char_string = unicode(C,L,M,N,P,S,Z);
+</pre>
 
- * [String-like arrays](#string-like-arrays) contain UTF-8 data. A string-like array's elements are always 8 bits wide, regardless of how many characters the bytes encode (i.e. the array length is counted in bytes, not characters).
- * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
- * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
- * [Custom types](#custom-types) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+String types **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string type containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
+The following are string types:
 
-### String-like Arrays
-
-String-like arrays are arrays of UTF-8 encoded bytes. The following types are string-like arrays:
-
- * [String](#string-type)
- * [Resource Identifier](#resource-identifier-type)
+ * [String](#string)
+ * [Resource Identifier](#resource-identifier)
  * [Remote Reference](#remote-reference)
  * [Custom Type (text form)](#custom-type-forms)
 
-String-like arrays **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string-like array containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
-#### NUL Character
+### NUL Character
 
-The NUL character (U+0000) is allowed in string-like arrays in documents, but because it is problematic on so many platforms, Concise Encoding imposes a special rule:
+The NUL character (U+0000) is allowed in string types, but because it is problematic on so many platforms, there is a special rule:
 
- * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`].
- * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string-like arrays to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
+ * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string types to the UTF-8 equivalent [`c0 80`].
+ * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string types to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
 
 This ensures a default of uniform behavior across all platforms that sidesteps the NUL-termination problem.
 
-#### Line Endings
 
-Line endings in string-like types **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms.
-
-Codecs **MUST** provide the following **OPTIONS** for converting line endings in string-like types:
-
- * Convert CRLF to LF (default)
- * Convert LF to CRLF
- * Perform no conversion
-
-#### String (Type)
+### String
 
 A standard UTF-8 string.
 
@@ -668,7 +708,7 @@ A standard UTF-8 string.
 c1 "I'm just a boring string."
 ```
 
-#### Resource Identifier (Type)
+### Resource Identifier
 
 A resource identifier is a text-based universally unique identifier that can be resolved by a machine. The most common kinds of resource identifiers are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of a resource ID is done according to its kind. If not specified by a schema, the configured default kind is assumed.
 
@@ -683,6 +723,25 @@ c1
     @"mailto:nobody@nowhere.com"
 ]
 ```
+
+
+
+Array Types
+-----------
+
+An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted. Array types **CAN** contain [comments](#comment) in [CTE](cte-specification.md) wherever an element is valid.
+
+General array form (note: [media](#media) and [custom binary](#custom-type-forms) also contain additional data):
+
+<pre>
+array = (<a href="#comment">comment</a>* & array_element)*;
+</pre>
+
+There are three main array styles in Concise Encoding:
+
+ * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
+ * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
 
 
 ### Primitive Array Types
@@ -716,9 +775,11 @@ c1
 
 ### Media
 
-A media object encapsulates foreign media data (encoded as a binary stream), along with its [media type](http://www.iana.org/assignments/media-types/media-types.xhtml).
+A media object contains a [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) and a series of bytes representing the media's data.
 
-    (media type) (data)
+<pre>
+media = media_type (<a href="#comment">comment</a>* & byte)*;
+</pre>
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
@@ -744,7 +805,9 @@ echo hello world
 ```
 
 
-### Custom Types
+
+Custom Types
+------------
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
@@ -752,15 +815,20 @@ Adding custom types restricts interoperability to only those implementations tha
 
 **Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
 
-#### Custom Type Code
+### Custom Type Code
 
 All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
 
 A custom type code **MUST** be an unsigned integer in the range of 0 to 4294967295 (inclusive).
 
-#### Custom Type Forms
+### Custom Type Forms
 
 Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
+
+<pre>
+custom_binary = type_code & (<a href="#comment">comment</a>* & byte)*;
+custom_text   = type_code & <a href="#comment">comment</a>* & <a href="#string-types">string</a>;
+</pre>
 
 [CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
 
@@ -833,7 +901,11 @@ Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be 
 
 ### List
 
-A sequential list of objects. List elements **CAN** be any type (including other containers), and do not all have to be the same type.
+A sequential list of objects. List elements **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not all have to be the same type.
+
+<pre>
+list = <a href="#object-categories">object</a>*;
+</pre>
 
 By default, a list is [ordered, and allows duplicate values](#container-properties).
 
@@ -852,21 +924,36 @@ c1
 
 ### Map
 
-A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not have to all be the same type. Values **CAN** be any type (including other containers), and do not have to all be the same type.
+A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not have to all be the same type. Values **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not have to all be the same type.
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
+
+<pre>
+map = (<a href="#keyable-types">keyable-type</a> & <a href="#concrete-objects">concrete-object</a>)*;
+</pre>
 
 By default, a map is [unordered, and does not allow duplicate keys](#container-properties).
 
 #### Keyable types
 
-Only the following types are allowed as keys in map-like containers:
+Only the following data types are allowed as keys in map-like containers:
 
 * [Numeric types](#numeric-types), except for [NaNs and `-0`](#special-floating-point-values)
 * [Temporal types](#temporal-types)
-* [Strings](#string-type)
-* [Resource identifiers](#resource-identifier-type)
-* [References](#reference) (only if the referenced value is keyable)
+* [Strings](#string)
+* [Resource identifiers](#resource-identifier)
+* [Local references](#local-reference) (only if the referenced value is keyable)
+
+<pre>
+keyable-type = <a href="#intangible-objects">intangible_object</a>*
+             & ( <a href="#numeric-types">numeric_type</a>
+               | <a href="#temporal-types">temporal_type</a>
+               | <a href="#string">string</a>
+               | <a href="#resource-identifier">resource_id</a>
+               | <a href="#local-reference">local_reference</a>
+               )
+             ;
+</pre>
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -881,26 +968,30 @@ c1
 ```
 
 
-### Struct
+### Records
 
-A struct produces a [map](#map) from a template. Structs are composed of two parts: a [struct template](#struct-template) which defines what keys will be present, and [struct instances](#struct-instance) that combine the template's keys with a series of values to produce [maps](#map).
+Records split [map-like](#map) data into two parts: a [definition](#record-definition) which defines what keys will be present, and multple [records](#record) which reference the definition and provide the matching values.
 
-    Struct Template: <key1 key2 key3 ...>
-    Struct Instance: (val1 val2 val3 ...)
-    ----------------------------------------------------
-    Produces Map:    {key1=val1 key2=val2 key3=val3 ...}
+    Record Definition: <key1 key2 key3 ...>
+    Record:            (val1 val2 val3 ...)
+    ------------------------------------------------------
+    Produces Map:      {key1=val1 key2=val2 key3=val3 ...}
 
-Structs offer a more efficient way to encode payloads containing many instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
+Records offer a more efficient way to encode payloads containing many instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
 
-#### Struct Instance
+#### Record
 
-A struct instance builds a [map](#map) from a [struct template](#struct-template) by assigning the values from the instance to the keys from the template.
+A record builds a [map](#map) from a [record definition](#record-definition) by assigning the values from the instance to the keys from the definition.
 
-A struct instance contains the [identifier](#identifier) of the [struct template](#struct-template) to build from, followed by a series of values that will be assigned in-order to the keys from the template. [Null](#null) values **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
+A record contains the [identifier](#identifier) of the [record definition](#record-definition) to build from, followed by a series of values that will be assigned in-order to the keys from the definition. [Null](#null) values **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
 
- * Struct instances are always [ordered, and **CAN** contain duplicates](#container-properties).
- * The struct instance **MUST** define the same number of values as there are keys in the struct template. A mismatch is a [structural error](#structural-errors).
- * A struct instance **CANNOT** occur earlier in the document than the [template](#struct-template) it references.
+<pre>
+record = <a href="#identifier">identifier</a> & <a href="#concrete-objects">concrete_object</a>*;
+</pre>
+
+ * Records are always [ordered, and **CAN** contain duplicates](#container-properties).
+ * The record **MUST** define the same number of values as there are keys in the [definition](#record-definition). A mismatch is a [structural error](#structural-errors).
+ * A record **CANNOT** occur earlier in the document than the [definition](#record-definition) it references.
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -970,18 +1061,34 @@ c1
 }
 ```
 
-#### Struct Validation
+#### Record Validation
 
-As struct templates and instances are only parts of the final object, they **CANNOT** be validated on their own; only the final [map](#map) they produce **CAN** be validated.
+As record definitions and instances are only parts of the final object, they **CANNOT** be validated on their own; only the final [map](#map) they produce **CAN** be validated.
 
 
 ### Edge
 
 An edge describes a relationship between vertices in a graph. It is composed of three parts:
 
- * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier-type). This **MUST NOT** be [null](#null).
+ * A **source**, which is the first vertex of the edge being described. This will most commonly be either a [reference](#reference) to an existing object, or a [resource ID](#resource-identifier). This **MUST NOT** be [null](#null) or a [reference](#local-reference) to null.
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other application-specific data. If the edge has no properties, use [null](#null).
- * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null).
+ * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null) or a [reference](#local-reference) to null.
+
+<pre>
+edge        = source & description & destination;
+source      = not_null;
+description = <a href="#concrete-objects">concrete_object</a>;
+destination = not_null;
+not_null    = <a href="#intangible-objects">intangible_object</a>*
+            & ( <a href="#numeric-types">numeric_type</a>
+              | <a href="#temporal-types">temporal_type</a>
+              | <a href="#string-types">string_type</a>
+              | <a href="#array-types">array_type</a>
+              | <a href="#container-types">container_type</a>
+              | <a href="#pseudo-objects">pseudo_object</a>
+              )
+            ;
+</pre>
 
 If any of these parts are missing, it is a [structural error](#structural-errors).
 
@@ -1057,10 +1164,14 @@ c1
 
 A node is the basic building block for unweighted directed graphs. It consists of:
 
- * A value (any object).
+ * A value (any data object or pseudo-object).
  * An [ordered](#container-properties) collection of zero or more children (directionality is always from the node to its children).
 
 If a child is not of type node, it is treated as though it were the value portion of a node with no children.
+
+<pre>
+node = <a href="#concrete-objects">concrete_object</a> & (node | <a href="#concrete-objects">concrete_object</a>)*;
+</pre>
 
 **Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
 
@@ -1121,15 +1232,15 @@ Uses for `null` in common operations:
 | Delete    | Client      | Match records where this field is absent.                   |
 | Fetch     | Client      | Match records where this field is absent.                   |
 
-Null is often used in [data records](#struct-instance) because every field in a record entry must have something specified (even if just to say "no data specified for this field"). For example:
+Null is often used in [data records](#record) because every field in a record entry must have something specified (even if just to say "no data specified for this field"). For example:
 
 ```cte
 c1
 [
-    // Define the "Employee" record (struct template):
+    // Define the "Employee" record definition:
     @Employee<"name" "department" "parking stall">
 
-    // Add some employee records (struct instances):
+    // Add some employee records:
     @Employee( "John Marcos" "Marketing" 34   )
     @Employee( "Judy McGill" "Executive"  5   )
     // Jane works from home, and uses guest parking when at the office
@@ -1159,6 +1270,10 @@ A reference acts as a stand-in for another object in the current document or ano
 #### Local Reference
 
 A local reference contains the marker [identifier](#identifier) of an object that has been [marked](#marker) elsewhere in the current document.
+
+<pre>
+local_reference = <a href="#identifier">identifier</a>;
+</pre>
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
  * Forward references (reference to an object marked later in the document) are supported.
@@ -1196,7 +1311,7 @@ c1
 
 #### Remote Reference
 
-A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier-type) that describes how to find the referenced object in an outside document.
+A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier) that describes how to find the referenced object in an outside document.
 
  * A remote reference **MUST** point to either:
    - Another Concise Encoding document (using no fragment section, thus referring to the top-level object in the document)
@@ -1288,24 +1403,30 @@ Structural objects exist purely in support of the document structure itself. The
 Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 
-### Struct Template
+### Record Definition
 
-A struct template provides instructions for a decoder to build instances from, defining what keys will be present for any [struct instances](#struct-instance) that use it.
+A record definition provides instructions for a decoder to build instances from, defining what keys will be present for any [records](#record) that use it.
 
-A struct template contains a unique (to the current document) template [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
+A record definition contains a unique (to the current document) definition [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
 
- * Templates **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
- * Template keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
- * Templates **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure), but there are some restrictions:
-   - Templates **CANNOT** be placed inside other templates.
-   - A Template **MUST** be defined **before** any [struct instances](#struct-instance) that use it.
+<pre>
+record_definition = <a href="#identifier">identifier</a> & <a href="#keyable-types">keyable_type</a>*;
+</pre>
+
+ * Definitions **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
+ * Definition keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
+ * Definitions **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure), but there are some restrictions:
+   - Definitions **CANNOT** be placed inside other definitions.
+   - A Definition **MUST** be defined **before** any [records](#record) that use it.
 
 
 ### Marker
 
 A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which can then be [referenced](#reference) from elsewhere the document (or from a different document).
 
-    (marker identifier) (marked object)
+<pre>
+marked-object = <a href="#identifier">identifier</a> & <a href="#concrete-objects">concrete_object</a>;
+</pre>
 
 A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are [structural errors](#structural-errors)).
 
@@ -1335,7 +1456,13 @@ Identifiers are always an integral part of another type, and thus **CANNOT** exi
  * It **MUST** be a valid, visible UTF-8 string and contain only [identifier safe](#character-safety) characters.
  * It **CANNOT** be empty (0 bytes long).
  * Comparisons are **case sensitive**.
- * Identifier definitions **MUST** be unique to the current document (isolated to the type they identify for). So for example the [marker](#marker) ID "a" will not clash with the [struct template](#struct-template) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [struct templates](#struct-template) with ID "a".
+ * Identifier definitions **MUST** be unique to the current document (isolated to the type they identify for). So for example the [marker](#marker) ID "a" will not clash with the [record definition](#record-definition) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record definitions](#record-definition) with ID "a".
+
+<pre>
+identifier      = char_identifier+;
+char_identifier = unicode(Cf,L,M,N) | '_' | '.' | '-';
+</pre>
+
 
 
 Empty Document
@@ -1383,6 +1510,8 @@ The following table lists the CTE and identifier safety of Unicode characters ba
 | U+fff9 to U+fffb      |     -     |        -         |
 | U+e0001 to U+e0007f   |     -     |        -         |
 
+See [cte.kbnf](cte.kbnf) and [cbe.kbnf](cbe.kbnf) for formal definitions.
+
 
 
 Unrepresentable Values
@@ -1422,7 +1551,7 @@ Disallowed or disabled lossy conversions are [data errors](#data-errors).
 Binary and decimal float values can rarely be converted to each other without data loss, but conversions are sometimes necessary:
 
  * The destination platform might not support the requested type.
- * The struct being decoded into might only have a partially compatible type.
+ * The record being decoded into might only have a partially compatible type.
 
 Conversion between binary and decimal float values **MUST** be done using a method that effectively produces the same result in the destination type as the following algorithm would:
 
@@ -1730,7 +1859,6 @@ The following options **MUST** be present in a Concise Encoding codec:
 | Option                                | Default    | Section                                             |
 | ------------------------------------- | ---------- | --------------------------------------------------- |
 | Convert NUL to [`c0 80`]              | enabled    | [NUL](#nul-character)                               |
-| Convert line endings                  | CRLF to LF | [Line Endings](#line-endings)                       |
 | Follow remote references              | disabled   | [Remote Reference](#remote-reference)               |
 | Lossy binary decimal float conversion | forbidden  | [Lossy Conversions](#lossy-conversions)             |
 | Lossy conversion to smaller float     | forbidden  | [Lossy Conversions](#lossy-conversions)             |
@@ -1739,7 +1867,7 @@ The following options **MUST** be present in a Concise Encoding codec:
 | Terminate truncated documents         | disabled   | [Truncated Document](#truncated-document)           |
 | Time zone to time offset conversion   | forbidden  | [Lossy Conversions](#lossy-conversions)             |
 | Data error response                   | terminate  | [Error Processing](#error-processing)               |
-| Default Resource Identifier Kind      | IRI        | [Resource Identifier](#resource-identifier-type)    |
+| Default Resource Identifier Kind      | IRI        | [Resource Identifier](#resource-identifier)    |
 | CTE: Binary float output format       | base 16    | [Binary Float](cte-specification.md#floating-point) |
 
 

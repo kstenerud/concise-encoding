@@ -1,0 +1,221 @@
+kbnf_v1 utf-8
+- identifier  = cte_v1
+- description = Concise Text Encoding, version 1
+- kbnf_spec   = https://github.com/kstenerud/kbnf/blob/master/kbnf.md
+
+document              = version_header & SOME_WSLC & data_object;
+
+version_header        = ('c' | 'C') & digit_dec+ & SOME_WSLC;
+
+object                = intangible_type | reference_type | data_type;
+data_object           = (intangible_objects & SOME_WSLC)? ((marker? & data_type) | reference_type);
+keyable_object        = (intangible_objects & SOME_WSLC)? ((marker? & keyable_type) | local_reference);
+non_null_object       = (intangible_objects & SOME_WSLC)? ((marker? & non_null_data_type) | reference_type);
+intangible_objects    = intangible_type & (SOME_WSLC & intangible_type)*;
+objects               = object & (SOME_WSLC object)*;
+key_value             = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
+key_value_pairs       = key_value & (SOME_WSLC & key_value)*;
+
+data_type             = keyable_type | non_null_data_type | null;
+non_null_data_type    = keyable_type | array_type | media | custom_type | list | map | record | edge | node;
+keyable_type          = boolean | integer | float | uid | date | time | timestamp | string | resource_id;
+reference_type        = local_reference | remote_reference;
+intangible_type       = comment | record_definition;
+
+boolean               = "true" | "false";
+integer               = neg? & uinteger;
+integer_bin           = neg? & uinteger_bin;
+integer_oct           = neg? & uinteger_oct;
+integer_dec           = neg? & uinteger_dec;
+integer_hex           = neg? & uinteger_hex;
+uinteger              = uinteger_bin | uinteger_oct | uinteger_dec | uinteger_hex;
+uinteger_bin          = prefix_bin & digits_bin;
+uinteger_oct          = prefix_oct & digits_oct;
+uinteger_dec          = digits_dec;
+uinteger_hex          = prefix_hex & digits_hex;
+integer_bin_implied   = neg? & uinteger_bin_implied;
+integer_oct_implied   = neg? & uinteger_oct_implied;
+integer_hex_implied   = neg? & uinteger_hex_implied;
+uinteger_bin_implied  = digits_bin;
+uinteger_oct_implied  = digits_oct;
+uinteger_hex_implied  = digits_hex;
+float                 = float_dec | float_hex;
+float_dec             = (neg? & digits_dec & (('.' & digits_dec & exponent_dec?) | exponent_dec)) | float_special;
+float_hex             = (neg? & prefix_hex & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
+float_hex_implied     = (neg? & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
+float_special         = (neg? & "inf") | "nan" | "snan";
+exponent_dec          = ('e' | 'E') & neg? & digits_dec;
+exponent_hex          = ('p' | 'P') & neg? & digits_dec); # digits_dec, not digits_hex
+uid                   = digit_hex{8} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{12};
+
+date                  = neg? & digit_dec+ & '-' & digit_dec{1~2} & '-' & digit_dec{1~2};
+time                  = digit_dec{1~2} & ':' & digit_dec{2} & ':' & digit_dec{2} & ('.' & digit_dec{1~9})? & time_zone?;
+timestamp             = date & '/' & time;
+time_zone             = tz_area_location | tz_coordinates | utc_offset;
+tz_area_location      = '/' & (tz_a_l_component & ('/' & tz_a_l_component)* | tz_a_l_legacy);
+tz_a_l_component      = ('a'~'z' | 'A'~'Z' | '.' | '-' | '_' )+;
+tz_a_l_legacy         = ('A'~'Z') & ('a'~'z' | 'A'~'Z' | '0'~'9' | '-' | '+' | '_' | '/')+;
+tz_coordinates        = '/' & tz_coordinate & '/' & tz_coordinate;
+tz_coordinate         = neg? & digit_dec+ & ('.' & digit_dec+)?;
+utc_offset            = ('+' | '-') & digit_dec{4};
+
+string                = string_type;
+resource_id           = '@' & rid_type;
+remote_ref            = '$' & rid_type;
+string_type           = '"' & (char_string | escape_sequence)* & '"';
+escape_sequence       = '\\' & ( 't'
+                               | 'n'
+                               | 'r'
+                               | '"'
+                               | '*'
+                               | '/'
+                               | '\\'
+                               | '_'
+                               | '-'
+                               | escape_continuation
+                               | escape_codepoint
+                               | escape_verbatim
+                               )
+                      ;
+escape_continuation   = LINE_END & MAYBE_WS;
+escape_codepoint      = '{' & digit_hex+ & '}';
+escape_verbatim       = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
+rid_type              = '"' & rid_contents & '"';
+
+array_type            = array_bit
+                      | array_int8 | array_int8b | array_int8o | array_int8x
+                      | array_int16 | array_int16b | array_int16o | array_int16x
+                      | array_int32 | array_int32b | array_int32o | array_int32x
+                      | array_int64 | array_int64b | array_int64o | array_int64x
+                      | array_uint8 | array_uint8b | array_uint8o | array_uint8x
+                      | array_uint16 | array_uint16b | array_uint16o | array_uint16x
+                      | array_uint32 | array_uint32b | array_uint32o | array_uint32x
+                      | array_uint64 | array_uint64b | array_uint64o | array_uint64x
+                      | array_float16 | array_float16x
+                      | array_float32 | array_float32x
+                      | array_float64 | array_float64x
+                      | array_uid
+                      ;
+
+array_bit             = '|' & ('b' | 'B') & (SOME_WSLC & (digit_bin & MAYBE_WSLC)+)? & MAYBE_WSLC & '|';
+array_int8            = '|' & ('i' | 'I') & '8' & array_elems_int? & MAYBE_WSLC & '|';
+array_int8b           = '|' & ('i' | 'I') & '8' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
+array_int8o           = '|' & ('i' | 'I') & '8' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
+array_int8x           = '|' & ('i' | 'I') & '8' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
+array_int16           = '|' & ('i' | 'I') & '16' & array_elems_int? & MAYBE_WSLC & '|';
+array_int16b          = '|' & ('i' | 'I') & '16' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
+array_int16o          = '|' & ('i' | 'I') & '16' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
+array_int16x          = '|' & ('i' | 'I') & '16' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
+array_int32           = '|' & ('i' | 'I') & '32' & array_elems_int? & MAYBE_WSLC & '|';
+array_int32b          = '|' & ('i' | 'I') & '32' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
+array_int32o          = '|' & ('i' | 'I') & '32' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
+array_int32x          = '|' & ('i' | 'I') & '32' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
+array_int64           = '|' & ('i' | 'I') & '64' & array_elems_int? & MAYBE_WSLC & |';
+array_int64b          = '|' & ('i' | 'I') & '64' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
+array_int64o          = '|' & ('i' | 'I') & '64' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
+array_int64x          = '|' & ('i' | 'I') & '64' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
+array_uint8           = '|' & ('u' | 'U') & '8' & array_elems_uint? & MAYBE_WSLC & '|';
+array_uint8b          = '|' & ('u' | 'U') & '8' & ('b' | 'B') & array_elems_uint_bin? & MAYBE_WSLC & '|';
+array_uint8o          = '|' & ('u' | 'U') & '8' & ('o' | 'O') & array_elems_uint_oct? & MAYBE_WSLC & '|';
+array_uint8x          = '|' & ('u' | 'U') & '8' & ('x' | 'X') & array_elems_uint_hex? & MAYBE_WSLC & '|';
+array_uint16          = '|' & ('u' | 'U') & '16' & array_elems_uint? & MAYBE_WSLC & '|';
+array_uint16b         = '|' & ('u' | 'U') & '16' & ('b' | 'B') & array_elems_uint_bin? & MAYBE_WSLC & '|';
+array_uint16o         = '|' & ('u' | 'U') & '16' & ('o' | 'O') & array_elems_uint_oct? & MAYBE_WSLC & '|';
+array_uint16x         = '|' & ('u' | 'U') & '16' & ('x' | 'X') & array_elems_uint_hex? & MAYBE_WSLC & '|';
+array_uint32          = '|' & ('u' | 'U') & '32' & array_elems_uint? & MAYBE_WSLC & '|';
+array_uint32b         = '|' & ('u' | 'U') & '32' & ('b' | 'B') & array_elems_uint_bin? & MAYBE_WSLC & '|';
+array_uint32o         = '|' & ('u' | 'U') & '32' & ('o' | 'O') & array_elems_uint_oct? & MAYBE_WSLC & '|';
+array_uint32x         = '|' & ('u' | 'U') & '32' & ('x' | 'X') & array_elems_uint_hex? & MAYBE_WSLC & '|';
+array_uint64          = '|' & ('u' | 'U') & '64' & array_elems_uint? & MAYBE_WSLC & '|';
+array_uint64b         = '|' & ('u' | 'U') & '64' & ('b' | 'B') & array_elems_uint_bin? & MAYBE_WSLC & '|';
+array_uint64o         = '|' & ('u' | 'U') & '64' & ('o' | 'O') & array_elems_uint_oct? & MAYBE_WSLC & '|';
+array_uint64x         = '|' & ('u' | 'U') & '64' & ('x' | 'X') & array_elems_uint_hex? & MAYBE_WSLC & '|';
+array_float16         = '|' & ('f' | 'F') & '16' & array_elems_float? & MAYBE_WSLC & '|';
+array_float16x        = '|' & ('f' | 'F') & '16' & ('x' | 'X') & array_elems_float_hex? & MAYBE_WSLC & '|';
+array_float32         = '|' & ('f' | 'F') & '32' & array_elems_float? & MAYBE_WSLC & '|';
+array_float32x        = '|' & ('f' | 'F') & '32' & ('x' | 'X') & array_elems_float_hex? & MAYBE_WSLC & '|';
+array_float64         = '|' & ('f' | 'F') & '64' & array_elems_float? & MAYBE_WSLC & '|';
+array_float64x        = '|' & ('f' | 'F') & '64' & ('x' | 'X') & array_elems_float_hex? & MAYBE_WSLC & '|';
+array_uid             = '|' & ('u' | 'U') & array_elems_uid? & MAYBE_WSLC & '|';
+
+array_elems_int       = (SOME_WSLC & integer)+;
+array_elems_int_bin   = (SOME_WSLC & integer_bin_implied)+;
+array_elems_int_oct   = (SOME_WSLC & integer_oct_implied)+;
+array_elems_int_hex   = (SOME_WSLC & integer_hex_implied)+;
+array_elems_uint      = (SOME_WSLC & uinteger)+;
+array_elems_uint_bin  = (SOME_WSLC & uinteger_bin_implied)+;
+array_elems_uint_oct  = (SOME_WSLC & uinteger_oct_implied)+;
+array_elems_uint_hex  = (SOME_WSLC & uinteger_hex_implied)+;
+array_elems_float     = (SOME_WSLC & float)+;
+array_elems_float_hex = (SOME_WSLC & float_hex_implied)+;
+array_elems_uid       = (SOME_WSLC & uid)+;
+
+media                 = '|' & media_type & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
+media_type            = media_type_word & '/' & media_type_word;
+media_type_word       = char_media_first & char_media*;
+custom_type           = '|' & ('c' | 'C') & custom_type_code & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
+custom_type_code      = digit_dec+;
+hex_bytes             = hex_byte & (SOME_WSLC & hex_byte)*;
+hex_byte              = SOME_WSLC & digit_hex{2};
+
+list                  = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ]';
+map                   = '{' & MAYBE_WSLC & key_value_pairs? & MAYBE_WSLC & '}';
+record_definition     = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
+record                = '@' & identifier & '(' & MAYBE_WSLC & objects? & MAYBE_WSLC & ')';
+edge                  = '@{' & non_null_object & data_object & non_null_object & '}';
+node                  = '(' & data_object & (node | data_object)* & ')';
+null                  = "null";
+local_ref             = '$' & identifier;
+marker                = '&' & identifier & ':';
+identifier            = char_identifier+;
+
+comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
+comment_multi_line    = "/*" & (char_cte* ! "*/") & "*/";
+
+digits_bin            = digit_bin & ('_'? & digit_bin)*;
+digits_oct            = digit_oct & ('_'? & digit_oct)*;
+digits_dec            = digit_dec & ('_'? & digit_dec)*;
+digits_hex            = digit_hex & ('_'? & digit_hex)*;
+digit_bin             = '0'~'1';
+digit_oct             = '0'~'7';
+digit_dec             = '0'~'9';
+digit_hex             = '0'~'9' | 'a'~'f' | 'A'~'F';
+neg                   = '-';
+prefix_bin            = '0' ('b' | 'B');
+prefix_oct            = '0' ('o' | 'O');
+prefix_hex            = '0' ('x' | 'X');
+
+# Whitespace
+MAYBE_WS              = WS*;
+SOME_WS               = WS & MAYBE_WS;
+MAYBE_WSLC            = (WSL | comment)*;
+SOME_WSLC             = WSL & MAYBE_WSLC;
+WSL                   = WS | LINE_END;
+WS                    = HT | SP;
+LINE_END              = CR? & LF;
+HT                    = '\{9}';
+LF                    = '\{a}';
+CR                    = '\{d}';
+SP                    = '\{20}';
+
+# https://www.rfc-editor.org/rfc/rfc2045#section-5.1
+char_media_first      = 'a'~'z' | 'A'~'Z';
+char_media            = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
+                                      | '@' | ',' | ';' | ':'
+                                      | '\' | '"' | '/' | '['
+                                      | ']' | '?' | '='
+                                      )
+                      ;
+
+rid_contents          = """https://www.rfc-editor.org/rfc/rfc3987""";
+
+char_string           = char_cte ! ('"' | '\\' | delimiter_lookalikes);
+char_sentinel         = unicode(L,M,N,P,S);
+char_identifier       = unicode(Cf,L,M,N) | '_' | '.' | '-';
+char_cte              = unicode(Cf,L,M,N,P,S,Zs) | WSL;
+delimiter_lookalikes  = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
+                      | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
+                      | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
+                      | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
+                      | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+                      ;

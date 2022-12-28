@@ -29,10 +29,10 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Binary Encoding?](#what-is-concise-binary-encoding)
   - [Document Structure](#document-structure)
-  - [Document Version Specifier](#document-version-specifier)
+  - [Version Header](#version-header)
   - [Object Encoding](#object-encoding)
-    - [Type Field](#type-field)
-    - [Type Field (Plane 7f)](#type-field-plane-7f)
+    - [Type Code](#type-code)
+    - [Type Code (Plane 7f)](#type-code-plane-7f)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -46,14 +46,14 @@ Contents
     - [Date](#date)
     - [Time](#time)
     - [Timestamp](#timestamp)
-  - [Array Types](#array-types)
+  - [Array and String Types](#array-and-string-types)
     - [Array Elements](#array-elements)
     - [Array Forms](#array-forms)
       - [Short Form](#short-form)
       - [Chunked Form](#chunked-form)
         - [Chunk Header](#chunk-header)
         - [Bit Array Chunks](#bit-array-chunks)
-        - [String-like Array Chunks](#string-like-array-chunks)
+        - [String Type Array Chunks](#string-type-array-chunks)
         - [Zero Chunk](#zero-chunk)
     - [Supported Array Types](#supported-array-types)
       - [String](#string)
@@ -64,7 +64,7 @@ Contents
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
-    - [Struct Instance](#struct-instance)
+    - [Record](#record)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
@@ -77,7 +77,7 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Struct Template](#struct-template)
+    - [Record Definition](#record-definition)
     - [Marker](#marker)
     - [Identifier](#identifier)
   - [Empty Document](#empty-document)
@@ -108,6 +108,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
+ * Some explanations will include [KBNF notation](https://github.com/kstenerud/kbnf/blob/master/kbnf.md) and excerpts from [cbe.kbnf](cbe.kbnf).
 
 
 
@@ -123,16 +124,24 @@ The binary format aims for compactness and machine processing efficiency while m
 Document Structure
 ------------------
 
-Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
+Documents begin with a [version header](#version-header), followed by possible [intangible](ce-structure.md#intangible-objects) objects, and then ultimately followed by one (and only one) top-level [data object](ce-structure.md#data-objects).
 
-    [81 (version) (optional invisible and structural objects) (top-level data object)]
+```kbnf
+document = version_header & data_object;
+```
 
 
 
-Document Version Specifier
---------------------------
+Version Header
+--------------
 
-The version specifier is composed of the byte [`81`], followed by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded version number representing which version of this specification the document adheres to.
+The version header is composed of the byte [`81`], followed by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded version number representing which version of this specification the document adheres to.
+
+```kbnf
+version_header                     = uint(8,0x81) & uleb_int(version);
+uleb_int(v)                        = uleb128(uint(0,v));
+uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+```
 
 **Example**:
 
@@ -143,16 +152,16 @@ The version specifier is composed of the byte [`81`], followed by an [unsigned L
 Object Encoding
 ---------------
 
-A CBE document is byte-oriented. All objects are composed of a type field (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types begin with length determining fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
+A CBE document is byte-oriented. All objects are composed of a type code (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types begin with length determining fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
 
 Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
 
 The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy friendly in most places on little endian systems.
 
 
-### Type Field
+### Type Code
 
-All objects begin with a type field, followed by a possible payload (depending on the type).
+All objects begin with a type code, followed by a possible payload (depending on the type).
 
 | Hex | Type                                              | Payload                                  |
 | --- | ------------------------------------------------- | ---------------------------------------- |
@@ -186,7 +195,7 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  7c | [Timestamp](#timestamp)                           | ([compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp)) |
 |  7d | [Null](#null)                                     |                                          |
 |  7e | [RESERVED](#reserved)                             |                                          |
-|  7f | [Plane 7f](#type-field-plane-7f)                  | (See [Plane 7f](#type-field-plane-7f))   |
+|  7f | [Plane 7f](#type-code-plane-7f)                   | (See [Plane 7f](#type-code-plane-7f))    |
 |  80 | [String: 0 bytes](#string)                        |                                          |
 |  81 | [String: 1 byte](#string)                         | (1 byte of UTF-8 data)                   |
 |  82 | [String: 2 bytes](#string)                        | (2 bytes of UTF-8 data)                  |
@@ -209,7 +218,7 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  93 | [Array: Unsigned Int8](#supported-array-types)    | (chunk header) (8-bit elements) ...      |
 |  94 | [Array: Bit](#bit-array)                          | (chunk header) (1-bit elements) ...      |
 |  95 | [Padding](#padding)                               |                                          |
-|  96 | [Struct Instance](#struct-instance)               | (identifier) (value) ... (end container) |
+|  96 | [Record](#record)                                 | (identifier) (value) ... (end container) |
 |  97 | [Edge](#edge)                                     | (source) (description) (destination) (end container) |
 |  98 | [Node](#node)                                     | (value) (child node) ... (end container) |
 |  99 | [Map](#map)                                       | (key, value) ... (end container)         |
@@ -221,7 +230,7 @@ All objects begin with a type field, followed by a possible payload (depending o
 |  ff | [Integer value -1](#small-integer)                |                                          |
 
 
-### Type Field (Plane 7f)
+### Type Code (Plane 7f)
 
 Bulkier or less common types are encoded into a secondary type plane, which adds a second byte to the type code.
 
@@ -276,7 +285,7 @@ Types from plane 7f begin with the type code prefix [`7f`], followed by their ty
 |  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
 | ... | [RESERVED](#reserved)                           |       |                                           |
 |  f0 | [Marker](#marker)                               |    1  | (byte length) (UTF-8 data)                |
-|  f1 | [Struct Template](#struct-template)             |    ∞  | (ID) (key) ... (end container)            |
+|  f1 | [Record Definition](#record-definition)         |    ∞  | (ID) (key) ... (end container)            |
 |  f2 | [Remote Reference](#remote-reference)           |    1  | (chunk header) (UTF-8 data) ...           |
 |  f3 | [Media](#media)                                 |    ∞  | (byte length) (UTF-8 data) (chunk header) (bytes) ... |
 | ... | [RESERVED](#reserved)                           |       |                                           |
@@ -314,21 +323,39 @@ Integers are encoded in three possible ways:
 
 #### Small Integer
 
-Values from -100 to +100 ("small int") are encoded into the type field itself, and can be read directly as 8-bit signed two's complement integers.
+Values from -100 to +100 ("small int") are encoded into the type code itself, and can be read directly as 8-bit signed two's complement integers.
+
+```kbnf
+int_small = sint(8,-100~100);
+```
 
 #### Fixed Width Integer
 
-Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type field holds the sign of the integer.
+Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type code holds the sign of the integer.
 
-    [(type) (low byte) ... (high byte)]
+```kbnf
+int_8_positive        = uint(8,0x68) & uint(8,~);
+int_8_negative        = uint(8,0x69) & uint(8,~);
+int_16_positive       = uint(8,0x6a) & uint(16,~);
+int_16_negative       = uint(8,0x6b) & uint(16,~);
+int_32_positive       = uint(8,0x6c) & uint(32,~);
+int_32_negative       = uint(8,0x6d) & uint(32,~);
+int_64_positive       = uint(8,0x6e) & uint(64,~);
+int_64_negative       = uint(8,0x6f) & uint(64,~);
+```
 
-**Note**: Because the sign is encoded into the type field, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments. The application might choose to discard the sign information in this case, but the codec **MUST** preserve it (the most common approach is to pass it to the application as a floating point type).
+**Note**: Because the sign is encoded into the type code, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments. The application might choose to discard the sign information in this case, but the codec **MUST** preserve it (the most common approach is to pass it to the application as a floating point type).
 
 #### Variable Width Integer
 
-Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type field.
+Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type code.
 
-    [(66 or 67) (length) (low byte) ... (high byte)]
+```kbnf
+int_variable_positive = uint(8,0x66) & uleb(bind(length, 1~)) & swapped(uint(length*8, ~));
+int_variable_negative = uint(8,0x67) & uleb(bind(length, 1~)) & swapped(uint(length*8, ~));
+uleb(v)               = uleb128(uint(0,v));
+uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+```
 
 **Examples**:
 
@@ -346,6 +373,11 @@ Variable width integers are encoded as a block of little endian ordered bytes, p
 
 Decimal floating point values are stored in [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
+```kbnf
+decimal_float = uint(8,0x76) & compact_float(~);
+compact_float(v: real): expression = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
+```
+
 **Examples**:
 
     [76 07 4b] = -7.5
@@ -355,6 +387,13 @@ Decimal floating point values are stored in [Compact Float](https://github.com/k
 ### Binary Floating Point
 
 Binary floating point values are stored in 32 or 64-bit [ieee754 binary floating point](https://en.wikipedia.org/wiki/IEEE_754) format, or in 16-bit [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) format, in little endian byte order.
+
+```kbnf
+binary_float_16             = uint(8,0x70) & swapped(bfloat(~));
+binary_float_32             = uint(8,0x71) & swapped(float(32,~));
+binary_float_64             = uint(8,0x72) & swapped(float(64,~));
+bfloat(v: real): expression = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
+```
 
 **Examples**:
 
@@ -368,6 +407,10 @@ Binary floating point values are stored in 32 or 64-bit [ieee754 binary floating
 A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format.
 
 **Note**: This is the only data type that is stored in **big endian** byte order ([as required by rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
+
+```kbnf
+uid = u8(0x65) & uint(128, ~};
+```
 
 **Example**:
 
@@ -387,6 +430,11 @@ Temporal types are stored in [compact time](https://github.com/kstenerud/compact
 
 Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
 
+```kbnf
+date                     = u8(0x7a) & compact_date;
+compact_date: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
+```
+
 **Example**:
 
     [7a 56 cd 00] = Oct 22, 2051
@@ -395,6 +443,11 @@ Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blo
 ### Time
 
 Time values are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
+
+```kbnf
+time                     = u8(0x7b) & compact_time;
+compact_time: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
+```
 
 **Example**:
 
@@ -405,16 +458,21 @@ Time values are stored in [compact time](https://github.com/kstenerud/compact-ti
 
 Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp) format.
 
+```kbnf
+timestamp                     = u8(0x7c) & compact_timestamp;
+compact_timestamp: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
+```
+
 **Example**:
 
     [7c 81 ac a0 b5 03 8f 1a ef d1] = Oct 26, 1985 1:22:16 at location 33.99, -117.93
 
 
 
-Array Types
------------
+Array and String Types
+----------------------
 
-An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The [array type](#supported-array-types) determines the size of each element and how the data is to be interpreted.
+An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The [array type](#supported-array-types) determines the size of each element and how the data is to be interpreted. [String types](ce-structure.md#string-types) are implemented as arrays with an element size of 1 byte.
 
 
 ### Array Elements
@@ -426,44 +484,6 @@ Array elements have a fixed type and size, determined by the [array type](#suppo
 
 All arrays have a [chunked form](#chunked-form), and many also have a [short form](#short-form).
 
-**Primary plane, short form**:
-
-| Field        | Bits | Description                                         |
-| ------------ | ---- | --------------------------------------------------- |
-| Type         |    4 | Upper 4 bits in the [primary plane](#type-field)    |
-| Length       |    4 | Number of elements (0-15)                           |
-| Elements     |    ∞ | The elements as a sequence of bytes                 |
-
-**Primary plane, chunked form**:
-
-| Field        | Bits | Description                                         |
-| ------------ | ---- | --------------------------------------------------- |
-| Type         |   8  | Type in the [primary plane](#type-field)            |
-| Chunk Header |   ∞  | The number of elements in this chunk + continuation |
-| Elements     |   ∞  | The elements as a sequence of bytes                 |
-| ...          |   ∞  | More chunks if continuation is 1                    |
-
-**Plane 7f, short form**:
-
-| Field        | Bits | Description                                         |
-| ------------ | ---- | --------------------------------------------------- |
-| Type (plane) |    8 | 0x7f (plane 7f)                                     |
-| Type         |    4 | Upper 4 bits in [plane 7f](#type-field-plane-7f)    |
-| Length       |    4 | Number of elements (0-15)                           |
-| Elements     |    ∞ | The elements as a sequence of bytes                 |
-
-**Plane 7f, chunked form**:
-
-| Field        | Bits | Description                                         |
-| ------------ | ---- | --------------------------------------------------- |
-| Type (plane) |   8  | 0x7f (plane 7f)                                     |
-| Type         |   8  | Type in [plane 7f](#type-field-plane-7f)            |
-| Chunk Header |   ∞  | The number of elements in this chunk + continuation |
-| Elements     |   ∞  | The elements as a sequence of bytes                 |
-| ...          |   ∞  | More chunks if continuation is 1                    |
-
-The length represents the number of **elements** (not bytes) in the array/chunk.
-
 **Examples**:
 
  * [`82 61 62`] = string (short form, length 2) with elements 'a', 'b'
@@ -472,21 +492,31 @@ The length represents the number of **elements** (not bytes) in the array/chunk.
 
 #### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type field itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
+Short form arrays have their length encoded in the lower 4 bits of the type code itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
+
+```kbnf
+array_short        = short_type_code & uint(4,bind(count, ~)) & array_element{count};
+short_type_code    = uint(4,~);
+```
 
 CBE encoders **MUST** use the short form whenever it is possible to do so, unless explicitly configured to do otherwise.
 
 **Examples**:
 
- * [`83 61 62 63`] = the string "abc" (short form - length is part of the type field)
+ * [`83 61 62 63`] = the string "abc" (short form - length is part of the type code)
  * [`90 06 61 62 63`] = the string "abc" (chunked form - length is a separate field)
 
 
 #### Chunked Form
 
-In chunked form, array data is represented as a series of chunks of data, each with its own [header](#chunk-header) containing the number of elements in the chunk and a continuation bit that tells if more chunks follow the current one:
+In chunked form, array data is represented as a series of chunks of data, each with its own [header](#chunk-header) containing the number of elements in the chunk and a continuation bit that tells if more chunks follow the current one.
 
-    [(array type) (chunk-header-a) (chunk-elements-a) (chunk-header-b) (chunk-elements-b) ...]
+```kbnf
+array_chunked      = array_type_code & array_chunk+;
+array_chunk        = bind(header, array_chunk_header) & array_element{header.count};
+array_chunk_header = uleb128(unsigned(0,bind(count,~)) & array_continuation);
+array_continuation = uint(1,~);
+```
 
 An array **CAN** contain any number of chunks, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
 
@@ -500,10 +530,10 @@ In this example, the first chunk of the array has 14 elements and has a continua
 
 All array chunks are preceded by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded header containing the chunk length and a continuation bit (in the low bit of the fully decoded header). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
-| Field        | Bits | Description                          |
-| ------------ | ---- | ------------------------------------ |
-| Length       |   ∞  | Chunk length (element count)         |
-| Continuation |   1  | If 1, another chunk follows this one |
+```kbnf
+array_chunk_header = uleb128(unsigned(0,bind(count,~)) & array_continuation);
+array_continuation = uint(1,~);
+```
 
 **Examples**:
 
@@ -514,9 +544,9 @@ All array chunks are preceded by an [unsigned LEB128](https://en.wikipedia.org/w
 
 Bit array chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size.
 
-##### String-like Array Chunks
+##### String Type Array Chunks
 
-To ensure compatibility across all platforms, array chunks for string-like data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks).
+To ensure compatibility across all platforms, array chunks for string data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks).
 
 ##### Zero Chunk
 
@@ -542,40 +572,49 @@ If the source buffer in your decoder is mutable, you could achieve C-style zero-
 
 ### Supported Array Types
 
-| Array Type                                                                                   | Element Size (bits) | Byte Order    |
-| -------------------------------------------------------------------------------------------- | ------------------- | ------------- |
-| Unsigned int                                                                                 | 8                   | -             |
-| Unsigned int                                                                                 | 16                  | Little Endian |
-| Unsigned int                                                                                 | 32                  | Little Endian |
-| Unsigned int                                                                                 | 64                  | Little Endian |
-| 2's complement signed int                                                                    | 8                   | -             |
-| 2's complement signed int                                                                    | 16                  | Little Endian |
-| 2's complement signed int                                                                    | 32                  | Little Endian |
-| 2's complement signed int                                                                    | 64                  | Little Endian |
-| [Bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)                     | 16                  | Little Endian |
-| [IEEE754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) | 32                  | Little Endian |
-| [IEEE754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) | 64                  | Little Endian |
-| [RFC4122 UUID](https://tools.ietf.org/html/rfc4122#section-4.1.2)                            | 128                 | Big Endian    |
-| [String](#string)                                                                            | 8                   | -             |
-| [Resource ID](#resource-identifier)                                                          | 8                   | -             |
-| [Bit](#bit-array)                                                                            | 1                   | Little Endian |
-| [Media](#media)                                                                              | 8                   | -             |
-| [Custom Type](#custom-types)                                                                 | 8                   | -             |
+| Array Type                                                                                   | Element Size (bits) | Byte Order    | Type Codes      |
+| -------------------------------------------------------------------------------------------- | ------------------- | ------------- | --------------- |
+| Unsigned int                                                                                 | 8                   | -             | 93              |
+| Unsigned int                                                                                 | 16                  | Little Endian | 7f:20-2f, 7f:e2 |
+| Unsigned int                                                                                 | 32                  | Little Endian | 7f:40-4f, 7f:e4 |
+| Unsigned int                                                                                 | 64                  | Little Endian | 7f:60-6f, 7f:e6 |
+| 2's complement signed int                                                                    | 8                   | -             | 7f:10-1f, 7f:e1 |
+| 2's complement signed int                                                                    | 16                  | Little Endian | 7f:30-3f, 7f:e3 |
+| 2's complement signed int                                                                    | 32                  | Little Endian | 7f:50-5f, 7f:e5 |
+| 2's complement signed int                                                                    | 64                  | Little Endian | 7f:70-7f, 7f:e6 |
+| [Bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)                     | 16                  | Little Endian | 7f:80-8f, 7f:e8 |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) | 32                  | Little Endian | 7f:90-9f, 7f:e9 |
+| [IEEE754 binary float](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) | 64                  | Little Endian | 7f:a0-af, 7f:ea |
+| [RFC4122 UUID](https://tools.ietf.org/html/rfc4122#section-4.1.2)                            | 128                 | Big Endian    | 7f:00-0f, 7f:e0 |
+| [String](#string)                                                                            | 8                   | -             | 80-8f, 90       |
+| [Resource ID](#resource-identifier)                                                          | 8                   | -             | 91              |
+| [Bit](#bit-array)                                                                            | 1                   | Little Endian | 94              |
+| [Media](#media)                                                                              | 8                   | -             | 7f:f3           |
+| [Custom Type](#custom-types)                                                                 | 8                   | -             | 92              |
+
+See [cbe.kbnf](cbe.kbnf) for complete array encoding descriptions.
 
 #### String
 
 Strings are encoded as UTF-8.
 
-The general string encoding form is:
+The chunked string encoding form is:
 
-    [90 (chunk header) (byte 0) ... (byte n-1)]
+```kbnf
+string_chunked     = u8(0x90) & array_chunk_string;
+array_chunk_string = bind(header, array_chunk_header)
+                   & sized(header.count*8, char_string*)
+                   & when(header.continuation = 1, array_chunk_string)
+                   ;
+array_chunk_header = uleb128(unsigned(0,bind(count, ~)) & u1(bind(continuation, ~));
+char_string        = unicode(C,L,M,N,P,S,Z);
+```
 
 Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
 
-    [80]
-    [81 (byte 0)]
-    [82 (byte 0) (byte 1)]
-    ...
+```kbnf
+string_short = u4(8) & u4(bind(count, ~)) & sized(count*8, char_string*);
+```
 
 **Examples**:
 
@@ -587,6 +626,10 @@ Strings also have a [short form](#short-form) length encoding using types 0x80-0
 
 Resource identifiers are encoded similarly to a long-form [string](#string), but with type [`91`].
 
+```kbnf
+resource_id = u8(0x91) & array_chunk_string;
+```
+
 **Example**:
 
     [91 aa 01 68 74 74 70 73 3a 2f 2f 6a 6f 68 6e 2e 64 6f 65 40 77 77 77
@@ -597,7 +640,15 @@ Resource identifiers are encoded similarly to a long-form [string](#string), but
 
 #### Bit Array
 
-In bit arrays, the elements (bits) are encoded 8 per byte, (such that a 0 bit represents false and a 1 bit represents true), in little endian byte order, with the first element of the array stored in the least significant bit of the first byte of the encoded elements. Unused trailing (upper) bits in the [last chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of an imaginary little endian byte array). Array chunks **MUST** have a length such that `length % 8 == 0`, except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+
+```kbnf
+array_bit       = u8(0x94) & array_bit_chunk;
+array_bit_chunk = bind(header, array_chunk_header)
+                & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
+                & when(header.continuation = 1, array_bit_chunk)
+                ;
+```
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1c 7a`] with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
@@ -609,17 +660,18 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1
 
 A media object has type [`7f f3`] and is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
-    [7f f3 (media type length) (media type) (chunk header, chunk contents) ...]
-
-| Field             | Description                                             |
-| ----------------- | ------------------------------------------------------- |
-| Type              | Type code 0x7f: Plane 7f                                |
-| Plane 7f Subtype  | Type code 0xf3: Media                                   |
-| Media Type Length | [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) |
-| Media Type Data   | UTF-8 string data                                       |
-| Chunk Header      | Number of media bytes in this chunk, continuation bit   |
-| Elements          | Bytes of media data                                     |
-| ...               | More chunks if continuation is 1                        |
+```kbnf
+media            = plane7f(0xf3) & uleb(bind(mt_length, 1~)) & sized(mt_length*8, media_type) & array_chunk_u8;
+media_type       = media_type_word & '/' & media_type_word;
+media_type_word  = char_media_first & char_media*;
+char_media_first = 'a'~'z' | 'A'~'Z';
+char_media       = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
+                                | '@' | ',' | ';' | ':'
+                                | '\' | '"' | '/' | '['
+                                | ']' | '?' | '='
+                                )
+                 ;
+```
 
 **Example**:
 
@@ -652,7 +704,10 @@ echo hello world
 
 Custom type values have type code [`92`], followed by a custom type code (encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128)), followed by a byte array containing the custom data.
 
-    [92 (custom type code) (chunk header, chunk contents) ...]
+```kbnf
+custom_type      = u8(0x92) & custom_type_code & array_chunk_u8;
+custom_type_code = uleb(~);
+```
 
 **Note**: Custom data in [text form](ce-structure.md#custom-type-forms) **MUST** be converted to binary form before being encoded into CBE, as CBE does **not** support the text form.
 
@@ -687,7 +742,10 @@ Container Types
 
 A list has type code [`9a`], followed by a series of zero or more objects, and is terminated with [`9b`] (end of container).
 
-    [9a (element-1) (element-2) ... 9b]
+```kbnf
+list          = u8(0x9a) & object* & end_container;
+end_container = u8(0x9b);
+```
 
 **Example**:
 
@@ -698,22 +756,30 @@ A list has type code [`9a`], followed by a series of zero or more objects, and i
 
 A map has type code [`99`], followed by a series of zero or more key-value pairs, and is terminated with [`9b`] (end of container).
 
-    [99 (key-1, value-1) (key-2, value-2) ... 9b]
+```kbnf
+map           = u8(0x99) & key_value* & end_container;
+key_value     = keyable_object & data_object;
+end_container = u8(0x9b);
+```
 
 **Example**:
 
     [99 81 61 01 81 62 02 9b] = A map containg the key-value pairs ("a" = 1) ("b" = 2)
 
 
-### Struct Instance
+### Record
 
-A struct instance has type code [`96`], followed by a template [identifier](#identifier), followed by a series of values matching the order that the keys are defined in the associated [template](#struct-template), and is terminated with [`9b`] (end of container).
+A record has type code [`96`], followed by a definition [identifier](#identifier), followed by a series of values matching the order that the keys are defined in the associated [definition](#record-definition), and is terminated with [`9b`] (end of container).
 
-    [96 (template identifier) (value-1) (value-2) (value-3) ... 9b]
+```kbnf
+record        = u8(0x96) & identifier & object* & end_container;
+identifier    = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+end_container = u8(0x9b);
+```
 
 **Example**:
 
-A struct instance built from the template identified by "a" (defined elsewhere), with the first key's associated value set to 5:
+A record built from the definition identified by "a" (defined elsewhere), with the first key's associated value set to 5:
 
     [96 01 61 05 9b]
 
@@ -722,7 +788,10 @@ A struct instance built from the template identified by "a" (defined elsewhere),
 
 An edge has type code [`97`], followed by a source object, then a description object, then a destination object, and is terminated with [`9b`] (end of container).
 
-    [97 (source) (description) (destination) 9b]
+```kbnf
+edge          = u8(0x97) & non_null_object & data_object & non_null_object & end_container;
+end_container = u8(0x9b);
+```
 
 **Example**:
 
@@ -738,7 +807,10 @@ An edge has type code [`97`], followed by a source object, then a description ob
 
 A node has type code [`98`], followed by a value object and zero or more child nodes, and is terminated with [`9b`] (end of container).
 
-    [98 (value) (child node) ... 9b]
+```kbnf
+node          = u8(0x98) & data_object & (node | data_object)* & end_container;
+end_container = u8(0x9b);
+```
 
 **Example**:
 
@@ -757,7 +829,9 @@ Other Types
 
 ### Null
 
-Null is encoded as [`7d`].
+```kbnf
+null = u8(0x7d);
+```
 
 
 ### RESERVED
@@ -773,7 +847,10 @@ Peudo-Objects
 
 A local reference has type code [`0x77`], followed by a marker [identifier](#identifier).
 
-    [77 (identifier)]
+```kbnf
+local_reference = u8(0x77) & identifier;
+identifier      = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+```
 
 **Examples**:
 
@@ -782,6 +859,10 @@ A local reference has type code [`0x77`], followed by a marker [identifier](#ide
 ### Remote Reference
 
 A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code ([`7f f2`]).
+
+```kbnf
+remote_reference = plane7f(0xf2) & array_chunk_string;
+```
 
 **Examples**:
 
@@ -805,6 +886,10 @@ Comments are not supported in CBE. An encoder **MUST** skip all comments when co
 
 Padding is encoded as type [`95`]. Repeat as many times as needed.
 
+```kbnf
+padding = u8(0x95);
+```
+
 **Example**:
 
     [95 95 95 6c 00 00 00 8f] = 0x8f000000, padded such that the 32-bit integer begins on a 4-byte boundary.
@@ -814,15 +899,19 @@ Padding is encoded as type [`95`]. Repeat as many times as needed.
 Structural Objects
 ------------------
 
-### Struct Template
+### Record Definition
 
-A struct template has type code [`7f f1`], followed by a template [identifier](#identifier), followed by a series of keys, and is terminated with [`9b`] (end of container).
+A record definition has type code [`7f f1`], followed by a definition [identifier](#identifier), followed by a series of keys, and is terminated with [`9b`] (end of container).
 
-    [7f f1 (identifier) (key-1) (key-2) (key-3) ... 9b]
+```kbnf
+record_definition = plane7f(0xf1) & identifier & keyable_object* & end_container;
+identifier        = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+end_container     = u8(0x9b);
+```
 
 **Example**:
 
-A struct template named "a", containing the key "b":
+A record definition named "a", containing the key "b":
 
     [7f f1 01 61 81 62 9b]
 
@@ -831,7 +920,9 @@ A struct template named "a", containing the key "b":
 
 A marker has type code [`7f f0`], followed by a marker [identifier](#identifier), and then the marked object.
 
-    [7f f0 (identifier) (marked object)]
+```kbnf
+marked_object = plane7f(0xf0) & identifier & concrete_object;
+```
 
 **Example**:
 
@@ -847,9 +938,12 @@ A marker has type code [`7f f0`], followed by a marker [identifier](#identifier)
 
 Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) length field (min length 1 byte), followed by that many **bytes** of UTF-8 data.
 
-    [(byte length) (UTF-8 string data)]
-
 The length field **CANNOT** be 0.
+
+```kbnf
+identifier      = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+char_identifier = unicode(Cf,L,M,N) | '_' | '.' | '-';
+```
 
 **Note**: Identifiers are **not** standalone objects; they are always part of another object.
 

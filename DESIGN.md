@@ -45,11 +45,10 @@ Contents
     - [NUL support](#nul-support)
     - [Whitespace](#whitespace)
     - [Numeric Whitespace](#numeric-whitespace)
-    - [Radix Point](#radix-point)
     - [Numeric Bases](#numeric-bases)
     - [Media](#media)
     - [Recursive Data](#recursive-data)
-    - [Struct and Edge Termination](#struct-and-edge-termination)
+    - [Record and Edge Termination](#record-and-edge-termination)
     - [CBE Type Codes](#cbe-type-codes)
       - [Small Integers](#small-integers)
       - [Fixed Size Integers](#fixed-size-integers)
@@ -599,11 +598,6 @@ Line endings can be LF or CRLF to accommodate the two major encoding methods in 
 Underscore (`_`) is used for numeric whitespace, as is done in most programming languages. Characters such as `,` and `.` are unsuitable because many countries use them for opposite purposes (as a radix point / as a grouping separator).
 
 
-### Radix Point
-
-The text format accepts both `.` and `,` as a radix point in floating point numbers to match how they're used in various countries around the world.
-
-
 ### Numeric Bases
 
 To support the most common numeric representations, the text format supports the following bases:
@@ -628,9 +622,9 @@ Embedded media is such a common occurrence that it makes sense to include it in 
 Recursive data structures are very useful and powerful, yet potentially very dangerous. Concise Encoding opts to support recursive structures, with the caveat that they are opt-in (to avoid inadvertently opening a security hole).
 
 
-### Struct and Edge Termination
+### Record and Edge Termination
 
-Technically, we could get away with not requiring an end marker in edges and struct instances (because we already know how many children these containers will have). But doing so would leave the format vulnerable to undetectable structural errors.
+Technically, we could get away with not requiring an end marker in edges and records (because we already know how many children these containers will have). But doing so would leave the format vulnerable to undetectable structural errors.
 
 For example, the edge structure always has exactly three children, and so we could just bake in the assumption that after three children are decoded, the edge is finished. The problems come when a decoder reads a malformed document.
 

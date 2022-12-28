@@ -29,11 +29,13 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
   - [Text Format](#text-format)
+    - [Whitespace](#whitespace)
+    - [Key-Value Pairs](#key-value-pairs)
     - [Lookalike Characters](#lookalike-characters)
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
   - [Document Structure](#document-structure)
-  - [Document Version Specifier](#document-version-specifier)
+  - [Version Header](#version-header)
   - [Numeric Types](#numeric-types)
     - [Boolean](#boolean)
     - [Integer](#integer)
@@ -54,28 +56,26 @@ Contents
       - [UTC](#utc)
       - [UTC Offset](#utc-offset)
     - [Why not ISO 8601 or RFC 3339?](#why-not-iso-8601-or-rfc-3339)
-  - [Array Types](#array-types)
-    - [String-Like Arrays](#string-like-arrays)
-      - [String-Like Array Validation](#string-like-array-validation)
-      - [Escape Sequences](#escape-sequences)
+  - [String Types](#string-types)
+    - [String Type Validation](#string-type-validation)
+    - [Escape Sequences](#escape-sequences)
       - [Continuation](#continuation)
       - [Unicode Codepoint](#unicode-codepoint)
       - [Verbatim Sequence](#verbatim-sequence)
-      - [String](#string)
-      - [Resource Identifier](#resource-identifier)
-    - [General Array Encoding](#general-array-encoding)
-      - [General Array Forms](#general-array-forms)
-      - [General Array Types](#general-array-types)
-      - [Implied Prefix](#implied-prefix)
-      - [Bit Array Elements](#bit-array-elements)
-      - [Float Array Elements](#float-array-elements)
-      - [Media](#media)
-        - [Media Contents](#media-contents)
-      - [Custom Types](#custom-types)
+    - [String](#string)
+    - [Resource Identifier](#resource-identifier)
+  - [Arrays](#arrays)
+    - [Array Types](#array-types)
+      - [Array Type Suffix](#array-type-suffix)
+    - [Bit Array Elements](#bit-array-elements)
+    - [Float Array Elements](#float-array-elements)
+    - [Media](#media)
+      - [Media Contents](#media-contents)
+    - [Custom Types](#custom-types)
   - [Container Types](#container-types)
     - [List](#list)
     - [Map](#map)
-    - [Struct Instance](#struct-instance)
+    - [Record](#record)
     - [Edge](#edge)
     - [Node](#node)
   - [Other Types](#other-types)
@@ -89,7 +89,7 @@ Contents
       - [Multiline Comment](#multiline-comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Struct Template](#struct-template)
+    - [Record Definition](#record-definition)
     - [Marker](#marker)
   - [Empty Document](#empty-document)
   - [Letter Case](#letter-case)
@@ -100,8 +100,8 @@ Contents
     - [Indentation](#indentation)
     - [Pretty Printing Lists](#pretty-printing-lists)
     - [Pretty Printing Maps](#pretty-printing-maps)
-    - [Pretty Printing Struct Templates](#pretty-printing-struct-templates)
-    - [Pretty Printing Struct Instances](#pretty-printing-struct-instances)
+    - [Pretty Printing Record Definitions](#pretty-printing-record-definitions)
+    - [Pretty Printing Records](#pretty-printing-records)
     - [Pretty Printing Nodes](#pretty-printing-nodes)
     - [Pretty Printing Edges](#pretty-printing-edges)
     - [Pretty Printing Strings](#pretty-printing-strings)
@@ -132,6 +132,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
+ * Some explanations will include [KBNF notation](https://github.com/kstenerud/kbnf/blob/master/kbnf.md) and excerpts from [cte.kbnf](cte.kbnf).
 
 
 
@@ -149,9 +150,7 @@ Text Format
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation of CTE safety **MUST** occur _before_ all other processing (such as [escape-sequence](#escape-sequences) decoding).
-
-[Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). In [maps](#map), the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace). Extraneous [structural whitespace](#structural-whitespace) is ignored.
+All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation for CTE safety **MUST** occur _before_ all other processing or parsing (such as [line ending conversion](#line-endings) or [escape-sequence](#escape-sequences) decoding).
 
 **Examples**:
 
@@ -161,9 +160,24 @@ All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safe
  * CTE v1 document containing a top-level map: `c1 {"a"=1 "b"=2 "c"=3}`
 
 
+### Whitespace
+
+[Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). Extraneous [structural whitespace](#structural-whitespace) is ignored.
+
+### Key-Value Pairs
+
+In [maps](#map) and map-like objects, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace).
+
+```kbnf
+key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
+key_value_pairs = key_value & (SOME_WSLC & key_value)*;
+```
+
+
 ### Lookalike Characters
 
-Lookalike characters are characters that look confusingly similar to [string-like array](#string-like-arrays) delimiters when viewed by a human. Such characters **MUST** be escaped in [string-like arrays](#string-like-arrays).
+Lookalike characters are characters that look confusingly similar to [string type](#string-types) delimiters when viewed by a human. Such characters **MUST** be escaped in [string types](#string-types).
+
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
@@ -179,13 +193,28 @@ The following is (as of 2022-06-09) a complete list of [lookalike Unicode charac
 | `"` | [02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) |
 | `\` | [2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
 
+```kbnf
+delimiter_lookalikes = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
+                     | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
+                     | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
+                     | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
+                     | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+                     ;
+```
+
 
 ### Line Endings
 
-Line endings **CAN** be encoded as LF only (u+000a) or CR+LF (u+000d u+000a) to maintain compatibility with editors on various popular platforms. However, for document sharing purposes the canonical format is LF only.
+The canonical line ending for CTE documents is LF (u+000a).
 
- * Decoders **MUST** accept both line ending types as input.
- * Encoders **MUST** output LF only by default. Encoders **MAY** offer an option to output CR+LF line endings.
+* CTE decoders **MUST** accept LF and CRLF as line endings.
+* CTE encoders **MUST** output LF only as line endings.
+
+```kbnf
+LINE_END = CR? & LF;
+LF       = '\{a}';
+CR       = '\{d}';
+```
 
 
 ### Human Editability
@@ -200,25 +229,36 @@ In the spirit of human editability:
 Document Structure
 ------------------
 
-Documents begin with a [version specifier](#document-version-specifier), possibly followed by [invisible](ce-structure.md#invisible-objects) and [structural](ce-structure.md#structural-objects) objects, and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
+Documents begin with a [version header](#version-header), followed by [whitespace](#structural-whitespace), followed by possible [whitespace](#structural-whitespace) separated [intangible objects](ce-structure.md#intangible-objects), and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
-    (version specifier) (optional invisible and structural objects) (top-level data object)
+```kbnf
+document       = version_header & SOME_WSLC & data_object;
+version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
+```
+
+**Example**: A complete (and empty) CTE version 1 document:
+
+```cte
+c1
+null
+```
 
 
 
-Document Version Specifier
---------------------------
+Version Header
+--------------
 
-The version specifier is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
+The version header is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
 
-**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder **MUST** also accept uppercase `C` (u+0043).
+**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder **MUST** also accept uppercase `C` (u+0043). An encoder **MUST NOT** produce uppercase `C`.
 
-The version specifier and the top-level object **MUST** be separated by [structural whitespace](#structural-whitespace).
+```kbnf
+version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
+```
 
 **Example**:
 
-* Version specifier (CTE version 1): `c1`
-* Complete (and empty) document: `c1 null`
+* Version header (CTE version 1): `c1 `
 
 
 
@@ -229,6 +269,9 @@ Numeric Types
 
 Represented by the text sequences `true` and `false`.
 
+```kbnf
+boolean = "true" | "false";
+```
 
 ### Integer
 
@@ -243,34 +286,46 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
-Encoders **MUST** output integers in base 10 by default.
+```kbnf
+integer      = neg? & uinteger;
+integer_bin  = neg? & uinteger_bin;
+integer_oct  = neg? & uinteger_oct;
+integer_dec  = neg? & uinteger_dec;
+integer_hex  = neg? & uinteger_hex;
 
+uinteger     = uinteger_bin | uinteger_oct | uinteger_dec | uinteger_hex;
+uinteger_bin = prefix_bin & digits_bin;
+uinteger_oct = prefix_oct & digits_oct;
+uinteger_dec = digits_dec;
+uinteger_hex = prefix_hex & digits_hex;
+
+digits_bin   = digit_bin & ('_'? & digit_bin)*;
+digits_oct   = digit_oct & ('_'? & digit_oct)*;
+digits_dec   = digit_dec & ('_'? & digit_dec)*;
+digits_hex   = digit_hex & ('_'? & digit_hex)*;
+digit_bin    = '0'~'1';
+digit_oct    = '0'~'7';
+digit_dec    = '0'~'9';
+digit_hex    = '0'~'9' | 'a'~'f' | 'A'~'F';
+neg          = '-';
+prefix_bin   = '0' ('b' | 'B');
+prefix_oct   = '0' ('o' | 'O');
+prefix_hex   = '0' ('x' | 'X');
+```
+
+Encoders **MUST** output integers in base 10 by default.
 
 ### Floating Point
 
-A floating point number is composed of an implied base (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
+A floating point number is conceptually composed of an implied radix (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
 
-    value = significand × baseᵉˣᵖᵒⁿᵉⁿᵗ
+    value = significand × radixᵉˣᵖᵒⁿᵉⁿᵗ
 
- * The significand and exponential portions are separated by an exponent marker (either `e` or `p`, depending on the base).
- * The whole and fractional parts of the significand are separated by a radix point (`.`).
- * A dash `-` **MUST** be prepended to the front of negative floating point value as the sign indicator (before any other prefix).
+Where `radix` is 10 for [base-10 notation](#base-10-notation), and 2 for [base-16 notation](#base-16-notation).
 
-**Note**: A float value that contains only a whole significand portion (fractional part = 0 and exponent = 1) will be interpreted/printed as an integer.
+**Note**: A numeric value that contains only a whole significand portion (where the fractional part is 0 and the exponent is 1) will be interpreted/printed as an integer.
 
 Encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default.
-
-**Examples**:
-
-```cte
-c1
-[
-    1.0
-    5e-5
-    -98.413e50
-    3.14
-]
-```
 
 #### Base-10 Notation
 
@@ -282,11 +337,18 @@ The exponential portion of a base-10 number is denoted by the character `e`, fol
 
 Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, the 64-bit ieee754 floating point type can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
+```kbnf
+float_dec     = (neg? & digits_dec & (('.' & digits_dec & exponent_dec?) | exponent_dec)) | float_special;
+float_special = (neg? & "inf") | "nan" | "snan";
+exponent_dec  = ('e' | 'E') & neg? & digits_dec;
+```
+
 **Examples**:
 
 ```cte
 c1
 [
+    -3.14
     6.411e+9 // 6411000000
     6.411e9  // 6411000000
     6411e6   // 6411000000
@@ -301,6 +363,12 @@ Base-16 notation is used to represent [binary floating point numbers](ce-structu
 Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is denoted by the character `p`. The exponential portion is a signed base-10 number representing the power-of-2 to multiply the significand by. The exponent's sign character **CAN** be omitted if it's positive. Values **SHOULD** be normalized.
 
     value = significand × 2ᵉˣᵖᵒⁿᵉⁿᵗ
+
+```kbnf
+float_hex     = (neg? & prefix_hex & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
+float_special = (neg? & "inf") | "nan" | "snan";
+exponent_hex  = ('p' | 'P') & neg? & digits_dec); # digits_dec, not digits_hex
+```
 
 To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
 
@@ -352,6 +420,17 @@ Rules:
  * Numeric whitespace **CAN** only occur between two adjacent numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
 
+```kbnf
+digits_bin = digit_bin & ('_'? & digit_bin)*;
+digits_oct = digit_oct & ('_'? & digit_oct)*;
+digits_dec = digit_dec & ('_'? & digit_dec)*;
+digits_hex = digit_hex & ('_'? & digit_hex)*;
+digit_bin  = '0'~'1';
+digit_oct  = '0'~'7';
+digit_dec  = '0'~'9';
+digit_hex  = '0'~'9' | 'a'~'f' | 'A'~'F';
+```
+
 **Examples**:
 
 Valid:
@@ -382,6 +461,11 @@ Invalid:
 
 An [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
+```kbnf
+uid       = digit_hex{8} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{12};
+digit_hex = '0'~'9' | 'a'~'f' | 'A'~'F';
+```
+
 **Example**:
 
 ```cte
@@ -410,6 +494,12 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
  * BC years are prefixed with a dash (`-`).
 
+```kbnf
+date      = neg? & digit_dec+ & '-' & digit_dec{1~2} & '-' & digit_dec{1~2};
+digit_dec = '0'~'9';
+neg       = '-';
+```
+
 **Examples**:
 
 ```cte
@@ -434,6 +524,10 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 | Subseconds   |     N     |    `.`     |         0 | 999999999 |          0 |          9 |
 | Time Zone    |     N     |    `/`     |         - |         - |          - |          - |
 
+```kbnf
+time = digit_dec{1~2} & ':' & digit_dec{2} & ':' & digit_dec{2} & ('.' & digit_dec{1~9})? & time_zone?;
+```
+
 **Examples**:
 
 ```cte
@@ -453,6 +547,10 @@ c1
 
 A timestamp combines a date and a time, separated by a slash character (`/`).
 
+```kbnf
+timestamp = date & '/' & time;
+```
+
 **Examples**:
 
 ```cte
@@ -468,17 +566,27 @@ c1
 
 The time zone is an **OPTIONAL** field. If omitted, it is assumed to be `Zero` (UTC).
 
+```kbnf
+time_zone = tz_area_location | tz_coordinates | utc_offset;
+```
+
 #### Area/Location
 
-An area/location time zone is written in the form `Area/Location`.
+An area/location time zone is generally written in the form `Area/Location`, but there exist shorthands and legacy time zones that do not have a separator.
+
+```kbnf
+tz_area_location = '/' & (tz_a_l_component & ('/' & tz_a_l_component)* | tz_a_l_legacy);
+tz_a_l_component = ('a'~'z' | 'A'~'Z' | '.' | '-' | '_' )+;
+tz_a_l_legacy    = ('A'~'Z') & ('a'~'z' | 'A'~'Z' | '0'~'9' | '-' | '+' | '_' | '/')+;
+```
 
 **Examples**:
 
- * `E/Paris`
- * `Asia/Tokyo`
- * `America/Indiana/Petersburg` (which has area `America` and location `Indiana/Petersburg`)
- * `Etc/UTC` == `Zero` == `Z`
- * `L`
+ * `/E/Paris`
+ * `/Asia/Tokyo`
+ * `/America/Indiana/Petersburg` (which has area `America` and location `Indiana/Petersburg`)
+ * `/Etc/UTC` == `Zero` == `Z`
+ * `/L`
 
 #### Global Coordinates
 
@@ -487,10 +595,15 @@ Global coordinates are written as latitude and longitude in degrees to a precisi
  * Negative values **MUST** be prefixed with a dash character (`-`)
  * A period (`.`) is used as a fractional separator.
 
+```kbnf
+tz_coordinates = '/' & tz_coordinate & '/' & tz_coordinate;
+tz_coordinate  = neg? & digit_dec+ & ('.' & digit_dec+)?;
+```
+
 **Examples**:
 
- * `50.45/30.52` (Kyiv, near Independence Square)
- * `-13.53/-172.37` (Samoa)
+ * `/50.45/30.52` (Kyiv, near Independence Square)
+ * `/-13.53/-172.37` (Samoa)
 
 #### UTC
 
@@ -499,6 +612,10 @@ Simply omit the time zone entirely, which causes the time zone to default to UTC
 #### UTC Offset
 
 UTC offsets are recorded by using a `+` (for positive offsets) or `-` (for negative offsets) character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
+
+```kbnf
+utc_offset = ('+' | '-') & digit_dec{4};
+```
 
 **Examples (using timestamps)**:
 
@@ -530,55 +647,81 @@ RFC 3339 is a much simpler design for timestamped internet events, and is well s
 
 
 
-Array Types
------------
+String Types
+------------
 
-Array types are encoded in two primary forms: [general form](#general-array-encoding) and [string-like form](#string-like-arrays).
-
-
-### String-Like Arrays
-
-String-like arrays are a special convenience encoding for commonly used string types.
-
-A string-like array **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String-like arrays **CAN** contain [escape sequences](#escape-sequences).
-
-    "contents"
+String types **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String types **CAN** contain [escape sequences](#escape-sequences).
 
 [CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be [escaped](#escape-sequences).
 
-Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). TAB, CR and LF **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
+Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). CR (u+000d) **MUST** be escaped. TAB (u+0009) and LF (u+000a) **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
 
-#### String-Like Array Validation
+```kbnf
+string_type           = '"' & (char_string | escape_sequence)* & '"';
+char_string           = char_cte ! ('"' | '\\' | delimiter_lookalikes);
+char_cte              = unicode(Cf,L,M,N,P,S,Zs) | WSL;
+delimiter_lookalikes  = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
+                      | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
+                      | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
+                      | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
+                      | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+                      ;
+WSL                   = WS | LINE_END;
+WS                    = HT | SP;
+LINE_END              = CR? & LF;
+HT                    = '\{9}';
+LF                    = '\{a}';
+CR                    = '\{d}';
+SP                    = '\{20}';
+```
 
-Validating a string-like array in CTE is a multi-step process:
+**Example**:
+
+    "a string"
+
+
+### String Type Validation
+
+CTE decoders **MUST** validate string types in the following order (or effectively equivalent):
 
 1. Validate the raw string contents for [CTE safety](ce-structure.md#character-safety).
 2. Decode all [escape sequences](#escape-sequences) to produce a final string.
-3. [Validate the final string](ce-structure.md#string-like-arrays).
+3. [Validate the final string](ce-structure.md#string-types).
 
-#### Escape Sequences
 
-Within [string-like arrays](#string-like-arrays), escape sequences **CAN** be used to encode data that would otherwise be cumbersome or impossible to represent. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+### Escape Sequences
 
-| Escape Type Character    | Interpretation                          |
-| ------------------------ | --------------------------------------- |
-| u+0074 (`t`)             | horizontal tab (u+0009)                 |
-| u+006e (`n`)             | linefeed (u+000a)                       |
-| u+0072 (`r`)             | carriage return (u+000d)                |
-| u+0022 (`"`)             | double quote (u+0022)                   |
-| u+002a (`*`)             | asterisk (u+002a)                       |
-| u+002f (`/`)             | slash (u+002f)                          |
-| u+005c (`\`)             | backslash (u+005c)                      |
-| u+005f (`_`)             | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
-| u+002d (`-`)             | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
-| u+000a (linefeed)        | [continuation](#continuation)           |
-| u+000d (carriage return) | [continuation](#continuation)           |
-| u+002b (`{`)             | [Unicode codepoint](#unicode-codepoint) |
-| u+002e (`.`)             | [verbatim sequence](#verbatim-sequence) |
+Within [string types](#string-types), escape sequences **CAN** be used to encode data that would otherwise be cumbersome or impossible to represent in CTE. Backslash (`\`) acts as an escape sequence initiator, followed by an escape type character and possible payload data depending on the type:
+
+| Escape Type Character | Interpretation                          |
+| --------------------- | --------------------------------------- |
+| u+0074 (`t`)          | horizontal tab (u+0009)                 |
+| u+006e (`n`)          | linefeed (u+000a)                       |
+| u+0072 (`r`)          | carriage return (u+000d)                |
+| u+0022 (`"`)          | double quote (u+0022)                   |
+| u+002a (`*`)          | asterisk (u+002a)                       |
+| u+002f (`/`)          | slash (u+002f)                          |
+| u+005c (`\`)          | backslash (u+005c)                      |
+| u+005f (`_`)          | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
+| u+002d (`-`)          | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
+| u+000a (linefeed)     | [continuation](#continuation)           |
+| u+002b (`{`)          | [Unicode codepoint](#unicode-codepoint) |
+| u+002e (`.`)          | [verbatim sequence](#verbatim-sequence) |
+
+```kbnf
+escape_sequence       = '\\' & ('t' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' | '-'
+                      | escape_continuation | escape_codepoint | escape_verbatim)
+                      ;
+```
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by either LF (u+000a) or CR (u+000d) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by LF (u+000a) initiates a continuation.
+
+```kbnf
+escape_continuation = LINE_END & MAYBE_WS;
+MAYBE_WS            = WS*;
+```
 
 **Example**:
 
@@ -599,6 +742,10 @@ A Unicode codepoint escape sequence represents a single Unicode character as a h
 
 The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`). Leading zeroes are allowed for stylistic purposes (e.g. `\{0020}`).
 
+```kbnf
+escape_codepoint = '\\{' & digit_hex+ & '}';
+```
+
 **Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\{10000000000000020}` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
 
 **Examples**:
@@ -618,16 +765,21 @@ The escape sequence begins with a backslash (`\`) character, followed by an open
 A verbatim escape sequence works like a ["here document"](https://en.wikipedia.org/wiki/Here_document). It's composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence sentinel, which is a sequence of [CTE safe](ce-structure.md#character-safety), non-whitespace characters.
- * An unescaped whitespace terminator to terminate the end-of-sequence sentinel (either: SPACE `u+0020`, LF `u+000a`, or CR+LF `u+000d u+000a`).
+ * An end-of-sequence sentinel, which is a sequence of characters with the codepoint categories (L, M, N, P, S).
+ * An unescaped whitespace terminator (either SPACE `u+0020` or LF `u+000a`) to terminate the end-of-sequence sentinel.
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
+
+```kbnf
+escape_verbatim = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
+char_sentinel   = unicode(L,M,N,P,S);
+char_cte        = unicode(Cf,L,M,N,P,S,Zs) | WSL;
+```
 
 **Notes**:
 
  * Verbatim sequence sentinels are **case sensitive**.
  * TAB (`u+0009`) **MUST NOT** be used as an end-of-sequence sentinel terminator because any editor that converts tabs to spaces would effectively alter the verbatim contents (only the first space would terminate the sentinel; the other spaces would become part of the verbatim data).
- * CR alone (without a following LF) **MUST NOT** be used as an end-of-sequence sentinel terminator. Decoders **MUST NOT** stop processing a sentinel after only reading a CR character; they **MUST** verify that a LF follows and then discard the whole CR+LF sequence before stopping. Failure to do so would cause an LF to be included as part of the verbatim data.
  * A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
 
 **Example**:
@@ -663,9 +815,14 @@ Normal processing resumes after the terminator, so escape sequences
 are once again interpreted.
 ```
 
-#### String
+### String
 
-A string is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`).
+A string is the most basic [string type](#string-types), enclosed within double-quote delimiters (`"`).
+
+```kbnf
+string      = string_type;
+string_type = '"' & (char_string | escape_sequence)* & '"';
+```
 
 **Example**:
 
@@ -682,13 +839,17 @@ Line 2
 Line 3
 ```
 
-#### Resource Identifier
+### Resource Identifier
 
-A resource identifier is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
+A resource identifier is encoded as a [string type](#string-types) restricted to rfc3987, enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
 
-    @"contents"
+```kbnf
+resource_id  = '@' & rid_type;
+rid_type     = '"' & rid_contents & '"';
+rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
+```
 
-**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST NOT** be interpreted.
+**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST** be passed through unimpeded and uninterpreted.
 
 **Example**:
 
@@ -706,78 +867,75 @@ c1
 ```
 
 
-### General Array Encoding
 
-The general form of array encoding consists of an array type and array contents separated by [structural whitespace](#structural-whitespace), all enclosed between pipe (`|`) characters:
+Arrays
+------
 
-    |array-type array-contents|
+Arrays are enclosed within pipe (`|`) characters, containing the array type and the elements. Elements are either encoded individually ([whitespace](#structural-whitespace) separated), or as a [string](#string-types). The array type field **MUST** only contain characters that are allowed in [media types](https://www.rfc-editor.org/rfc/rfc6838#section-4.2).
 
-The array type field **MUST** only contain characters that are allowed in [media types](https://www.rfc-editor.org/rfc/rfc6838#section-4.2).
+The general form is:
 
-#### General Array Forms
-
-Depending on the kind of array, the contents are encoded in elemental form as [whitespace](#structural-whitespace)-separated elements, or in string form as quoted string contents following the same rules as [string-like arrays](#string-like-arrays):
-
-    |type elem1 elem2 elem3 ...|  // elemental form
-    |type "string-like contents"| // string form
-
-An empty array has a type but no contents:
-
-    |type|
+    |arraytype elem1 elem2 ...|   // Elemental form
+    |arraytype "string contents"| // String form
+    |arraytype|                   // Empty array
 
 In elemental form, array elements **CAN** be written using any valid representation of the array's element type and size:
 
 ```cte
 c1
 [
-    |i16 -1000 1000 15000|
+    |i16 -1000 1000 15000 0xff|
     |f32 1.5 3.914e+20 nan|
 ]
 ```
 
-#### General Array Types
+See [cte.kbnf](cte.kbnf) for details about arrays.
+
+
+### Array Types
 
 The following array types are available:
 
-| Denoted Type | Prefix? | Description                   | Encoding Kind          |
-| ------------ | ------- | ----------------------------- | ---------------------- |
-| `b`          |         | Bit                           | Element                |
-| `u8`         | b, o, x | 8-bit unsigned integer        | Element                |
-| `u16`        | b, o, x | 16-bit unsigned integer       | Element                |
-| `u32`        | b, o, x | 32-bit unsigned integer       | Element                |
-| `u64`        | b, o, x | 64-bit unsigned integer       | Element                |
-| `i8`         | b, o, x | 8-bit signed integer          | Element                |
-| `i16`        | b, o, x | 16-bit signed integer         | Element                |
-| `i32`        | b, o, x | 32-bit signed integer         | Element                |
-| `i64`        | b, o, x | 64-bit signed integer         | Element                |
-| `f16`        | x       | 16-bit binary float (bfloat)  | Element                |
-| `f32`        | x       | 32-bit binary float (ieee754) | Element                |
-| `f64`        | x       | 64-bit binary float (ieee754) | Element                |
-| `u`          |         | 128-bit UID                   | Element                |
-| `c<id>`      |         | [Custom Types](#custom-types) | Element or string-Like |
-| `<type/sub>` |         | [Media](#media)               | Element or string-Like |
+| Array Type   | Element Base | Description                   | Encoding Kind     |
+| ------------ | ------------ | ----------------------------- | ----------------- |
+| `b`          | 2            | Bit                           | Element           |
+| `u8`         | 2, 8, 10, 16 | 8-bit unsigned integer        | Element           |
+| `u16`        | 2, 8, 10, 16 | 16-bit unsigned integer       | Element           |
+| `u32`        | 2, 8, 10, 16 | 32-bit unsigned integer       | Element           |
+| `u64`        | 2, 8, 10, 16 | 64-bit unsigned integer       | Element           |
+| `i8`         | 2, 8, 10, 16 | 8-bit signed integer          | Element           |
+| `i16`        | 2, 8, 10, 16 | 16-bit signed integer         | Element           |
+| `i32`        | 2, 8, 10, 16 | 32-bit signed integer         | Element           |
+| `i64`        | 2, 8, 10, 16 | 64-bit signed integer         | Element           |
+| `f16`        | 10, 16       | 16-bit binary float (bfloat)  | Element           |
+| `f32`        | 10, 16       | 32-bit binary float (ieee754) | Element           |
+| `f64`        | 10, 16       | 64-bit binary float (ieee754) | Element           |
+| `u`          | 16           | 128-bit UID                   | Element           |
+| `c<id>`      | 16           | [Custom Types](#custom-types) | Element or string |
+| `<type/sub>` | 16           | [Media](#media)               | Element or string |
 
 Array types are [case-insensitive](#letter-case).
 
-If an array type field contains a slash (`/`), it **MUST** be interpreted as a media object (e.g. `|a/b "stuff"|` is a media object, regardless of whether media type "a/b" is known or [registered](http://www.iana.org/assignments/media-types/media-types.xhtml)). If the array type field does not contain a slash, it **MUST NOT** be interpreted as a media object.
+If an array type field contains a slash (`/`), it **MUST** be interpreted as a [media object](#media) (e.g. `|a/b "stuff"|` is a media object, regardless of whether media type "a/b" is known or [registered with IANA](http://www.iana.org/assignments/media-types/media-types.xhtml)). If the array type field does not contain a slash, it **MUST NOT** be interpreted as a [media object](#media).
 
 An invalid array type field is a [structural error](ce-structure#structural-errors).
 
-For some types, array elements **MAY** be represented in different bases by applying a prefix (`0b`, `0o`, `0x`) to the element.
+For array types that support multiple bases, elements **MAY** be represented in different bases by applying a base prefix (`0b` for base 2, `0o` for base 8, `0x` for base 16) to an element (provided the element type supports it).
 
-#### Implied Prefix
+CTE encoders **MUST** produce integer array elements in [base-10 notation](#base-10-notation) by default, and **MUST** produce binary floating point array elements in [base-16 notation](#base-16-notation) by default.
 
-**OPTIONALLY**, a suffix **CAN** be appended to the type specifier itself (if the type supports it) to indicate that _all_ element values **MUST** be considered to have an implicit prefix (except for [special float values](#special-floating-point-values)).
 
-| Type Suffix | Implied element prefix | Example                         |
-| ----------- | ---------------------- | ------------------------------- |
-| `b`         | `0b`                   | `\|u8b 10011010 00010101\|`     |
-| `o`         | `0o`                   | `\|i16o -7445 644\|`            |
-| `x`         | `0x`                   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
+#### Array Type Suffix
 
-CTE encoders **MUST NOT** use implied prefix arrays by default.
+**OPTIONALLY**, if an array type supports multiple element bases, a suffix **CAN** be appended to a numeric array type specifier to indicate the implied base of all elements in that array (provided the array element type supports such a base). When an implied base is specified, all elements **MUST** be interpreted in that base, and **MUST NOT** themselves have a base prefix.
 
-CTE encoders **MUST** output integer array elements of non-implied arrays in [base-10 notation](#base-10-notation) by default.
+| Array Type Suffix | Base | Example                         |
+| ----------------- | ---- | ------------------------------- |
+| `b`               | 2    | `\|u8b 10011010 00010101\|`     |
+| `o`               | 8    | `\|i16o -7445 644\|`            |
+| `x`               | 16   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
+
+CTE encoders **MUST NOT** produce array type suffixes by default, but **MAY** be configured to do so.
 
 **Examples**:
 
@@ -792,9 +950,16 @@ c1
 ]
 ```
 
-#### Bit Array Elements
+### Bit Array Elements
 
-Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array:
+Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array.
+
+```kbnf
+array_bit = '|' & ('b' | 'B') & (SOME_WSLC & (digit_bin & MAYBE_WSLC)+)? & MAYBE_WSLC & '|';
+digit_bin = '0'~'1';
+```
+
+**Examples**:
 
 ```cte
 c1
@@ -805,7 +970,7 @@ c1
 ]
 ```
 
-#### Float Array Elements
+### Float Array Elements
 
 Like their standalone counterparts, [special float values](#special-floating-point-values) are allowed in floating point arrays:
 
@@ -813,16 +978,27 @@ Like their standalone counterparts, [special float values](#special-floating-poi
 
 Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
-Float arrays **MAY** be written using the [implied prefix](#implied-prefix) `x`.
 
-CTE encoders **MUST NOT** use implied prefix arrays by default.
+### Media
 
-CTE encoders **MUST** output float array elements in [base-16 notation](#base-16-notation) by default.
+In media objects, the [array type field](#array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) contains the media data:
 
+```kbnf
+media            = '|' & media_type & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
+media_type       = media_type_word & '/' & media_type_word;
+media_type_word  = char_media_first & char_media*;
+hex_bytes        = hex_byte & (SOME_WSLC & hex_byte)*;
+hex_byte         = SOME_WSLC & digit_hex{2};
+char_media_first = 'a'~'z' | 'A'~'Z';
+char_media       = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
+                                 | '@' | ',' | ';' | ':'
+                                 | '\' | '"' | '/' | '['
+                                 | ']' | '?' | '='
+                                 )
+                 ;
+```
 
-#### Media
-
-In media objects, the [array type field](#general-array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) field contains the media data:
+**Examples**:
 
 ```cte
 c1
@@ -833,9 +1009,9 @@ c1
 ]
 ```
 
-##### Media Contents
+#### Media Contents
 
-If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#general-array-forms). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
+If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#string-types). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
 * As text: `|type/subtype "contents"|`
 * As binary: `|type/subtype 63 6f 6e 74 65 6e 74 73|`
@@ -867,9 +1043,14 @@ echo hello world
 ```
 
 
-#### Custom Types
+### Custom Types
 
 In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a [binary or textual form](#general-array-forms).
+
+```kbnf
+custom_type      = '|' & ('c' | 'C') & custom_type_code & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
+custom_type_code = digit_dec+;
+```
 
 The binary form is encoded like a u8x array (hex encoded byte elements).
 
@@ -898,6 +1079,11 @@ Container Types
 
 A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace) separated contents, and finishes with a closing square bracket `]`.
 
+```kbnf
+list    = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ]';
+objects = object & (SOME_WSLC object)*;
+```
+
 **Example**:
 
 ```cte
@@ -917,6 +1103,12 @@ A map begins with an opening curly brace `{`, contains [structural whitespace](#
 
 Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is a [structural error](ce-structure.md#structural-errors).
 
+```kbnf
+map             = '{' & MAYBE_WSLC & key_value_pairs? & MAYBE_WSLC & '}';
+key_value_pairs = key_value & (SOME_WSLC & key_value)*;
+key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
+```
+
 **Example**:
 
 ```cte
@@ -929,11 +1121,14 @@ c1
 ```
 
 
-### Struct Instance
+### Record
 
-A struct instance begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated template, and is terminated with `)`.
+A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record definition](#record-definition) defined elsewhere, followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [definition](#record-definition), and is terminated with `)`.
 
-There **MUST NOT** be whitespace at any point between the `@` and the opening `(` (e.g. `@my_struct(...)`, **not** `@ my_struct (...)`).
+```kbnf
+record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
+record            = '@' & identifier & '(' & MAYBE_WSLC & objects? & MAYBE_WSLC & ')';
+```
 
 **Example**:
 
@@ -952,6 +1147,10 @@ c1
 ### Edge
 
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
+
+```kbnf
+edge = '@{' & non_null_object & data_object & non_null_object & '}';
+```
 
 Edges are most commonly used in conjunction with [references](#local-reference) or [resource identifiers](#resource-identifier) to produce arbitrary graphs.
 
@@ -987,6 +1186,10 @@ c1
 ### Node
 
 A node begins with an opening parenthesis `(`, contains a value (object) followed by zero or more whitespace separated child nodes, and is closed with a closing parenthesis `)`.
+
+```kbnf
+node = '(' & data_object & (node | data_object)* & ')';
+```
 
 Nodes are recorded in **depth-first**, **node-right-left** order, which ensures that the textual representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
 
@@ -1033,6 +1236,10 @@ Other Types
 
 Null is encoded as `null`.
 
+```kbnf
+null = "null";
+```
+
 
 
 Pseudo-Objects
@@ -1041,6 +1248,10 @@ Pseudo-Objects
 ### Local Reference
 
 A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier](ce-structure.md#identifier) that has been defined elsewhere in the current document.
+
+```kbnf
+local_ref = '$' & identifier;
+```
 
 **Example**:
 
@@ -1062,9 +1273,13 @@ c1
 
 ### Remote Reference
 
-A remote reference is encoded as a [string-like array](#string-like-arrays), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
+A remote reference is encoded as a [string type](#string-types), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
-    $"https://www.ietf.org/"
+```kbnf
+remote_ref   = '$' & rid_type;
+rid_type     = '"' & rid_contents & '"';
+rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
+```
 
 **Example**:
 
@@ -1091,13 +1306,21 @@ Comments **MUST ONLY** contain [CTE safe](ce-structure.md#character-safety) char
 
 #### Single Line Comment
 
-A single line comment begins at the sequence `//` and continues until the next LF (u+000a) or CR (u+000d) is encountered. No checks for nested comments are performed.
+A single line comment begins at the sequence `//` and continues until the next LF (u+000a) is encountered. No checks for nested comments are performed.
+
+```kbnf
+comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
+```
 
 #### Multiline Comment
 
 A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-**Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string-like objects:
+```kbnf
+comment_multi_line    = "/*" & (char_cte* ! "*/") & "*/";
+```
+
+**Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string types:
 
 ```cte
 c1
@@ -1155,20 +1378,22 @@ Padding is not supported in CTE. An encoder **MUST** skip all padding when conve
 Structural Objects
 ------------------
 
-### Struct Template
+### Record Definition
 
-A struct template begins with `@`, followed by a template [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
+A record definition begins with `@`, followed by a definition [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
 
-There **MUST NOT** be whitespace at any point between the `@` and the opening `<` (e.g. `@my_struct<...>`, **not** `@ my_struct <...>`).
+```kbnf
+record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
+```
 
 **Example**:
 
 ```cte
 c1
-// Define a struct template:
+// Define a record definition:
 @dog<"name" "gender">
 
-// Now we can create instances of this struct:
+// Now we can create instances of this record:
 [
     @dog("Fido" "m")
     @dog("Fifi" "f")
@@ -1178,14 +1403,13 @@ c1
 
 ### Marker
 
-A marker sequence consists of the following, with no whitespace in between:
+A marker begins with `&`, followed by a marker [identifier](ce-structure.md#identifier), followed by `:`, followed by the marked data object.
 
- * `&` (the marker initiator)
- * A marker [identifier](ce-structure.md#identifier)
- * `:` (the marker separator)
- * The marked data object
+```kbnf
+marker = '&' & identifier & ':' & data_object;
+```
 
-Example:
+**Example**:
 
 ```cte
 c1
@@ -1216,7 +1440,7 @@ Letter Case
 
 A CTE document **MUST** be entirely in lower case, except in the following situations:
 
- * [String-like arrays](#string-like-arrays) **CAN** contain uppercase and lowercase characters.
+ * [String types](#string-types) **CAN** contain uppercase and lowercase characters.
  * [Comments](#comment) **CAN** contain uppercase and lowercase characters.
  * [Identifiers](ce-structure.md#identifier) **CAN** contain uppercase and lowercase characters.
  * [Time zones](#time-zones) are case sensitive, and usually contain uppercase and lowercase characters.
@@ -1262,15 +1486,15 @@ Structural Whitespace
 
 Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document.
 
-**Allowed structural whitespace characters:**
-
-| Code Point | Name                       |
-| ---------- | -------------------------- |
-| U+0009     | TAB (character tabulation) |
-| U+000A     | LF (line feed)             |
-| U+000D     | CR (carriage return)       |
-| U+0020     | SP (space)                 |
-
+```kbnf
+WSL      = WS | LINE_END;
+WS       = HT | SP;
+LINE_END = CR? & LF;
+HT       = '\{9}';
+LF       = '\{a}';
+CR       = '\{d}';
+SP       = '\{20}';
+```
 
 **Structural Whitespace CAN occur**:
 
@@ -1286,7 +1510,7 @@ Examples:
 
 **Structural Whitespace MUST occur**:
 
- * Between the [version specifier](#document-version-specifier) and the first object.
+ * Between the [version header](#version-header) and the first object.
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a primitive type array element type specifier and the array contents, and between array elements.
  * Between values in a [list](#list) (`["one""two"]` is a [structural error](ce-structure.md#structural-errors)).
@@ -1295,12 +1519,12 @@ Examples:
 
 **Whitespace MUST NOT occur**:
 
- * Before the [version specifier](#document-version-specifier).
+ * Before the [version header](#version-header).
  * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are [structural errors](ce-structure.md#structural-errors)).
  * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are [structural errors](ce-structure.md#structural-errors)).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is a [structural error](ce-structure.md#structural-errors)).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are [structural errors](ce-structure.md#structural-errors)). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
- * Anywhere between a [struct template](#struct-template) or [struct instance](#struct-instance) initiator and its opening character (`@ my_struct<>`, `@my_struct <>`, `@ my_struct()`,  and `@my_struct ()` are [structural errors](ce-structure.md#structural-errors)).
+ * Anywhere between a [record definition](#record-definition) or [record](#record) initiator and its opening character (`@ my_record<>`, `@my_record <>`, `@ my_record()`,  and `@my_record ()` are [structural errors](ce-structure.md#structural-errors)).
 
 
 
@@ -1380,14 +1604,14 @@ c1
 ```
 
 
-### Pretty Printing Struct Templates
+### Pretty Printing Record Definitions
 
-Struct templates **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
+Record definitions **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
 
 
-### Pretty Printing Struct Instances
+### Pretty Printing Records
 
-Struct instances **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
+Records **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
 
 
 ### Pretty Printing Nodes

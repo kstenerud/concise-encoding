@@ -64,7 +64,7 @@ Concise Encoding
 | Size Optimization     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ✔️    | ❌  |
 | Cyclic Data           | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Time Zones            | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
-| Templates             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
+| Records               | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ✔️      |   ❌   |  ❌   | ❌  |
 | Bin + Txt             | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ✔️    | ✔️   |
 | Versioned             | ✔️  | ✔️   |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ⚠️   |
 
@@ -73,7 +73,7 @@ Concise Encoding
  * **Size Optimization**: The most common types and values use less space.
  * **Cyclic Data**: Supports cyclic (recursive) data structures.
  * **Time Zones**: Time types support real time zones.
- * **Templates**: Templates for frequently occurring structures.
+ * **Records**: Records separate definition and instance for frequently occurring structures.
  * **Bin + Txt**: Has twin binary and text formats that are 1:1 convertible to each other without data loss.
  * **Versioned**: Documents are versioned to the specification they adhere to. (Ion supports versioning in the binary format only).
 
@@ -212,7 +212,7 @@ c1
 }
 ```
 
-### Struct Templates
+### Records (definition and instances)
 
 ```cte
 c1
