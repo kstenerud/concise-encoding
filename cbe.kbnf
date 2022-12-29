@@ -181,21 +181,21 @@ char_media            = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
 
 plane7f(v)            = u8(0x7f) & u8(v);
 
-s(bit_count, v)       = swapped(sint(bit_count, v));
+s(bit_count, v)       = swapped(8,sint(bit_count, v));
 s8(v)                 = s(8, v);
 s16(v)                = s(16, v);
 s32(v)                = s(32, v);
 s64(v)                = s(64, v);
-u(bit_count, v)       = swapped(uint(bit_count, v));
+u(bit_count, v)       = swapped(8,uint(bit_count, v));
 u1(v)                 = u(1, v);
 u4(v)                 = u(4, v);
 u8(v)                 = u(8, v);
 u16(v)                = u(16, v);
 u32(v)                = u(32, v);
 u64(v)                = u(64, v);
-f16(v)                = swapped(bfloat(v));
-f32(v)                = swapped(float(32, v));
-f64(v)                = swapped(float(64, v));
+f16(v)                = swapped(8,bfloat(v));
+f32(v)                = swapped(8,float(32, v));
+f64(v)                = swapped(8,float(64, v));
 uleb(v)               = uleb128(uint(0,v));
 
 bfloat(v: real): expression        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
