@@ -12,7 +12,7 @@ data_object           = (intangible_objects & SOME_WSLC)? ((marker? & data_type)
 keyable_object        = (intangible_objects & SOME_WSLC)? ((marker? & keyable_type) | local_reference);
 non_null_object       = (intangible_objects & SOME_WSLC)? ((marker? & non_null_data_type) | reference_type);
 intangible_objects    = intangible_type & (SOME_WSLC & intangible_type)*;
-objects               = object & (SOME_WSLC object)*;
+objects               = object & (SOME_WSLC & object)*;
 key_value             = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
 key_value_pairs       = key_value & (SOME_WSLC & key_value)*;
 
