@@ -132,7 +132,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [KBNF notation](https://github.com/kstenerud/kbnf/blob/master/kbnf.md) and excerpts from [cte.kbnf](cte.kbnf).
+ * Some explanations will include [Dogma notation](https://github.com/kstenerud/dogma/blob/master/dogma_v1.md) and excerpts from [cte.dogma](cte.dogma).
 
 
 
@@ -168,7 +168,7 @@ All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safe
 
 In [maps](#map) and map-like objects, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace).
 
-```kbnf
+```dogma
 key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
 key_value_pairs = key_value & (SOME_WSLC & key_value)*;
 ```
@@ -181,7 +181,7 @@ Lookalike characters are characters that look confusingly similar to [string typ
 
 | Lookalike      | Escaped             |
 | -------------- | ------------------- |
-| `"A” string"`  | `"A\{201d} string"` |
+| `"A” string"`  | `"A\[201d] string"` |
 
 The unicode.org site provides an [online utility](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) to find confusable characters.
 
@@ -193,12 +193,12 @@ The following is (as of 2022-06-09) a complete list of [lookalike Unicode charac
 | `"` | [02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) |
 | `\` | [2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
 
-```kbnf
-delimiter_lookalikes = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
-                     | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
-                     | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
-                     | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
-                     | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+```dogma
+delimiter_lookalikes = '\[02ba]' | '\[02dd]' | '\[02ee]' | '\[02f6]' | '\[05f2]' | '\[05f4]'
+                     | '\[1cd3]' | '\[201c]' | '\[201d]' | '\[201f]' | '\[2033]' | '\[2034]'
+                     | '\[2036]' | '\[2037]' | '\[2057]' | '\[20f2]' | '\[2216]' | '\[27cd]'
+                     | '\[29f5]' | '\[29f9]' | '\[3003]' | '\[3035]' | '\[31d4]' | '\[4e36]'
+                     | '\[fe68]' | '\[ff02]' | '\[ff3c]' | '\[1d20f]' | '\[1d23b]'
                      ;
 ```
 
@@ -210,10 +210,10 @@ The canonical line ending for CTE documents is LF (u+000a).
 * CTE decoders **MUST** accept LF and CRLF as line endings.
 * CTE encoders **MUST** output LF only as line endings.
 
-```kbnf
+```dogma
 LINE_END = CR? & LF;
-LF       = '\{a}';
-CR       = '\{d}';
+LF       = '\[a]';
+CR       = '\[d]';
 ```
 
 
@@ -231,7 +231,7 @@ Document Structure
 
 Documents begin with a [version header](#version-header), followed by [whitespace](#structural-whitespace), followed by possible [whitespace](#structural-whitespace) separated [intangible objects](ce-structure.md#intangible-objects), and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
 
-```kbnf
+```dogma
 document       = version_header & SOME_WSLC & data_object;
 version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
 ```
@@ -252,7 +252,7 @@ The version header is composed of the character `c` (u+0063), followed immediate
 
 **Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder **MUST** also accept uppercase `C` (u+0043). An encoder **MUST NOT** produce uppercase `C`.
 
-```kbnf
+```dogma
 version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
 ```
 
@@ -269,7 +269,7 @@ Numeric Types
 
 Represented by the text sequences `true` and `false`.
 
-```kbnf
+```dogma
 boolean = "true" | "false";
 ```
 
@@ -286,7 +286,7 @@ Integers **CAN** be specified in base 2, 8, 10, or 16. Bases other than 10 requi
 |  10  | Decimal     | 0123456789       |        | `900000`     | 900000             |
 |  16  | Hexadecimal | 0123456789abcdef | `0x`   | `0xdeadbeef` | 3735928559         |
 
-```kbnf
+```dogma
 integer      = neg? & uinteger;
 integer_bin  = neg? & uinteger_bin;
 integer_oct  = neg? & uinteger_oct;
@@ -337,7 +337,7 @@ The exponential portion of a base-10 number is denoted by the character `e`, fol
 
 Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, the 64-bit ieee754 floating point type can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
-```kbnf
+```dogma
 float_dec     = (neg? & digits_dec & (('.' & digits_dec & exponent_dec?) | exponent_dec)) | float_special;
 float_special = (neg? & "inf") | "nan" | "snan";
 exponent_dec  = ('e' | 'E') & neg? & digits_dec;
@@ -364,7 +364,7 @@ Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is 
 
     value = significand × 2ᵉˣᵖᵒⁿᵉⁿᵗ
 
-```kbnf
+```dogma
 float_hex     = (neg? & prefix_hex & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
 float_special = (neg? & "inf") | "nan" | "snan";
 exponent_hex  = ('p' | 'P') & neg? & digits_dec); # digits_dec, not digits_hex
@@ -420,7 +420,7 @@ Rules:
  * Numeric whitespace **CAN** only occur between two adjacent numeric digits (`0`-`9`, `a`-`f`, depending on numeric base).
  * Numeric whitespace characters **MUST** be ignored when decoding numeric values.
 
-```kbnf
+```dogma
 digits_bin = digit_bin & ('_'? & digit_bin)*;
 digits_oct = digit_oct & ('_'? & digit_oct)*;
 digits_dec = digit_dec & ('_'? & digit_dec)*;
@@ -461,7 +461,7 @@ Invalid:
 
 An [rfc4122 UUID string representation](https://tools.ietf.org/html/rfc4122).
 
-```kbnf
+```dogma
 uid       = digit_hex{8} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{12};
 digit_hex = '0'~'9' | 'a'~'f' | 'A'~'F';
 ```
@@ -494,7 +494,7 @@ A date is made up of the following fields, separated by a dash character (`-`):
 
  * BC years are prefixed with a dash (`-`).
 
-```kbnf
+```dogma
 date      = neg? & digit_dec+ & '-' & digit_dec{1~2} & '-' & digit_dec{1~2};
 digit_dec = '0'~'9';
 neg       = '-';
@@ -524,7 +524,7 @@ A time is made up of the following mandatory and **OPTIONAL** fields:
 | Subseconds   |     N     |    `.`     |         0 | 999999999 |          0 |          9 |
 | Time Zone    |     N     |    `/`     |         - |         - |          - |          - |
 
-```kbnf
+```dogma
 time = digit_dec{1~2} & ':' & digit_dec{2} & ':' & digit_dec{2} & ('.' & digit_dec{1~9})? & time_zone?;
 ```
 
@@ -547,7 +547,7 @@ c1
 
 A timestamp combines a date and a time, separated by a slash character (`/`).
 
-```kbnf
+```dogma
 timestamp = date & '/' & time;
 ```
 
@@ -566,7 +566,7 @@ c1
 
 The time zone is an **OPTIONAL** field. If omitted, it is assumed to be `Zero` (UTC).
 
-```kbnf
+```dogma
 time_zone = tz_area_location | tz_coordinates | utc_offset;
 ```
 
@@ -574,7 +574,7 @@ time_zone = tz_area_location | tz_coordinates | utc_offset;
 
 An area/location time zone is generally written in the form `Area/Location`, but there exist shorthands and legacy time zones that do not have a separator.
 
-```kbnf
+```dogma
 tz_area_location = '/' & (tz_a_l_component & ('/' & tz_a_l_component)* | tz_a_l_legacy);
 tz_a_l_component = ('a'~'z' | 'A'~'Z' | '.' | '-' | '_' )+;
 tz_a_l_legacy    = ('A'~'Z') & ('a'~'z' | 'A'~'Z' | '0'~'9' | '-' | '+' | '_' | '/')+;
@@ -595,7 +595,7 @@ Global coordinates are written as latitude and longitude in degrees to a precisi
  * Negative values **MUST** be prefixed with a dash character (`-`)
  * A period (`.`) is used as a fractional separator.
 
-```kbnf
+```dogma
 tz_coordinates = '/' & tz_coordinate & '/' & tz_coordinate;
 tz_coordinate  = neg? & digit_dec+ & ('.' & digit_dec+)?;
 ```
@@ -613,7 +613,7 @@ Simply omit the time zone entirely, which causes the time zone to default to UTC
 
 UTC offsets are recorded by using a `+` (for positive offsets) or `-` (for negative offsets) character as the time zone separator instead of the `/` character, with the hours and minutes given in the form `hhmm`.
 
-```kbnf
+```dogma
 utc_offset = ('+' | '-') & digit_dec{4};
 ```
 
@@ -656,23 +656,23 @@ String types **MUST** contain only valid UTF-8 characters. The contents are encl
 
 Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). CR (u+000d) **MUST** be escaped. TAB (u+0009) and LF (u+000a) **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
 
-```kbnf
+```dogma
 string_type           = '"' & (char_string | escape_sequence)* & '"';
 char_string           = char_cte ! ('"' | '\\' | delimiter_lookalikes);
 char_cte              = unicode(Cf,L,M,N,P,S,Zs) | WSL;
-delimiter_lookalikes  = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
-                      | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
-                      | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
-                      | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
-                      | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+delimiter_lookalikes  = '\[02ba]' | '\[02dd]' | '\[02ee]' | '\[02f6]' | '\[05f2]' | '\[05f4]'
+                      | '\[1cd3]' | '\[201c]' | '\[201d]' | '\[201f]' | '\[2033]' | '\[2034]'
+                      | '\[2036]' | '\[2037]' | '\[2057]' | '\[20f2]' | '\[2216]' | '\[27cd]'
+                      | '\[29f5]' | '\[29f9]' | '\[3003]' | '\[3035]' | '\[31d4]' | '\[4e36]'
+                      | '\[fe68]' | '\[ff02]' | '\[ff3c]' | '\[1d20f]' | '\[1d23b]'
                       ;
 WSL                   = WS | LINE_END;
 WS                    = HT | SP;
 LINE_END              = CR? & LF;
-HT                    = '\{9}';
-LF                    = '\{a}';
-CR                    = '\{d}';
-SP                    = '\{20}';
+HT                    = '\[9]';
+LF                    = '\[a]';
+CR                    = '\[d]';
+SP                    = '\[20]';
 ```
 
 **Example**:
@@ -708,7 +708,7 @@ Within [string types](#string-types), escape sequences **CAN** be used to encode
 | u+002b (`{`)          | [Unicode codepoint](#unicode-codepoint) |
 | u+002e (`.`)          | [verbatim sequence](#verbatim-sequence) |
 
-```kbnf
+```dogma
 escape_sequence       = '\\' & ('t' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' | '-'
                       | escape_continuation | escape_codepoint | escape_verbatim)
                       ;
@@ -718,7 +718,7 @@ escape_sequence       = '\\' & ('t' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' |
 
 A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by LF (u+000a) initiates a continuation.
 
-```kbnf
+```dogma
 escape_continuation = LINE_END & MAYBE_WS;
 MAYBE_WS            = WS*;
 ```
@@ -740,25 +740,25 @@ The above string is interpreted as:
 
 A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
 
-The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`). Leading zeroes are allowed for stylistic purposes (e.g. `\{0020}`).
+The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`). Leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
 
-```kbnf
+```dogma
 escape_codepoint = '\\{' & digit_hex+ & '}';
 ```
 
-**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\{10000000000000020}` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
+**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\[10000000000000020]` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
 
 **Examples**:
 
 | Sequence   | Digits | Codepoint | Character     |
 | ---------- | ------ | --------- | ------------- |
-| `\{c}`     | 1      | u+000c    | Form Feed     |
-| `\{df}`    | 2      | u+00df    | ß  (Eszett)   |
-| `\{101}`   | 3      | u+0101    | ā  (a macron) |
-| `\{2191}`  | 4      | u+2191    | ↑  (up arrow) |
-| `\{1f415}` | 5      | u+1f415   | 🐕 (dog)      |
+| `\[c]`     | 1      | u+000c    | Form Feed     |
+| `\[df]`    | 2      | u+00df    | ß  (Eszett)   |
+| `\[101]`   | 3      | u+0101    | ā  (a macron) |
+| `\[2191]`  | 4      | u+2191    | ↑  (up arrow) |
+| `\[1f415]` | 5      | u+1f415   | 🐕 (dog)      |
 
-`"gro\{df}e"` = `"große"`
+`"gro\[df]e"` = `"große"`
 
 #### Verbatim Sequence
 
@@ -770,7 +770,7 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
-```kbnf
+```dogma
 escape_verbatim = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
 char_sentinel   = unicode(L,M,N,P,S);
 char_cte        = unicode(Cf,L,M,N,P,S,Zs) | WSL;
@@ -819,7 +819,7 @@ are once again interpreted.
 
 A string is the most basic [string type](#string-types), enclosed within double-quote delimiters (`"`).
 
-```kbnf
+```dogma
 string      = string_type;
 string_type = '"' & (char_string | escape_sequence)* & '"';
 ```
@@ -843,7 +843,7 @@ Line 3
 
 A resource identifier is encoded as a [string type](#string-types) restricted to rfc3987, enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
 
-```kbnf
+```dogma
 resource_id  = '@' & rid_type;
 rid_type     = '"' & rid_contents & '"';
 rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
@@ -889,7 +889,7 @@ c1
 ]
 ```
 
-See [cte.kbnf](cte.kbnf) for details about arrays.
+See [cte.dogma](cte.dogma) for details about arrays.
 
 
 ### Array Types
@@ -954,7 +954,7 @@ c1
 
 Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array.
 
-```kbnf
+```dogma
 array_bit = '|' & ('b' | 'B') & (SOME_WSLC & (digit_bin & MAYBE_WSLC)+)? & MAYBE_WSLC & '|';
 digit_bin = '0'~'1';
 ```
@@ -983,7 +983,7 @@ Float array element values written in decimal form will be **silently rounded** 
 
 In media objects, the [array type field](#array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) contains the media data:
 
-```kbnf
+```dogma
 media            = '|' & media_type & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
 media_type       = media_type_word & '/' & media_type_word;
 media_type_word  = char_media_first & char_media*;
@@ -1047,7 +1047,7 @@ echo hello world
 
 In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a [binary or textual form](#general-array-forms).
 
-```kbnf
+```dogma
 custom_type      = '|' & ('c' | 'C') & custom_type_code & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
 custom_type_code = digit_dec+;
 ```
@@ -1079,7 +1079,7 @@ Container Types
 
 A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace) separated contents, and finishes with a closing square bracket `]`.
 
-```kbnf
+```dogma
 list    = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ]';
 objects = object & (SOME_WSLC object)*;
 ```
@@ -1103,7 +1103,7 @@ A map begins with an opening curly brace `{`, contains [structural whitespace](#
 
 Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is a [structural error](ce-structure.md#structural-errors).
 
-```kbnf
+```dogma
 map             = '{' & MAYBE_WSLC & key_value_pairs? & MAYBE_WSLC & '}';
 key_value_pairs = key_value & (SOME_WSLC & key_value)*;
 key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
@@ -1125,7 +1125,7 @@ c1
 
 A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record definition](#record-definition) defined elsewhere, followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [definition](#record-definition), and is terminated with `)`.
 
-```kbnf
+```dogma
 record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
 record            = '@' & identifier & '(' & MAYBE_WSLC & objects? & MAYBE_WSLC & ')';
 ```
@@ -1148,7 +1148,7 @@ c1
 
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
 
-```kbnf
+```dogma
 edge = '@{' & non_null_object & data_object & non_null_object & '}';
 ```
 
@@ -1187,7 +1187,7 @@ c1
 
 A node begins with an opening parenthesis `(`, contains a value (object) followed by zero or more whitespace separated child nodes, and is closed with a closing parenthesis `)`.
 
-```kbnf
+```dogma
 node = '(' & data_object & (node | data_object)* & ')';
 ```
 
@@ -1236,7 +1236,7 @@ Other Types
 
 Null is encoded as `null`.
 
-```kbnf
+```dogma
 null = "null";
 ```
 
@@ -1249,7 +1249,7 @@ Pseudo-Objects
 
 A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier](ce-structure.md#identifier) that has been defined elsewhere in the current document.
 
-```kbnf
+```dogma
 local_ref = '$' & identifier;
 ```
 
@@ -1275,7 +1275,7 @@ c1
 
 A remote reference is encoded as a [string type](#string-types), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
-```kbnf
+```dogma
 remote_ref   = '$' & rid_type;
 rid_type     = '"' & rid_contents & '"';
 rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
@@ -1308,7 +1308,7 @@ Comments **MUST ONLY** contain [CTE safe](ce-structure.md#character-safety) char
 
 A single line comment begins at the sequence `//` and continues until the next LF (u+000a) is encountered. No checks for nested comments are performed.
 
-```kbnf
+```dogma
 comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
 ```
 
@@ -1316,7 +1316,7 @@ comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
 
 A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
-```kbnf
+```dogma
 comment_multi_line    = "/*" & (char_cte* ! "*/") & "*/";
 ```
 
@@ -1382,7 +1382,7 @@ Structural Objects
 
 A record definition begins with `@`, followed by a definition [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
 
-```kbnf
+```dogma
 record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
 ```
 
@@ -1405,7 +1405,7 @@ c1
 
 A marker begins with `&`, followed by a marker [identifier](ce-structure.md#identifier), followed by `:`, followed by the marked data object.
 
-```kbnf
+```dogma
 marker = '&' & identifier & ':' & data_object;
 ```
 
@@ -1461,7 +1461,7 @@ A CTE decoder **MUST** accept documents such as:
 C1
 [
     |U8 0XF1 0X5A|
-    "Some text\Nwith a newline and a \{1F415}"
+    "Some text\Nwith a newline and a \[1F415]"
     0XFFFF
     0B10010101
     INF
@@ -1486,14 +1486,14 @@ Structural Whitespace
 
 Structural whitespace is a sequence of whitespace characters whose purpose is to separate objects in a CTE document (for example, separating objects in a list `[1 2 3 4]`). Such characters are not interpreted literally, are interchangeable, and can be repeated any number of times without altering the meaning or structure of the document.
 
-```kbnf
+```dogma
 WSL      = WS | LINE_END;
 WS       = HT | SP;
 LINE_END = CR? & LF;
-HT       = '\{9}';
-LF       = '\{a}';
-CR       = '\{d}';
-SP       = '\{20}';
+HT       = '\[9]';
+LF       = '\[a]';
+CR       = '\[d]';
+SP       = '\[20]';
 ```
 
 **Structural Whitespace CAN occur**:

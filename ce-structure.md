@@ -167,7 +167,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [KBNF notation](https://github.com/kstenerud/kbnf/blob/master/kbnf.md) for illustrative purposes only (this document doesn't describe actual encodings).
+ * Some explanations will include [Dogma notation](https://github.com/kstenerud/dogma/blob/master/dogma_v1.md) for illustrative purposes only (this document doesn't describe actual encodings).
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
@@ -1510,7 +1510,7 @@ The following table lists the CTE and identifier safety of Unicode characters ba
 | U+fff9 to U+fffb      |     -     |        -         |
 | U+e0001 to U+e0007f   |     -     |        -         |
 
-See [cte.kbnf](cte.kbnf) and [cbe.kbnf](cbe.kbnf) for formal definitions.
+See [cte.dogma](cte.dogma) and [cbe.dogma](cbe.dogma) for formal definitions.
 
 
 

@@ -1,7 +1,7 @@
-kbnf_v1 utf-8
+dogma_v1 utf-8
 - identifier  = cte_v1
 - description = Concise Text Encoding, version 1
-- kbnf_spec   = https://github.com/kstenerud/kbnf/blob/master/kbnf.md
+- dogma_specification = https://github.com/kstenerud/dogma/blob/master/dogma_v1.md
 
 document              = version_header & SOME_WSLC & data_object;
 
@@ -78,7 +78,7 @@ escape_sequence       = '\\' & ( 't'
                                )
                       ;
 escape_continuation   = LINE_END & MAYBE_WS;
-escape_codepoint      = '{' & digit_hex+ & '}';
+escape_codepoint      = '[' & digit_hex+ & ']';
 escape_verbatim       = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
 rid_type              = '"' & rid_contents & '"';
 
@@ -193,10 +193,10 @@ SOME_WSLC             = WSL & MAYBE_WSLC;
 WSL                   = WS | LINE_END;
 WS                    = HT | SP;
 LINE_END              = CR? & LF;
-HT                    = '\{9}';
-LF                    = '\{a}';
-CR                    = '\{d}';
-SP                    = '\{20}';
+HT                    = '\[9]';
+LF                    = '\[a]';
+CR                    = '\[d]';
+SP                    = '\[20]';
 
 # https://www.rfc-editor.org/rfc/rfc2045#section-5.1
 char_media_first      = 'a'~'z' | 'A'~'Z';
@@ -213,9 +213,9 @@ char_string           = char_cte ! ('"' | '\\' | delimiter_lookalikes);
 char_sentinel         = unicode(L,M,N,P,S);
 char_identifier       = unicode(Cf,L,M,N) | '_' | '.' | '-';
 char_cte              = unicode(Cf,L,M,N,P,S,Zs) | WSL;
-delimiter_lookalikes  = '\{02ba}' | '\{02dd}' | '\{02ee}' | '\{02f6}' | '\{05f2}' | '\{05f4}'
-                      | '\{1cd3}' | '\{201c}' | '\{201d}' | '\{201f}' | '\{2033}' | '\{2034}'
-                      | '\{2036}' | '\{2037}' | '\{2057}' | '\{20f2}' | '\{2216}' | '\{27cd}'
-                      | '\{29f5}' | '\{29f9}' | '\{3003}' | '\{3035}' | '\{31d4}' | '\{4e36}'
-                      | '\{fe68}' | '\{ff02}' | '\{ff3c}' | '\{1d20f}' | '\{1d23b}'
+delimiter_lookalikes  = '\[02ba]' | '\[02dd]' | '\[02ee]' | '\[02f6]' | '\[05f2]' | '\[05f4]'
+                      | '\[1cd3]' | '\[201c]' | '\[201d]' | '\[201f]' | '\[2033]' | '\[2034]'
+                      | '\[2036]' | '\[2037]' | '\[2057]' | '\[20f2]' | '\[2216]' | '\[27cd]'
+                      | '\[29f5]' | '\[29f9]' | '\[3003]' | '\[3035]' | '\[31d4]' | '\[4e36]'
+                      | '\[fe68]' | '\[ff02]' | '\[ff3c]' | '\[1d20f]' | '\[1d23b]'
                       ;

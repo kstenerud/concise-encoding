@@ -1,7 +1,7 @@
-kbnf_v1 utf-8
+dogma_v1 utf-8
 - identifier  = cbe_v1
 - description = Concise Binary Encoding, version 1
-- kbnf_spec   = https://github.com/kstenerud/kbnf/blob/master/kbnf.md
+- dogma_specification = https://github.com/kstenerud/dogma/blob/master/dogma_v1.md
 
 document              = version_header & data_object;
 
@@ -127,18 +127,18 @@ array_chunk_f64       = array_chunk(f64(~), array_chunk_f64);
 array_chunk_header    = uleb128(unsigned(0,bind(count, ~)) & u1(bind(continuation, ~));
 array_chunk(elem_type, chunk_type) = bind(header, array_chunk_header)
                                    & elem_type{header.count}
-                                   & when(header.continuation = 1, chunk_type)
+                                   & [header.continuation = 1: chunk_type;]
                                    ;
 
 array_bit             = u8(0x94) & array_bit_chunk;
 array_bit_chunk       = bind(header, array_chunk_header)
                       & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
-                      & when(header.continuation = 1, array_bit_chunk)
+                      & [header.continuation = 1: array_bit_chunk;]
                       ;
 
 array_chunk_string    = bind(header, array_chunk_header)
                       & sized(header.count*8, char_string*)
-                      & when(header.continuation = 1, array_chunk_string)
+                      & [header.continuation = 1: array_chunk_string;]
                       ;
 
 string                = string_short | string_chunked;
@@ -198,9 +198,9 @@ f32(v)                = swapped(8,float(32, v));
 f64(v)                = swapped(8,float(64, v));
 uleb(v)               = uleb128(uint(0,v));
 
-bfloat(v: real): expression        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
-uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
-compact_float(v: real): expression = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
-compact_date: expression           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
-compact_time: expression           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
-compact_timestamp: expression      = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
+bfloat(v: real): bits        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
+uleb128(v: bits): bits       = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+compact_float(v: real): bits = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
+compact_date: bits           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
+compact_time: bits           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
+compact_timestamp: bits      = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
