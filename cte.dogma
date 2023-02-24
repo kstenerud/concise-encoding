@@ -79,7 +79,7 @@ escape_sequence       = '\\' & ( 't'
                       ;
 escape_continuation   = LINE_END & MAYBE_WS;
 escape_codepoint      = '[' & digit_hex+ & ']';
-escape_verbatim       = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
+escape_verbatim       = '.' & var(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
 rid_type              = '"' & rid_contents & '"';
 
 array_type            = array_bit

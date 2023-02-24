@@ -771,7 +771,7 @@ A verbatim escape sequence works like a ["here document"](https://en.wikipedia.o
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
 ```dogma
-escape_verbatim = '.' & bind(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
+escape_verbatim = '.' & var(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
 char_sentinel   = unicode(L,M,N,P,S);
 char_cte        = unicode(Cf,L,M,N,P,S,Zs) | WSL;
 ```

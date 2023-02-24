@@ -351,8 +351,8 @@ int_64_negative       = uint(8,0x6f) & uint(64,~);
 Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type code.
 
 ```dogma
-int_variable_positive = uint(8,0x66) & uleb(bind(length, 1~)) & swapped(uint(length*8, ~));
-int_variable_negative = uint(8,0x67) & uleb(bind(length, 1~)) & swapped(uint(length*8, ~));
+int_variable_positive = uint(8,0x66) & uleb(var(length, 1~)) & swapped(uint(length*8, ~));
+int_variable_negative = uint(8,0x67) & uleb(var(length, 1~)) & swapped(uint(length*8, ~));
 uleb(v)               = uleb128(uint(0,v));
 uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
 ```
@@ -495,7 +495,7 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 Short form arrays have their length encoded in the lower 4 bits of the type code itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
 
 ```dogma
-array_short        = short_type_code & uint(4,bind(count, ~)) & array_element{count};
+array_short        = short_type_code & uint(4,var(count, ~)) & array_element{count};
 short_type_code    = uint(4,~);
 ```
 
@@ -513,8 +513,8 @@ In chunked form, array data is represented as a series of chunks of data, each w
 
 ```dogma
 array_chunked      = array_type_code & array_chunk+;
-array_chunk        = bind(header, array_chunk_header) & array_element{header.count};
-array_chunk_header = uleb128(unsigned(0,bind(count,~)) & array_continuation);
+array_chunk        = var(header, array_chunk_header) & array_element{header.count};
+array_chunk_header = uleb128(unsigned(0,var(count,~)) & array_continuation);
 array_continuation = uint(1,~);
 ```
 
@@ -531,7 +531,7 @@ In this example, the first chunk of the array has 14 elements and has a continua
 All array chunks are preceded by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded header containing the chunk length and a continuation bit (in the low bit of the fully decoded header). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
 ```dogma
-array_chunk_header = uleb128(unsigned(0,bind(count,~)) & array_continuation);
+array_chunk_header = uleb128(unsigned(0,var(count,~)) & array_continuation);
 array_continuation = uint(1,~);
 ```
 
@@ -602,18 +602,18 @@ The chunked string encoding form is:
 
 ```dogma
 string_chunked     = u8(0x90) & array_chunk_string;
-array_chunk_string = bind(header, array_chunk_header)
+array_chunk_string = var(header, array_chunk_header)
                    & sized(header.count*8, char_string*)
                    & [header.continuation = 1: array_chunk_string;]
                    ;
-array_chunk_header = uleb128(unsigned(0,bind(count, ~)) & u1(bind(continuation, ~));
+array_chunk_header = uleb128(unsigned(0,var(count, ~)) & u1(var(continuation, ~));
 char_string        = unicode(C,L,M,N,P,S,Z);
 ```
 
 Strings also have a [short form](#short-form) length encoding using types 0x80-0x8f:
 
 ```dogma
-string_short = u4(8) & u4(bind(count, ~)) & sized(count*8, char_string*);
+string_short = u4(8) & u4(var(count, ~)) & sized(count*8, char_string*);
 ```
 
 **Examples**:
@@ -644,7 +644,7 @@ Bit array elements are stored in little endian bit order (the first element is s
 
 ```dogma
 array_bit       = u8(0x94) & array_bit_chunk;
-array_bit_chunk = bind(header, array_chunk_header)
+array_bit_chunk = var(header, array_chunk_header)
                 & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
                 & [header.continuation = 1: array_bit_chunk;]
                 ;
@@ -661,7 +661,7 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1
 A media object has type [`7f f3`] and is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
 ```dogma
-media            = plane7f(0xf3) & uleb(bind(mt_length, 1~)) & sized(mt_length*8, media_type) & array_chunk_u8;
+media            = plane7f(0xf3) & uleb(var(mt_length, 1~)) & sized(mt_length*8, media_type) & array_chunk_u8;
 media_type       = media_type_word & '/' & media_type_word;
 media_type_word  = char_media_first & char_media*;
 char_media_first = 'a'~'z' | 'A'~'Z';
@@ -773,7 +773,7 @@ A record has type code [`96`], followed by a definition [identifier](#identifier
 
 ```dogma
 record        = u8(0x96) & identifier & object* & end_container;
-identifier    = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+identifier    = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 end_container = u8(0x9b);
 ```
 
@@ -849,7 +849,7 @@ A local reference has type code [`0x77`], followed by a marker [identifier](#ide
 
 ```dogma
 local_reference = u8(0x77) & identifier;
-identifier      = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+identifier      = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 ```
 
 **Examples**:
@@ -905,7 +905,7 @@ A record definition has type code [`7f f1`], followed by a definition [identifie
 
 ```dogma
 record_definition = plane7f(0xf1) & identifier & keyable_object* & end_container;
-identifier        = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+identifier        = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 end_container     = u8(0x9b);
 ```
 
@@ -941,7 +941,7 @@ Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128
 The length field **CANNOT** be 0.
 
 ```dogma
-identifier      = uleb(bind(length, 1~)) & sized(length*8, char_identifier*);
+identifier      = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 char_identifier = unicode(Cf,L,M,N) | '_' | '.' | '-';
 ```
 
