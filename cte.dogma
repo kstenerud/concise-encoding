@@ -110,7 +110,7 @@ array_int32           = '|' & ('i' | 'I') & '32' & array_elems_int? & MAYBE_WSLC
 array_int32b          = '|' & ('i' | 'I') & '32' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
 array_int32o          = '|' & ('i' | 'I') & '32' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
 array_int32x          = '|' & ('i' | 'I') & '32' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
-array_int64           = '|' & ('i' | 'I') & '64' & array_elems_int? & MAYBE_WSLC & |';
+array_int64           = '|' & ('i' | 'I') & '64' & array_elems_int? & MAYBE_WSLC & '|';
 array_int64b          = '|' & ('i' | 'I') & '64' & ('b' | 'B') & array_elems_int_bin? & MAYBE_WSLC & '|';
 array_int64o          = '|' & ('i' | 'I') & '64' & ('o' | 'O') & array_elems_int_oct? & MAYBE_WSLC & '|';
 array_int64x          = '|' & ('i' | 'I') & '64' & ('x' | 'X') & array_elems_int_hex? & MAYBE_WSLC & '|';
@@ -158,7 +158,7 @@ custom_type_code      = digit_dec+;
 hex_bytes             = hex_byte & (SOME_WSLC & hex_byte)*;
 hex_byte              = SOME_WSLC & digit_hex{2};
 
-list                  = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ]';
+list                  = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ']';
 map                   = '{' & MAYBE_WSLC & key_value_pairs? & MAYBE_WSLC & '}';
 record_definition     = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
 record                = '@' & identifier & '(' & MAYBE_WSLC & objects? & MAYBE_WSLC & ')';
@@ -202,7 +202,7 @@ SP                    = '\[20]';
 char_media_first      = 'a'~'z' | 'A'~'Z';
 char_media            = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
                                       | '@' | ',' | ';' | ':'
-                                      | '\' | '"' | '/' | '['
+                                      | '\\' | '"' | '/' | '['
                                       | ']' | '?' | '='
                                       )
                       ;

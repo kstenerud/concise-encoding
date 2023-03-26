@@ -3,7 +3,7 @@ dogma_v1 utf-8
 - description = Concise Binary Encoding, version 1
 - dogma_specification = https://github.com/kstenerud/dogma/blob/master/dogma_v1.md
 
-document              = version_header & data_object;
+document              = byte_order(lsb, version_header & data_object);
 
 version_header        = u8(0x81) & uleb(version);
 version               = 1;
@@ -49,13 +49,13 @@ int_32_positive       = u8(0x6c) & u32(~);
 int_32_negative       = u8(0x6d) & u32(~);
 int_64_positive       = u8(0x6e) & u64(~);
 int_64_negative       = u8(0x6f) & u64(~);
-int_variable_positive = u8(0x66) & uleb(var(length, 1~)) & u(length*8, ~);
-int_variable_negative = u8(0x67) & uleb(var(length, 1~)) & u(length*8, ~);
+int_variable_positive = u8(0x66) & uleb(var(length, 1~)) & ordered(uint(length*8, ~));
+int_variable_negative = u8(0x67) & uleb(var(length, 1~)) & ordered(uint(length*8, ~));
 decimal_float         = u8(0x76) & compact_float(~);
 binary_float_16       = u8(0x70) & f16(~);
 binary_float_32       = u8(0x71) & f32(~);
 binary_float_64       = u8(0x72) & f64(~);
-uid                   = u8(0x65) & uint(128, ~}; # Note: big endian
+uid                   = u8(0x65) & uint(128, ~); # Note: big endian
 
 date                  = u8(0x7a) & compact_date;
 time                  = u8(0x7b) & compact_time;
@@ -124,7 +124,7 @@ array_short_f64       = u8(0x7f) & u4(10) & u4(var(count, ~)) & f64(~){count};
 array_chunked_f64     = plane7f(0xea) & array_chunk_f64;
 array_chunk_f64       = array_chunk(f64(~), array_chunk_f64);
 
-array_chunk_header    = uleb128(unsigned(0,var(count, ~)) & u1(var(continuation, ~));
+array_chunk_header    = uleb128(unsigned(0,var(count, ~)) & u1(var(continuation, ~)));
 array_chunk(elem_type, chunk_type) = var(header, array_chunk_header)
                                    & elem_type{header.count}
                                    & [header.continuation = 1: chunk_type;]
@@ -132,7 +132,7 @@ array_chunk(elem_type, chunk_type) = var(header, array_chunk_header)
 
 array_bit             = u8(0x94) & array_bit_chunk;
 array_bit_chunk       = var(header, array_chunk_header)
-                      & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
+                      & aligned(8, reversed(1, u1(~){header.count}), u1(0)*)
                       & [header.continuation = 1: array_bit_chunk;]
                       ;
 
@@ -174,33 +174,31 @@ char_identifier       = unicode(Cf,L,M,N) | '_' | '.' | '-';
 char_media_first      = 'a'~'z' | 'A'~'Z';
 char_media            = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
                                      | '@' | ',' | ';' | ':'
-                                     | '\' | '"' | '/' | '['
+                                     | '\\' | '"' | '/' | '['
                                      | ']' | '?' | '='
                                      )
                       ;
 
 plane7f(v)            = u8(0x7f) & u8(v);
 
-s(bit_count, v)       = swapped(8,sint(bit_count, v));
-s8(v)                 = s(8, v);
-s16(v)                = s(16, v);
-s32(v)                = s(32, v);
-s64(v)                = s(64, v);
-u(bit_count, v)       = swapped(8,uint(bit_count, v));
-u1(v)                 = u(1, v);
-u4(v)                 = u(4, v);
-u8(v)                 = u(8, v);
-u16(v)                = u(16, v);
-u32(v)                = u(32, v);
-u64(v)                = u(64, v);
-f16(v)                = swapped(8,bfloat(v));
-f32(v)                = swapped(8,float(32, v));
-f64(v)                = swapped(8,float(64, v));
+s8(v)                 = sint(8, v);
+s16(v)                = ordered(sint(16, v));
+s32(v)                = ordered(sint(32, v));
+s64(v)                = ordered(sint(64, v));
+u1(v)                 = uint(1, v);
+u4(v)                 = uint(4, v);
+u8(v)                 = uint(8, v);
+u16(v)                = ordered(uint(16, v));
+u32(v)                = ordered(uint(32, v));
+u64(v)                = ordered(uint(64, v));
+f16(v)                = ordered(bfloat(v));
+f32(v)                = ordered(float(32, v));
+f64(v)                = ordered(float(64, v));
 uleb(v)               = uleb128(uint(0,v));
 
-bfloat(v: real): bits        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
-uleb128(v: bits): bits       = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
-compact_float(v: real): bits = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
-compact_date: bits           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
-compact_time: bits           = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
-compact_timestamp: bits      = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
+bfloat(v: number): bits        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
+uleb128(v: bits): bits         = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+compact_float(v: number): bits = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
+compact_date: bits             = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
+compact_time: bits             = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
+compact_timestamp: bits        = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
