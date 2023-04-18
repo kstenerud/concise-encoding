@@ -2,7 +2,7 @@ dogma_v1 utf-8
 - identifier  = cte_v1
 - description = Concise Text Encoding, version 1
 - reference   = https://concise-encoding.org
-- dogma       = https://github.com/kstenerud/dogma/blob/master/dogma_v1.md
+- dogma       = https://github.com/kstenerud/dogma/blob/master/v1/dogma_v1.0.md
 
 document              = version_header & SOME_WSLC & data_object;
 
