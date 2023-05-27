@@ -237,7 +237,7 @@ c1
                 <code>
 c1
 {
-    "string" = "Strings support escape sequences: \n \t \{1f415}"
+    "string" = "Strings support escape sequences: \n \t \[1f415]"
     "url"    = @"https://example.com/"
     "email"  = @"mailto:me@somewhere.com"
 }
@@ -259,7 +259,7 @@ c1
     "time"      = 18:04:00.948/Europe/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
-    "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+    "media"     = |.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
                     65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
                 </code>
@@ -296,15 +296,15 @@ c1
                 </div>
             </div>
             <br/>
-            Records are composed of templates and instances, and are particularly useful for tabular data because you don't have to repeat the keys for every entry.
+            Records are composed of types and instances, and are particularly useful for tabular data because you don't have to repeat the keys for every entry.
             <pre>
                 <code>
 c1
+@vehicle&lt;"make" "model" "drive" "sunroof"&gt; // record type
 [
-    @vehicle&lt;"make"   "model"    "drive" "sunroof"&gt; // template
-    @vehicle("Ford"   "Explorer" "4wd"   true     ) // instance
-    @vehicle("Toyota" "Corolla"  "fwd"   false    ) // instance
-    @vehicle("Honda"  "Civic"    "fwd"   false    ) // instance
+    @vehicle{"Ford"   "Explorer" "4wd" true } // instance
+    @vehicle{"Toyota" "Corolla"  "fwd" false} // instance
+    @vehicle{"Honda"  "Civic"    "fwd" false} // instance
 ]
                 </code>
             </pre>
