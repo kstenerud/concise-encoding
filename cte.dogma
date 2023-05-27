@@ -95,7 +95,7 @@ edge                   = '@(' & WSLC* & non_null_object & WSLC+ & data_object & 
 key_value              = keyable_object & WSLC* & '=' & WSLC* & data_object;
 
 # Whitespace between elements is optional for bit array
-array_bit              = '|' & B & WSL & items(elem_type, WSL?) & '|';
+array_bit              = '|' & B & WSL & items(digit_bin, WSL?) & '|';
 array_int8             = array(I & '8',      integer);
 array_int16            = array(I & '16',     integer);
 array_int32            = array(I & '32',     integer);
@@ -201,7 +201,7 @@ char_identifier_next   = unicode(Cf,L,M,N) | '_' | '.' | '-';
 char_cte               = unicode(Cf,L,M,N,P,S,Zs) | WSL;
 delimiter_lookalikes   = '\[02ba]' | '\[02dd]' | '\[02ee]' | '\[02f6]' | '\[05f2]' | '\[05f4]'
                        | '\[1cd3]' | '\[201c]' | '\[201d]' | '\[201f]' | '\[2033]' | '\[2034]'
-                       | '\[2036]' | '\[2037]' | '\[2057]' | '\[20f2]' | '\[2216]' | '\[27cd]'
+                       | '\[2036]' | '\[2037]' | '\[2057]' | '\[2f02]' | '\[2216]' | '\[27cd]'
                        | '\[29f5]' | '\[29f9]' | '\[3003]' | '\[3035]' | '\[31d4]' | '\[4e36]'
                        | '\[fe68]' | '\[ff02]' | '\[ff3c]' | '\[1d20f]' | '\[1d23b]'
                        ;

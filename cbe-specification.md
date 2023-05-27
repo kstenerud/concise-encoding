@@ -77,7 +77,7 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Record Definition](#record-definition)
+    - [Record Type](#record-type)
     - [Marker](#marker)
     - [Identifier](#identifier)
   - [Empty Document](#empty-document)
@@ -108,7 +108,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [Dogma notation](https://github.com/kstenerud/dogma/blob/master/dogma_v1.md) and excerpts from [cbe.dogma](cbe.dogma).
+ * Some explanations will include excerpts from [cbe.dogma](cbe.dogma) (in [Dogma notation](https://dogma-lang.org/)).
 
 
 
@@ -124,10 +124,17 @@ The binary format aims for compactness and machine processing efficiency while m
 Document Structure
 ------------------
 
-Documents begin with a [version header](#version-header), followed by possible [intangible](ce-structure.md#intangible-objects) objects, and then ultimately followed by one (and only one) top-level [data object](ce-structure.md#data-objects).
+A CBE document is composed of the following parts:
+
+ 1. A [version header](#version-header)
+ 2. A series of optional [intangible objects](ce-structure.md#intangible-objects)
+ 3. A top-level [data object](ce-structure.md#data-objects)
 
 ```dogma
-document = version_header & data_object;
+document = version_header
+         & (padding | record_type)*
+         & (data_object ! local_reference)
+         ;
 ```
 
 
@@ -138,9 +145,9 @@ Version Header
 The version header is composed of the byte [`81`], followed by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded version number representing which version of this specification the document adheres to.
 
 ```dogma
-version_header                     = uint(8,0x81) & uleb_int(version);
-uleb_int(v)                        = uleb128(uint(0,v));
-uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+version_header         = u8(0x81) & version;
+version                = uleb128(uint(~,~));
+uleb128(v: bits): bits = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
 ```
 
 **Example**:
@@ -152,16 +159,16 @@ uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Uns
 Object Encoding
 ---------------
 
-A CBE document is byte-oriented. All objects are composed of a type code (1 or 2 bytes long) and a possible payload that will always end on an 8-bit boundary. Variable length types begin with length determining fields, and all types always end deteriministically at an 8-bit boundary with no lookahead required. This ensures that the end of a CBE document can always be deterministically found with no scan-ahead or backtracking.
-
-Containers and arrays can always be built incrementally (you don't need to know their final size before you start encoding their contents).
-
-The types are structured such that the most commonly used types and values encode into the smallest space while still remaining zero-copy friendly in most places on little endian systems.
+ * All objects are composed of a 1 or 2-byte type code and a possible payload.
+ * All objects end on an 8-bit boundary.
+ * All variable-length discrete types begin with length fields.
+ * All containers and arrays can be built incrementally (you don't need to know their final size before you start encoding their contents).
+ * The most commonly used types and values encode into the smallest space while still remaining zero-copy friendly in most places on little endian systems.
 
 
 ### Type Code
 
-All objects begin with a type code, followed by a possible payload (depending on the type).
+All objects begin with a type code, followed by a possible payload (depending on the type). Of note, the integers from -100 to 100 are encoded directly into the type code with no payload.
 
 | Hex | Type                                              | Payload                                  |
 | --- | ------------------------------------------------- | ---------------------------------------- |
@@ -285,7 +292,7 @@ Types from plane 7f begin with the type code prefix [`7f`], followed by their ty
 |  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
 | ... | [RESERVED](#reserved)                           |       |                                           |
 |  f0 | [Marker](#marker)                               |    1  | (byte length) (UTF-8 data)                |
-|  f1 | [Record Definition](#record-definition)         |    ∞  | (ID) (key) ... (end container)            |
+|  f1 | [Record Type](#record-type)                     |    ∞  | (ID) (key) ... (end container)            |
 |  f2 | [Remote Reference](#remote-reference)           |    1  | (chunk header) (UTF-8 data) ...           |
 |  f3 | [Media](#media)                                 |    ∞  | (byte length) (UTF-8 data) (chunk header) (bytes) ... |
 | ... | [RESERVED](#reserved)                           |       |                                           |
@@ -298,6 +305,11 @@ Numeric Types
 ### Boolean
 
 Represents true or false.
+
+```dogma
+false = u8(0x78);
+true  = u8(0x79);
+```
 
 **Examples**:
 
@@ -326,7 +338,7 @@ Integers are encoded in three possible ways:
 Values from -100 to +100 ("small int") are encoded into the type code itself, and can be read directly as 8-bit signed two's complement integers.
 
 ```dogma
-int_small = sint(8,-100~100);
+int_small = s8(-100~100);
 ```
 
 #### Fixed Width Integer
@@ -334,14 +346,14 @@ int_small = sint(8,-100~100);
 Fixed width integers are stored as their absolute values in widths of 8, 16, 32, and 64 bits (in little endian byte order). The type code holds the sign of the integer.
 
 ```dogma
-int_8_positive        = uint(8,0x68) & uint(8,~);
-int_8_negative        = uint(8,0x69) & uint(8,~);
-int_16_positive       = uint(8,0x6a) & uint(16,~);
-int_16_negative       = uint(8,0x6b) & uint(16,~);
-int_32_positive       = uint(8,0x6c) & uint(32,~);
-int_32_negative       = uint(8,0x6d) & uint(32,~);
-int_64_positive       = uint(8,0x6e) & uint(64,~);
-int_64_negative       = uint(8,0x6f) & uint(64,~);
+int_8_positive  = u8(0x68) & u8(~);
+int_8_negative  = u8(0x69) & u8(~);
+int_16_positive = u8(0x6a) & u16(~);
+int_16_negative = u8(0x6b) & u16(~);
+int_32_positive = u8(0x6c) & u32(~);
+int_32_negative = u8(0x6d) & u32(~);
+int_64_positive = u8(0x6e) & u64(~);
+int_64_negative = u8(0x6f) & u64(~);
 ```
 
 **Note**: Because the sign is encoded into the type code, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments. The application might choose to discard the sign information in this case, but the codec **MUST** preserve it (the most common approach is to pass it to the application as a floating point type).
@@ -351,10 +363,11 @@ int_64_negative       = uint(8,0x6f) & uint(64,~);
 Variable width integers are encoded as a block of little endian ordered bytes, prefixed with a length header. The length header is encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128), denoting how many bytes of integer data follows. The sign is encoded in the type code.
 
 ```dogma
-int_variable_positive = uint(8,0x66) & uleb(var(length, 1~)) & swapped(uint(length*8, ~));
-int_variable_negative = uint(8,0x67) & uleb(var(length, 1~)) & swapped(uint(length*8, ~));
-uleb(v)               = uleb128(uint(0,v));
-uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
+int_vlength_positive   = u8(0x66) & var(pref,length_prefix) & ordered(uint(pref.length*8, ~));
+int_vlength_negative   = u8(0x67) & var(pref,length_prefix) & ordered(uint(pref.length*8, ~));
+length_prefix          = uleb(var(length, 1~));
+uleb(v)                = uleb128(uint(0,v));
+uleb128(v: bits): bits = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";
 ```
 
 **Examples**:
@@ -374,8 +387,8 @@ uleb128(v: expression): expression = """https://en.wikipedia.org/wiki/LEB128#Uns
 Decimal floating point values are stored in [Compact Float](https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md) format.
 
 ```dogma
-decimal_float = uint(8,0x76) & compact_float(~);
-compact_float(v: real): expression = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
+decimal_float                  = u8(0x76) & compact_float(~);
+compact_float(v: number): bits = """https://github.com/kstenerud/compact-float/blob/master/compact-float-specification.md""";
 ```
 
 **Examples**:
@@ -389,10 +402,10 @@ compact_float(v: real): expression = """https://github.com/kstenerud/compact-flo
 Binary floating point values are stored in 32 or 64-bit [ieee754 binary floating point](https://en.wikipedia.org/wiki/IEEE_754) format, or in 16-bit [bfloat](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) format, in little endian byte order.
 
 ```dogma
-binary_float_16             = uint(8,0x70) & swapped(bfloat(~));
-binary_float_32             = uint(8,0x71) & swapped(float(32,~));
-binary_float_64             = uint(8,0x72) & swapped(float(64,~));
-bfloat(v: real): expression = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
+binary_float_16         = u8(0x70) & f16(~);
+binary_float_32         = u8(0x71) & f32(~);
+binary_float_64         = u8(0x72) & f64(~);
+bfloat(v: number): bits = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
 ```
 
 **Examples**:
@@ -431,8 +444,8 @@ Temporal types are stored in [compact time](https://github.com/kstenerud/compact
 Dates are stored in [compact date](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date) format.
 
 ```dogma
-date                     = u8(0x7a) & compact_date;
-compact_date: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
+date               = u8(0x7a) & compact_date;
+compact_date: bits = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time""";
 ```
 
 **Example**:
@@ -445,8 +458,8 @@ compact_date: expression = """https://github.com/kstenerud/compact-time/blob/mas
 Time values are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-time) format.
 
 ```dogma
-time                     = u8(0x7b) & compact_time;
-compact_time: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
+time               = u8(0x7b) & compact_time;
+compact_time: bits = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-date""";
 ```
 
 **Example**:
@@ -459,8 +472,8 @@ compact_time: expression = """https://github.com/kstenerud/compact-time/blob/mas
 Timestamps are stored in [compact timestamp](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp) format.
 
 ```dogma
-timestamp                     = u8(0x7c) & compact_timestamp;
-compact_timestamp: expression = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
+timestamp               = u8(0x7c) & compact_timestamp;
+compact_timestamp: bits = """https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#compact-timestamp""";
 ```
 
 **Example**:
@@ -477,12 +490,12 @@ An array is a contiguous sequence of identically sized elements, stored in lengt
 
 ### Array Elements
 
-Array elements have a fixed type and size, determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte).
+Array elements have a fixed type and size, determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte, padded to an 8-bit boundary).
 
 
 ### Array Forms
 
-All arrays have a [chunked form](#chunked-form), and many also have a [short form](#short-form).
+All array types have a [chunked form](#chunked-form), and many also have a [short form](#short-form).
 
 **Examples**:
 
@@ -495,8 +508,13 @@ All arrays have a [chunked form](#chunked-form), and many also have a [short for
 Short form arrays have their length encoded in the lower 4 bits of the type code itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
 
 ```dogma
-array_short        = short_type_code & uint(4,var(count, ~)) & array_element{count};
-short_type_code    = uint(4,~);
+array_short_uid   = u8(0x7f) & u4(0) & array_short(uid(~));
+array_short_s8    = u8(0x7f) & u4(1) & array_short(s8(~));
+array_short_u16   = u8(0x7f) & u4(2) & array_short(u16(~));
+array_short_s16   = u8(0x7f) & u4(3) & array_short(s16(~));
+array_short_u32   = u8(0x7f) & u4(4) & array_short(u32(~));
+...
+array_short(type) = u4(var(count, ~)) & type{count};
 ```
 
 CBE encoders **MUST** use the short form whenever it is possible to do so, unless explicitly configured to do otherwise.
@@ -512,10 +530,17 @@ CBE encoders **MUST** use the short form whenever it is possible to do so, unles
 In chunked form, array data is represented as a series of chunks of data, each with its own [header](#chunk-header) containing the number of elements in the chunk and a continuation bit that tells if more chunks follow the current one.
 
 ```dogma
-array_chunked      = array_type_code & array_chunk+;
-array_chunk        = var(header, array_chunk_header) & array_element{header.count};
-array_chunk_header = uleb128(unsigned(0,var(count,~)) & array_continuation);
-array_continuation = uint(1,~);
+array_chunked_uid     = plane7f(0xe0) & array_chunk(uid(~));
+array_chunked_s8      = plane7f(0xe1) & array_chunk(s8(~));
+array_chunked_u16     = plane7f(0xe2) & array_chunk(u16(~));
+array_chunked_s16     = plane7f(0xe3) & array_chunk(s16(~));
+array_chunked_u32     = plane7f(0xe4) & array_chunk(u32(~));
+...
+array_chunk(type)     = var(header, array_chunk_header)
+                      & type{header.count}
+                      & [header.continuation = 1: array_chunk(type);]
+                      ;
+array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 ```
 
 An array **CAN** contain any number of chunks, and the chunks don't have to be the same length. The most common use case would be to represent the entire array as a single chunk, but there might be cases where you need multiple chunks, such as when the array length is not known at the time when encoding has started (for example if it's being built progressively).
@@ -531,8 +556,7 @@ In this example, the first chunk of the array has 14 elements and has a continua
 All array chunks are preceded by an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128) encoded header containing the chunk length and a continuation bit (in the low bit of the fully decoded header). Chunk processing continues until the end of a chunk with a continuation bit of 0.
 
 ```dogma
-array_chunk_header = uleb128(unsigned(0,var(count,~)) & array_continuation);
-array_continuation = uint(1,~);
+array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 ```
 
 **Examples**:
@@ -542,7 +566,7 @@ array_continuation = uint(1,~);
 
 ##### Bit Array Chunks
 
-Bit array chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size.
+[Bit array](#bit-array) chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size (the last chunk will be zero-padded to an 8-bit boundary).
 
 ##### String Type Array Chunks
 
@@ -558,9 +582,9 @@ vs
 
     [90 21 m i s u n d e r s t a n d i n g 00 ...]
 
-Note that this technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
+This technique will only work for the general string type (0x90), not for the short string types 0x80 - 0x8f (which have no chunk headers).
 
-If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type code:
+**Note**: If the source buffer in your decoder is mutable, you could achieve C-style zero-copy without requiring the above technique, using a scheme whereby you pre-cache the type code of the next value, overwrite that type code's memory location in the buffer with 0 (effectively "terminating" the string), and then process the next value using the pre-cached type code:
 
     ...                          // buffer = [84 t e s t 6a 10 a0 ...]
     case string (length 4):      // 0x84 = string (length 4)
@@ -601,10 +625,10 @@ Strings are encoded as UTF-8.
 The chunked string encoding form is:
 
 ```dogma
-string_chunked     = u8(0x90) & array_chunk_string;
-array_chunk_string = var(header, array_chunk_header)
+string_chunked     = u8(0x90) & string_chunk;
+string_chunk       = var(header, array_chunk_header)
                    & sized(header.count*8, char_string*)
-                   & [header.continuation = 1: array_chunk_string;]
+                   & [header.continuation = 1: string_chunk;]
                    ;
 array_chunk_header = uleb128(unsigned(0,var(count, ~)) & u1(var(continuation, ~));
 char_string        = unicode(C,L,M,N,P,S,Z);
@@ -627,7 +651,7 @@ string_short = u4(8) & u4(var(count, ~)) & sized(count*8, char_string*);
 Resource identifiers are encoded similarly to a long-form [string](#string), but with type [`91`].
 
 ```dogma
-resource_id = u8(0x91) & array_chunk_string;
+resource_id = u8(0x91) & string_chunk;
 ```
 
 **Example**:
@@ -643,11 +667,14 @@ resource_id = u8(0x91) & array_chunk_string;
 Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of an imaginary little endian byte array). Array chunks **MUST** have a length such that `length % 8 == 0`, except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 ```dogma
-array_bit       = u8(0x94) & array_bit_chunk;
-array_bit_chunk = var(header, array_chunk_header)
-                & aligned(8, swapped(1, u1(~){header.count}), u1(0)*)
-                & [header.continuation = 1: array_bit_chunk;]
-                ;
+array_bit            = u8(0x94) & array_bit_chunk* array_bit_chunk_last;
+array_bit_chunk      = uleb128(uany(var(count, mult_8(~))) & u1(1))
+                     & reversed(1, u1(~){count})
+                     ;
+array_bit_chunk_last = uleb128(uany(var(count, ~)) & u1(0))
+                     & aligned(8, reversed(1, u1(~){count}), u1(0)*)
+                     ;
+mult_8(v)            = [v%8 = 0: v;];
 ```
 
 For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1c 7a`] with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
@@ -661,13 +688,17 @@ For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1
 A media object has type [`7f f3`] and is composed of a length-prefixed [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), followed by a byte array containing the media data.
 
 ```dogma
-media            = plane7f(0xf3) & uleb(var(mt_length, 1~)) & sized(mt_length*8, media_type) & array_chunk_u8;
+media            = plane7f(0xf3)
+                 & var(pref,length_prefix)
+                 & sized(pref.length*8, media_type)
+                 & array_chunk(u8(~))
+                 ;
 media_type       = media_type_word & '/' & media_type_word;
 media_type_word  = char_media_first & char_media*;
 char_media_first = 'a'~'z' | 'A'~'Z';
 char_media       = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
                                 | '@' | ',' | ';' | ':'
-                                | '\' | '"' | '/' | '['
+                                | '\\' | '"' | '/' | '['
                                 | ']' | '?' | '='
                                 )
                  ;
@@ -705,7 +736,7 @@ echo hello world
 Custom type values have type code [`92`], followed by a custom type code (encoded as an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128)), followed by a byte array containing the custom data.
 
 ```dogma
-custom_type      = u8(0x92) & custom_type_code & array_chunk_u8;
+custom_type      = u8(0x92) & custom_type_code & array_chunk(u8(~));
 custom_type_code = uleb(~);
 ```
 
@@ -743,7 +774,7 @@ Container Types
 A list has type code [`9a`], followed by a series of zero or more objects, and is terminated with [`9b`] (end of container).
 
 ```dogma
-list          = u8(0x9a) & object* & end_container;
+list          = u8(0x9a) & data_object* & end_container;
 end_container = u8(0x9b);
 ```
 
@@ -769,17 +800,16 @@ end_container = u8(0x9b);
 
 ### Record
 
-A record has type code [`96`], followed by a definition [identifier](#identifier), followed by a series of values matching the order that the keys are defined in the associated [definition](#record-definition), and is terminated with [`9b`] (end of container).
+A record has type code [`96`], followed by an [identifier](#identifier), followed by a series of values matching the order that the keys are defined in the associated [record type](#record-type), and is terminated with [`9b`] (end of container).
 
 ```dogma
-record        = u8(0x96) & identifier & object* & end_container;
-identifier    = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
+record        = u8(0x96) & identifier & data_object* & end_container;
 end_container = u8(0x9b);
 ```
 
 **Example**:
 
-A record built from the definition identified by "a" (defined elsewhere), with the first key's associated value set to 5:
+A record built from the record type identified by "a" (defined elsewhere), with the first key's associated value set to 5:
 
     [96 01 61 05 9b]
 
@@ -849,7 +879,6 @@ A local reference has type code [`0x77`], followed by a marker [identifier](#ide
 
 ```dogma
 local_reference = u8(0x77) & identifier;
-identifier      = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 ```
 
 **Examples**:
@@ -861,7 +890,7 @@ identifier      = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
 A remote reference is encoded in the same manner as a [resource identifier](#resource-identifier), except with a different type code ([`7f f2`]).
 
 ```dogma
-remote_reference = plane7f(0xf2) & array_chunk_string;
+remote_reference = plane7f(0xf2) & string_chunk;
 ```
 
 **Examples**:
@@ -899,19 +928,18 @@ padding = u8(0x95);
 Structural Objects
 ------------------
 
-### Record Definition
+### Record Type
 
-A record definition has type code [`7f f1`], followed by a definition [identifier](#identifier), followed by a series of keys, and is terminated with [`9b`] (end of container).
+A record type has type code [`7f f1`], followed by an [identifier](#identifier), followed by a series of keys, and is terminated with [`9b`] (end of container).
 
 ```dogma
-record_definition = plane7f(0xf1) & identifier & keyable_object* & end_container;
-identifier        = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
-end_container     = u8(0x9b);
+record_type   = plane7f(0xf1) & identifier & keyable_object* & end_container;
+end_container = u8(0x9b);
 ```
 
 **Example**:
 
-A record definition named "a", containing the key "b":
+A record type named "a", containing the key "b":
 
     [7f f1 01 61 81 62 9b]
 
@@ -921,7 +949,7 @@ A record definition named "a", containing the key "b":
 A marker has type code [`7f f0`], followed by a marker [identifier](#identifier), and then the marked object.
 
 ```dogma
-marked_object = plane7f(0xf0) & identifier & concrete_object;
+marked_object(type) = plane7f(0xf0) & identifier & type;
 ```
 
 **Example**:
@@ -941,7 +969,8 @@ Identifiers begin with an [unsigned LEB128](https://en.wikipedia.org/wiki/LEB128
 The length field **CANNOT** be 0.
 
 ```dogma
-identifier      = uleb(var(length, 1~)) & sized(length*8, char_identifier*);
+identifier      = var(pref,length_prefix) & sized(pref.length*8, char_identifier*);
+length_prefix   = uleb(var(length, 1~));
 char_identifier = unicode(Cf,L,M,N) | '_' | '.' | '-';
 ```
 
@@ -998,6 +1027,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2023 Karl Stenerud. All rights reserved.
 
 Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).

@@ -29,9 +29,8 @@ Contents
   - [Terms and Conventions](#terms-and-conventions)
   - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
   - [Text Format](#text-format)
+    - [Character Safety](#character-safety)
     - [Whitespace](#whitespace)
-    - [Key-Value Pairs](#key-value-pairs)
-    - [Lookalike Characters](#lookalike-characters)
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
   - [Document Structure](#document-structure)
@@ -89,7 +88,7 @@ Contents
       - [Multiline Comment](#multiline-comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Record Definition](#record-definition)
+    - [Record Type](#record-type)
     - [Marker](#marker)
   - [Empty Document](#empty-document)
   - [Letter Case](#letter-case)
@@ -100,7 +99,7 @@ Contents
     - [Indentation](#indentation)
     - [Pretty Printing Lists](#pretty-printing-lists)
     - [Pretty Printing Maps](#pretty-printing-maps)
-    - [Pretty Printing Record Definitions](#pretty-printing-record-definitions)
+    - [Pretty Printing Record Types](#pretty-printing-record-types)
     - [Pretty Printing Records](#pretty-printing-records)
     - [Pretty Printing Nodes](#pretty-printing-nodes)
     - [Pretty Printing Edges](#pretty-printing-edges)
@@ -132,7 +131,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [Dogma notation](https://github.com/kstenerud/dogma/blob/master/dogma_v1.md) and excerpts from [cte.dogma](cte.dogma).
+ * Some explanations will include excerpts from [cte.dogma](cte.dogma) (in [Dogma notation](https://dogma-lang.org/)).
 
 
 
@@ -150,7 +149,7 @@ Text Format
 
 A CTE document is a UTF-8 encoded text document containing data arranged in an ad-hoc hierarchical fashion.
 
-All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safety). Validation for CTE safety **MUST** occur _before_ all other processing or parsing (such as [line ending conversion](#line-endings) or [escape-sequence](#escape-sequences) decoding).
+All text in a CTE document **MUST** be [CTE safe](#character-safety). Validation for CTE safety **MUST** occur _before_ all other processing or parsing (such as [line ending conversion](#line-endings) or [escape-sequence](#escape-sequences) decoding).
 
 **Examples**:
 
@@ -160,47 +159,30 @@ All text in a CTE document **MUST** be [CTE safe](ce-structure.md#character-safe
  * CTE v1 document containing a top-level map: `c1 {"a"=1 "b"=2 "c"=3}`
 
 
-### Whitespace
+### Character Safety
 
-[Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). Extraneous [structural whitespace](#structural-whitespace) is ignored.
+Because CTE documents must be editable by a human without losing information, there are certain codepoints that **MUST NOT** be present in a CTE document. These restrictions can be worked around in some contexts by encoding them as [escape sequences](#escape-sequences).
 
-### Key-Value Pairs
+All unassigned, reserved, surrogate, and invalid Unicode codepoints **MUST NOT** be present in a Concise Encoding document at all (even in escaped form).
 
-In [maps](#map) and map-like objects, the key and value portions of a key-value pair are separated by an equals character (`=`) and possible [structural whitespace](#structural-whitespace). The key-value pairs themselves are separated by [structural whitespace](#structural-whitespace).
+The following characters **MUST NOT** be present in a CTE document (but may be [escaped](#escape-sequences)):
 
-```dogma
-key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
-key_value_pairs = key_value & (SOME_WSLC & key_value)*;
-```
+* Unicode categories Cc (except tab, carriage return and linefeed), Co, Zl, Zp
+* Characters that look confusingly similar to CTE string delimiter characters.
 
+For example, the CTE string representation `"A” string"` would be invalid due to the confusing "closing double-quote" character (`”`), but it could be escaped like so: `"A\[201d] string"`
 
-### Lookalike Characters
-
-Lookalike characters are characters that look confusingly similar to [string type](#string-types) delimiters when viewed by a human. Such characters **MUST** be escaped in [string types](#string-types).
-
-
-| Lookalike      | Escaped             |
-| -------------- | ------------------- |
-| `"A” string"`  | `"A\[201d] string"` |
-
-The unicode.org site provides an [online utility](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) to find confusable characters.
-
-
-The following is (as of 2022-06-09) a complete list of [lookalike Unicode characters](https://util.unicode.org/UnicodeJsps/confusables.jsp). This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
+Here is (as of 2023) a complete list of lookalike Unicode characters. This list may change as the Unicode character set evolves over time. Codec developers **MUST** keep their implementation up to date with the latest lookalike characters.
 
 | Character | Lookalikes (codepoints)                                                |
 | --------- | ---------------------------------------------------------------------- |
 | `"` | [02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) |
-| `\` | [2216, 27cd, 29f5, 29f9, 20f2, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
+| `\` | [2216, 27cd, 29f5, 29f9, 2f02, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
 
-```dogma
-delimiter_lookalikes = '\[02ba]' | '\[02dd]' | '\[02ee]' | '\[02f6]' | '\[05f2]' | '\[05f4]'
-                     | '\[1cd3]' | '\[201c]' | '\[201d]' | '\[201f]' | '\[2033]' | '\[2034]'
-                     | '\[2036]' | '\[2037]' | '\[2057]' | '\[20f2]' | '\[2216]' | '\[27cd]'
-                     | '\[29f5]' | '\[29f9]' | '\[3003]' | '\[3035]' | '\[31d4]' | '\[4e36]'
-                     | '\[fe68]' | '\[ff02]' | '\[ff3c]' | '\[1d20f]' | '\[1d23b]'
-                     ;
-```
+
+### Whitespace
+
+[Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). Extraneous [structural whitespace](#structural-whitespace) is ignored.
 
 
 ### Line Endings
@@ -221,7 +203,7 @@ CR       = '\[d]';
 
 In the spirit of human editability:
 
- * Implementations **SHOULD** avoid outputting characters that different editors tend to display inconsistently (for example, TAB).
+ * Implementations **SHOULD** avoid outputting unescaped characters that different editors tend to display inconsistently (for example, TAB).
  * Line lengths **SHOULD** be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
 
 
@@ -229,11 +211,17 @@ In the spirit of human editability:
 Document Structure
 ------------------
 
-Documents begin with a [version header](#version-header), followed by [whitespace](#structural-whitespace), followed by possible [whitespace](#structural-whitespace) separated [intangible objects](ce-structure.md#intangible-objects), and then ultimately followed by the top-level [data object](ce-structure.md#data-objects).
+A CTE document is composed of the following parts:
+
+ 1. A [version header](#version-header)
+ 2. A series of optional [intangible objects](ce-structure.md#intangible-objects)
+ 3. A top-level [data object](ce-structure.md#data-objects)
 
 ```dogma
-document       = version_header & SOME_WSLC & data_object;
-version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
+document = version_header
+         & items(record_type, WSLC)
+         & (data_object ! local_reference)
+         ;
 ```
 
 **Example**: A complete (and empty) CTE version 1 document:
@@ -248,13 +236,17 @@ null
 Version Header
 --------------
 
-The version header is composed of the character `c` (u+0063), followed immediately by an unsigned integer version number. The document **MUST NOT** begin with a byte order mark (BOM), and there **MUST NOT** be anything (whitespace or otherwise) between the `c` and the version number.
+The version header is composed of:
 
-**Note**: Due to the [overriding letter case rule for decoders](#overriding-rule-for-decoders), a decoder **MUST** also accept uppercase `C` (u+0043). An encoder **MUST NOT** produce uppercase `C`.
+ 1. The character 'c' (u+0063) or the character 'C' (u+0043)
+ 2. The numeric version number
+ 3. Mandatory [whitespace](#structural-whitespace)
 
 ```dogma
-version_header = ('c' | 'C') & digit_dec+ & SOME_WSLC;
+version_header = ('c' | 'C') & digit_dec+ & WSL;
 ```
+
+**Note**: A decoder must accept lowercase 'c' (u+0063) or uppercase 'C' (u+0043), but an encoder **MUST** produce only lowercase 'c' (u+0063).
 
 **Example**:
 
@@ -315,6 +307,7 @@ prefix_hex   = '0' ('x' | 'X');
 
 Encoders **MUST** output integers in base 10 by default.
 
+
 ### Floating Point
 
 A floating point number is conceptually composed of an implied radix (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
@@ -367,7 +360,7 @@ Base-16 notation **MUST** have a prefix of `0x`, and the exponential portion is 
 ```dogma
 float_hex     = (neg? & prefix_hex & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
 float_special = (neg? & "inf") | "nan" | "snan";
-exponent_hex  = ('p' | 'P') & neg? & digits_dec); # digits_dec, not digits_hex
+exponent_hex  = ('p' | 'P') & neg? & digits_dec; # hex float exponent is in decimal, not hex.
 ```
 
 To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
@@ -652,9 +645,9 @@ String Types
 
 String types **MUST** contain only valid UTF-8 characters. The contents are enclosed within double-quote (`"`) delimiters. All characters leading up to the closing double-quote (including whitespace) are considered part of the string sequence. String types **CAN** contain [escape sequences](#escape-sequences).
 
-[CTE unsafe](ce-structure.md#character-safety) characters **MUST** always be [escaped](#escape-sequences).
+[CTE unsafe](#character-safety) characters **MUST** always be [escaped](#escape-sequences).
 
-Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#lookalike-characters)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). CR (u+000d) **MUST** be escaped. TAB (u+0009) and LF (u+000a) **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
+Double-quotes (`"`) and backslash (`\`) (as well as their [lookalikes](#character-safety)) **MUST** be encoded as [escape sequences](#escape-sequences) (except when inside of a [verbatim sequence](#verbatim-sequence)). CR (u+000d) **MUST** be escaped. TAB (u+0009) and LF (u+000a) **SHOULD** be escaped as well to ensure that a text editor doesn't alter them.
 
 ```dogma
 string_type           = '"' & (char_string | escape_sequence)* & '"';
@@ -684,7 +677,7 @@ SP                    = '\[20]';
 
 CTE decoders **MUST** validate string types in the following order (or effectively equivalent):
 
-1. Validate the raw string contents for [CTE safety](ce-structure.md#character-safety).
+1. Validate the raw string contents for [CTE safety](#character-safety).
 2. Decode all [escape sequences](#escape-sequences) to produce a final string.
 3. [Validate the final string](ce-structure.md#string-types).
 
@@ -708,6 +701,8 @@ Within [string types](#string-types), escape sequences **CAN** be used to encode
 | u+002b (`{`)          | [Unicode codepoint](#unicode-codepoint) |
 | u+002e (`.`)          | [verbatim sequence](#verbatim-sequence) |
 
+Any escape type character not in the above list is invalid.
+
 ```dogma
 escape_sequence       = '\\' & ('t' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' | '-'
                       | escape_continuation | escape_codepoint | escape_verbatim)
@@ -716,11 +711,10 @@ escape_sequence       = '\\' & ('t' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' |
 
 #### Continuation
 
-A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by LF (u+000a) initiates a continuation.
+A continuation escape sequence causes the decoder to ignore all [structural whitespace](#structural-whitespace) characters until it encounters a character that is not [structural whitespace](#structural-whitespace). The escape character (`\`) followed by LF (u+000a) or CRLF (u+000d u+000a) initiates a continuation.
 
 ```dogma
-escape_continuation = LINE_END & MAYBE_WS;
-MAYBE_WS            = WS*;
+escape_continuation = '\\' & LINE_END & WS*;
 ```
 
 **Example**:
@@ -740,10 +734,10 @@ The above string is interpreted as:
 
 A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
 
-The escape sequence begins with a backslash (`\`) character, followed by an opening curly brace (`{`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing curly brace (`}`). Leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
+The escape sequence begins with a backslash (`\`) character, followed by an opening square brace (`[]`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing square brace (`]`). Leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
 
 ```dogma
-escape_codepoint = '\\{' & digit_hex+ & '}';
+escape_codepoint = '\\[' & digit_hex+ & ']';
 ```
 
 **Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\[10000000000000020]` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
@@ -820,8 +814,9 @@ are once again interpreted.
 A string is the most basic [string type](#string-types), enclosed within double-quote delimiters (`"`).
 
 ```dogma
-string      = string_type;
-string_type = '"' & (char_string | escape_sequence)* & '"';
+string              = stringlike(char_cte);
+stringlike(allowed) = '"' & ((allowed ! ('"' | '\\' | delimiter_lookalikes)) | escape_sequence)* & '"';
+char_cte            = unicode(Cf,L,M,N,P,S,Zs) | WSL;
 ```
 
 **Example**:
@@ -844,12 +839,11 @@ Line 3
 A resource identifier is encoded as a [string type](#string-types) restricted to rfc3987, enclosed within double-quote delimiters (`"`) and prefixed with an at symbol (`@`).
 
 ```dogma
-resource_id  = '@' & rid_type;
-rid_type     = '"' & rid_contents & '"';
-rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
+resource_id = '@' & stringlike(char_rid);
+char_rid    = """https://www.rfc-editor.org/rfc/rfc3987""";
 ```
 
-**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST** be passed through unimpeded and uninterpreted.
+**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST** be passed through to the application unimpeded and uninterpreted.
 
 **Example**:
 
@@ -871,13 +865,18 @@ c1
 Arrays
 ------
 
-Arrays are enclosed within pipe (`|`) characters, containing the array type and the elements. Elements are either encoded individually ([whitespace](#structural-whitespace) separated), or as a [string](#string-types). The array type field **MUST** only contain characters that are allowed in [media types](https://www.rfc-editor.org/rfc/rfc6838#section-4.2).
+Arrays are enclosed within pipe (`|`) characters, containing the array type and the elements. Elements are either encoded individually ([whitespace](#structural-whitespace) separated), or as a [string](#string-types).
 
 The general form is:
 
     |arraytype elem1 elem2 ...|   // Elemental form
     |arraytype "string contents"| // String form
     |arraytype|                   // Empty array
+
+```dogma
+array(type, elem_type) = '|' & type & WSL & items(elem_type, WSL) & '|';
+items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
+```
 
 In elemental form, array elements **CAN** be written using any valid representation of the array's element type and size:
 
@@ -896,33 +895,31 @@ See [cte.dogma](cte.dogma) for details about arrays.
 
 The following array types are available:
 
-| Array Type   | Element Base | Description                   | Encoding Kind     |
-| ------------ | ------------ | ----------------------------- | ----------------- |
-| `b`          | 2            | Bit                           | Element           |
-| `u8`         | 2, 8, 10, 16 | 8-bit unsigned integer        | Element           |
-| `u16`        | 2, 8, 10, 16 | 16-bit unsigned integer       | Element           |
-| `u32`        | 2, 8, 10, 16 | 32-bit unsigned integer       | Element           |
-| `u64`        | 2, 8, 10, 16 | 64-bit unsigned integer       | Element           |
-| `i8`         | 2, 8, 10, 16 | 8-bit signed integer          | Element           |
-| `i16`        | 2, 8, 10, 16 | 16-bit signed integer         | Element           |
-| `i32`        | 2, 8, 10, 16 | 32-bit signed integer         | Element           |
-| `i64`        | 2, 8, 10, 16 | 64-bit signed integer         | Element           |
-| `f16`        | 10, 16       | 16-bit binary float (bfloat)  | Element           |
-| `f32`        | 10, 16       | 32-bit binary float (ieee754) | Element           |
-| `f64`        | 10, 16       | 64-bit binary float (ieee754) | Element           |
-| `u`          | 16           | 128-bit UID                   | Element           |
-| `c<id>`      | 16           | [Custom Types](#custom-types) | Element or string |
-| `<type/sub>` | 16           | [Media](#media)               | Element or string |
+| Array Type      | Element Base | Description                   | Encoding Kind     |
+| --------------- | ------------ | ----------------------------- | ----------------- |
+| `b`             | 2            | Bit                           | Element           |
+| `u8`            | 2, 8, 10, 16 | 8-bit unsigned integer        | Element           |
+| `u16`           | 2, 8, 10, 16 | 16-bit unsigned integer       | Element           |
+| `u32`           | 2, 8, 10, 16 | 32-bit unsigned integer       | Element           |
+| `u64`           | 2, 8, 10, 16 | 64-bit unsigned integer       | Element           |
+| `i8`            | 2, 8, 10, 16 | 8-bit signed integer          | Element           |
+| `i16`           | 2, 8, 10, 16 | 16-bit signed integer         | Element           |
+| `i32`           | 2, 8, 10, 16 | 32-bit signed integer         | Element           |
+| `i64`           | 2, 8, 10, 16 | 64-bit signed integer         | Element           |
+| `f16`           | 10, 16       | 16-bit binary float (bfloat)  | Element           |
+| `f32`           | 10, 16       | 32-bit binary float (ieee754) | Element           |
+| `f64`           | 10, 16       | 64-bit binary float (ieee754) | Element           |
+| `u`             | 16           | 128-bit UID                   | Element           |
+| `c<id>`         | 16           | [Custom Types](#custom-types) | Element or string |
+| `.<media-type>` | 16           | [Media](#media)               | Element or string |
 
 Array types are [case-insensitive](#letter-case).
-
-If an array type field contains a slash (`/`), it **MUST** be interpreted as a [media object](#media) (e.g. `|a/b "stuff"|` is a media object, regardless of whether media type "a/b" is known or [registered with IANA](http://www.iana.org/assignments/media-types/media-types.xhtml)). If the array type field does not contain a slash, it **MUST NOT** be interpreted as a [media object](#media).
 
 An invalid array type field is a [structural error](ce-structure#structural-errors).
 
 For array types that support multiple bases, elements **MAY** be represented in different bases by applying a base prefix (`0b` for base 2, `0o` for base 8, `0x` for base 16) to an element (provided the element type supports it).
 
-CTE encoders **MUST** produce integer array elements in [base-10 notation](#base-10-notation) by default, and **MUST** produce binary floating point array elements in [base-16 notation](#base-16-notation) by default.
+CTE encoders **MUST** default to [base-10 notation](#base-10-notation) for integer array elements, and **MUST** default to [base-16 notation](#base-16-notation) for floating point array elements.
 
 
 #### Array Type Suffix
@@ -952,10 +949,10 @@ c1
 
 ### Bit Array Elements
 
-Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) is **OPTIONAL** when encoding a bit array.
+Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) between elements is **OPTIONAL** when encoding a bit array.
 
 ```dogma
-array_bit = '|' & ('b' | 'B') & (SOME_WSLC & (digit_bin & MAYBE_WSLC)+)? & MAYBE_WSLC & '|';
+array_bit = '|' & ('b' | 'B') & WSL & items(digit_bin, WSL?) & '|';
 digit_bin = '0'~'1';
 ```
 
@@ -976,7 +973,7 @@ Like their standalone counterparts, [special float values](#special-floating-poi
 
     |f32 0x1.5da nan -inf 0xc.1f3p38|
 
-Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should always use [CBE](cbe-specification.md) instead of CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
+Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should prefer [CBE](cbe-specification.md) over CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
 
 ### Media
@@ -984,18 +981,10 @@ Float array element values written in decimal form will be **silently rounded** 
 In media objects, the [array type field](#array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) contains the media data:
 
 ```dogma
-media            = '|' & media_type & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
-media_type       = media_type_word & '/' & media_type_word;
-media_type_word  = char_media_first & char_media*;
-hex_bytes        = hex_byte & (SOME_WSLC & hex_byte)*;
-hex_byte         = SOME_WSLC & digit_hex{2};
-char_media_first = 'a'~'z' | 'A'~'Z';
-char_media       = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
-                                 | '@' | ',' | ';' | ':'
-                                 | '\' | '"' | '/' | '['
-                                 | ']' | '?' | '='
-                                 )
-                 ;
+media                  = array_stringable('.' & media_type);
+media_type             = media_type_word & '/' & media_type_word;
+media_type_word        = char_media_first & char_media_next*;
+array_stringable(type) = '|' & type & (WSL+ & (string | hex_bytes))? & WSL* & '|';
 ```
 
 **Examples**:
@@ -1003,9 +992,9 @@ char_media       = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
 ```cte
 c1
 [
-    |text/plain "stuff"|        // text encoded media
-    |text/plain 73 74 75 66 66| // byte encoded media
-    |text/plain|                // empty media
+    |.text/plain "stuff"|        // text encoded media
+    |.text/plain 73 74 75 66 66| // byte encoded media
+    |.text/plain|                // empty media
 ]
 ```
 
@@ -1013,21 +1002,21 @@ c1
 
 If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#string-types). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
-* As text: `|type/subtype "contents"|`
-* As binary: `|type/subtype 63 6f 6e 74 65 6e 74 73|`
+* As text: `|.type/subtype "contents"|`
+* As binary: `|.type/subtype 63 6f 6e 74 65 6e 74 73|`
 
 **Example**:
 
 ```cte
 c1
-|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is equivalent to:
 
 ```cte
 c1
-|application/x-sh "\.@@
+|.application/x-sh "\.@@
 #!/bin/sh
 
 echo hello world
@@ -1045,10 +1034,10 @@ echo hello world
 
 ### Custom Types
 
-In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a [binary or textual form](#general-array-forms).
+In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a hex-byte form and a [string form](#string-types).
 
 ```dogma
-custom_type      = '|' & ('c' | 'C') & custom_type_code & SOME_WSLC & (string_type | hex_bytes)? & MAYBE_WSLC & '|';
+custom_type      = array_stringable(('c' | 'C') & custom_type_code);
 custom_type_code = digit_dec+;
 ```
 
@@ -1080,8 +1069,8 @@ Container Types
 A list begins with an opening square bracket `[`, contains [structural whitespace](#structural-whitespace) separated contents, and finishes with a closing square bracket `]`.
 
 ```dogma
-list    = '[' & MAYBE_WSLC & objects? & MAYBE_WSLC & ]';
-objects = object & (SOME_WSLC object)*;
+list                   = '[' & items(data_object, WSLC) & ']';
+items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
 ```
 
 **Example**:
@@ -1104,9 +1093,8 @@ A map begins with an opening curly brace `{`, contains [structural whitespace](#
 Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is a [structural error](ce-structure.md#structural-errors).
 
 ```dogma
-map             = '{' & MAYBE_WSLC & key_value_pairs? & MAYBE_WSLC & '}';
-key_value_pairs = key_value & (SOME_WSLC & key_value)*;
-key_value       = keyable_object & MAYBE_WSLC & '=' & MAYBE_WSLC & data_object;
+map       = '{' & items(key_value, WSLC) & '}';
+key_value = keyable_object & WSLC* & '=' & WSLC* & data_object;
 ```
 
 **Example**:
@@ -1123,23 +1111,22 @@ c1
 
 ### Record
 
-A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record definition](#record-definition) defined elsewhere, followed by `(`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [definition](#record-definition), and is terminated with `)`.
+A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record type](#record-type) defined elsewhere, followed by `{`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [record type](#record-type), and is terminated with `}`.
 
 ```dogma
-record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
-record            = '@' & identifier & '(' & MAYBE_WSLC & objects? & MAYBE_WSLC & ')';
+record = '@' & identifier & '{' & items(data_object, WSLC) & '}';
 ```
 
 **Example**:
 
 ```cte
 c1
+@vehicle<"make" "model" "drive" "sunroof">
 [
-    @vehicle<"make"       "model"      "drive" "sunroof">
-    @vehicle("Ford"       "Explorer"   "4wd"   true     )
-    @vehicle("Toyota"     "Corolla"    "fwd"   false    )
-    @vehicle("Honda"      "Civic"      "fwd"   false    )
-    @vehicle("Alfa Romeo" "Giulia 952" "awd"   true     )
+    @vehicle{"Ford"       "Explorer"   "4wd" true }
+    @vehicle{"Toyota"     "Corolla"    "fwd" false}
+    @vehicle{"Honda"      "Civic"      "fwd" false}
+    @vehicle{"Alfa Romeo" "Giulia 952" "awd" true }
 ]
 ```
 
@@ -1149,7 +1136,7 @@ c1
 An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
 
 ```dogma
-edge = '@{' & non_null_object & data_object & non_null_object & '}';
+edge = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
 ```
 
 Edges are most commonly used in conjunction with [references](#local-reference) or [resource identifiers](#resource-identifier) to produce arbitrary graphs.
@@ -1188,7 +1175,7 @@ c1
 A node begins with an opening parenthesis `(`, contains a value (object) followed by zero or more whitespace separated child nodes, and is closed with a closing parenthesis `)`.
 
 ```dogma
-node = '(' & data_object & (node | data_object)* & ')';
+node = '(' & WSLC* & data_object & items(data_object, WSLC) & ')';
 ```
 
 Nodes are recorded in **depth-first**, **node-right-left** order, which ensures that the textual representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
@@ -1250,7 +1237,7 @@ Pseudo-Objects
 A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier](ce-structure.md#identifier) that has been defined elsewhere in the current document.
 
 ```dogma
-local_ref = '$' & identifier;
+local_reference = '$' & identifier;
 ```
 
 **Example**:
@@ -1276,9 +1263,9 @@ c1
 A remote reference is encoded as a [string type](#string-types), enclosed within double-quote delimiters (`"`) and prefixed with a reference initiator (`$`).
 
 ```dogma
-remote_ref   = '$' & rid_type;
-rid_type     = '"' & rid_contents & '"';
-rid_contents = """https://www.rfc-editor.org/rfc/rfc3987""";
+remote_reference    = '$' & stringlike(char_rid);
+stringlike(allowed) = '"' & ((allowed ! ('"' | '\\' | delimiter_lookalikes)) | escape_sequence)* & '"';
+char_rid            = """https://www.rfc-editor.org/rfc/rfc3987""";
 ```
 
 **Example**:
@@ -1309,7 +1296,7 @@ Comments **MUST ONLY** contain [CTE safe](ce-structure.md#character-safety) char
 A single line comment begins at the sequence `//` and continues until the next LF (u+000a) is encountered. No checks for nested comments are performed.
 
 ```dogma
-comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
+comment_single_line = "//" & (char_cte* ! LINE_END) & LINE_END;
 ```
 
 #### Multiline Comment
@@ -1317,7 +1304,7 @@ comment_single_line   = "//" & (char_cte* ! LINE_END) & LINE_END;
 A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
 
 ```dogma
-comment_multi_line    = "/*" & (char_cte* ! "*/") & "*/";
+comment_multi_line = "/*" & ((char_cte* ! "/*") | comment_multi_line) & "*/";
 ```
 
 **Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string types:
@@ -1359,11 +1346,6 @@ c1
 
     "a" = "We're inside a string, so /* this is not a comment; it's part of the string! */"
 
-    "data" =
-    // A comment before some binary data
-    |u8x 01 02 03 // A comment inside the binary array
-         04 05 06 07 /* Another comment inside */ 08 09 0a|
-
     // Comment before the end of the top-level object (the map), but not after!
 }
 ```
@@ -1378,25 +1360,25 @@ Padding is not supported in CTE. An encoder **MUST** skip all padding when conve
 Structural Objects
 ------------------
 
-### Record Definition
+### Record Type
 
-A record definition begins with `@`, followed by a definition [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
+A record type begins with `@`, followed by an [identifier](ce-structure.md#identifier), followed by `<`, followed by a series of [whitespace](#structural-whitespace) separated keys, and is terminated with `>`.
 
 ```dogma
-record_definition = '@' & identifier & '<' & MAYBE_WSLC & keyable_object* & MAYBE_WSLC & '>';
+record_type = '@' & identifier & '<' & items(keyable_object, WSLC) '>';
 ```
 
 **Example**:
 
 ```cte
 c1
-// Define a record definition:
+// Define a record type:
 @dog<"name" "gender">
 
-// Now we can create instances of this record:
+// Now we can create records of this type:
 [
-    @dog("Fido" "m")
-    @dog("Fifi" "f")
+    @dog{"Fido" "m"}
+    @dog{"Fifi" "f"}
 ]
 ```
 
@@ -1478,7 +1460,7 @@ However, the following would be invalid:
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
 
- * `|TEXT/XML "<xml/>"|` ([IANA registered](http://www.iana.org/assignments/media-types/media-types.xhtml) as `text/xml`, not `TEXT/XML`)
+ * `|.TEXT/XML "<xml/>"|` ([IANA registered](http://www.iana.org/assignments/media-types/media-types.xhtml) as `text/xml`, not `TEXT/XML`)
 
 
 Structural Whitespace
@@ -1524,7 +1506,7 @@ Examples:
  * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are [structural errors](ce-structure.md#structural-errors)).
  * In time values (`2018-07-01-10 :53:22.001481/Z` is a [structural error](ce-structure.md#structural-errors)).
  * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are [structural errors](ce-structure.md#structural-errors)). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
- * Anywhere between a [record definition](#record-definition) or [record](#record) initiator and its opening character (`@ my_record<>`, `@my_record <>`, `@ my_record()`,  and `@my_record ()` are [structural errors](ce-structure.md#structural-errors)).
+ * Anywhere between a [record type](#record-type) or [record](#record) initiator and its opening character (`@ my_record<>`, `@my_record <>`, `@ my_record{}`,  and `@my_record {}` are [structural errors](ce-structure.md#structural-errors)).
 
 
 
@@ -1604,9 +1586,9 @@ c1
 ```
 
 
-### Pretty Printing Record Definitions
+### Pretty Printing Record Types
 
-Record definitions **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
+Record types **SHOULD** follow a similar pretty printing strategy to [lists](#pretty-printing-lists).
 
 
 ### Pretty Printing Records
@@ -1721,6 +1703,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2023 Karl Stenerud. All rights reserved.
 
 Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).

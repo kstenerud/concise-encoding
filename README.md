@@ -96,6 +96,7 @@ Concise Encoding
 | Map           | ✔️  | ❌  |  ✔️   |  ✔️   |  ✔️   |    ✔️      |   ✔️    |  ❌   | ❌  |
 | Edge          | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Node          | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
+| Record        | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
 | Typed Arrays  | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ✔️      |   ✔️    |  ✔️    | ❌  |
 | Reference     | ✔️  | ❌  |  ❌  |  ❌  |  ✔️   |    ❌     |   ❌   |  ❌   | ❌  |
 | Remote Ref    | ✔️  | ❌  |  ❌  |  ❌  |  ❌  |    ❌     |   ❌   |  ❌   | ❌  |
@@ -177,7 +178,7 @@ c1
 ```cte
 c1
 {
-    "string" = "Strings support escape sequences: \n \t \{1f415}"
+    "string" = "Strings support escape sequences: \n \t \[1f415]"
     "url"    = @"https://example.com/"
     "email"  = @"mailto:me@somewhere.com"
 }
@@ -193,7 +194,7 @@ c1
     "time"      = 18:04:00.948/Europe/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
-    "media"     = |application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
+    "media"     = |.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
                    65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 }
 ```
@@ -212,14 +213,14 @@ c1
 }
 ```
 
-### Records (definition and instances)
+### Records
 
 ```cte
 c1
+@vehicle<"make" "model" "drive" "sunroof"> // type
 [
-    @vehicle<"make"   "model"    "drive" "sunroof"> // template
-    @vehicle("Ford"   "Explorer" "4wd"   true     ) // instance
-    @vehicle("Toyota" "Corolla"  "fwd"   false    ) // instance
+    @vehicle{"Ford"   "Explorer" "4wd" true } // instance
+    @vehicle{"Toyota" "Corolla"  "fwd" false} // instance
 ]
 ```
 
@@ -338,3 +339,12 @@ c1
     "custom binary" = |c12 04 f6 28 3c 40 00 00 40 40|
 }
 ```
+
+
+
+License
+-------
+
+Copyright (c) 2018-2023 Karl Stenerud. All rights reserved.
+
+Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).

@@ -103,11 +103,11 @@ array_chunked_f16     = plane7f(0xe8) & array_chunk(f16(~));
 array_chunked_f32     = plane7f(0xe9) & array_chunk(f32(~));
 array_chunked_f64     = plane7f(0xea) & array_chunk(f64(~));
 
-array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 array_chunk(type)     = var(header, array_chunk_header)
                       & type{header.count}
                       & [header.continuation = 1: array_chunk(type);]
                       ;
+array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 array_short(type)     = u4(var(count, ~)) & type{count};
 
 # Non-terminating bit array chunks must be a multiple of 8 bits

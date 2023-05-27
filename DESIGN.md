@@ -514,23 +514,23 @@ Since Concise Encoding dosn't suffer from the C legacy of by-now-extinct [octal 
 Unicode codepoint escape sequences consist of the following:
 
 - The `\` character
-- The `{` character
+- The `[` character
 - Any number of hexadecimal digits, representing the hex value of the codepoint.
-- The `}` character, to terminate the sequence.
+- The `]` character, to terminate the sequence.
 
 Examples:
 
-- `\{0}` = NUL (0x00)
-- `\{c}` = FF (0x0c)
-- `\{7f}` = DEL (0x7f)
-- `\{101}` = ā (0x101)
-- `\{2191}`  = ↑ (0x2191)
-- `\{1f415}` = 🐕 (0x1f415)
+- `\[0]` = NUL (0x00)
+- `\[c]` = FF (0x0c)
+- `\[7f]` = DEL (0x7f)
+- `\[101]` = ā (0x101)
+- `\[2191]`  = ↑ (0x2191)
+- `\[1f415]` = 🐕 (0x1f415)
 
 Advantages:
 
 - One encoding method for all codepoints.
-- It can be adopted into other languages (no other language currently defines `\{` as a string escape sequence).
+- It can be adopted into other languages (no other language currently defines `\[` as a string escape sequence).
 - You only need to encode as many digits as are actually needed to represent the codepoint (no need for zero padding).
 - It can handle all existing and future Unicode codepoints (i.e. we'll never have to change this escape scheme, ever).
 

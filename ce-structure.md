@@ -31,6 +31,7 @@ Contents
   - [Design Goals](#design-goals)
     - [Why Two Formats?](#why-two-formats)
   - [Schema](#schema)
+  - [Formal Representation](#formal-representation)
   - [Document Structure](#document-structure)
   - [Version Header](#version-header)
     - [Prerelease Version](#prerelease-version)
@@ -95,12 +96,11 @@ Contents
     - [Comment](#comment)
     - [Padding](#padding)
   - [Structural Objects](#structural-objects)
-    - [Record Definition](#record-definition)
+    - [Record Type](#record-type)
     - [Marker](#marker)
     - [Identifier](#identifier)
       - [Identifier Rules](#identifier-rules)
   - [Empty Document](#empty-document)
-  - [Character Safety](#character-safety)
   - [Unrepresentable Values](#unrepresentable-values)
     - [Lossy Conversions](#lossy-conversions)
       - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
@@ -167,7 +167,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [Dogma notation](https://github.com/kstenerud/dogma/blob/master/dogma_v1.md) for illustrative purposes only (this document doesn't describe actual encodings).
+ * Some explanations will include [Dogma notation](https://dogma-lang.org/) for illustrative purposes only (this document doesn't describe actual encodings).
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
@@ -185,7 +185,7 @@ Primary Goals:
 
  * It must be easy for a machine to parse and produce (low runtime energy use, low implementation complexity).
  * It must be easy for a human to parse and produce.
- * It must be compact (produce small encoded documents).
+ * It must be compact (produce small encoded documents - only necessary in the binary format).
  * It must be secure (secure defaults, no implicit behavior, one way to do each thing, reject bad data).
  * It must be future proof.
  * It must support the most commonly used types and the funtamental types natively.
@@ -236,6 +236,18 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 
 
 
+Formal Representation
+---------------------
+
+Formal specification clauses are written in the [Dogma](https://dogma-lang.org/) metalanguage.
+
+There are also formal Dogma documents for both CBE and CTE, which should be referred to whenever any textual description is unclear:
+
+* [CBE Dogma](cbe.dogma)
+* [CTE Dogma](cte.dogma)
+
+
+
 Document Structure
 ------------------
 
@@ -245,9 +257,9 @@ Documents begin with a [version header](#version-header), followed by possible [
 
 Once the top-level data object is fully decoded, the document is considered finished.
 
-<pre>
-document = <a href="#version-header">version_header</a> & <a href="#intangible-objects">intangible_object</a>* & <a href="#data-objects">data_object</a>;
-</pre>
+```dogma
+document = version_header & intangible_object* & data_object;
+```
 
 **Notes**:
 
@@ -270,11 +282,11 @@ Version Header
 
 Concise Encoding is versioned, meaning that every Concise Encoding document contains the version of the Concise Encoding specification it adheres to. This ensures that any future incompatible changes to the format will not break existing implementations.
 
-A version header consists of a signature byte - 0x63 (`c`) for CTE, 0x81 for CBE - followed by the version number, which is an unsigned integer representing the [version of this specification](#version) that the document adheres to.
+A version header consists of a signature byte - 0x63 (`c`) or 0x43 (`C`) for CTE, 0x81 for CBE - followed by the version number, which is an unsigned integer representing the [version of this specification](#version) that the document adheres to.
 
-<pre>
+```dogma
 version-header = signature_byte & unsigned_integer;
-</pre>
+```
 
 **Example**:
 
@@ -303,9 +315,9 @@ Concrete objects either are data, or point to data.
 
 Wherever a concrete object can be placed, any number of intangible objects can be placed before it.
 
-<pre>
-concrete-object = <a href="#intangible-objects">intangible_object</a>* & (<a href="#data-objects">data_object</a> | <a href="#pseudo-objects">pseudo_object</a>);
-</pre>
+```dogma
+concrete-object = intangible_object* & (data_object | pseudo_object);
+```
 
 ### Intangible Objects
 
@@ -314,9 +326,9 @@ Intangible objects are either meta-information or structural helpers, but do not
  * [Invisible objects](#invisible-objects) provide helper functionality such as comments and byte alignment, but don't affect the document structure or data.
  * [Structural objects](#structural-objects) provide linkages beween parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
 
-<pre>
-intangible-object = <a href="#invisible-objects">invisible_object</a> | <a href="#structural-objects">structural_object</a>;
-</pre>
+```dogma
+intangible-object = invisible_object | structural_object;
+```
 
 
 Data Objects
@@ -331,23 +343,23 @@ Data objects hold the actual data of a document, and consist mainly of container
  * [Container Types](#container-types)
  * [Other Types](#other-types)
 
-<pre>
-data-object = <a href="#numeric-types">numeric_type</a>
-            | <a href="#temporal-types">temporal_type</a>
-            | <a href="#string-types">string_type</a>
-            | <a href="#array-types">array_type</a>
-            | <a href="#container-types">container_type</a>
-            | <a href="#other-types">other_type</a>
+```dogma
+data-object = numeric_type
+            | temporal_type
+            | string_type
+            | array_type
+            | container_type
+            | other_type
             ;
-</pre>
+```
 
 
 Numeric Types
 -------------
 
-Numeric types comprise the basic scalar numeric types present in most computer systems.
+Numeric types represent the basic scalar numeric types present in most computer systems.
 
-An implementation **MAY** alter the type and/or storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss (except for NaN payload information other than the quiet bit).
+An implementation **MAY** alter the type and/or storage size of integer and floating point values when encoding/decoding as long as the resulting value can be converted back to the original value without data loss (although [NaN payloads](#nan-payload) are treated more leniently).
 
 **Note**: The Concise Encoding format itself places no bounds on the range of most numeric types, but implementations (being bound by language, platform, and physical limitations) **MUST** [decide which ranges to accept](#user-controllable-limits). It's important that all chosen limits are kept consistent across all participating systems in order to mitigate potential [security holes](#security-and-limits).
 
@@ -369,7 +381,7 @@ c1
 
 ### Integer
 
-Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md)) and sizes.
+Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md#integer)) and sizes.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -389,7 +401,7 @@ A floating point number is conceptually composed of a whole part and a fractiona
 
     value = whole.fractional × baseᵉˣᵖᵒⁿᵉⁿᵗ
 
-Internally, the whole and fractional parts are usually combined into a single integer significand value, with the exponent adjusted to compensate:
+Internally, most systems combine the whole and fractional parts into a single integer significand value, with the exponent adjusted to compensate:
 
     value = significand × baseᵉˣᵖᵒⁿᵉⁿᵗ
 
@@ -428,7 +440,7 @@ Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-**Note**: Be careful not to set the rest of the bits of an ieee754 binary float payload to all zeroes on a signaling NaN, as this signifies [infinity, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
+**Note**: Be careful not to set the rest of the bits of an ieee754 binary float or bfloat payload to all zeroes on a signaling NaN, as this signifies [infinity, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -460,7 +472,7 @@ Both decimal and binary floating point numbers have representations for the foll
 
 * Two kinds of zero: +0 and -0
 * Two kinds of infinities: +∞ and -∞
-* Two kinds of NaN (not-a-number): Signaling and quiet
+* Two kinds of NaN (not-a-number): signaling and quiet
 
 #### NaN Payload
 
@@ -506,7 +518,7 @@ Temporal types are represented using the [Gregorian calendar](https://en.wikiped
 
 ### Date
 
-Represents a date without specifying a time of day.
+Represents a date without specifying a time of day or time zone.
 
 A date is made up of the following fields:
 
@@ -578,7 +590,7 @@ c1
 
 ### Time Zones
 
-A time zone refers to the political designation of a location as having a specific time offset from UTC during a particular time period. Time zones are in a continual state of flux, and could change at any time for many reasons.
+A time zone refers to the political designation of a location as having a specific time offset from UTC during a particular time period. Time zones are in a continual state of flux, and could change at any time for all sorts of reasons.
 
 Time zone data can be denoted in the following ways:
 
@@ -615,7 +627,7 @@ Since there are only a limited number of areas in the database, the following ab
 | `Indian`     | `I`          |
 | `Pacific`    | `P`          |
 
-A Decoder **MUST** convert abbreviated areas back to their full names.
+A decoder **MUST NOT** blindly pass abbreviated area names to the application. Convert the time data to a host-supported format first.
 
 ##### Special Areas
 
@@ -626,7 +638,7 @@ The following special pseudo-areas **CAN** also be used. They do not contain a l
 | `Zero`  | `Z`          | Alias to `Etc/UTC` |
 | `Local` | `L`          | "Local" time zone, meaning that the accompanying time value is to be interpreted as if in the time zone of the observer. |
 
-**Note**: These special areas may not be understood by the host's time APIs. Implementations **MUST** compensate for this.
+A decoder **MUST NOT** blindly pass these special areas to the application. Convert the time data to a host-supported format first.
 
 **Examples**:
 
@@ -651,7 +663,7 @@ This method has the advantage of being temporally unambiguous, which could be us
 
 If the time zone is unspecified, it is assumed to be `Zero` (UTC). Placing all past event time values in the UTC time zone has the advantage of more compact and unambiguous time storage, which makes comparisons and other operations much easier and reduces bugs.
 
-UTC time **SHOULD NOT** be used for future or periodic/repeating time values.
+UTC time **SHOULD NOT** be used for future or periodic/repeating time values (see [appendix B: recording time](#appendix-b-recording-time)] for an explanation).
 
 #### UTC Offset
 
@@ -659,7 +671,7 @@ Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and mi
 
 Use of UTC offset is discouraged except as a means of interfacing with legacy systems.
 
-UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values.
+UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values (see [appendix B: recording time](#appendix-b-recording-time)] for an explanation).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -673,10 +685,10 @@ String Types
 
 String types contain [UTF-8 encoded](https://en.wikipedia.org/wiki/UTF-8) string data. All [Unicode](https://en.wikipedia.org/wiki/Unicode) codepoints except for surrogates and those marked permanently as noncharacters are allowed:
 
-<pre>
+```dogma
 string_type = char_string*;
 char_string = unicode(C,L,M,N,P,S,Z);
-</pre>
+```
 
 String types **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string type containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
@@ -729,19 +741,19 @@ c1
 Array Types
 -----------
 
-An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted. Array types **CAN** contain [comments](#comment) in [CTE](cte-specification.md) wherever an element is valid.
+An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
 
-General array form (note: [media](#media) and [custom binary](#custom-type-forms) also contain additional data):
+General array form:
 
-<pre>
-array = (<a href="#comment">comment</a>* & array_element)*;
-</pre>
+```dogma
+array = array_element*;
+```
 
 There are three main array styles in Concise Encoding:
 
  * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
- * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
- * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always considered to be 8 bits wide, regardless of the actual data the bytes represent.
+ * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always bytes, regardless of the actual data the bytes represent.
+ * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always bytes, regardless of the actual data the bytes represent.
 
 
 ### Primitive Array Types
@@ -777,23 +789,24 @@ c1
 
 A media object contains a [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) and a series of bytes representing the media's data.
 
-<pre>
-media = media_type (<a href="#comment">comment</a>* & byte)*;
-</pre>
+```dogma
+media = media_type & byte*;
+```
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
 The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is a [data error](#data-errors).
 
-**Note**: An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
+**Notes**:
 
-**Note**: [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
+ * An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
+ * [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
 
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1
-|application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+|.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
 ```
 
 Which is the shell script:
@@ -813,22 +826,22 @@ There are some situations where a custom data type is preferable to the standard
 
 Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type envelope, and then report it as a [data error](#data-errors).
 
-**Note**: Although custom types are encoded as "array types", the interpretation of their contents is user-defined, and they might not represent an array at all.
+**Note**: Although custom types are encoded as "[array types](#array-types)", the interpretation of their contents is user-defined, and they might not represent an array at all.
 
 ### Custom Type Code
 
-All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely identifies the value's type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
+All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely differentiates each type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
 
-A custom type code **MUST** be an unsigned integer in the range of 0 to 4294967295 (inclusive).
+A custom type code **MUST** be an unsigned integer in the range of 0 to 0xffffffff (inclusive).
 
 ### Custom Type Forms
 
 Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
 
-<pre>
-custom_binary = type_code & (<a href="#comment">comment</a>* & byte)*;
-custom_text   = type_code & <a href="#comment">comment</a>* & <a href="#string-types">string</a>;
-</pre>
+```dogma
+custom_binary = type_code & byte*;
+custom_text   = type_code & string;
+```
 
 [CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
 
@@ -844,9 +857,11 @@ Suppose we wanted to encode a fictional "complex number" type:
         imaginary: float32
     }
 
-For our textual encoding scheme, we could represent complex numbers using something like this: `REAL+IMAGINARYi`, where `REAL` and `IMAGINARY` are floats.
+For our textual encoding scheme, we could represent complex numbers using something like `REAL + IMAGINARY`, where `REAL` and `IMAGINARY` are float32s.
 
-For our binary encoding scheme, we could just write the two float32 values directly:
+For our textual encoding scheme, we could use the mathematical notation, such as `2.94+3i`.
+
+For our binary encoding scheme, we could write the two float32 values directly:
 
     78 56 34 12 78 56 34 12 <-- in little endian byte order
     |---------| |---------|
@@ -890,9 +905,9 @@ If a container is ordered, the order in which objects are placed in the containe
 
 For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list.
 
-For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what the key's associated value is.
+For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what that key's associated value is.
 
-An implementation **MUST** disregard the type and size of integers and floats when comparing them to one other. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it is a string, not an integer or float.
+An implementation **MUST** disregard the type and size of integers and floats when comparing. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it is a string, not an integer or float.
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
@@ -903,9 +918,9 @@ Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be 
 
 A sequential list of objects. List elements **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not all have to be the same type.
 
-<pre>
-list = <a href="#object-categories">object</a>*;
-</pre>
+```dogma
+list = object*;
+```
 
 By default, a list is [ordered, and allows duplicate values](#container-properties).
 
@@ -928,9 +943,9 @@ A map associates key objects with value objects. Keys **CAN** be any [keyable ty
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
-<pre>
-map = (<a href="#keyable-types">keyable-type</a> & <a href="#concrete-objects">concrete-object</a>)*;
-</pre>
+```dogma
+map = (keyable-type & concrete-object)*;
+```
 
 By default, a map is [unordered, and does not allow duplicate keys](#container-properties).
 
@@ -938,22 +953,22 @@ By default, a map is [unordered, and does not allow duplicate keys](#container-p
 
 Only the following data types are allowed as keys in map-like containers:
 
-* [Numeric types](#numeric-types), except for [NaNs and `-0`](#special-floating-point-values)
+* [Numeric types](#numeric-types), except for [NaN and `-0`](#special-floating-point-values)
 * [Temporal types](#temporal-types)
 * [Strings](#string)
 * [Resource identifiers](#resource-identifier)
 * [Local references](#local-reference) (only if the referenced value is keyable)
 
-<pre>
-keyable-type = <a href="#intangible-objects">intangible_object</a>*
-             & ( <a href="#numeric-types">numeric_type</a>
-               | <a href="#temporal-types">temporal_type</a>
-               | <a href="#string">string</a>
-               | <a href="#resource-identifier">resource_id</a>
-               | <a href="#local-reference">local_reference</a>
+```dogma
+keyable-type = intangible_object*
+             & ( numeric_type
+               | temporal_type
+               | string
+               | resource_id
+               | local_reference
                )
              ;
-</pre>
+```
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -970,46 +985,45 @@ c1
 
 ### Records
 
-Records split [map-like](#map) data into two parts: a [definition](#record-definition) which defines what keys will be present, and multple [records](#record) which reference the definition and provide the matching values.
+Records split [map-like](#map) data into two parts: a [record type](#record-type) which defines what keys will be present, and multple [records](#record) which reference the record type and provide the matching values.
 
-    Record Definition: <key1 key2 key3 ...>
-    Record:            (val1 val2 val3 ...)
-    ------------------------------------------------------
-    Produces Map:      {key1=val1 key2=val2 key3=val3 ...}
+    Record type:  @<key1 key2 key3 ...>
+    Record:       @{val1 val2 val3 ...}
+    -------------------------------------------------
+    Produces Map: {key1=val1 key2=val2 key3=val3 ...}
 
 Records offer a more efficient way to encode payloads containing many instances of the same data structures by removing the need to write their map keys over and over. For tabular data this can reduce the payload size by 30-50% or more.
 
 #### Record
 
-A record builds a [map](#map) from a [record definition](#record-definition) by assigning the values from the instance to the keys from the definition.
+A record builds a [map](#map) from a [record type](#record-type) by assigning the values from the record to the keys from the record type.
 
-A record contains the [identifier](#identifier) of the [record definition](#record-definition) to build from, followed by a series of values that will be assigned in-order to the keys from the definition. [Null](#null) values **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
+A record contains the [identifier](#identifier) of the [record type](#record-type) to build from, followed by a series of values that will be assigned in-order to the keys from the record type. [Null](#null) values in a record **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
 
 <pre>
 record = <a href="#identifier">identifier</a> & <a href="#concrete-objects">concrete_object</a>*;
 </pre>
 
  * Records are always [ordered, and **CAN** contain duplicates](#container-properties).
- * The record **MUST** define the same number of values as there are keys in the [definition](#record-definition). A mismatch is a [structural error](#structural-errors).
- * A record **CANNOT** occur earlier in the document than the [definition](#record-definition) it references.
+ * The record **MUST** define the same number of values as there are keys in the [record type](#record-type). A mismatch is a [structural error](#structural-errors).
 
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1
+@vehicle<"make" "model" "drive" "sunroof">
+@phone<"make" "model" "storage">
 {
     "year end" = 2018
     "vehicles" = [
-        @vehicle<"make"       "model"      "drive" "sunroof">
-        @vehicle("Ford"       "Explorer"   "4wd"   true     )
-        @vehicle("Toyota"     "Corolla"    "fwd"   false    )
-        @vehicle("Honda"      "Civic"      "fwd"   false    )
-        @vehicle("Alfa Romeo" "Giulia 952" "awd"   true     )
+        @vehicle{"Ford"       "Explorer"   "4wd" true }
+        @vehicle{"Toyota"     "Corolla"    "fwd" false}
+        @vehicle{"Honda"      "Civic"      "fwd" false}
+        @vehicle{"Alfa Romeo" "Giulia 952" "awd" true }
     ]
     "phones" = [
-        @phone<"make"   "model"      "storage">
-        @phone("Apple"  "iPhone XS"   67108864)
-        @phone("Google" "Pixel 3 XL" 134217728)
+        @phone{"Apple"  "iPhone XS"   67108864}
+        @phone{"Google" "Pixel 3 XL" 134217728}
     ]
 }
 ```
@@ -1063,7 +1077,7 @@ c1
 
 #### Record Validation
 
-As record definitions and instances are only parts of the final object, they **CANNOT** be validated on their own; only the final [map](#map) they produce **CAN** be validated.
+A record and record type **MUST** be validated together as the [map](#map) they produce through their combination.
 
 
 ### Edge
@@ -1074,23 +1088,23 @@ An edge describes a relationship between vertices in a graph. It is composed of 
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other application-specific data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null) or a [reference](#local-reference) to null.
 
-<pre>
+If any of these parts are missing, it is a [structural error](#structural-errors).
+
+```dogma
 edge        = source & description & destination;
 source      = not_null;
-description = <a href="#concrete-objects">concrete_object</a>;
+description = concrete_object;
 destination = not_null;
-not_null    = <a href="#intangible-objects">intangible_object</a>*
-            & ( <a href="#numeric-types">numeric_type</a>
-              | <a href="#temporal-types">temporal_type</a>
-              | <a href="#string-types">string_type</a>
-              | <a href="#array-types">array_type</a>
-              | <a href="#container-types">container_type</a>
-              | <a href="#pseudo-objects">pseudo_object</a>
+not_null    = intangible_object*
+            & ( numeric_type
+              | temporal_type
+              | string_type
+              | array_type
+              | container_type
+              | pseudo_object
               )
             ;
-</pre>
-
-If any of these parts are missing, it is a [structural error](#structural-errors).
+```
 
 Directionality is by default from the source to the destination unless the description or schema specifies otherwise.
 
@@ -1169,9 +1183,9 @@ A node is the basic building block for unweighted directed graphs. It consists o
 
 If a child is not of type node, it is treated as though it were the value portion of a node with no children.
 
-<pre>
-node = <a href="#concrete-objects">concrete_object</a> & (node | <a href="#concrete-objects">concrete_object</a>)*;
-</pre>
+```dogma
+node = concrete_object & (node | concrete_object)*;
+```
 
 **Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
 
@@ -1236,19 +1250,16 @@ Null is often used in [data records](#record) because every field in a record en
 
 ```cte
 c1
+// Define the "Employee" record type:
+@Employee<"name" "department" "parking stall">
 [
-    // Define the "Employee" record definition:
-    @Employee<"name" "department" "parking stall">
-
     // Add some employee records:
-    @Employee( "John Marcos" "Marketing" 34   )
-    @Employee( "Judy McGill" "Executive"  5   )
+    @Employee( "John Marcos" "Marketing"   34)
+    @Employee( "Judy McGill" "Executive"    5)
     // Jane works from home, and uses guest parking when at the office
-    @Employee( "Jane Morgan" "Sales"     null )
+    @Employee( "Jane Morgan" "Sales"     null)
 ]
 ```
-
-**Note**: One might argue that the above example record structure does not adequately reflect reality (parking stall should allow for no stall to be assigned), but data modeling is about finding an acceptable compromise between reality and processing efficiency, and the result is often impure.
 
 
 
@@ -1271,11 +1282,11 @@ A reference acts as a stand-in for another object in the current document or ano
 
 A local reference contains the marker [identifier](#identifier) of an object that has been [marked](#marker) elsewhere in the current document.
 
-<pre>
-local_reference = <a href="#identifier">identifier</a>;
-</pre>
+```dogma
+local_reference = identifier;
+```
 
- * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been configured to accept them.
+ * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been [configured to accept them](#recursive-references).
  * Forward references (reference to an object marked later in the document) are supported.
  * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid or undefined marker ID is a [structural error](#structural-errors).
  * A local reference used as a map key **MUST** refer to a marked [keyable object](#keyable-types).
@@ -1351,9 +1362,11 @@ A comment is a string-like invisible object that provides extra information for 
 CTE supports two forms of comments:
 
  * Single-line comments, which end at the line end (`// a comment`).
- * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment */`).
+ * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment /* nested */ */`).
 
-Comments are allowed anywhere in a CTE document where a real object would be allowed, and can also be placed inside [primitive arrays](#primitive-array-types) alongside array elements (but not between the opening pipe and the [array type specifier](cte-specification.md#primitive-type-array-encoding)).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, except inside [arrays](#array-types).
+
+**Note**: CBE **CANNOT** encode comments, so they will be discarded when converting from CTE to CBE.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1375,13 +1388,6 @@ c1
 
     "a" = "We're inside a string, so /* this is not a comment; it's part of the string! */"
 
-    "data" =
-    // A comment before some binary data
-    |u8x // Comment at the start of the array
-         01 02 03 // A comment inside the binary array
-         04 05 06 07 /* Another comment inside */ 08 09 0a
-         /* One more before closing */|
-
     // Comment before the end of the top-level object (the map), but not after!
 }
 ```
@@ -1389,9 +1395,11 @@ c1
 
 ### Padding
 
-Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning. CTE encoders **CANNOT** encode padding.
+Padding is an invisible object used for aligning data in a CBE document, and has no actual meaning.
 
 The padding type **CAN** occur any number of times where a [CBE type field](cbe-specification.md#type-field) is valid.
+
+**Note**: CTE **CANNOT** encode padding, so it will be discarded when converting from CBE to CTE.
 
 
 
@@ -1403,30 +1411,30 @@ Structural objects exist purely in support of the document structure itself. The
 Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 
-### Record Definition
+### Record Type
 
-A record definition provides instructions for a decoder to build instances from, defining what keys will be present for any [records](#record) that use it.
+A record type provides instructions for a decoder to build [records](#record) from, defining what keys will be present for any records that use it.
 
-A record definition contains a unique (to the current document) definition [identifier](#identifier), followed by a series of keys that will be present in any instances created from it.
+A record type contains a unique (to the current document) type [identifier](#identifier), followed by a series of keys that will be present in any records created from it.
 
-<pre>
-record_definition = <a href="#identifier">identifier</a> & <a href="#keyable-types">keyable_type</a>*;
-</pre>
+```dogma
+record_type = identifier & keyable_type*;
+```
 
- * Definitions **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
- * Definition keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
- * Definitions **CAN** be placed anywhere a [pseudo-object](#pseudo-objects) can, and also any number of times before the [top-level object](#document-structure), but there are some restrictions:
-   - Definitions **CANNOT** be placed inside other definitions.
-   - A Definition **MUST** be defined **before** any [records](#record) that use it.
+**Notes**:
+
+ * Record Types **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
+ * Record Type keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
+ * Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure).
 
 
 ### Marker
 
 A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which can then be [referenced](#reference) from elsewhere the document (or from a different document).
 
-<pre>
-marked-object = <a href="#identifier">identifier</a> & <a href="#concrete-objects">concrete_object</a>;
-</pre>
+```dogma
+marked-object = identifier & concrete_object;
+```
 
 A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are [structural errors](#structural-errors)).
 
@@ -1453,15 +1461,16 @@ Identifiers are always an integral part of another type, and thus **CANNOT** exi
 
 #### Identifier Rules
 
- * It **MUST** be a valid, visible UTF-8 string and contain only [identifier safe](#character-safety) characters.
- * It **CANNOT** be empty (0 bytes long).
+ * It **MUST** be a valid, visible UTF-8 string and contain only characters of Unicode categories Cf, L, M, N, or characters '_', '.', or '-'.
+ * It **MUST** begin with either a letter, number, or an underscore '_' (and therefore **CANNOT** be empty).
  * Comparisons are **case sensitive**.
- * Identifier definitions **MUST** be unique to the current document (isolated to the type they identify for). So for example the [marker](#marker) ID "a" will not clash with the [record definition](#record-definition) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record definitions](#record-definition) with ID "a".
+ * Identifier definitions **MUST** be unique to an identifier type in the current document. So for example the [marker](#marker) ID "a" will not clash with the [record type](#record-type) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record type](#record-type) with ID "a".
 
-<pre>
-identifier      = char_identifier+;
-char_identifier = unicode(Cf,L,M,N) | '_' | '.' | '-';
-</pre>
+```dogma
+identifier             = char_identifier_first & char_identifier_next*;
+char_identifier_first  = unicode(L,N) | '_';
+char_identifier_next   = unicode(Cf,L,M,N) | '_' | '.' | '-';
+```
 
 
 
@@ -1472,45 +1481,6 @@ An empty document is signified by using [null](#null) as the [top-level object](
 
 * In CBE: [`81 01 7d`]
 * In CTE: `c1 null`
-
-
-
-Character Safety
-----------------
-
-Because [CTE](cte-specification.md) documents **MUST** be editable by a human without losing information, there are certain codepoints that **MUST NOT** be present in a [CTE](cte-specification.md) document. These restrictions can be worked around in some contexts by encoding them as [escape sequences](cte-specification.md#escape-sequences).
-
-All unassigned, reserved, and invalid Unicode codepoints **MUST NOT** be present in a [CBE](cbe-specification.md) or [CTE](cte-specification.md) document at all (even in escaped form).
-
-[Identifiers](#identifier) have even stricter restrictions, and do not support [escape sequences](cte-specification.md#escape-sequences).
-
-The following table lists the CTE and identifier safety of Unicode characters based on [category](https://unicode.org/glossary/#general_category) or codepoint. The more specific categories or codepoints override the safety status of the broader categories in the range they specify. All characters not covered by this table are both CTE _and_ identifier **unsafe**.
-
-| Category or Character | CTE Safe? | Identifier Safe? |
-| --------------------- | --------- | ---------------- |
-| Cf (format)           |     Y     |        Y         |
-| L (letter)            |     Y     |        Y         |
-| M (mark)              |     Y     |        Y         |
-| N (number)            |     Y     |        Y         |
-| P (punctuation)       |     Y     |        -         |
-| S (symbol)            |     Y     |        -         |
-| Zs (space separators) |     Y     |        -         |
-| U+0009 (TAB)          |     Y     |        -         |
-| U+000a (LF)           |     Y     |        -         |
-| U+000d (CR)           |     Y     |        -         |
-| U+002d (`-`)          |     Y     |        Y         |
-| U+002e (`.`)          |     Y     |        Y         |
-| U+005f (`_`)          |     Y     |        Y         |
-| U+00ad (SHY)          |     -     |        -         |
-| U+200b (ZWSP)         |     -     |        -         |
-| U+200e to U+200f      |     -     |        -         |
-| U+202a to U+202e      |     -     |        -         |
-| U+2060 to U+206f      |     -     |        -         |
-| U+feff (BOM)          |     -     |        -         |
-| U+fff9 to U+fffb      |     -     |        -         |
-| U+e0001 to U+e0007f   |     -     |        -         |
-
-See [cte.dogma](cte.dogma) and [cbe.dogma](cbe.dogma) for formal definitions.
 
 
 
@@ -1537,7 +1507,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 **Lossy conversions that MUST be decided based on configuration**:
 
- * Loss of floating point coefficient precision from conversion between binary and decimal float types
+ * Loss of floating point coefficient accuracy from conversion between binary and decimal float types
  * Loss of floating point coefficient precision from storing in a smaller float type
  * Loss of subsecond precision due to temporal type mismatch or platform capabilities
  * Conversion from a real [time zone](#time-zones) to a [UTC offset](#utc-offset)
@@ -1555,8 +1525,8 @@ Binary and decimal float values can rarely be converted to each other without da
 
 Conversion between binary and decimal float values **MUST** be done using a method that effectively produces the same result in the destination type as the following algorithm would:
 
-1. Convert the source value to its string-based decimal float encoding.
-2. Convert the string value into the destination type.
+1. Convert the source value to its string-based decimal float encoding using the standard library.
+2. Convert the string value into the destination type using the standard library.
 
 Where conversion between binary float and decimal string representation follows one of the commonly accepted conversion algorithms present in most standard libraries, for example:
 
@@ -1762,7 +1732,7 @@ As a seller, you'd want your billing system to choose the first instance of "tot
     {
         "purchase-ids" = [1004 102062 94112]
         "total" = 91.44
-        "total\{D800}" = 0
+        "total\[D800]" = 0
     }
 
 In this case, if the system truncated bad Unicode characters _after_ checking for duplicate keys, it would be vulnerable to exploitation.
@@ -1961,6 +1931,6 @@ Version History
 License
 -------
 
-Copyright (c) 2018-2022 Karl Stenerud. All rights reserved.
+Copyright (c) 2018-2023 Karl Stenerud. All rights reserved.
 
 Distributed under the [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/legalcode) ([license deed](https://creativecommons.org/licenses/by/4.0).
