@@ -10,7 +10,7 @@ Concise Encoding
 
 **Times are different from the carefree days that brought us XML and JSON:**
 
-### Security (protect your data and infrastructure)
+### 🔒 Security (protect your data and infrastructure)
 
 <ul>
 
@@ -22,7 +22,7 @@ Concise Encoding
 
 </ul>
 
-### Efficiency (but not at the cost of convenience)
+### 🔋 Efficiency (but not at the cost of convenience)
 
 <ul>
 
@@ -34,7 +34,7 @@ Concise Encoding
 
 </ul>
 
-### Types (because stringifying everything is wasteful)
+### 🧬 Types (because stringifying everything is wasteful)
 
 <ul>
 
