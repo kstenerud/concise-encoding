@@ -34,7 +34,7 @@ Concise Encoding
 
 </ul>
 
-### Types (stringifying is wasteful)
+### Types (because stringifying is wasteful)
 
 <ul>
 
