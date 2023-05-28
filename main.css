@@ -224,6 +224,10 @@ a.badge-shoutout:hover {
     margin: 4rem auto 0 auto;
 }
 
+.resource-section h1 {
+    font-size: 2rem;
+}
+
 .blurb {
     width: 80%;
     text-align: center;
@@ -298,14 +302,11 @@ a.badge-shoutout:hover {
 .resource-desc {
     margin-top: auto;
     margin-bottom: auto;
-}
-
-.resource-desc a {
     font-size: 1.5rem;
 }
 
 .resource-desc span {
-    font-size: 1rem;
+    font-size: 1.15rem;
     opacity: 0.85;
 }
 
