@@ -10,6 +10,7 @@ Contents
 
 - [Design Document](#design-document)
   - [Contents](#contents)
+  - [TODO](#todo)
   - [Mission Statement](#mission-statement)
   - [Problem Space](#problem-space)
   - [Concise Encoding's Positioning](#concise-encodings-positioning)
@@ -54,6 +55,18 @@ Contents
       - [Fixed Size Integers](#fixed-size-integers)
       - [Booleans](#booleans)
 
+TODO
+----
+
+
+- [] list semantics
+- {} map semantics
+- () graph semantics
+- <> template semantics
+- "" string semantics
+- & marked (address-of / reference-of)
+- $ dereference
+- @ & identifier? & semantic: qualifier for alternate processing
 
 
 Mission Statement
@@ -490,6 +503,7 @@ Other escape sequences present in various formats and languages were evaluated b
 Continuations are a convenience for representing long sequences of text that don't have many line breaks. For example:
 
 ```cte
+c1
     "The only people for me are the mad ones, the ones who are mad to live, \
      mad to talk, mad to be saved, desirous of everything at the same time, \
      the ones who never yawn or say a commonplace thing, but burn, burn, burn \

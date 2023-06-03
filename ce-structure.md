@@ -776,11 +776,11 @@ The following element types are supported in primitive arrays. For other types o
 ```cte
 c1
 [
-    |u8x 9f 47 cb 9a 3c|
-    |f32 1.5 0x4.f391p100 30 9.31e-30|
-    |i16 0b1001010 0o744 1000 0x7fff|
-    |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    |b 1 1 0 1 0|
+    @u8x[9f 47 cb 9a 3c]
+    @f32[1.5 0x4.f391p100 30 9.31e-30]
+    @i16[0b1001010 0o744 1000 0x7fff]
+    @uid[3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f]
+    @b[1 1 0 1 0]
 ]
 ```
 
@@ -806,7 +806,7 @@ The media type **MUST** be validated according to the rules of [rfc6838](https:/
 
 ```cte
 c1
-|.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+@application/x-sh[23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 ```
 
 Which is the shell script:
@@ -879,8 +879,8 @@ Our data:
 
 In [CTE](cte-specification.md):
 
- * Binary form:  `|c99 f6 28 3c 40 00 00 40 40|`
- * Textual form: `|c99 "2.94+3i"|`
+ * Binary form:  `@99[f6 28 3c 40 00 00 40 40]`
+ * Textual form: `@99"2.94+3i"`
 
 In [CBE](cbe-specification.md):
 
@@ -1254,10 +1254,10 @@ c1
 @Employee<"name" "department" "parking stall">
 [
     // Add some employee records:
-    @Employee( "John Marcos" "Marketing"   34)
-    @Employee( "Judy McGill" "Executive"    5)
+    @Employee{ "John Marcos" "Marketing"   34}
+    @Employee{ "Judy McGill" "Executive"    5}
     // Jane works from home, and uses guest parking when at the office
-    @Employee( "Jane Morgan" "Sales"     null)
+    @Employee{ "Jane Morgan" "Sales"     null}
 ]
 ```
 
@@ -1268,7 +1268,7 @@ Pseudo-Objects
 
 Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand-ins for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `|u8x 11 22 $myref 44|` is a [structural error](#structural-errors)).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `@u8x[11 22 $myref 44]` is a [structural error](#structural-errors)).
 
 
 ### Reference

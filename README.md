@@ -197,8 +197,8 @@ c1
     "time"      = 18:04:00.948/Europe/Prague
     "timestamp" = 2010-07-15/13:28:15.415942344
     "null"      = null
-    "media"     = |.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a
-                   65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+    "media"     = @application/x-sh[23 21 2f 62 69 6e 2f 73 68 0a 0a
+                   65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 }
 ```
 
@@ -209,10 +209,10 @@ c1
 {
     "list"          = [1 2.5 "a string"]
     "map"           = {"one"=1 2="two" "today"=2020-09-10}
-    "bytes"         = |u8x 01 ff de ad be ef|
-    "int16 array"   = |i16 7374 17466 -9957|
-    "uint16 hex"    = |u16x 91fe 443a 9c15|
-    "float32 array" = |f32 1.5e10 -8.31e-12|
+    "bytes"         = @u8x[01 ff de ad be ef]
+    "int16 array"   = @i16[7374 17466 -9957]
+    "uint16 hex"    = @u16x[91fe 443a 9c15]
+    "float32 array" = @f32[1.5e10 -8.31e-12]
 }
 ```
 
@@ -338,8 +338,8 @@ c1
     // Custom types are user-defined, with user-supplied codecs.
     // In this example, we assume that custom type 12 is registered
     // via a schema to a custom "complex number" type.
-    "custom text"   = |c12 "2.94+3i"|
-    "custom binary" = |c12 04 f6 28 3c 40 00 00 40 40|
+    "custom text"   = @12"2.94+3i"
+    "custom binary" = @12[04 f6 28 3c 40 00 00 40 40]
 }
 ```
 

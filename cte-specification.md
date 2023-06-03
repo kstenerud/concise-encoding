@@ -64,6 +64,8 @@ Contents
     - [String](#string)
     - [Resource Identifier](#resource-identifier)
   - [Arrays](#arrays)
+    - [Elemental Form](#elemental-form)
+    - [String Form](#string-form)
     - [Array Types](#array-types)
       - [Array Type Suffix](#array-type-suffix)
     - [Bit Array Elements](#bit-array-elements)
@@ -865,30 +867,49 @@ c1
 Arrays
 ------
 
-Arrays are enclosed within pipe (`|`) characters, containing the array type and the elements. Elements are either encoded individually ([whitespace](#structural-whitespace) separated), or as a [string](#string-types).
+Arrays come in elemental and string form, depending on the array type.
 
-The general form is:
 
-    |arraytype elem1 elem2 ...|   // Elemental form
-    |arraytype "string contents"| // String form
-    |arraytype|                   // Empty array
+### Elemental Form
+
+An elemental form array begins with an `@` character, followed by the [array type](#array-types), and finally the array elements between `[` and `]` characters.
 
 ```dogma
-array(type, elem_type) = '|' & type & WSL & items(elem_type, WSL) & '|';
+array(type, elem_type) = '@' & type & '[' & items(elem_type, WSL) & ']';
 items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
 ```
 
-In elemental form, array elements **CAN** be written using any valid representation of the array's element type and size:
+**Example:**
+
+```cte
+c1
+@i32[1 -1000 10000 -100000 1000000]
+```
+
+
+### String Form
+
+The string form is available as an alternative representation in some cases ([media](#media) and [custom typss](#custom-types)). It begins with an `@` character, followed by the [array type](#array-types) type, followed by a string enclosed by double-quotes (`"`).
+
+```dogma
+array_stringform(type) = '@' & type & stringlike;
+stringlike             = '"' & ((char_cte ! ('"' | '\\' | delimiter_lookalikes)) | escape_sequence)* & '"';
+```
+
+**Example:**
 
 ```cte
 c1
 [
-    |i16 -1000 1000 15000 0xff|
-    |f32 1.5 3.914e+20 nan|
+    // Custom type as a string
+    @1"2.94+3i"
+
+    // Media as a string
+    @application/x-sh"#!/bin/sh\
+                      echo hello world\
+                     "
 ]
 ```
-
-See [cte.dogma](cte.dogma) for details about arrays.
 
 
 ### Array Types
@@ -909,9 +930,9 @@ The following array types are available:
 | `f16`           | 10, 16       | 16-bit binary float (bfloat)  | Element           |
 | `f32`           | 10, 16       | 32-bit binary float (ieee754) | Element           |
 | `f64`           | 10, 16       | 64-bit binary float (ieee754) | Element           |
-| `u`             | 16           | 128-bit UID                   | Element           |
-| `c<id>`         | 16           | [Custom Types](#custom-types) | Element or string |
-| `.<media-type>` | 16           | [Media](#media)               | Element or string |
+| `uid`           | 16           | 128-bit UID                   | Element           |
+| `<type-code>`   | 16           | [Custom Types](#custom-types) | Element or string |
+| `<media-type>`  | 16           | [Media](#media)               | Element or string |
 
 Array types are [case-insensitive](#letter-case).
 
@@ -926,11 +947,11 @@ CTE encoders **MUST** default to [base-10 notation](#base-10-notation) for integ
 
 **OPTIONALLY**, if an array type supports multiple element bases, a suffix **CAN** be appended to a numeric array type specifier to indicate the implied base of all elements in that array (provided the array element type supports such a base). When an implied base is specified, all elements **MUST** be interpreted in that base, and **MUST NOT** themselves have a base prefix.
 
-| Array Type Suffix | Base | Example                         |
-| ----------------- | ---- | ------------------------------- |
-| `b`               | 2    | `\|u8b 10011010 00010101\|`     |
-| `o`               | 8    | `\|i16o -7445 644\|`            |
-| `x`               | 16   | `\|f32x a.c9fp20 -1.ffe9p-40\|` |
+| Array Type Suffix | Base | Example                       |
+| ----------------- | ---- | ----------------------------- |
+| `b`               | 2    | `@u8b[10011010 00010101]`     |
+| `o`               | 8    | `@i16o[-7445 644]`            |
+| `x`               | 16   | `@f32x[a.c9fp20 -1.ffe9p-40]` |
 
 CTE encoders **MUST NOT** produce array type suffixes by default, but **MAY** be configured to do so.
 
@@ -939,11 +960,11 @@ CTE encoders **MUST NOT** produce array type suffixes by default, but **MAY** be
 ```cte
 c1
 [
-    |u8x 9f 47 cb 9a 3c|
-    |f32 1.5 0x4.f391p100 30 9.31e-30|
-    |i16 0b1001010 0o744 1000 0x7fff|
-    |u 3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f|
-    |b 11010|
+    @u8x[9f 47 cb 9a 3c]
+    @f32[1.5 0x4.f391p100 30 9.31e-30]
+    @i16[0b1001010 0o744 1000 0x7fff]
+    @uid[3a04f62f-cea5-4d2a-8598-bc156b99ea3b 1d4e205c-5ea3-46ea-92a3-98d9d3e6332f]
+    @b[11010]
 ]
 ```
 
@@ -952,7 +973,7 @@ c1
 Bit array elements are represented using `0` for false and `1` for true. [Whitespace](#structural-whitespace) between elements is **OPTIONAL** when encoding a bit array.
 
 ```dogma
-array_bit = '|' & ('b' | 'B') & WSL & items(digit_bin, WSL?) & '|';
+array_bit = '@b[' & items(digit_bin, WSL?) & ']';
 digit_bin = '0'~'1';
 ```
 
@@ -961,9 +982,9 @@ digit_bin = '0'~'1';
 ```cte
 c1
 [
-    |b 1 0 0 1| // bits 1, 0, 0, 1
-    |b 1001|    // bits 1, 0, 0, 1
-    |b 10 01|   // bits 1, 0, 0, 1
+    @b[1 0 0 1] // bits 1, 0, 0, 1
+    @b[1001]    // bits 1, 0, 0, 1
+    @b[10 01]   // bits 1, 0, 0, 1
 ]
 ```
 
@@ -971,7 +992,7 @@ c1
 
 Like their standalone counterparts, [special float values](#special-floating-point-values) are allowed in floating point arrays:
 
-    |f32 0x1.5da nan -inf 0xc.1f3p38|
+    @f32[0x1.5da nan -inf 0xc.1f3p38]
 
 Float array element values written in decimal form will be **silently rounded** as they're converted to binary floats. This is unavoidable due to differences in float parsers on different platforms, and is another reason why you should prefer [CBE](cbe-specification.md) over CTE when ingesting data from an untrusted source (see [security and limits](ce-structure.md#security-and-limits)).
 
@@ -981,10 +1002,10 @@ Float array element values written in decimal form will be **silently rounded** 
 In media objects, the [array type field](#array-types) is the [media type](http://www.iana.org/assignments/media-types/media-types.xhtml), and the [contents](#media-contents) contains the media data:
 
 ```dogma
-media                  = array_stringable('.' & media_type);
-media_type             = media_type_word & '/' & media_type_word;
-media_type_word        = char_media_first & char_media_next*;
-array_stringable(type) = '|' & type & (WSL+ & (string | hex_bytes))? & WSL* & '|';
+media                  = array_stringform(media_type) | array(media_type, hex_byte);
+media_type             = media_type_major & '/' & media_type_minor;
+media_type_major       = char_media_first & char_media_next*;
+media_type_minor       = char_media_next+;
 ```
 
 **Examples**:
@@ -992,9 +1013,10 @@ array_stringable(type) = '|' & type & (WSL+ & (string | hex_bytes))? & WSL* & '|
 ```cte
 c1
 [
-    |.text/plain "stuff"|        // text encoded media
-    |.text/plain 73 74 75 66 66| // byte encoded media
-    |.text/plain|                // empty media
+    @text/plain"stuff"          // text encoded media
+    @text/plain[73 74 75 66 66] // byte encoded media
+    @text/plain[]               // empty media
+    @text/plain""               // empty media
 ]
 ```
 
@@ -1002,25 +1024,24 @@ c1
 
 If the actual media contents consists only of valid UTF-8 text, it **CAN** be represented in [string form](#string-types). Otherwise, it **MUST** be represented in binary form using hex byte values as if it were a `u8x` array:
 
-* As text: `|.type/subtype "contents"|`
-* As binary: `|.type/subtype 63 6f 6e 74 65 6e 74 73|`
+* As text: `@type/subtype"contents"`
+* As binary: `@type/subtype[63 6f 6e 74 65 6e 74 73]`
 
 **Example**:
 
 ```cte
 c1
-|.application/x-sh 23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a|
+@application/x-sh[23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 ```
 
 Which is equivalent to:
 
 ```cte
 c1
-|.application/x-sh "\.@@
-#!/bin/sh
+@application/x-sh"#!/bin/sh
 
 echo hello world
-@@"|
+"
 ```
 
 Both of the above examples represent a document containing the shell script:
@@ -1034,10 +1055,10 @@ echo hello world
 
 ### Custom Types
 
-In custom objects, the type field is a concatenation of the letter `c` and the unsigned integer custom type, and can have a hex-byte form and a [string form](#string-types).
+In custom objects, the type field is the text representation of theunsigned integer custom type. Custom types can have a hex-byte form and a [string form](#string-types).
 
 ```dogma
-custom_type      = array_stringable(('c' | 'C') & custom_type_code);
+custom_type      = array_stringform(custom_type_code) | array(custom_type_code, hex_byte);
 custom_type_code = digit_dec+;
 ```
 
@@ -1047,7 +1068,7 @@ The binary form is encoded like a u8x array (hex encoded byte elements).
 
 ```cte
 c1
-|c99 01 f6 28 3c 40 00 00 40 40|
+@99[01 f6 28 3c 40 00 00 40 40]
 ```
 
 The textual form is encoded using a quoted string.
@@ -1056,7 +1077,7 @@ The textual form is encoded using a quoted string.
 
 ```cte
 c1
-|c99 "2.94+3i"|
+@99"2.94+3i"
 ```
 
 
@@ -1442,7 +1463,7 @@ A CTE decoder **MUST** accept documents such as:
 ```cte
 C1
 [
-    |U8 0XF1 0X5A|
+    @U8[0XF1 0X5A]
     "Some text\Nwith a newline and a \[1F415]"
     0XFFFF
     0B10010101
@@ -1460,7 +1481,7 @@ However, the following would be invalid:
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
 
- * `|.TEXT/XML "<xml/>"|` ([IANA registered](http://www.iana.org/assignments/media-types/media-types.xhtml) as `text/xml`, not `TEXT/XML`)
+ * `@TEXT/XML"<xml/>"` ([IANA registered](http://www.iana.org/assignments/media-types/media-types.xhtml) as `text/xml`, not `TEXT/XML`)
 
 
 Structural Whitespace
@@ -1481,12 +1502,12 @@ SP       = '\[20]';
 **Structural Whitespace CAN occur**:
 
  * Around an object.
- * Around array and container delimiters (`|`, `[`, `]`, `{`, `=`, `}`, `(`, `)`, `<`, `>`)
+ * Around array and container delimiters (`[`, `]`, `{`, `=`, `}`, `(`, `)`, `<`, `>`)
 
 Examples:
 
  * `[   1     2      3 ]` is equivalent to `[1 2 3]`
- * `| u8x 01   02 03   04 |` is equivalent to `|u8x 01 02 03 04|`
+ * `@u8x[ 01   02 03   04 ]` is equivalent to `@u8x[01 02 03 04]`
  * `{ 1="one" 2 = "two" 3= "three" 4 ="four"}` is equivalent to `{1="one" 2="two" 3="three" 4="four"}`
 
 
@@ -1646,9 +1667,9 @@ Primitive type arrays **SHOULD** be broken up into multiple indented lines if th
 
 ```cte
 c1
-|u16x aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
-      bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
-      fb59 fdb0 1d93 5747 239d b16f 7d9c c48b 5581 13ba 19ca 6f3b 4ba9|
+@u16[aa5c 5e0f e9a7 b65b 3572 96ec da16 6496 6133 5aa1 687f 9ce0 4d10 a39e 3bd3
+     bf96 ad12 e64b 298f e137 a99f 5fb8 a8ca e8e7 0595 bc2f 4b64 8b0e 895d ebe7
+     fb59 fdb0 1d93 5747 239d b16f 7d9c c48b 5581 13ba 19ca 6f3b 4ba9]
 ```
 
 

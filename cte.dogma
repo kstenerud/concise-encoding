@@ -34,8 +34,8 @@ array_type             = array_bit
                        | array_uid
                        ;
 
-null                   = "null";
-boolean                = "true" | "false";
+null                   = N&U&L&L;
+boolean                = (T&R&U&E) | (F&A&L&S&E);
 integer                = neg? & uinteger;
 integer_bin            = neg? & uinteger_bin;
 integer_oct            = neg? & uinteger_oct;
@@ -56,7 +56,10 @@ float                  = float_dec | float_hex;
 float_dec              = (neg? & digits_dec & (('.' & digits_dec & exponent_dec?) | exponent_dec)) | float_special;
 float_hex              = (neg? & prefix_hex & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
 float_hex_implied      = (neg? & digits_hex & (('.' & digits_hex & exponent_hex?) | exponent_hex)) | float_special;
-float_special          = (neg? & "inf") | "nan" | "snan";
+float_special          = (neg? & inf) | nan | snan;
+inf                    = I&N&F;
+nan                    = N&A&N;
+snan                   = S&N&A&N;
 exponent_dec           = E & neg? & digits_dec;
 exponent_hex           = P & neg? & digits_dec; # hex float exponent is in decimal, not hex.
 uid                    = digit_hex{8} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{4} & '-' & digit_hex{12};
@@ -76,7 +79,7 @@ string                 = stringlike(char_cte);
 resource_id            = '@' & stringlike(char_rid);
 remote_reference       = '$' & stringlike(char_rid);
 stringlike(allowed)    = '"' & ((allowed ! ('"' | '\\' | delimiter_lookalikes)) | escape_sequence)* & '"';
-escape_sequence        = '\\' & ( 't' | 'n' | 'r' | '"' | '*' | '/' | '\\' | '_' | '-'
+escape_sequence        = '\\' & ( T | N | R | '"' | '*' | '/' | '\\' | '_' | '-'
                                 | escape_continuation
                                 | escape_codepoint
                                 | escape_verbatim
@@ -95,7 +98,7 @@ edge                   = '@(' & WSLC* & non_null_object & WSLC+ & data_object & 
 key_value              = keyable_object & WSLC* & '=' & WSLC* & data_object;
 
 # Whitespace between elements is optional for bit array
-array_bit              = '|' & B & WSL & items(digit_bin, WSL?) & '|';
+array_bit              = '@' & B & '[' & items(digit_bin, WSL?) & ']';
 array_int8             = array(I & '8',      integer);
 array_int16            = array(I & '16',     integer);
 array_int32            = array(I & '32',     integer);
@@ -134,14 +137,15 @@ array_float64          = array(F & '64',     float);
 array_float16x         = array(F & '16' & X, float_hex_implied);
 array_float32x         = array(F & '32' & X, float_hex_implied);
 array_float64x         = array(F & '64' & X, float_hex_implied);
-array_uid              = array(U,            uid);
-media                  = array_stringable('.' & media_type);
-media_type             = media_type_word & '/' & media_type_word;
-media_type_word        = char_media_first & char_media_next*;
-custom_type            = array_stringable(C & custom_type_code);
+array_uid              = array(U&I&D,        uid);
+media                  = array_stringform(media_type) | array(media_type, hex_byte);
+media_type             = media_type_major & '/' & media_type_minor;
+media_type_major       = char_media_first & char_media_next*;
+media_type_minor       = char_media_next+;
+custom_type            = array_stringform(custom_type_code) | array(custom_type_code, hex_byte);
 custom_type_code       = digit_dec+;
-array_stringable(type) = '|' & type & (WSL+ & (string | hex_bytes))? & WSL* & '|';
-array(type, elem_type) = '|' & type & WSL & items(elem_type, WSL) & '|';
+array_stringform(type) = '@' & type & string;
+array(type, elem_type) = '@' & type & '[' & items(elem_type, WSL) & ']';
 items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
 
 local_reference        = '$' & identifier;
@@ -151,7 +155,6 @@ identifier             = char_identifier_first & char_identifier_next*;
 comment_single_line    = "//" & (char_cte* ! LINE_END) & LINE_END;
 comment_multi_line     = "/*" & ((char_cte* ! "/*") | comment_multi_line) & "*/";
 
-hex_bytes              = hex_byte & (WSL+ & hex_byte)*;
 hex_byte               = digit_hex{2};
 digits_bin             = digit_bin & ('_'? & digit_bin)*;
 digits_oct             = digit_oct & ('_'? & digit_oct)*;
@@ -166,13 +169,20 @@ prefix_bin             = '0' B;
 prefix_oct             = '0' O;
 prefix_hex             = '0' X;
 
+A                      = 'a' | 'A';
 B                      = 'b' | 'B';
 C                      = 'c' | 'C';
+D                      = 'd' | 'D';
 E                      = 'e' | 'E';
 F                      = 'f' | 'F';
 I                      = 'i' | 'I';
+L                      = 'l' | 'L';
+N                      = 'n' | 'N';
 O                      = 'o' | 'O';
 P                      = 'p' | 'P';
+R                      = 'r' | 'R';
+S                      = 's' | 'S';
+T                      = 't' | 'T';
 U                      = 'u' | 'U';
 X                      = 'x' | 'X';
 
@@ -192,7 +202,7 @@ char_media_next        = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
                                        | '@' | ',' | ';' | ':'
                                        | '\\' | '"' | '/' | '['
                                        | ']' | '?' | '='
-                                       )
+                                       ) # tspecials in RFC 2045
                        ;
 char_rid               = """https://www.rfc-editor.org/rfc/rfc3987""";
 char_sentinel          = unicode(L,M,N,P,S);
