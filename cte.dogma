@@ -35,7 +35,9 @@ array_type             = array_bit
                        ;
 
 null                   = N&U&L&L;
-boolean                = (T&R&U&E) | (F&A&L&S&E);
+boolean                = true | false;
+true                   = T&R&U&E;
+false                  = F&A&L&S&E;
 integer                = neg? & uinteger;
 integer_bin            = neg? & uinteger_bin;
 integer_oct            = neg? & uinteger_oct;
