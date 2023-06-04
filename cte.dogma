@@ -11,7 +11,7 @@ document               = C & version & WSL
 
 version                = '1';
 
-non_null_object        = markable(data_object ! null) | reference_type;
+non_null_object        = markable(data_type ! null) | reference_type;
 data_object            = markable(data_type) | reference_type;
 keyable_object         = markable(keyable_type) | local_reference;
 markable(type)         = marker? & type;
