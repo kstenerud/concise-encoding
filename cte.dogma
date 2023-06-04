@@ -93,7 +93,7 @@ list                   = '[' & items(data_object, WSLC) & ']';
 map                    = '{' & items(key_value, WSLC) & '}';
 record_type            = '@' & identifier & '<' & items(keyable_object, WSLC) '>';
 record                 = '@' & identifier & '{' & items(data_object, WSLC) & '}';
-node                   = '(' & WSLC* & data_object & items(data_object, WSLC) & ')';
+node                   = '(' & WSLC* & data_object & (WSLC & items(data_object, WSLC))? & WSLC* & ')';
 edge                   = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
 key_value              = keyable_object & WSLC* & '=' & WSLC* & data_object;
 
