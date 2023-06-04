@@ -20,12 +20,11 @@ markable(type)        = marked_object(type) | type;
 data_type             = keyable_type | array_type | media | custom_type | list | map | record | edge | node | null;
 keyable_type          = boolean | integer | float | uid | date | time | timestamp | string | resource_id;
 reference_type        = local_reference | remote_reference;
-array_type            = array_chunked_u8
-                      | array_short_s8  | array_chunked_s8
+array_type            = array_short_s8  | array_chunked_s8
                       | array_short_s16 | array_chunked_s16
                       | array_short_s32 | array_chunked_s32
                       | array_short_s64 | array_chunked_s64
-                      | array_short_u8  | array_chunked_u8
+                      | array_chunked_u8
                       | array_short_u16 | array_chunked_u16
                       | array_short_u32 | array_chunked_u32
                       | array_short_u64 | array_chunked_u64
