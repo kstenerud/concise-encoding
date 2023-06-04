@@ -14,14 +14,29 @@ version               = 1;
 
 data_object           = padding* & (markable(data_type) | reference_type);
 keyable_object        = padding* & (markable(keyable_type) | local_reference);
-non_null_object       = padding* & (markable(non_null_data_type) | reference_type);
+non_null_object       = padding* & (markable(data_type ! null) | reference_type);
 markable(type)        = marked_object(type) | type;
 
-data_type             = non_null_data_type | null;
-non_null_data_type    = keyable_type | array | media | custom_type | list | map | record | edge | node;
+data_type             = keyable_type | array_type | media | custom_type | list | map | record | edge | node | null;
 keyable_type          = boolean | integer | float | uid | date | time | timestamp | string | resource_id;
 reference_type        = local_reference | remote_reference;
+array_type            = array_chunked_u8
+                      | array_short_s8  | array_chunked_s8
+                      | array_short_s16 | array_chunked_s16
+                      | array_short_s32 | array_chunked_s32
+                      | array_short_s64 | array_chunked_s64
+                      | array_short_u8  | array_chunked_u8
+                      | array_short_u16 | array_chunked_u16
+                      | array_short_u32 | array_chunked_u32
+                      | array_short_u64 | array_chunked_u64
+                      | array_short_f16 | array_chunked_f16
+                      | array_short_f32 | array_chunked_f32
+                      | array_short_f64 | array_chunked_f64
+                      | array_short_uid | array_chunked_uid
+                      | array_bit
+                      ;
 
+null                  = u8(0x7d);
 boolean               = true | false;
 false                 = u8(0x78);
 true                  = u8(0x79);
@@ -63,22 +78,6 @@ date                  = u8(0x7a) & compact_date;
 time                  = u8(0x7b) & compact_time;
 timestamp             = u8(0x7c) & compact_timestamp;
 
-array                 = array_chunked_u8
-                      | array_short_s8  | array_chunked_s8
-                      | array_short_s16 | array_chunked_s16
-                      | array_short_s32 | array_chunked_s32
-                      | array_short_s64 | array_chunked_s64
-                      | array_short_u8  | array_chunked_u8
-                      | array_short_u16 | array_chunked_u16
-                      | array_short_u32 | array_chunked_u32
-                      | array_short_u64 | array_chunked_u64
-                      | array_short_f16 | array_chunked_f16
-                      | array_short_f32 | array_chunked_f32
-                      | array_short_f64 | array_chunked_f64
-                      | array_short_uid | array_chunked_uid
-                      | array_bit
-                      ;
-
 array_short_uid       = u8(0x7f) & u4(0) & array_short(uid(~));
 array_short_s8        = u8(0x7f) & u4(1) & array_short(s8(~));
 array_short_u16       = u8(0x7f) & u4(2) & array_short(u16(~));
@@ -118,7 +117,7 @@ array_bit_chunk       = uleb128(uany(var(count, mult_8(~))) & u1(1))
 array_bit_chunk_last  = uleb128(uany(var(count, ~)) & u1(0))
                       & aligned(8, reversed(1, u1(~){count}), u1(0)*)
                       ;
-mult_8(v)             = [v%8 = 0: v;];
+mult_8(v)             = [v%8 = 0: v;]; # Require the value to be a multiple of 8
 
 string_chunk          = var(header, array_chunk_header)
                       & sized(header.count*8, char_string*)
@@ -135,7 +134,7 @@ media                 = plane7f(0xf3)
                       & array_chunk(u8(~))
                       ;
 media_type            = media_type_word & '/' & media_type_word;
-media_type_word       = char_media_first & char_media*;
+media_type_word       = char_media_first & char_media_next*;
 custom_type           = u8(0x92) & custom_type_code & array_chunk(u8(~));
 custom_type_code      = uleb(~);
 
@@ -146,29 +145,17 @@ record                = u8(0x96) & identifier & data_object* & end_container;
 edge                  = u8(0x97) & non_null_object & data_object & non_null_object & end_container;
 node                  = u8(0x98) & data_object & (node | data_object)* & end_container;
 end_container         = u8(0x9b);
-null                  = u8(0x7d);
+
 local_reference       = u8(0x77) & identifier;
 remote_reference      = plane7f(0xf2) & string_chunk;
 padding               = u8(0x95);
 record_type           = plane7f(0xf1) & identifier & keyable_object* & end_container;
-
 marked_object(type)   = plane7f(0xf0) & identifier & type;
-identifier            = var(pref,length_prefix) & sized(pref.length*8, char_identifier*);
-byte                  = u8(~);
-char_string           = unicode(C,L,M,N,P,S,Z);
-char_identifier       = unicode(Cf,L,M,N) | '_' | '.' | '-';
-
-# https://www.rfc-editor.org/rfc/rfc2045#section-5.1
-char_media_first      = 'a'~'z' | 'A'~'Z';
-char_media            = ('!' ~ '~')! ( '(' | ')' | '<' | '>'
-                                     | '@' | ',' | ';' | ':'
-                                     | '\\' | '"' | '/' | '['
-                                     | ']' | '?' | '='
-                                     )
+identifier            = var(pref,length_prefix)
+                      & sized(pref.length*8, (char_identifier_first & char_identifier_next*)?)
                       ;
 
 length_prefix         = uleb(var(length, 1~));
-
 plane7f(v)            = u8(0x7f) & u8(v);
 
 s8(v)                 = sint(8, v);
@@ -186,6 +173,20 @@ f16(v)                = ordered(bfloat(v));
 f32(v)                = ordered(float(32, v));
 f64(v)                = ordered(float(64, v));
 uleb(v)               = uleb128(uany(v));
+
+# https://www.rfc-editor.org/rfc/rfc2045#section-5.1
+char_media_first      = 'a'~'z' | 'A'~'Z';
+char_media_next       = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
+                                      | '@' | ',' | ';' | ':'
+                                      | '\\' | '"' | '/' | '['
+                                      | ']' | '?' | '='
+                                      ) # tspecials in RFC 2045
+                      ;
+char_rid              = """https://www.rfc-editor.org/rfc/rfc3987""";
+char_sentinel         = unicode(L,M,N,P,S);
+char_identifier_first = unicode(L,N) | '_';
+char_identifier_next  = unicode(Cf,L,M,N) | '_' | '.' | '-';
+char_string           = unicode(C,L,M,N,P,S,Z);
 
 bfloat(v: number): bits        = """https://en.wikipedia.org/wiki/Bfloat16_floating-point_format""";
 uleb128(v: bits): bits         = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128""";

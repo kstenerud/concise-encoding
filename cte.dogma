@@ -11,9 +11,9 @@ document               = C & version & WSL
 
 version                = '1';
 
-non_null_object        = markable(data_type ! null) | reference_type;
 data_object            = markable(data_type) | reference_type;
 keyable_object         = markable(keyable_type) | local_reference;
+non_null_object        = markable(data_type ! null) | reference_type;
 markable(type)         = marker? & type;
 
 data_type              = keyable_type | array_type | media | custom_type | list | map | record | edge | node | null;
@@ -89,14 +89,6 @@ escape_continuation    = LINE_END & WS*;
 escape_codepoint       = '[' & digit_hex+ & ']';
 escape_verbatim        = '.' & var(terminator, char_sentinel+) & (LINE_END | SP) & char_cte* & terminator;
 
-list                   = '[' & items(data_object, WSLC) & ']';
-map                    = '{' & items(key_value, WSLC) & '}';
-record_type            = '@' & identifier & '<' & items(keyable_object, WSLC) '>';
-record                 = '@' & identifier & '{' & items(data_object, WSLC) & '}';
-node                   = '(' & WSLC* & data_object & (WSLC & items(data_object, WSLC))? & WSLC* & ')';
-edge                   = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
-key_value              = keyable_object & WSLC* & '=' & WSLC* & data_object;
-
 # Whitespace between elements is optional for bit array
 array_bit              = '@' & B & '[' & items(digit_bin, WSL?) & ']';
 array_int8             = array(I & '8',      integer);
@@ -147,6 +139,14 @@ custom_type_code       = digit_dec+;
 array_stringform(type) = '@' & type & string;
 array(type, elem_type) = '@' & type & '[' & items(elem_type, WSL) & ']';
 items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
+
+list                   = '[' & items(data_object, WSLC) & ']';
+map                    = '{' & items(key_value, WSLC) & '}';
+record_type            = '@' & identifier & '<' & items(keyable_object, WSLC) '>';
+record                 = '@' & identifier & '{' & items(data_object, WSLC) & '}';
+node                   = '(' & WSLC* & data_object & (WSLC & items(data_object, WSLC))? & WSLC* & ')';
+edge                   = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
+key_value              = keyable_object & WSLC* & '=' & WSLC* & data_object;
 
 local_reference        = '$' & identifier;
 marker                 = '&' & identifier & ':';
