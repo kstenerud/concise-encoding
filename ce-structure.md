@@ -953,21 +953,15 @@ By default, a map is [unordered, and does not allow duplicate keys](#container-p
 
 Only the following data types are allowed as keys in map-like containers:
 
-* [Numeric types](#numeric-types), except for [NaN and `-0`](#special-floating-point-values)
-* [Temporal types](#temporal-types)
-* [Strings](#string)
-* [Resource identifiers](#resource-identifier)
-* [Local references](#local-reference) (only if the referenced value is keyable)
+* [Integer](#integer), except for [`-0`](#special-floating-point-values)
+* [Universal ID](#uid)
+* [Date, time, timestamp](#temporal-types)
+* [String](#string)
+* [Resource identifier](#resource-identifier)
+* [Local reference](#local-reference) (only if the referenced value is keyable)
 
 ```dogma
-keyable-type = intangible_object*
-             & ( numeric_type
-               | temporal_type
-               | string
-               | resource_id
-               | local_reference
-               )
-             ;
+keyable_type = boolean | integer | uid | date | time | timestamp | string | resource_id;
 ```
 
 **Example (in [CTE](cte-specification.md))**:

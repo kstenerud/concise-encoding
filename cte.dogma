@@ -17,7 +17,7 @@ non_null_object        = markable(data_type ! null) | reference_type;
 markable(type)         = marker? & type;
 
 data_type              = keyable_type | array_type | media | custom_type | list | map | record | edge | node | null;
-keyable_type           = boolean | integer | float | uid | date | time | timestamp | string | resource_id;
+keyable_type           = boolean | integer | uid | date | time | timestamp | string | resource_id;
 reference_type         = local_reference | remote_reference;
 array_type             = array_bit
                        | array_int8    | array_int8x    | array_int8o   | array_int8b
