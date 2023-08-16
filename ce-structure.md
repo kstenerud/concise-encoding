@@ -67,11 +67,6 @@ Contents
     - [String](#string)
     - [Resource Identifier](#resource-identifier)
   - [Array Types](#array-types)
-    - [Primitive Array Types](#primitive-array-types)
-    - [Media](#media)
-  - [Custom Types](#custom-types)
-    - [Custom Type Code](#custom-type-code)
-    - [Custom Type Forms](#custom-type-forms)
   - [Container Types](#container-types)
     - [Container Properties](#container-properties)
       - [Ordering](#ordering)
@@ -82,11 +77,15 @@ Contents
     - [Records](#records)
       - [Record](#record)
       - [Record Validation](#record-validation)
+    - [Node](#node)
     - [Edge](#edge)
       - [Example](#example)
-    - [Node](#node)
   - [Other Types](#other-types)
+    - [Media](#media)
     - [Null](#null)
+  - [Custom Types](#custom-types)
+    - [Custom Type Code](#custom-type-code)
+    - [Custom Type Forms](#custom-type-forms)
   - [Pseudo-Objects](#pseudo-objects)
     - [Reference](#reference)
       - [Local Reference](#local-reference)
@@ -107,16 +106,16 @@ Contents
     - [Problematic Values](#problematic-values)
   - [Truncated Document](#truncated-document)
   - [Equivalence](#equivalence)
-    - [Relaxed Equivalence](#relaxed-equivalence)
-      - [Integer and Float Equivalence](#integer-and-float-equivalence)
-      - [Custom Type Equivalence](#custom-type-equivalence)
-      - [String Equivalence](#string-equivalence)
-      - [Array Equivalence](#array-equivalence)
-      - [Container Equivalence](#container-equivalence)
-      - [Null Equivalence](#null-equivalence)
-      - [Comment Equivalence](#comment-equivalence)
-      - [Padding Equivalence](#padding-equivalence)
-    - [Strict Equivalence](#strict-equivalence)
+    - [Boolean Equivalence](#boolean-equivalence)
+    - [Integer and Float Equivalence](#integer-and-float-equivalence)
+      - [Special Float Value Equivalence Follows ieee754](#special-float-value-equivalence-follows-ieee754)
+    - [Custom Type Equivalence](#custom-type-equivalence)
+    - [String Type Equivalence](#string-type-equivalence)
+    - [Array Equivalence](#array-equivalence)
+    - [Container Equivalence](#container-equivalence)
+    - [Null Equivalence](#null-equivalence)
+    - [Comment Equivalence](#comment-equivalence)
+    - [Padding Equivalence](#padding-equivalence)
   - [Error Processing](#error-processing)
     - [Structural Errors](#structural-errors)
     - [Data Errors](#data-errors)
@@ -174,41 +173,41 @@ Terms and Conventions
 Introduction
 ------------
 
-Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md).
+Concise Encoding is a general purpose, human and machine friendly, compact representation of semi-structured hierarchical data. It consists of two parallel and seamlessly convertible data formats: a **binary format** [(Concise Binary Encoding - or CBE)](cbe-specification.md) for size and transmission efficiency, and a **text format** [(Concise Text Encoding - or CTE)](cte-specification.md) for human readability.
 
 
 
 Design Goals
 ------------
 
-Primary Goals:
+**Primary Goals:**
 
- * It must be easy for a machine to parse and produce (low runtime energy use, low implementation complexity).
+ * It must be machine and transmission efficient (low transmission cost, low energy cost, low complexity)
  * It must be easy for a human to parse and produce.
- * It must be compact (produce small encoded documents - only necessary in the binary format).
- * It must be secure (secure defaults, no implicit behavior, one way to do each thing, reject bad data).
- * It must be future proof.
+ * It must be secure (secure defaults, no implicit behavior, one way to do each thing, reject bad data by default).
+ * It must be future proof (allow changes and additions to the spec with no negative impact to existing implementations).
+ * It must be simple to use (no special compilation or code generation steps, no descriptor files, etc).
  * It must support the most commonly used types and the funtamental types natively.
- * It must support unlimited numeric value ranges.
- * It must support cyclic data.
  * It must support ad-hoc data structures and progressive document building.
- * It must be simple to use from code (no special compilation or code generation steps, no descriptor files, etc).
+ * It must support unlimited numeric value ranges.
  * Schemas must be optional.
 
-Secondary Goals:
+**Secondary Goals:**
 
+ * It must support cyclic data.
  * It must be zero-copy friendly.
  * It must use little endian byte ordering wherever possible.
  * It must be identifiable within the first few bytes of the document.
  * It must support inter-document linking.
+ * It must support partial recovery of damaged/incomplete documents.
 
 
 
 ### Why Two Formats?
 
-The first two primary goals cannot be satisfied by a single format. A binary format is easy for a machine and hard for a human. A text format is easy for a human and hard for a machine. Twin formats make it easy and efficient for machines to read and write data (as binary), and _also_ provide a way for humans to read and write that same data (as text).
+The first two primary goals (ease for machines, ease for humans) cannot be satisfied by a single format. A binary format is easy for a machine and hard for a human. A text format is easy for a human and hard for a machine. Twin formats make it easy and efficient for machines to read and write data (as binary), and _also_ provide a way for humans to read and write that same data (as text).
 
-Data should ideally be stored and transmitted in a binary format, and only converted to/from text in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE is usually enough for a human to examine and modify the CBE data that your application uses.
+Data should ideally be stored and transmitted in a binary format, and only converted to/from text in the uncommon cases where a human needs to be involved (modifying data, configuring, debugging, etc). In fact, most applications won't even need to concern themselves with the text format at all; a simple standalone command-line tool to convert between CBE and CTE (for example [enctool](https://github.com/kstenerud/enctool)) is usually enough for a human to examine and modify the CBE data that your application uses.
 
 ![Example binary and text data flow](img/dataflow.svg)
 
@@ -239,9 +238,9 @@ Therefore, [CUE](https://cuelang.org/) is the preferred schema language for vali
 Formal Representation
 ---------------------
 
-Formal specification clauses are written in the [Dogma](https://dogma-lang.org/) metalanguage.
+Formal specification clauses are written in the [Dogma](https://dogma-lang.org/) metalanguage. Many of the text descriptions in this specification will be augmented with Dogma rules for clarity.
 
-There are also formal Dogma documents for both CBE and CTE, which should be referred to whenever any textual description is unclear:
+Whenever any textual description seems ambiuguous or unclear, please refer to the formal Dogma documents (and also, please [open an issue](https://github.com/kstenerud/concise-encoding/issues)):
 
 * [CBE Dogma](cbe.dogma)
 * [CTE Dogma](cte.dogma)
@@ -324,7 +323,7 @@ concrete-object = intangible_object* & (data_object | pseudo_object);
 Intangible objects are either meta-information or structural helpers, but do not themselves count as actual data when structurally interpreting the document (i.e. they cannot fill containers).
 
  * [Invisible objects](#invisible-objects) provide helper functionality such as comments and byte alignment, but don't affect the document structure or data.
- * [Structural objects](#structural-objects) provide linkages beween parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
+ * [Structural objects](#structural-objects) provide support for linkages beween parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
 
 ```dogma
 intangible-object = invisible_object | structural_object;
@@ -381,7 +380,11 @@ c1
 
 ### Integer
 
+"Integer" in Concise Encoding refers to the integer type as it is used in programming languages (in other words, 0 is included in its definition).
+
 Integer values **CAN** be positive or negative, and **CAN** be represented in various bases (in [CTE](cte-specification.md#integer)) and sizes.
+
+**Note**: Although negative zero (`-0`) can technically be encoded using certain integer encodings in [CBE](cbe-specification.md#fixed-width-integer) (and it is valid to do so), this value is actually a [floating point](#floating-point) type.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -413,7 +416,7 @@ Concise Encoding supports the two most common bases in use: 10 (decimal) and 2 (
 
 In a decimal floating point number, the exponent represents 10 to the power of the exponent value (for example 3.814 x 10⁵⁰).
 
-Decimal floating point **SHOULD** be the preferred method for storing floating point values because of the rounding issues associated with binary floating point when converting from/to human-friendly forms.
+Decimal floating point **SHOULD** be the preferred method for storing floating point values because of the rounding issues associated with binary floating point when converting to/from human-friendly forms.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -440,7 +443,10 @@ Following [ieee754-2008 recommendations](https://en.wikipedia.org/wiki/IEEE_754#
     s 1111111 1xxxxxxxxxxxxxxxxxxxxxxx = float32 quiet NaN
     s 1111111 0xxxxxxxxxxxxxxxxxxxxxxx = float32 signaling NaN (if payload is not all zeroes)
 
-**Note**: Be careful not to set the rest of the bits of an ieee754 binary float or bfloat payload to all zeroes on a signaling NaN, as this signifies [infinity, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
+**Notes**:
+
+ * Concise Encoding does **not** require implementations to preserve NaN payloads other than the signaling/quiet status.
+ * Be careful not to set the rest of the bits of an ieee754 binary float or bfloat payload to all zeroes on a signaling NaN, because such an encoding signifies [infinity, not NaN](https://en.wikipedia.org/wiki/Single-precision_floating-point_format#Exponent_encoding).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -463,7 +469,7 @@ Floating point types support the following ranges:
 
 **Notes**:
 
- * Binary floats are limited to what is representable by their respective types.
+ * Binary floats are limited to what is representable by their respective types (bfloat16, ieee754 float32, ieee754 float64).
  * Although decimal floats technically have unlimited range, implementations will suffer performance issues after a point, and thus require pragmatic and homogenous [limit enforcement](#user-controllable-limits).
 
 #### Special Floating Point Values
@@ -476,7 +482,7 @@ Both decimal and binary floating point numbers have representations for the foll
 
 #### NaN Payload
 
-An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information. Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementation could potentially pose a [security risk](#security-and-limits).
+An implementation **MUST** preserve the signaling/quiet status of a NaN, and **MAY** discard the rest of the NaN payload information (this actually becomes necessary when converting to [CTE](cte-specification.md)). Applications **SHOULD NOT** attach special meaning to NaN payloads (other than the quiet bit) because differences in implementations and possible implicit type conversions at the receiving end could potentially pose a [security risk](#security-and-limits).
 
 
 ### UID
@@ -533,9 +539,10 @@ A date is made up of the following fields:
 ```cte
 c1
 [
-    2019-08-05 // August 5, 2019
-    5081-03-30 // March 30, 5081
-    -300-12-21 // December 21, 300 BC (proleptic Gregorian)
+    2019-08-05  // August 5, 2019
+    15081-03-30 // March 30, 15081
+    70-01-01    // January 1st, year 70 (proleptic Gregorian) - *not* 1970
+    -300-12-21  // December 21, 300 BC (proleptic Gregorian)
 ]
 ```
 
@@ -556,7 +563,7 @@ A time is made up of the following fields:
 
 **Notes**:
 
- * Since a time by itself has no date component, its time zone data **MUST** be interpreted as if it were "today". This means that location-based time zones like `America/Seattle` or `48.86/2.36` (as opposed to UTC-offsets like `Zero` or `Etc/GMT+1`) might result in a different absolute time when read on different dates due to political time shifts (such as daylight savings).
+ * Since a time by itself has no date component, its time zone data **MUST** be interpreted as if it were "today". This means that location-based time zones like `America/Seattle` or `48.86/2.36` or `Local` (as opposed to UTC-offsets like `Zero` or `Etc/GMT+1`) might result in a different absolute time when read on different dates due to political time shifts (such as daylight savings).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -627,7 +634,7 @@ Since there are only a limited number of areas in the database, the following ab
 | `Indian`     | `I`          |
 | `Pacific`    | `P`          |
 
-A decoder **MUST NOT** blindly pass abbreviated area names to the application. Convert the time data to a host-supported format first.
+A decoder **MUST NOT** blindly pass abbreviated area names to the application because the application's time implementation may not understand them. Convert the time data to a host-supported format first.
 
 ##### Special Areas
 
@@ -638,7 +645,7 @@ The following special pseudo-areas **CAN** also be used. They do not contain a l
 | `Zero`  | `Z`          | Alias to `Etc/UTC` |
 | `Local` | `L`          | "Local" time zone, meaning that the accompanying time value is to be interpreted as if in the time zone of the observer. |
 
-A decoder **MUST NOT** blindly pass these special areas to the application. Convert the time data to a host-supported format first.
+A decoder **MUST NOT** blindly pass these special areas to the application because the application's time implementation may not understand them. Convert the time data to a host-supported format first.
 
 **Examples**:
 
@@ -650,7 +657,7 @@ A decoder **MUST NOT** blindly pass these special areas to the application. Conv
 
 #### Global Coordinates
 
-The global coordinates method represents the location's global latitudinal and longitudinal position to a precision of hundredths of degrees, giving a resolution of about 1km at the equator.
+The global coordinates method represents the location's global latitudinal and longitudinal position to a precision of hundredths of degrees, giving a resolution of about 1km at Earth's equator.
 
 This method has the advantage of being temporally unambiguous, which could be useful for areas that are in an inconsistent political state at a particular time such that area/location cannot be reliably determined. The disadvantage is that it's not as easily recognizable to humans.
 
@@ -692,7 +699,7 @@ char_string = unicode(C,L,M,N,P,S,Z);
 
 String types **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string type containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
 
-The following are string types:
+The following types use string-style encoding and follow string encoding rules:
 
  * [String](#string)
  * [Resource Identifier](#resource-identifier)
@@ -722,9 +729,7 @@ c1 "I'm just a boring string."
 
 ### Resource Identifier
 
-A resource identifier is a text-based universally unique identifier that can be resolved by a machine. The most common kinds of resource identifiers are [URLs](https://tools.ietf.org/html/rfc1738), [URIs](https://tools.ietf.org/html/rfc3986), and [IRIs](https://tools.ietf.org/html/rfc3987). Validation of a resource ID is done according to its kind. If not specified by a schema, the configured default kind is assumed.
-
-Codecs **MUST** provide an **OPTION** to set the default kind of resource identifier, and the default setting **MUST** be [IRI](https://tools.ietf.org/html/rfc3987).
+A resource identifier is a text-based universally unique identifier that can be resolved by a machine to point to a resource. Resource identifier validation is done according to [the URL standard](https://url.spec.whatwg.org).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -741,24 +746,13 @@ c1
 Array Types
 -----------
 
-An array represents a contiguous sequence of identically typed fixed length elements (essentially a space-optimized [list](#list)). The length of an array is counted in elements (which are not necessarily bytes). The type of the array determines the size of its elements and how its contents are interpreted.
+An array represents a contiguous sequence of identically typed fixed length elements (like a space-optimized [list](#list) where every element is the same type). The type of the array determines the size of its elements and how its contents are interpreted.
 
-General array form:
+In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
 ```dogma
 array = array_element*;
 ```
-
-There are three main array styles in Concise Encoding:
-
- * [Primitive array types](#primitive-array-types) represent elements of a fixed size and type.
- * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always bytes, regardless of the actual data the bytes represent.
- * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always bytes, regardless of the actual data the bytes represent.
-
-
-### Primitive Array Types
-
-A primitive array encodes a sequence of primitive values of a fixed type and size. In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
 The following element types are supported in primitive arrays. For other types or mixed types, use a [list](#list).
 
@@ -770,6 +764,11 @@ The following element types are supported in primitive arrays. For other types o
 | BFloat               | 16                   |
 | IEEE754 Binary Float | 32, 64               |
 | UID                  | 128                  |
+
+**Note**: The following types also use array-style encoding (with byte elements), but are not considered arrays:
+
+ * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always bytes, regardless of the actual data the bytes represent.
+ * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always bytes, regardless of the actual data the bytes represent.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -785,109 +784,6 @@ c1
 ```
 
 
-### Media
-
-A media object contains a [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) and a series of bytes representing the media's data.
-
-```dogma
-media = media_type & byte*;
-```
-
-The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
-
-The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is a [data error](#data-errors).
-
-**Notes**:
-
- * An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
- * [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
-
-**Example (in [CTE](cte-specification.md))**:
-
-```cte
-c1
-@application/x-sh[23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
-```
-
-Which is the shell script:
-
-```sh
-#!/bin/sh
-
-echo hello world
-```
-
-
-
-Custom Types
-------------
-
-There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
-
-Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type envelope, and then report it as a [data error](#data-errors).
-
-**Note**: Although custom types are encoded as "[array types](#array-types)", the interpretation of their contents is user-defined, and they might not represent an array at all.
-
-### Custom Type Code
-
-All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely differentiates each type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
-
-A custom type code **MUST** be an unsigned integer in the range of 0 to 0xffffffff (inclusive).
-
-### Custom Type Forms
-
-Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
-
-```dogma
-custom_binary = type_code & byte*;
-custom_text   = type_code & string;
-```
-
-[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
-
-Custom type implementations **MUST** provide at least a binary form, and **SHOULD** also provide a textual form. When both binary and textual forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
-
-**Example**:
-
-Suppose we wanted to encode a fictional "complex number" type:
-
-    typedef complex
-    {
-        real:      float32
-        imaginary: float32
-    }
-
-For our textual encoding scheme, we could represent complex numbers using something like `REAL + IMAGINARY`, where `REAL` and `IMAGINARY` are float32s.
-
-For our textual encoding scheme, we could use the mathematical notation, such as `2.94+3i`.
-
-For our binary encoding scheme, we could write the two float32 values directly:
-
-    78 56 34 12 78 56 34 12 <-- in little endian byte order
-    |---------| |---------|
-       real      imaginary
-
-**Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
-
-In this example, we'll assign the custom type code 99 to our complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
-
-Our data:
-
- * Type: `99`
- * Real: `2.94`, float32 bit pattern `0x403c28f6`, in little endian `f6 28 3c 40`
- * Imaginary: `3`, float32 bit pattern `0x40400000`, in little endian `00 00 40 40`
-
-In [CTE](cte-specification.md):
-
- * Binary form:  `@99[f6 28 3c 40 00 00 40 40]`
- * Textual form: `@99"2.94+3i"`
-
-In [CBE](cbe-specification.md):
-
- * Binary form: [`92 63 10 f6 28 3c 40 00 00 40 40`]
- * Textual form not supported in CBE
-
-
 
 Container Types
 ---------------
@@ -899,15 +795,15 @@ Container types hold collections of other objects.
 
 #### Ordering
 
-If a container is ordered, the order in which objects are placed in the container matters. Ordered containers that contain [equivalent](#equivalence) objects but in a different order are NOT [equivalent](#equivalence).
+If a container is ordered, the order in which objects are placed in the container matters. Ordered containers that contain [equivalent](#equivalence) objects but in a different order are **not** [equivalent](#equivalence).
 
 #### Duplicates
 
-For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list.
+For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list. Note that due to proccessing cost, containers within a list are never considered equivalent for the purpose of duplicate checking.
 
 For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what that key's associated value is.
 
-An implementation **MUST** disregard the type and size of integers and floats when comparing. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it is a string, not an integer or float.
+An implementation **MUST** disregard the type and size of integers and floats when comparing numeric types. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it's not a number (it's a string).
 
 If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
 
@@ -916,7 +812,7 @@ Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be 
 
 ### List
 
-A sequential list of objects. List elements **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not all have to be the same type.
+A sequential list of objects. List elements **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not have to be all the same type.
 
 ```dogma
 list = object*;
@@ -939,7 +835,7 @@ c1
 
 ### Map
 
-A map associates key objects with value objects. Keys **CAN** be any [keyable type](#keyable-types), and do not have to all be the same type. Values **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not have to all be the same type.
+A map associates key objects with value objects. Every key **MUST** be a [keyable type](#keyable-types), and keys do not have to all be the same type. Values **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not have to be all the same type.
 
 Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
 
@@ -953,6 +849,7 @@ By default, a map is [unordered, and does not allow duplicate keys](#container-p
 
 Only the following data types are allowed as keys in map-like containers:
 
+* [Boolean](#boolean)
 * [Integer](#integer), except for [`-0`](#special-floating-point-values)
 * [Universal ID](#uid)
 * [Date, time, timestamp](#temporal-types)
@@ -994,11 +891,12 @@ A record builds a [map](#map) from a [record type](#record-type) by assigning th
 
 A record contains the [identifier](#identifier) of the [record type](#record-type) to build from, followed by a series of values that will be assigned in-order to the keys from the record type. [Null](#null) values in a record **MUST** be treated as "no data provided for this field"; it's up to the application to decide the appropriate action.
 
-<pre>
-record = <a href="#identifier">identifier</a> & <a href="#concrete-objects">concrete_object</a>*;
-</pre>
+```dogma
+record = identifier & concrete_object*;
+```
 
  * Records are always [ordered, and **CAN** contain duplicates](#container-properties).
+ * A record that references an undefined [record type](#record-type) identifier is a [structural error](#structural-errors).
  * The record **MUST** define the same number of values as there are keys in the [record type](#record-type). A mismatch is a [structural error](#structural-errors).
 
 **Example (in [CTE](cte-specification.md))**:
@@ -1072,6 +970,58 @@ c1
 #### Record Validation
 
 A record and record type **MUST** be validated together as the [map](#map) they produce through their combination.
+
+
+### Node
+
+A node is the basic building block for unweighted directed graphs. It consists of:
+
+ * A value (any data object or pseudo-object).
+ * An [ordered](#container-properties) collection of zero or more children (directionality is always from the node to its children).
+
+If a child is not of type node, it is treated as though it were the value portion of a node with no children.
+
+```dogma
+node = concrete_object & (node | concrete_object)*;
+```
+
+**Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
+
+Nodes are recorded in a **depth-first**, **node-right-left** order, which ensures that the [CTE](cte-specification.md) representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
+
+**Example (in [CTE](cte-specification.md))**:
+
+```cte
+c1
+// The tree:
+//       2
+//      / \
+//     5   7
+//    /   /|\
+//   9   6 1 2
+//  /   / \
+// 4   8   5
+//
+(2
+    (7
+        2
+        1
+        (6
+            5
+            8
+        )
+    )
+    (5
+        (9
+            4
+        )
+    )
+)
+```
+
+When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
+
+![tree rotated](img/tree-rotated.svg)
 
 
 ### Edge
@@ -1168,61 +1118,42 @@ c1
 ```
 
 
-### Node
 
-A node is the basic building block for unweighted directed graphs. It consists of:
+Other Types
+-----------
 
- * A value (any data object or pseudo-object).
- * An [ordered](#container-properties) collection of zero or more children (directionality is always from the node to its children).
+### Media
 
-If a child is not of type node, it is treated as though it were the value portion of a node with no children.
+A media object contains a [media type](http://www.iana.org/assignments/media-types/media-types.xhtml) and a series of bytes representing the media's data.
 
 ```dogma
-node = concrete_object & (node | concrete_object)*;
+media = media_type & byte*;
 ```
 
-**Hint**: If the graph is cyclic, use [references](#reference) to nodes to represent the cycles.
+The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
-Nodes are recorded in a **depth-first**, **node-right-left** order, which ensures that the [CTE](cte-specification.md) representation looks like the actual tree structure it describes when rotated 90 degrees clockwise.
+The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is a [data error](#data-errors).
+
+**Notes**:
+
+ * An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
+ * [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
 
 **Example (in [CTE](cte-specification.md))**:
 
 ```cte
 c1
-// The tree:
-//       2
-//      / \
-//     5   7
-//    /   /|\
-//   9   6 1 2
-//  /   / \
-// 4   8   5
-//
-(2
-    (7
-        2
-        1
-        (6
-            5
-            8
-        )
-    )
-    (5
-        (9
-            4
-        )
-    )
-)
+@application/x-sh[23 21 2f 62 69 6e 2f 73 68 0a 0a 65 63 68 6f 20 68 65 6c 6c 6f 20 77 6f 72 6c 64 0a]
 ```
 
-When rotated 90 degrees clockwise, one can recognize the tree structure this represents:
+Which is the shell script:
 
-![tree rotated](img/tree-rotated.svg)
+```sh
+#!/bin/sh
 
+echo hello world
+```
 
-
-Other Types
------------
 
 ### Null
 
@@ -1255,14 +1186,86 @@ c1
 ]
 ```
 
+Architecturally speaking, think twice, then think again, before deciding that null is necessary for your application. Like `goto`, it has a _very narrow_ use case but tends to be used far too liberally.
+
+
+
+Custom Types
+------------
+
+There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
+
+Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type envelope, and then report it as a [data error](#data-errors).
+
+**Note**: Although custom types are encoded as "[array types](#array-types)" or "[string types](#string-types)", the interpretation of their contents is user-defined, and they likely won't represent an array or string value at all.
+
+### Custom Type Code
+
+All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely differentiates each type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
+
+A custom type code **MUST** be an unsigned integer in the range of 0 to 0xffffffff (inclusive).
+
+### Custom Type Forms
+
+Custom types can be represented in binary and textual form, where the binary form is encoded as a series of bytes, and the textual form is a structured textual representation.
+
+```dogma
+custom_binary = type_code & byte*;
+custom_text   = type_code & string;
+```
+
+[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
+
+Custom type implementations **MUST** provide at least a binary form, and **SHOULD** also provide a textual form. When both binary and textual forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
+
+**Example**:
+
+Suppose we wanted to encode a fictional "complex number" type:
+
+    typedef complex
+    {
+        real:      float32
+        imaginary: float32
+    }
+
+For our textual encoding scheme, we could represent complex numbers using something like `REAL + IMAGINARY`, where `REAL` and `IMAGINARY` are float32s.
+
+For our textual encoding scheme, we could use the mathematical notation, such as `2.94+3i`.
+
+For our binary encoding scheme, we could write the two float32 values directly:
+
+    78 56 34 12 78 56 34 12 <-- in little endian byte order
+    |---------| |---------|
+       real      imaginary
+
+**Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
+
+In this example, we'll assign the custom type code 99 to our complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
+
+Our data:
+
+ * Type: `99`
+ * Real: `2.94`, float32 bit pattern `0x403c28f6`, in little endian `f6 28 3c 40`
+ * Imaginary: `3`, float32 bit pattern `0x40400000`, in little endian `00 00 40 40`
+
+In [CTE](cte-specification.md):
+
+ * Binary form:  `@99[f6 28 3c 40 00 00 40 40]`
+ * Textual form: `@99"2.94+3i"`
+
+In [CBE](cbe-specification.md):
+
+ * Binary form: [`92 63 10 f6 28 3c 40 00 00 40 40`]
+ * Textual form not supported in CBE
+
 
 
 Pseudo-Objects
 --------------
 
-Pseudo-objects are not [data objects](#data-objects) themselves, but rather stand-ins for [data objects](#data-objects).
+Pseudo-objects are not [data objects](#data-objects) themselves, but rather are stand-ins for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside a [primitive array's](#primitive-array-types) contents (for example, `@u8x[11 22 $myref 44]` is a [structural error](#structural-errors)).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside the contents of an [array](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types) (for example, `@u8x[11 22 $myref 44]` is a [structural error](#structural-errors)).
 
 
 ### Reference
@@ -1316,7 +1319,7 @@ c1
 
 #### Remote Reference
 
-A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier) that describes how to find the referenced object in an outside document.
+A remote reference refers to an object in another document. It acts like a [resource ID](#resource-identifier) that describes how to find the referenced object in an outside document. Remote reference validation is done according to [the URL standard](https://url.spec.whatwg.org).
 
  * A remote reference **MUST** point to either:
    - Another Concise Encoding document (using no fragment section, thus referring to the top-level object in the document)
@@ -1351,16 +1354,16 @@ Invisible objects **CANNOT** be used as real objects, and **CANNOT** be marked o
 
 ### Comment
 
-A comment is a string-like invisible object that provides extra information for human readers in CTE documents. CBE documents do not support comments.
+A comment is a string-like invisible object that provides extra information for human readers in CTE documents. CBE documents do not support comments (meaning that comments will be lost when converting from CTE to CBE).
 
 CTE supports two forms of comments:
 
  * Single-line comments, which end at the line end (`// a comment`).
  * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment /* nested */ */`).
 
-Comments are allowed anywhere in a CTE document where a real object would be allowed, except inside [arrays](#array-types).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, except inside [arrays](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types).
 
-**Note**: CBE **CANNOT** encode comments, so they will be discarded when converting from CTE to CBE.
+**Note**: CBE **CANNOT** encode comments, so they **MUST** be discarded when converting from CTE to CBE.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1393,7 +1396,7 @@ Padding is an invisible object used for aligning data in a CBE document, and has
 
 The padding type **CAN** occur any number of times where a [CBE type field](cbe-specification.md#type-field) is valid.
 
-**Note**: CTE **CANNOT** encode padding, so it will be discarded when converting from CBE to CTE.
+**Note**: CTE **CANNOT** encode padding, so it **MUST** be discarded when converting from CBE to CTE.
 
 
 
@@ -1409,6 +1412,8 @@ Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 A record type provides instructions for a decoder to build [records](#record) from, defining what keys will be present for any records that use it.
 
+Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure). A record type occuring anywhere else in the document is a [structural error](#structural-errors).
+
 A record type contains a unique (to the current document) type [identifier](#identifier), followed by a series of keys that will be present in any records created from it.
 
 ```dogma
@@ -1419,7 +1424,6 @@ record_type = identifier & keyable_type*;
 
  * Record Types **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
  * Record Type keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
- * Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure).
 
 
 ### Marker
@@ -1451,11 +1455,11 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 Identifiers provide the linkage mechanism between objects.
 
-Identifiers are always an integral part of another type, and thus **CANNOT** exist standalone, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is a [structural error](#structural-errors)).
+Identifiers are always an integral part of another type, and thus **CANNOT** exist on their own, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is a [structural error](#structural-errors)).
 
 #### Identifier Rules
 
- * It **MUST** be a valid, visible UTF-8 string and contain only characters of Unicode categories Cf, L, M, N, or characters '_', '.', or '-'.
+ * It **MUST** be a valid UTF-8 string containing only characters of Unicode categories Cf, L, M, N, or characters '_', '.', or '-'.
  * It **MUST** begin with either a letter, number, or an underscore '_' (and therefore **CANNOT** be empty).
  * Comparisons are **case sensitive**.
  * Identifier definitions **MUST** be unique to an identifier type in the current document. So for example the [marker](#marker) ID "a" will not clash with the [record type](#record-type) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record type](#record-type) with ID "a".
@@ -1492,9 +1496,9 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 **Lossy conversions that MUST always be allowed**:
 
- * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved
+ * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved.
 
-**Lossy conversions that MUST NOT be allowed ever**:
+**Lossy conversions that MUST NOT be allowed at all**:
 
  * String character substitution or omission
  * Truncation from storing in a type that cannot hold all of the data (except where decided based on configuration - see below)
@@ -1538,7 +1542,7 @@ This helps to minimize exploitable behavioral differences between implementation
 
 ### Problematic Values
 
-It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach. Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase to ensure uniform (and thus unexploitable) behavior in all parts of an application.
+It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach. Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase in order to ensure uniform (and thus unexploitable) behavior in all parts of an application.
 
  * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL character](#nul-character) section for how to deal with this.
@@ -1572,63 +1576,57 @@ The artificialy completed document is returned to the caller along with an indic
 Equivalence
 -----------
 
-There are many things to consider when determining if two Concise Encoding documents are equivalent. This section helps clear up possible confusion.
+When comparing objects to detect duplicate entries in containers, the following rules apply:
 
-**Note**: Equivalence is relaxed unless otherwise specified.
+### Boolean Equivalence
 
+Booleans can only be compared to other booleans. There is no inferred "truthiness" in Concise Encoding.
 
-### Relaxed Equivalence
+### Integer and Float Equivalence
 
-Relaxed equivalence is concerned with the question: Does the data come out with essentially the same values, even if there are some type differences?
+Integers and floats do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they can be round-trip converted to the destination type and back again to the same value without data loss, they are equivalent.
 
-#### Integer and Float Equivalence
+#### Special Float Value Equivalence Follows ieee754
 
-Integers and floats do not have to be of the same type or size in order to be equivalent. For example, the 32-bit float value 12.0 is equivalent to the 8-bit integer value 12. So long as they resolve to the same effective value without data loss after type coercion, they are equivalent.
+* Infinity values are equivalent if they have the same sign.
+* Zero values are equivalent regardless of sign.
+* NaN values are never equivalent.
 
-Infinities with the same sign are considered equivalent.
-
-**Note**: In contrast to ieee754 rules, two floating point values ARE considered equivalent if they are both NaN, so long as they are both the same kind of NaN (signaling or quiet). Other than the signaling status, the NaN payload is disregarded when comparing.
-
-#### Custom Type Equivalence
+### Custom Type Equivalence
 
 Unless the schema specifies otherwise, custom types are compared byte-by-byte, with no other consideration to their contents. Custom text values **MUST NOT** be compared to custom binary values unless they can both first be converted to a common type that the receiver can compare.
 
-#### String Equivalence
+### String Type Equivalence
 
-Strings are considered equivalent if their contents are equal after decoding escape sequences, [NUL stuffing](#nul-character), etc. Comparisons are case sensitive unless otherwise specified by the schema.
+String types (such as [string](#string), [resource id](#resource-identifier), [remote reference](#remote-reference)) are considered equivalent if their types are the same and their contents are equal after decoding escape sequences, [NUL stuffing](#nul-character), etc. Comparisons are case sensitive unless otherwise specified by the schema.
 
-#### Array Equivalence
+String types **MUST NOT** be normalized prior to comparison; a different encoding of the same characters is **not** equivalent.
+
+Comparisons are case sensitive unless otherwise specified by the schema.
+
+String types are never equivalent to any other type, even if the byte contents are the same or "look like" the string encoding of something.
+
+### Array Equivalence
 
 Arrays **MUST** contain the same number of elements in the same order, and each element **MUST** be equivalent.
 
-The equivalence rules for numeric types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent under relaxed equivalence.
+The equivalence rules for integer and float types also extends to numeric arrays. For example, the 16-bit unsigned int array `1 2 3`, 32-bit integer array `1 2 3`, and 64-bit float array `1.0 2.0 3.0` are equivalent.
 
-#### Container Equivalence
+### Container Equivalence
 
-Containers **MUST** be of the same type. For example, a map is never equivalent to a list.
+Containers are never considered equivalent when testing for duplicates, as this would cause too much complexity.
 
-Containers **MUST** contain the same number of elements, and their elements **MUST** be equivalent.
-
-By default, list types **MUST** be compared [ordered](#container-properties), and map types compared [unordered](#container-properties), unless their ordering was otherwise specified by the schema.
-
-#### Null Equivalence
+### Null Equivalence
 
 [Null](#null) values are always considered equivalent to each other.
 
-#### Comment Equivalence
+### Comment Equivalence
 
 Comments are always ignored when testing for equivalence.
 
-#### Padding Equivalence
+### Padding Equivalence
 
 Padding is always ignored when testing for equivalence.
-
-
-### Strict Equivalence
-
-Strict equivalence concerns itself with differences that could still technically have an impact on how the document is interpreted, even if the chances are low:
-
-* Objects **MUST** be of the same type and size.
 
 
 
@@ -1666,7 +1664,7 @@ Security and Limits
 
 Accepting data from an outside source is always a security risk. The safest approach is to always assume hostile intentions when ingesting data.
 
-Although Concise Encoding supports a wide range of data types and values, any given implementation will have limitations of some sort on their abilities due to the platform, language, system, and performance profiles. This will inevitably lead to subtle differences in CE implementations and applications that an attacker might be able to take advantage of if you're not careful.
+Although Concise Encoding supports a wide range of data types and values, any given implementation will have limitations of some sort on their abilities due to the platform, language, system, and performance profiles. This will invariably lead to subtle differences in CE implementations and applications that an attacker might be able to take advantage of if you're not careful.
 
 
 ### Attack Vectors
