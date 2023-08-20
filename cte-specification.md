@@ -77,8 +77,8 @@ Contents
     - [List](#list)
     - [Map](#map)
     - [Record](#record)
-    - [Edge](#edge)
     - [Node](#node)
+    - [Edge](#edge)
   - [Other Types](#other-types)
     - [Null](#null)
   - [Pseudo-Objects](#pseudo-objects)
@@ -94,7 +94,7 @@ Contents
     - [Marker](#marker)
   - [Empty Document](#empty-document)
   - [Letter Case](#letter-case)
-    - [Overriding Rule for Decoders](#overriding-rule-for-decoders)
+    - [Letter Case for Decoders](#letter-case-for-decoders)
   - [Structural Whitespace](#structural-whitespace)
   - [Pretty Printing](#pretty-printing)
     - [Right Margin](#right-margin)
@@ -165,11 +165,11 @@ All text in a CTE document **MUST** be [CTE safe](#character-safety). Validation
 
 Because CTE documents must be editable by a human without losing information, there are certain codepoints that **MUST NOT** be present in a CTE document. These restrictions can be worked around in some contexts by encoding them as [escape sequences](#escape-sequences).
 
-All unassigned, reserved, surrogate, and invalid Unicode codepoints **MUST NOT** be present in a Concise Encoding document at all (even in escaped form).
+All unassigned, reserved, surrogate, and invalid [Unicode codepoints](https://home.unicode.org) **MUST NOT** be present in a Concise Encoding document at all (even in escaped form).
 
 The following characters **MUST NOT** be present in a CTE document (but may be [escaped](#escape-sequences)):
 
-* Unicode categories Cc (except tab, carriage return and linefeed), Co, Zl, Zp
+* [Unicode categories](https://en.wikipedia.org/wiki/Template:General_Category_(Unicode)) Cc (except tab, carriage return and linefeed), Co, Zl, Zp
 * Characters that look confusingly similar to CTE string delimiter characters.
 
 For example, the CTE string representation `"A” string"` would be invalid due to the confusing "closing double-quote" character (`”`), but it could be escaped like so: `"A\[201d] string"`
@@ -206,7 +206,7 @@ CR       = '\[d]';
 In the spirit of human editability:
 
  * Implementations **SHOULD** avoid outputting unescaped characters that different editors tend to display inconsistently (for example, TAB).
- * Line lengths **SHOULD** be kept within reasonable amounts in order to avoid excessive horizontal scrolling in an editor.
+ * Line lengths **SHOULD** be kept within reasonable amounts (80-120 columns) in order to avoid excessive horizontal scrolling in an editor.
 
 
 
@@ -216,7 +216,7 @@ Document Structure
 A CTE document is composed of the following parts:
 
  1. A [version header](#version-header)
- 2. A series of optional [intangible objects](ce-structure.md#intangible-objects)
+ 2. A series of optional [intangible objects](ce-structure.md#intangible-objects) (which can include [record types](#record-type))
  3. A top-level [data object](ce-structure.md#data-objects)
 
 ```dogma
@@ -314,7 +314,7 @@ Encoders **MUST** output integers in base 10 by default.
 
 A floating point number is conceptually composed of an implied radix (signified by an **OPTIONAL** prefix), a significand portion (composed of a whole part and an **OPTIONAL** fractional part), and an **OPTIONAL** exponential portion, such that the value is calculated as:
 
-    value = significand × radixᵉˣᵖᵒⁿᵉⁿᵗ
+    value = whole.fractional × radixᵉˣᵖᵒⁿᵉⁿᵗ
 
 Where `radix` is 10 for [base-10 notation](#base-10-notation), and 2 for [base-16 notation](#base-16-notation).
 
@@ -330,7 +330,7 @@ The exponential portion of a base-10 number is denoted by the character `e`, fol
 
     value = significand × 10ᵉˣᵖᵒⁿᵉⁿᵗ
 
-Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, the 64-bit ieee754 floating point type can represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
+Although there is technically no maximum number of significant digits or exponent digits for base-10 floating point notation, care should be taken to ensure that the receiving end will be able to store the value. For example, if the receiving end only supports the 64-bit ieee754 floating point type, then it can only represent values with up to 16 significant digits and an exponent range roughly from 10⁻³⁰⁷ to 10³⁰⁷.
 
 ```dogma
 float_dec     = (neg? & digits_dec & (('.' & digits_dec & exponent_dec?) | exponent_dec)) | float_special;
@@ -625,7 +625,7 @@ c1
 
 ### Why not ISO 8601 or RFC 3339?
 
-[RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) was developed as a greatly simplified profile of [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to be used in internet protocols. RFC 3339's criticisms of ISO 8601 are valid:
+[RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) was developed as a greatly simplified (and also open) profile of [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to be used in internet protocols. RFC 3339's criticisms of ISO 8601 are valid:
 
 - It has bad defaults.
 - It tries to do too many things.
@@ -636,7 +636,7 @@ This renders ISO 8601 overcomplicated and prone to misinterpretation, incompatib
 
 RFC 3339 is a much simpler design for timestamped internet events, and is well suited to that purpose. However, it lacks functionality that a general purpose date format would require:
 
-- It only supports time offsets (+01:00, -13:00, etc), not real time zones ([link: why this is important](ce-structure.md#appendix-b-recording-time)).
+- Like ISO 8601, it only supports time offsets (+01:00, -13:00, etc), not real time zones ([link: why this is important](ce-structure.md#appendix-b-recording-time)).
 - It doesn't support BCE dates.
 - It allows multiple interpretations of year values less than 4 digits long, which is a security risk and a source of bugs.
 
@@ -736,7 +736,7 @@ The above string is interpreted as:
 
 A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
 
-The escape sequence begins with a backslash (`\`) character, followed by an opening square brace (`[]`), followed by any number of hexadecimal digits representing the codepoint, and is finally terminated by a closing square brace (`]`). Leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
+The escape sequence begins with a backslash (`\`) character, followed by an opening square brace (`[`), followed by hexadecimal digits representing the codepoint, and is finally terminated by a closing square brace (`]`). **OPTIONAL** leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
 
 ```dogma
 escape_codepoint = '\\[' & digit_hex+ & ']';
@@ -761,8 +761,8 @@ escape_codepoint = '\\[' & digit_hex+ & ']';
 A verbatim escape sequence works like a ["here document"](https://en.wikipedia.org/wiki/Here_document). It's composed as follows:
 
  * Verbatim sequence escape initiator (`\.`).
- * An end-of-sequence sentinel, which is a sequence of characters with the codepoint categories (L, M, N, P, S).
- * An unescaped whitespace terminator (either SPACE `u+0020` or LF `u+000a`) to terminate the end-of-sequence sentinel.
+ * An end-of-sequence sentinel, which is a sequence of characters with the [Unicode categories](https://en.wikipedia.org/wiki/Template:General_Category_(Unicode)) (L, M, N, P, S).
+ * An unescaped whitespace terminator (either SPACE `u+0020`  LF `u+000a`, or CRLF `u+000d u+000a`) to terminate the end-of-sequence sentinel.
  * The string contents.
  * A second instance of the end-of-sequence sentinel (without whitespace terminator). Note: Unlike in many languages, this sequence does _not_ have to occur alone on its own line.
 
@@ -934,7 +934,7 @@ The following array types are available:
 | `<type-code>`   | 16           | [Custom Types](#custom-types) | Element or string |
 | `<media-type>`  | 16           | [Media](#media)               | Element or string |
 
-Array types are [case-insensitive](#letter-case).
+Array type designators are [case-insensitive](#letter-case).
 
 An invalid array type field is a [structural error](ce-structure#structural-errors).
 
@@ -1055,7 +1055,7 @@ echo hello world
 
 ### Custom Types
 
-In custom objects, the type field is the text representation of theunsigned integer custom type. Custom types can have a hex-byte form and a [string form](#string-types).
+In custom objects, the type field is the text representation of the unsigned integer custom type. Custom types can be encoded using a hex-byte binary form and a string-based textual form.
 
 ```dogma
 custom_type      = array_stringform(custom_type_code) | array(custom_type_code, hex_byte);
@@ -1132,7 +1132,7 @@ c1
 
 ### Record
 
-A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record type](#record-type) defined elsewhere, followed by `{`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [record type](#record-type), and is terminated with `}`.
+A record begins with `@`, followed by the [identifier](ce-structure.md#identifier) of a [record type](#record-type) that **MUST** have been defined at the top of the document, followed by `{`, followed by a series of [whitespace](#structural-whitespace) separated values in the same order that their keys are defined in the associated [record type](#record-type), and is terminated with `}`.
 
 ```dogma
 record = '@' & identifier & '{' & items(data_object, WSLC) & '}';
@@ -1149,45 +1149,6 @@ c1
     @vehicle{"Honda"      "Civic"      "fwd" false}
     @vehicle{"Alfa Romeo" "Giulia 952" "awd" true }
 ]
-```
-
-
-### Edge
-
-An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
-
-```dogma
-edge = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
-```
-
-Edges are most commonly used in conjunction with [references](#local-reference) or [resource identifiers](#resource-identifier) to produce arbitrary graphs.
-
-**Examples**:
-
-Weighted graph edge:
-
-```cte
-c1
-{
-    "vertices" = [
-      &a:{}
-      &b:{}
-    ]
-    "edges" = [
-      @($a 200 $b)
-    ]
-}
-```
-
-Relationship graph edge:
-
-```cte
-c1
-@(
-    @"https://springfield.gov/people#homer_simpson"
-    @"https://example.org/wife"
-    @"https://springfield.gov/people#marge_simpson"
-)
 ```
 
 
@@ -1236,6 +1197,45 @@ Viewed rotated, it resembles the tree it describes:
 ![tree rotated](img/tree-rotated.svg)
 
 
+### Edge
+
+An edge container is composed of the delimiters `@(` and `)`, containing the whitespace separated source, description, and destination.
+
+```dogma
+edge = '@(' & WSLC* & non_null_object & WSLC+ & data_object & WSLC+ & non_null_object & WSLC* & ')';
+```
+
+Edges are most commonly used in conjunction with [references](#local-reference) or [resource identifiers](#resource-identifier) to produce arbitrary graphs.
+
+**Examples**:
+
+Weighted graph edge:
+
+```cte
+c1
+{
+    "vertices" = [
+      &a:{}
+      &b:{}
+    ]
+    "edges" = [
+      @($a 200 $b)
+    ]
+}
+```
+
+Relationship graph edge:
+
+```cte
+c1
+@(
+    @"https://springfield.gov/people#homer_simpson"
+    @"https://example.org/wife"
+    @"https://springfield.gov/people#marge_simpson"
+)
+```
+
+
 
 Other Types
 -----------
@@ -1255,7 +1255,7 @@ Pseudo-Objects
 
 ### Local Reference
 
-A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by a marker [identifier](ce-structure.md#identifier) that has been defined elsewhere in the current document.
+A local reference begins with a reference initiator (`$`), followed immediately (with no whitespace) by the [identifier](ce-structure.md#identifier) of a [marker](#marker) that has been defined elsewhere in the current document.
 
 ```dogma
 local_reference = '$' & identifier;
@@ -1441,7 +1441,7 @@ null
 Letter Case
 -----------
 
-A CTE document **MUST** be entirely in lower case, except in the following situations:
+A CTE encoder **MUST** output entirely in lower case, except in the following situations:
 
  * [String types](#string-types) **CAN** contain uppercase and lowercase characters.
  * [Comments](#comment) **CAN** contain uppercase and lowercase characters.
@@ -1450,7 +1450,7 @@ A CTE document **MUST** be entirely in lower case, except in the following situa
 
 For the above situations, a CTE encoder **MUST** preserve letter case. In all other situations, a CTE encoder **MUST** convert to lower case.
 
-### Overriding Rule for Decoders
+### Letter Case for Decoders
 
 Humans will inevitably get letter case wrong when writing into a CTE document (because they copy-pasted it from somewhere, because they have caps-lock on, because it's just muscle memory to do it that way, etc). Rejecting a document on letter case grounds would be poor U/X, so some decoder lenience is necessary:
 
