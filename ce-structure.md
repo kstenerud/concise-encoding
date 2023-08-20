@@ -166,7 +166,7 @@ Terms and Conventions
  * Character sequences are enclosed within backticks: `this is a character sequence`
  * Byte sequences are represented as a series of two-digit hex values, enclosed within backticks and square brackets: [`f1 33 91`]
  * Data placeholders are put `(between parentheses)`
- * Some explanations will include [Dogma notation](https://dogma-lang.org/) for illustrative purposes only (this document doesn't describe actual encodings).
+ * Some explanations will include [Dogma notation](https://dogma-lang.org/) notation for illustrative purposes only (they will be inexact because this document doesn't describe actual encodings).
  * Sample Concise Encoding data will usually be given in [CTE format](cte-specification.md) for clarity and human readability.
 
 
@@ -252,15 +252,18 @@ Document Structure
 
 Data in a Concise Encoding document is arranged in an ad-hoc hierarchical fashion, and can be progressively read or written.
 
-Documents begin with a [version header](#version-header), followed by possible [intangible](#intangible-objects) objects, and then ultimately followed by one (and only one) top-level [data object](#data-objects).
+Documents begin with a [version header](#version-header), followed by possible [intangible](#intangible-objects) objects (which at this point in the document can also include [record types](#record-type)), and then ultimately followed by one (and only one) top-level [data object](#data-objects).
 
 Once the top-level data object is fully decoded, the document is considered finished.
 
 ```dogma
-document = version_header & intangible_object* & data_object;
+document = version_header
+         & intangible_object*
+         & data_object
+         ;
 ```
 
-**Notes**:
+**Specific Use Cases**:
 
  * To store multiple [data objects](#data-objects) in a document, use a [container](#container-types) as the top-level object.
  * To represent an [empty document](#empty-document), use [null](#null) as the top-level object.
@@ -1576,7 +1579,7 @@ The artificialy completed document is returned to the caller along with an indic
 Equivalence
 -----------
 
-When comparing objects to detect duplicate entries in containers, the following rules apply:
+When comparing objects to detect duplicate entries in containers, object equivalence is decided according to the following rules:
 
 ### Boolean Equivalence
 
@@ -1604,7 +1607,7 @@ String types **MUST NOT** be normalized prior to comparison; a different encodin
 
 Comparisons are case sensitive unless otherwise specified by the schema.
 
-String types are never equivalent to any other type, even if the byte contents are the same or "look like" the string encoding of something.
+String types are never equivalent to any other type, even if the byte contents are the same or "look like" the string encoding of something (e.g. `"https://concise-encoding.com/"` is not equivalent to `@"https://concise-encoding.com/"`, and `"2"` is not equivalent to `2`).
 
 ### Array Equivalence
 

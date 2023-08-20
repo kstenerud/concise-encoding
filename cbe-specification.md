@@ -14,7 +14,7 @@ This Document
 
 This document describes the Concise Binary Encoding (CBE) format, and how codecs for this format must behave.
 
- * The Concise Text Encoding (CTE) format is described in [cte-specification.md](cte-specification.md).
+ * The text variant Concise Text Encoding (CTE) is described in [cte-specification.md](cte-specification.md).
  * The logical structure of Concise Encoding is described in [ce-structure.md](ce-structure.md).
 
 
@@ -55,7 +55,7 @@ Contents
         - [Bit Array Chunks](#bit-array-chunks)
         - [String Type Array Chunks](#string-type-array-chunks)
         - [Zero Chunk](#zero-chunk)
-    - [Supported Array Types](#supported-array-types)
+    - [Array Encoded Types](#array-encoded-types)
       - [String](#string)
       - [Resource Identifier](#resource-identifier)
       - [Bit Array](#bit-array)
@@ -159,7 +159,9 @@ uleb128(v: bits): bits = """https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128
 Object Encoding
 ---------------
 
- * All objects are composed of a 1 or 2-byte type code and a possible payload.
+Object encoding in CBE follows these principles:
+
+ * All objects are composed of a 1 or 2-byte [type code](#type-code) and a possible payload.
  * All objects end on an 8-bit boundary.
  * All variable-length discrete types begin with length fields.
  * All containers and arrays can be built incrementally (you don't need to know their final size before you start encoding their contents).
@@ -168,7 +170,9 @@ Object Encoding
 
 ### Type Code
 
-All objects begin with a type code, followed by a possible payload (depending on the type). Of note, the integers from -100 to 100 are encoded directly into the type code with no payload.
+All objects encoded in CBE begin with a type code, followed by a possible payload (depending on the type).
+
+**Note**: Integers from -100 to 100 can be encoded directly into the type code with no payload.
 
 | Hex | Type                                              | Payload                                  |
 | --- | ------------------------------------------------- | ---------------------------------------- |
@@ -222,7 +226,7 @@ All objects begin with a type code, followed by a possible payload (depending on
 |  90 | [String](#string)                                 | (chunk header) (UTF-8 data) ...          |
 |  91 | [Resource Identifier](#resource-identifier)       | (chunk header) (UTF-8 data) ...          |
 |  92 | [Custom Type](#custom-types)                      | (type code) (chunk header) (data) ...    |
-|  93 | [Array: Unsigned Int8](#supported-array-types)    | (chunk header) (8-bit elements) ...      |
+|  93 | [Array: Unsigned Int8](#array-encoded-types)      | (chunk header) (8-bit elements) ...      |
 |  94 | [Array: Bit](#bit-array)                          | (chunk header) (1-bit elements) ...      |
 |  95 | [Padding](#padding)                               |                                          |
 |  96 | [Record](#record)                                 | (identifier) (value) ... (end container) |
@@ -239,63 +243,63 @@ All objects begin with a type code, followed by a possible payload (depending on
 
 ### Type Code (Plane 7f)
 
-Bulkier or less common types are encoded into a secondary type plane, which adds a second byte to the type code.
+Bulkier or less common types are encoded into a secondary type plane, which adds a second byte to the type code. Most of the [array types](#array-encoded-types) encoded in this plane also include a [short form encoding](#short-form), where the length is encoded into the type field.
 
 Types from plane 7f begin with the type code prefix [`7f`], followed by their type code in that plane. For example, the type for signed 16-bit array with 8 elements is [`7f 28`], and the type for [media](#media) is [`7f f3`].
 
-| Hex | Type                                            | Elems | Payload                                   |
-| --- | ----------------------------------------------- | ----- | ----------------------------------------- |
-|  00 | [Array: UID](#supported-array-types)            |    0  | (128-bit big endian element) x0           |
-| ... | ...                                             |  ...  | ...                                       |
-|  0f | [Array: UID](#supported-array-types)            |   15  | (128-bit big endian element) x15          |
-|  10 | [Array: Signed Int8](#supported-array-types)    |    0  | (8-bit element) x0                        |
-| ... | ...                                             |  ...  | ...                                       |
-|  1f | [Array: Signed Int8](#supported-array-types)    |   15  | (8-bit element) x15                       |
-|  20 | [Array: Unsigned Int16](#supported-array-types) |    0  | (16-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  2f | [Array: Unsigned Int16](#supported-array-types) |   15  | (16-bit little endian element) x15        |
-|  30 | [Array: Signed Int16](#supported-array-types)   |    0  | (16-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  3f | [Array: Signed Int16](#supported-array-types)   |   15  | (16-bit little endian element) x15        |
-|  40 | [Array: Unsigned Int32](#supported-array-types) |    0  | (32-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  4f | [Array: Unsigned Int32](#supported-array-types) |   15  | (32-bit little endian element) x15        |
-|  50 | [Array: Signed Int32](#supported-array-types)   |    0  | (32-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  5f | [Array: Signed Int32](#supported-array-types)   |   15  | (32-bit little endian element) x15        |
-|  60 | [Array: Unsigned Int64](#supported-array-types) |    0  | (64-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  6f | [Array: Unsigned Int64](#supported-array-types) |   15  | (64-bit little endian element) x15        |
-|  70 | [Array: Signed Int64](#supported-array-types)   |    0  | (64-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  7f | [Array: Signed Int64](#supported-array-types)   |   15  | (64-bit little endian element) x15        |
-|  80 | [Array: BFloat16](#supported-array-types)       |    0  | (16-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  8f | [Array: BFloat16](#supported-array-types)       |   15  | (16-bit little endian element) x15        |
-|  90 | [Array: Binary Float32](#supported-array-types) |    0  | (32-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  9f | [Array: Binary Float32](#supported-array-types) |   15  | (32-bit little endian element) x15        |
-|  a0 | [Array: Binary Float64](#supported-array-types) |    0  | (64-bit little endian element) x0         |
-| ... | ...                                             |  ...  | ...                                       |
-|  af | [Array: Bin Float64](#supported-array-types)    |   15  | (64-bit little endian element) x15        |
-| ... | [RESERVED](#reserved)                           |       |                                           |
-|  e0 | [Array: UID](#supported-array-types)            |    ∞  | (chunk header) (128-bit B-E elements) ... |
-|  e1 | [Array: Signed Int8](#supported-array-types)    |    ∞  | (chunk header) (8-bit elements) ...       |
-|  e2 | [Array: Unsigned Int16](#supported-array-types) |    ∞  | (chunk header) (16-bit L-E elements) ...  |
-|  e3 | [Array: Signed Int16](#supported-array-types)   |    ∞  | (chunk header) (16-bit L-E elements) ...  |
-|  e4 | [Array: Unsigned Int32](#supported-array-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
-|  e5 | [Array: Signed Int32](#supported-array-types)   |    ∞  | (chunk header) (32-bit L-E elements) ...  |
-|  e6 | [Array: Unsigned Int64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
-|  e7 | [Array: Signed Int64](#supported-array-types)   |    ∞  | (chunk header) (64-bit L-E elements) ...  |
-|  e8 | [Array: BFloat16](#supported-array-types)       |    ∞  | (chunk header) (16-bit L-E elements) ...  |
-|  e9 | [Array: Binary Float32](#supported-array-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
-|  ea | [Array: Binary Float64](#supported-array-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
-| ... | [RESERVED](#reserved)                           |       |                                           |
-|  f0 | [Marker](#marker)                               |    1  | (byte length) (UTF-8 data)                |
-|  f1 | [Record Type](#record-type)                     |    ∞  | (ID) (key) ... (end container)            |
-|  f2 | [Remote Reference](#remote-reference)           |    1  | (chunk header) (UTF-8 data) ...           |
-|  f3 | [Media](#media)                                 |    ∞  | (byte length) (UTF-8 data) (chunk header) (bytes) ... |
-| ... | [RESERVED](#reserved)                           |       |                                           |
+| Hex | Type                                          | Elems | Payload                                   |
+| --- | --------------------------------------------- | ----- | ----------------------------------------- |
+|  00 | [Array: UID](#array-encoded-types)            |    0  | (128-bit big endian element) x0           |
+| ... | ...                                           |  ...  | ...                                       |
+|  0f | [Array: UID](#array-encoded-types)            |   15  | (128-bit big endian element) x15          |
+|  10 | [Array: Signed Int8](#array-encoded-types)    |    0  | (8-bit element) x0                        |
+| ... | ...                                           |  ...  | ...                                       |
+|  1f | [Array: Signed Int8](#array-encoded-types)    |   15  | (8-bit element) x15                       |
+|  20 | [Array: Unsigned Int16](#array-encoded-types) |    0  | (16-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  2f | [Array: Unsigned Int16](#array-encoded-types) |   15  | (16-bit little endian element) x15        |
+|  30 | [Array: Signed Int16](#array-encoded-types)   |    0  | (16-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  3f | [Array: Signed Int16](#array-encoded-types)   |   15  | (16-bit little endian element) x15        |
+|  40 | [Array: Unsigned Int32](#array-encoded-types) |    0  | (32-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  4f | [Array: Unsigned Int32](#array-encoded-types) |   15  | (32-bit little endian element) x15        |
+|  50 | [Array: Signed Int32](#array-encoded-types)   |    0  | (32-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  5f | [Array: Signed Int32](#array-encoded-types)   |   15  | (32-bit little endian element) x15        |
+|  60 | [Array: Unsigned Int64](#array-encoded-types) |    0  | (64-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  6f | [Array: Unsigned Int64](#array-encoded-types) |   15  | (64-bit little endian element) x15        |
+|  70 | [Array: Signed Int64](#array-encoded-types)   |    0  | (64-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  7f | [Array: Signed Int64](#array-encoded-types)   |   15  | (64-bit little endian element) x15        |
+|  80 | [Array: BFloat16](#array-encoded-types)       |    0  | (16-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  8f | [Array: BFloat16](#array-encoded-types)       |   15  | (16-bit little endian element) x15        |
+|  90 | [Array: Binary Float32](#array-encoded-types) |    0  | (32-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  9f | [Array: Binary Float32](#array-encoded-types) |   15  | (32-bit little endian element) x15        |
+|  a0 | [Array: Binary Float64](#array-encoded-types) |    0  | (64-bit little endian element) x0         |
+| ... | ...                                           |  ...  | ...                                       |
+|  af | [Array: Bin Float64](#array-encoded-types)    |   15  | (64-bit little endian element) x15        |
+| ... | [RESERVED](#reserved)                         |       |                                           |
+|  e0 | [Array: UID](#array-encoded-types)            |    ∞  | (chunk header) (128-bit B-E elements) ... |
+|  e1 | [Array: Signed Int8](#array-encoded-types)    |    ∞  | (chunk header) (8-bit elements) ...       |
+|  e2 | [Array: Unsigned Int16](#array-encoded-types) |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e3 | [Array: Signed Int16](#array-encoded-types)   |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e4 | [Array: Unsigned Int32](#array-encoded-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  e5 | [Array: Signed Int32](#array-encoded-types)   |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  e6 | [Array: Unsigned Int64](#array-encoded-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
+|  e7 | [Array: Signed Int64](#array-encoded-types)   |    ∞  | (chunk header) (64-bit L-E elements) ...  |
+|  e8 | [Array: BFloat16](#array-encoded-types)       |    ∞  | (chunk header) (16-bit L-E elements) ...  |
+|  e9 | [Array: Binary Float32](#array-encoded-types) |    ∞  | (chunk header) (32-bit L-E elements) ...  |
+|  ea | [Array: Binary Float64](#array-encoded-types) |    ∞  | (chunk header) (64-bit L-E elements) ...  |
+| ... | [RESERVED](#reserved)                         |       |                                           |
+|  f0 | [Marker](#marker)                             |    1  | (byte length) (UTF-8 data)                |
+|  f1 | [Record Type](#record-type)                   |    ∞  | (ID) (key) ... (end container)            |
+|  f2 | [Remote Reference](#remote-reference)         |    1  | (chunk header) (UTF-8 data) ...           |
+|  f3 | [Media](#media)                               |    ∞  | (byte length) (UTF-8 data) (chunk header) (bytes) ... |
+| ... | [RESERVED](#reserved)                         |       |                                           |
 
 
 
@@ -329,7 +333,7 @@ CBE encoders **MUST** by default output integer values in the smallest type they
 | ± `0x10000` - `0xffffffff`                 | [32-bit integer](#fixed-width-integer)            |
 | ± `0x100000000` - `0xffffffffffff`         | [variable width integer](#variable-width-integer) |
 | ± `0x1000000000000` - `0xffffffffffffffff` | [64-bit integer](#fixed-width-integer)            |
-| ± `0x10000000000000000` and up             | [variable width integer](#variable-width-integer) |
+| ± `0x10000000000000000` - ∞                | [variable width integer](#variable-width-integer) |
 
 Integers are encoded in three possible ways:
 
@@ -356,7 +360,7 @@ int_64_positive = u8(0x6e) & u64(~);
 int_64_negative = u8(0x6f) & u64(~);
 ```
 
-**Note**: Because the sign is encoded into the type code, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer in most environments. The application might choose to discard the sign information in this case, but the codec **MUST** preserve it (the most common approach is to pass it to the application as a floating point type).
+**Note**: Because the sign is encoded into the type code, it's possible to encode the value 0 with a negative sign. `-0` is not representable as an integer, and **MUST** be passed on to the application as a floating point type.
 
 #### Variable Width Integer
 
@@ -419,7 +423,7 @@ bfloat(v: number): bits = """https://en.wikipedia.org/wiki/Bfloat16_floating-poi
 
 A unique identifier, stored according to [rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2) binary format.
 
-**Note**: This is the only data type that is stored in **big endian** byte order ([as required by rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
+**Note**: This is the only data type in CBE that is stored in **big endian** byte order ([as required by rfc4122](https://tools.ietf.org/html/rfc4122#section-4.1.2)).
 
 ```dogma
 uid = u8(0x65) & uint(128, ~};
@@ -436,7 +440,7 @@ Temporal Types
 
 Temporal types are stored in [compact time](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md) format.
 
-**Note**: [zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed in CBE.
+**Note**: [compact time zero values](https://github.com/kstenerud/compact-time/blob/master/compact-time-specification.md#zero-values) are not allowed in CBE.
 
 
 ### Date
@@ -485,12 +489,12 @@ compact_timestamp: bits = """https://github.com/kstenerud/compact-time/blob/mast
 Array and String Types
 ----------------------
 
-An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The [array type](#supported-array-types) determines the size of each element and how the data is to be interpreted. [String types](ce-structure.md#string-types) are implemented as arrays with an element size of 1 byte.
+An array is a contiguous sequence of identically sized elements, stored in length delimited chunks. The [array type](#array-encoded-types) determines the size of each element and how the data is to be interpreted. [String types](ce-structure.md#string-types) are implemented as arrays with an element size of 1 byte.
 
 
 ### Array Elements
 
-Array elements have a fixed type and size, determined by the [array type](#supported-array-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte, padded to an 8-bit boundary).
+Array elements have a fixed type and size, determined by the [array type](#array-encoded-types). Length fields in array chunks represent the number of *elements*, so for example a uint32 array chunk of length 3 contains 12 bytes of array data (3 elements x 4 bytes per element), and a bit array chunk of length 10 would contain 2 bytes of array data (10 elements, 8 elements per byte, zero-padded to an 8-bit boundary).
 
 
 ### Array Forms
@@ -505,7 +509,9 @@ All array types have a [chunked form](#chunked-form), and many also have a [shor
 
 #### Short Form
 
-Short form arrays have their length encoded in the lower 4 bits of the type code itself in order to save space when encoding arrays with lengths from 0 to 15 elements. Not all array types have a short form.
+Short form arrays have their length encoded in the lower 4 bits of the type code itself in order to save space when encoding arrays with lengths from 0 to 15 elements.
+
+**Note**: Not all array types have a short form.
 
 ```dogma
 array_short_uid   = u8(0x7f) & u4(0) & array_short(uid(~));
@@ -563,10 +569,11 @@ array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 
  * [`03`] = Chunk length 1 with the continuation bit set
  * [`80 02`] = Chunk length 256 with the continuation bit cleared
+ * [`00`] = Chunk length 0 with the continuation bit cleared (terminates any array)
 
 ##### Bit Array Chunks
 
-[Bit array](#bit-array) chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size (the last chunk will be zero-padded to an 8-bit boundary).
+[Bit array](#bit-array) chunks with continuation=1 **MUST** have a length that is a multiple of 8 so that subsequent chunk data will begin on an 8-bit boundary. Only the final chunk (continuation=0) of a bit array **CAN** be of arbitrary size (the last chunk of array data will be [zero-padded to an 8-bit boundary](#bit-array)).
 
 ##### String Type Array Chunks
 
@@ -594,7 +601,9 @@ This technique will only work for the general string type (0x90), not for the sh
       next(cachedType, buffer+6) // 0x6a, [10 a0 ...] = 16-bit positive int value 40976
 
 
-### Supported Array Types
+### Array Encoded Types
+
+The following types are encoded using [array encoding](#array-forms):
 
 | Array Type                                                                                   | Element Size (bits) | Byte Order    | Type Codes      |
 | -------------------------------------------------------------------------------------------- | ------------------- | ------------- | --------------- |
@@ -664,7 +673,7 @@ resource_id = u8(0x91) & string_chunk;
 
 #### Bit Array
 
-Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of an imaginary little endian byte array). Array chunks **MUST** have a length such that `length % 8 == 0`, except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of the encoded array). Array chunks **MUST** have a length such that `length % 8 == 0` (failure to do so is a [structural error](ce-structure#structural-errors)), except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 ```dogma
 array_bit            = u8(0x94) & array_bit_chunk* array_bit_chunk_last;
@@ -809,7 +818,7 @@ end_container = u8(0x9b);
 
 **Example**:
 
-A record built from the record type identified by "a" (defined elsewhere), with the first key's associated value set to 5:
+A record built from the record type identified by "a" (which must be defined at the top of the document), with the first key's associated value set to 5:
 
     [96 01 61 05 9b]
 
@@ -866,7 +875,7 @@ null = u8(0x7d);
 
 ### RESERVED
 
-This type is reserved for future expansion of the format, and **MUST NOT** be used.
+This type is reserved for future expansion of the format, and **MUST NOT** be used. If a decoder encounters a reserved type code, it is a [structural error](ce-structure.md#structural-errors).
 
 
 
