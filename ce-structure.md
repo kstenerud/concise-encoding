@@ -681,7 +681,7 @@ Time offset is recorded as an offset (+ or -) from UTC, recorded in hours and mi
 
 Use of UTC offset is discouraged except as a means of interfacing with legacy systems.
 
-UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values (see [appendix B: recording time](#appendix-b-recording-time)] for an explanation).
+UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values (see [appendix B: recording time](#appendix-b-recording-time) for an explanation).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -751,7 +751,7 @@ Array Types
 
 An array represents a contiguous sequence of identically typed fixed length elements (like a space-optimized [list](#list) where every element is the same type). The type of the array determines the size of its elements and how its contents are interpreted.
 
-In a CBE document, the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
+In a [CBE document](cbe-specification.md), the array elements will all be adjacent to each other, allowing large amounts of data to be efficiently copied between the stream and your internal structures.
 
 ```dogma
 array = array_element*;
@@ -770,8 +770,8 @@ The following element types are supported in primitive arrays. For other types o
 
 **Note**: The following types also use array-style encoding (with byte elements), but are not considered arrays:
 
- * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media array are always bytes, regardless of the actual data the bytes represent.
- * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type array are always bytes, regardless of the actual data the bytes represent.
+ * [Media](#media) encapsulates other data formats with well-known media types (which can thus be automatically passed by the application to an appropriate codec). Elements of a media "array" are always bytes, regardless of the actual data the bytes represent.
+ * [Custom types (binary form)](#custom-type-forms) represent custom data structures that only a custom codec designed for them will understand. Elements of a custom type "array" are always bytes, regardless of the actual data the bytes represent.
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -808,7 +808,7 @@ For map-like containers, a duplicate means any key-value pair whose key is [equi
 
 An implementation **MUST** disregard the type and size of integers and floats when comparing numeric types. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it's not a number (it's a string).
 
-If a container disallows duplicates, duplicate entries are [structural errors](#structural-errors).
+If a container disallows duplicates, duplicate entries are [data errors](#data-errors).
 
 Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be set by a schema, per-instance and globally.
 
@@ -853,7 +853,7 @@ By default, a map is [unordered, and does not allow duplicate keys](#container-p
 Only the following data types are allowed as keys in map-like containers:
 
 * [Boolean](#boolean)
-* [Integer](#integer), except for [`-0`](#special-floating-point-values)
+* [Integer](#integer) (**note**: not [`-0`](#special-floating-point-values), which is actually a float)
 * [Universal ID](#uid)
 * [Date, time, timestamp](#temporal-types)
 * [String](#string)
@@ -879,7 +879,7 @@ c1
 
 ### Records
 
-Records split [map-like](#map) data into two parts: a [record type](#record-type) which defines what keys will be present, and multple [records](#record) which reference the record type and provide the matching values.
+Records split [map-like](#map) data into two parts: a [record type](#record-type) which defines what keys will be present, and a [record](#record) which references the record type and provides the matching values.
 
     Record type:  @<key1 key2 key3 ...>
     Record:       @{val1 val2 val3 ...}
@@ -1198,13 +1198,13 @@ Custom Types
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type envelope, and then report it as a [data error](#data-errors).
+Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type's envelope (yielding encoded bytes or encoded string data), and then report it as a [data error](#data-errors).
 
-**Note**: Although custom types are encoded as "[array types](#array-types)" or "[string types](#string-types)", the interpretation of their contents is user-defined, and they likely won't represent an array or string value at all.
+**Note**: Although custom types are encoded into bytes or string data, the interpretation of their contents is user-defined, and very likely won't represent an array or string value at all.
 
 ### Custom Type Code
 
-All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely differentiates each type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be consistent between sending and receiving sides (for example via a schema).
+All custom type values **MUST** have an associated unsigned integer "custom type" code. This code uniquely differentiates each type from all other types being used in the current document. The definition of which type codes refer to which data types **MUST** be agreed upon by both sending and receiving sides (for example via a schema).
 
 A custom type code **MUST** be an unsigned integer in the range of 0 to 0xffffffff (inclusive).
 
@@ -1217,7 +1217,7 @@ custom_binary = type_code & byte*;
 custom_text   = type_code & string;
 ```
 
-[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any binary form to its matching textual form whenever the text form is available.
+[CBE](cbe-specification.md) documents only support the binary form. [CTE](cte-specification.md) documents support both the binary and textual forms. CTE encoders **MUST** convert any custom binary form to its matching textual form whenever the text form is available.
 
 Custom type implementations **MUST** provide at least a binary form, and **SHOULD** also provide a textual form. When both binary and textual forms of a custom type are provided, they **MUST** be 1:1 convertible to each other without data loss.
 
@@ -1231,7 +1231,7 @@ Suppose we wanted to encode a fictional "complex number" type:
         imaginary: float32
     }
 
-For our textual encoding scheme, we could represent complex numbers using something like `REAL + IMAGINARY`, where `REAL` and `IMAGINARY` are float32s.
+In our conceptual structure, we could represent complex numbers using something like `REAL + IMAGINARY`, where `REAL` and `IMAGINARY` are float32s.
 
 For our textual encoding scheme, we could use the mathematical notation, such as `2.94+3i`.
 
@@ -1243,7 +1243,7 @@ For our binary encoding scheme, we could write the two float32 values directly:
 
 **Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
 
-In this example, we'll assign the custom type code 99 to our complex number type (assume that we've done this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
+In this example, we'll assign the custom type code 99 to our complex number type (assume that we've stated this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
 
 Our data:
 
@@ -1364,7 +1364,7 @@ CTE supports two forms of comments:
  * Single-line comments, which end at the line end (`// a comment`).
  * Multi-line comments, which can span multiple lines of text, and support nesting (`/* a comment /* nested */ */`).
 
-Comments are allowed anywhere in a CTE document where a real object would be allowed, except inside [arrays](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types).
+Comments are allowed anywhere in a CTE document where a real object would be allowed, except inside [arrays](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types) (i.e. `@u8[1 2 /* a comment */ 3]` is invalid).
 
 **Note**: CBE **CANNOT** encode comments, so they **MUST** be discarded when converting from CTE to CBE.
 
@@ -1425,13 +1425,14 @@ record_type = identifier & keyable_type*;
 
 **Notes**:
 
- * Record Types **MUST** always be [ordered](#container-properties), and by default do not allow duplicate keys.
- * Record Type keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
+ * Record types **MUST** always be [ordered](#container-properties).
+ * Record types default to not allowing duplicate keys.
+ * Record type keys **MUST** be [keyable types](#keyable-types), and **CANNOT** be [references](#reference).
 
 
 ### Marker
 
-A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which can then be [referenced](#reference) from elsewhere the document (or from a different document).
+A marker assigns a unique (to the current document) marker [identifier](#identifier) to another object, which can then be [referenced](#reference) from elsewhere the document (or from a different document using [remote references](#remote-reference)).
 
 ```dogma
 marked-object = identifier & concrete_object;
@@ -1465,7 +1466,7 @@ Identifiers are always an integral part of another type, and thus **CANNOT** exi
  * It **MUST** be a valid UTF-8 string containing only characters of Unicode categories Cf, L, M, N, or characters '_', '.', or '-'.
  * It **MUST** begin with either a letter, number, or an underscore '_' (and therefore **CANNOT** be empty).
  * Comparisons are **case sensitive**.
- * Identifier definitions **MUST** be unique to an identifier type in the current document. So for example the [marker](#marker) ID "a" will not clash with the [record type](#record-type) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record type](#record-type) with ID "a".
+ * Identifier definitions **MUST** be unique to an identifier type in the current document. So for example the [marker](#marker) ID "a" will not clash with the [record type](#record-type) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record types](#record-type) with ID "a".
 
 ```dogma
 identifier             = char_identifier_first & char_identifier_next*;
@@ -1499,7 +1500,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 **Lossy conversions that MUST always be allowed**:
 
- * Loss of [NaN payload data](#nan-payload), except for the quiet bit which **MUST** be preserved.
+ * Loss of [NaN payload data](#nan-payload), except for the quiet/signaling status which **MUST** be preserved.
 
 **Lossy conversions that MUST NOT be allowed at all**:
 
@@ -1547,7 +1548,7 @@ This helps to minimize exploitable behavioral differences between implementation
 
 It's best to think ahead about types and values that might be problematic on the various platforms your application runs on. In some cases, switching to a different type might be enough. In others, a schema limitation might be the better approach. Regardless, applications **SHOULD** always take problematic values and their mitigations into account during the design phase in order to ensure uniform (and thus unexploitable) behavior in all parts of an application.
 
- * The Concise Encoding integer type can store the value `-0`, but most platform integer types cannot. The recommended approach is to convert to a float type if possible, or reject the document.
+ * The [Concise Binary Encoding](cbe-specification.md) integer encoding can store the "integer" value `-0` (which is actually a float), but if the destination cannot handle floating point values, it will have to reject the document.
  * Platforms might not be able to handle the NUL character in strings. Please see the [NUL character](#nul-character) section for how to deal with this.
  * Platforms might not support UTF-8 encoding.
  * Platforms might not support the full range of Unicode codepoints.
