@@ -553,9 +553,13 @@ An array **CAN** contain any number of chunks, and the chunks don't have to be t
 
 **Example**:
 
-    [(array type) 1d (14 elements of data) 08 (4 elements of data)]
+        chunk header                                 chunk header
+        |                                            |
+    [93 1d 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 08 01 02 03 04]
+     |     |                                            |
+     type  data                                         data
 
-In this example, the first chunk of the array has 14 elements and has a continuation bit of 1 (chunk header [`1d`]). The second chunk has 4 elements and a continuation bit of 0 (chunk header [`08`]). The total length of the array is thus 18 elements, split across two chunks.
+In this example (unsigned 8-bit int array), the first chunk of the array has 14 elements and has a continuation bit of 1 (chunk header [`1d`]). The second chunk has 4 elements and a continuation bit of 0 (chunk header [`08`]). The total length of the array is thus 18 elements, split across two chunks.
 
 ##### Chunk Header
 
