@@ -184,7 +184,7 @@ Here is (as of 2023) a complete list of lookalike Unicode characters. This list 
 
 ### Whitespace
 
-[Structural whitespace](#structural-whitespace) is used to separate structural elements in a document (such as container contents). Extraneous [structural whitespace](#structural-whitespace) is ignored.
+[Structural whitespace](#structural-whitespace) (carriage return, linefeed, space, and tab) is used to separate structural elements in a document (such as container contents). Extraneous [structural whitespace](#structural-whitespace) is ignored.
 
 
 ### Line Endings
@@ -307,7 +307,7 @@ prefix_oct   = '0' ('o' | 'O');
 prefix_hex   = '0' ('x' | 'X');
 ```
 
-Encoders **MUST** output integers in base 10 by default.
+Encoders **MUST** output integers in base 10 by default, and **MAY** offer configuration to output different bases.
 
 
 ### Floating Point
@@ -318,9 +318,7 @@ A floating point number is conceptually composed of an implied radix (signified 
 
 Where `radix` is 10 for [base-10 notation](#base-10-notation), and 2 for [base-16 notation](#base-16-notation).
 
-**Note**: A numeric value that contains only a whole significand portion (where the fractional part is 0 and the exponent is 1) will be interpreted/printed as an integer.
-
-Encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default.
+Encoders **MUST** output decimal float values in [base-10 notation](#base-10-notation) and binary float values in [base-16 notation](#base-16-notation) by default, and **MAY** offer configuration to output different bases.
 
 #### Base-10 Notation
 
@@ -681,7 +679,7 @@ CTE decoders **MUST** validate string types in the following order (or effective
 
 1. Validate the raw string contents for [CTE safety](#character-safety).
 2. Decode all [escape sequences](#escape-sequences) to produce a final string.
-3. [Validate the final string](ce-structure.md#string-types).
+3. [Validate the final string](ce-structure.md#string-types) for UTF-8 validity and apply [NUL stuffing](ce-structure#nul-character) if necessary.
 
 
 ### Escape Sequences
@@ -700,7 +698,7 @@ Within [string types](#string-types), escape sequences **CAN** be used to encode
 | u+005f (`_`)          | [non-breaking space](https://en.wikipedia.org/wiki/Non-breaking_space) (u+00a0) |
 | u+002d (`-`)          | [soft hyphen](https://en.wikipedia.org/wiki/Soft_hyphen) (u+00ad) |
 | u+000a (linefeed)     | [continuation](#continuation)           |
-| u+002b (`{`)          | [Unicode codepoint](#unicode-codepoint) |
+| u+002b (`[`)          | [Unicode codepoint](#unicode-codepoint) |
 | u+002e (`.`)          | [verbatim sequence](#verbatim-sequence) |
 
 Any escape type character not in the above list is invalid.
@@ -940,7 +938,7 @@ An invalid array type field is a [structural error](ce-structure#structural-erro
 
 For array types that support multiple bases, elements **MAY** be represented in different bases by applying a base prefix (`0b` for base 2, `0o` for base 8, `0x` for base 16) to an element (provided the element type supports it).
 
-CTE encoders **MUST** default to [base-10 notation](#base-10-notation) for integer array elements, and **MUST** default to [base-16 notation](#base-16-notation) for floating point array elements.
+CTE encoders **MUST** default to [base-10 notation](#base-10-notation) for integer array elements, and **MUST** default to [base-16 notation](#base-16-notation) for floating point array elements, and **MAY** offer configuration to output different bases.
 
 
 #### Array Type Suffix
