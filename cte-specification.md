@@ -843,7 +843,7 @@ resource_id = '@' & stringlike(char_rid);
 char_rid    = """https://www.rfc-editor.org/rfc/rfc3987""";
 ```
 
-**Note**: A decoder **MUST** interpret only [CTE escape sequences](#escape-sequences). Resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)) **MUST** be passed through to the application unimpeded and uninterpreted.
+**Note**: A decoder **MUST** only interpret [CTE escape sequences](#escape-sequences), not resource-specific escape sequences (such as [percent encoding](https://en.wikipedia.org/wiki/Percent-encoding)). Resource-specific escape sequences **MUST** be passed unmodified to the application layer.
 
 **Example**:
 
@@ -865,7 +865,7 @@ c1
 Arrays
 ------
 
-Arrays come in elemental and string form, depending on the array type.
+Array-like data can be represented in elemental or string form, depending on the type.
 
 
 ### Elemental Form
@@ -887,7 +887,7 @@ c1
 
 ### String Form
 
-The string form is available as an alternative representation in some cases ([media](#media) and [custom typss](#custom-types)). It begins with an `@` character, followed by the [array type](#array-types) type, followed by a string enclosed by double-quotes (`"`).
+The string form is available as an alternative representation in some cases ([media](#media) and [custom types](#custom-types)). It begins with an `@` character, followed by the [array type](#array-types), followed by a string enclosed by double-quotes (`"`).
 
 ```dogma
 array_stringform(type) = '@' & type & stringlike;
