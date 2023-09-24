@@ -1768,22 +1768,7 @@ A codec **MUST** provide at least the following **OPTIONS** to allow the user to
 
  * An array along with its contents constitute a _single_ object.
  * [Referenced](#reference) containers are **not** double-counted (the reference itself is counted as an object, but the container and contents it references are not counted again, and do not count towards the container depth).
-
-It's impossible to prescribe what default limits are sane and reasonable for all decoders because different systems will have different constraints, and system capabilities in general keep improving as time goes on. As an illustration, for a general purpose decoder the following defaults would probably give a reasonable balance in 2020:
-
-| Limit                             | Value     |
-| --------------------------------- | --------- |
-| Max document size                 | 5 GB      |
-| Max array size                    | 1 GB      |
-| Max object count                  | 1,000,000 |
-| Max container depth               | 1000      |
-| Max year digits                   | 11        |
-| Max integer digits                | 100       |
-| Max float coefficient digits      | 100       |
-| Max decimal float exponent digits | 5         |
-| Max marker count                  | 10,000    |
-| Max reference count               | 10,000    |
-| Max identifier length             | 1000      |
+ * See [Appendix A: Mandatory User-controllable limits](#mandatory-user-controllable-limits) for a list of default values.
 
 
 ### Mitigations: Application Guidelines
@@ -1829,8 +1814,8 @@ The following options **MUST** be present in a Concise Encoding codec, and their
 
 | Option                            | Recommended Default (in 2020) |
 | --------------------------------- | ----------------------------- |
-| Max document size                 | 5 GB (5 * 1024 * 1024 * 1024) |
-| Max array size                    | 1 GB (1 * 1024 * 1024 * 1024) |
+| Max document size                 | 5 GB (5 × 1024 × 1024 × 1024) |
+| Max array size                    | 1 GB (1 × 1024 × 1024 × 1024) |
 | Max identifier length             | 1000                          |
 | Max object count                  | 1,000,000                     |
 | Max container depth               | 1000                          |
