@@ -10,7 +10,6 @@ Contents
 
 - [Design Document](#design-document)
   - [Contents](#contents)
-  - [TODO](#todo)
   - [Mission Statement](#mission-statement)
   - [Problem Space](#problem-space)
   - [Concise Encoding's Positioning](#concise-encodings-positioning)
@@ -55,18 +54,6 @@ Contents
       - [Fixed Size Integers](#fixed-size-integers)
       - [Booleans](#booleans)
 
-TODO
-----
-
-
-- [] list semantics
-- {} map semantics
-- () graph semantics
-- <> template semantics
-- "" string semantics
-- & marked (address-of / reference-of)
-- $ dereference
-- @ & identifier? & semantic: qualifier for alternate processing
 
 
 Mission Statement
@@ -94,7 +81,7 @@ Threat actors have become much more sophisticated and organized over the past de
 Concise Encoding's Positioning
 ------------------------------
 
-Concice Encoding is a general purpose, ad-hoc encoding format that can be added to a project to solve the majority of data storage or transmission issues quickly and efficiently with low friction.
+Concise Encoding is a general purpose, ad-hoc encoding format that can be added to a project to solve the majority of data storage or transmission issues quickly and efficiently with low friction.
 
 Other formats support advanced features like partial reads, zero-copy structs, random access, finite-time decoding/encoding, etc. And those are great, but I'd consider them specialized features with many trade-offs; they should only be used after careful evaluation of your requirements (which you often won't fully know up front).
 
@@ -214,7 +201,7 @@ CBE tends more towards the simplicity side to:
 - Minimize bugs and security issues
 - Encourage developers to build implementations
 
-Complex bitfields are kept to a minimum, and all values end on a byte boundary.
+Complex bit fields are kept to a minimum, and all values end on a byte boundary.
 
 
 ### Little Endian
@@ -248,7 +235,7 @@ All CBE documents start with the signature byte 0x81, followed by the version. W
  * The byte sequences [`80 00`] to [`81 3f`] are invalid in Shift-JIS-like character sets ([Shift JIS](https://en.wikipedia.org/wiki/Shift_JIS), [BIG5](https://en.wikipedia.org/wiki/Big5), [GB18030](https://en.wikipedia.org/wiki/GB_18030)).
  * 0x81, 0x8D, 0x8F, 0x90, and 0x9D are undefined in [Windows codepage 1252](https://en.wikipedia.org/wiki/Windows-1252#Character_set) (most ISO 8859-1 decoders are actually CP-1252 decoders).
 
-Thus, 0x81 is invalid for all major character sets in the next 63 Concise Encoding versions (from 0x01 to 0x3f).
+Thus, 0x81 is invalid for all major character sets over the next 63 Concise Encoding versions (from 0x01 to 0x3f).
 
 This "invalid" property can be used to indicate the presence of binary data on mediums originally designed for text.
 
@@ -407,10 +394,10 @@ Zero-copy is a desirable aspect of a data format because it allows the receiving
 
 The binary format is designed to support zero-copy as much as is possible in an ad-hoc format:
 
-- Multibyte data types are stored in little endian format (except for UUID, which is big endian as per the spec).
+- Multi-byte data types are stored in little endian format (except for UUID, which is big endian as per the spec).
 - Standard format and sizing is available for the most common types (integers, binary floats, strings, arrays).
 - Strings can be artificially zero-terminated either while encoding (by inserting a [zero chunk](#zero-chunk)), or while decoding (by caching and then overwriting the next object's type code).
-- Encoders can insert [padding](#padding) bytes such that multibyte values end up aligned when the document is read into memory by a decoder.
+- Encoders can insert [padding](#padding) bytes such that multi-byte values end up aligned when the document is read into memory by a decoder.
 
 
 ### Array Chunking
@@ -442,7 +429,7 @@ Padding allows an encoder to adjust the alignment of encoded data in the documen
 [LEB128](https://en.wikipedia.org/wiki/LEB128) is used for the following data fields in the binary format:
 
 - [Version specifier](cbe-specification.md#version-specifier)
-- [Multibyte integer length field](cbe-specification.md#variable-width)
+- [Multi-byte integer length field](cbe-specification.md#variable-width)
 - [Array chunk header](cbe-specification.md#chunk-header)
 
 While LEB128 is infinitely extensible, it has a constant overhead loss of 1/8, so it's only used in headers with length fields and in data unlikely to exceed a single group. This gives flexibility in the rare cases where it's needed, while keeping CPU and space overhead low on the whole.
@@ -472,7 +459,7 @@ The following escape sequences are supported:
 | `-`                  | soft-hyphen (u+00ad)        |
 | u+000a               | [continuation](#continuation) |
 | u+000d               | [continuation](#continuation) |
-| `0` - `9`            | [Unicode sequence](#unicode-escape-sequences) |
+| `[`                  | [Unicode sequence](#unicode-escape-sequences) |
 | `.`                  | [verbatim sequence](#verbatim-sequence) |
 
 Reasoning:
@@ -523,7 +510,7 @@ Unicode escaping is a mess. We currently have two clumsy escape methods to repre
 
 This is just silly. Not only does it complicate things and encourage user error (i.e. accidentally using the wrong case), it also bloats strings unnecessarily (Unicode codepoints only go to 1fffff, so you automatically waste two or more bytes every time you want to encode a codepoint > 65536).
 
-Since Concise Encoding dosn't suffer from the C legacy of by-now-extinct [octal escape sequences](https://en.wikipedia.org/wiki/Escape_sequences_in_C#Table_of_escape_sequences), it can use a better Unicode escaping mechanism.
+Since Concise Encoding doesn't suffer from the C legacy of by-now-extinct [octal escape sequences](https://en.wikipedia.org/wiki/Escape_sequences_in_C#Table_of_escape_sequences), it can use a better Unicode escaping mechanism.
 
 Unicode codepoint escape sequences consist of the following:
 
@@ -597,7 +584,7 @@ In the above example, using a newline terminator is preferable because:
 
 NUL is a troublesome character in many languages, but it's still a valid codepoint and must be supported somehow. On the other hand, it's an exploitable security hole in systems that are unprepared for it.
 
-As a compromise, decoders convert NUL to [`c0 80`] by default in order to sidestep the NUL termination problem.
+As a compromise, decoders convert NUL to [`c0 80`] on systems that cannot have NUL in strings in order to sidestep the NUL termination problem.
 
 
 ### Whitespace
