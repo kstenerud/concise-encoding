@@ -128,7 +128,7 @@ Concise Encoding
  * [🔡 Dogma grammar for CTE](cte.dogma)
  * [🔡 Dogma grammar for CBE](cbe.dogma)
 
- * [🔡 ANTLRv4 grammar for CTE](https://github.com/kstenerud/go-concise-encoding/tree/master/codegen/cte)
+ * [🔡 ANTLRv4 grammar for CTE](ANTLR)
 
 ### Implementations
 
