@@ -184,7 +184,7 @@ Design Goals
  * It must be secure (secure defaults, no implicit behavior, one way to do each thing, reject bad data by default).
  * It must be future proof (allow changes and additions to the spec with no negative impact to existing implementations).
  * It must be simple to use (no special compilation or code generation steps, no descriptor files, etc).
- * It must support the most commonly used types and the funtamental types natively.
+ * It must support the most commonly used types and the fundamental types natively.
  * It must support ad-hoc data structures and progressive document building.
  * It must support unlimited numeric value ranges.
  * Schemas must be optional.
@@ -237,7 +237,7 @@ Formal Representation
 
 Formal specification clauses are written in the [Dogma](https://dogma-lang.org/) metalanguage. Many of the text descriptions in this specification will be augmented with Dogma rules for clarity.
 
-Whenever any textual description seems ambiuguous or unclear, please refer to the formal Dogma documents (and also, please [open an issue](https://github.com/kstenerud/concise-encoding/issues)):
+Whenever any textual description seems ambiguous or unclear, please refer to the formal Dogma documents (and also, please [open an issue](https://github.com/kstenerud/concise-encoding/issues)):
 
 * [CBE Dogma](cbe.dogma)
 * [CTE Dogma](cte.dogma)
@@ -323,7 +323,7 @@ concrete-object = intangible_object* & (data_object | pseudo_object);
 Intangible objects are either meta-information or structural helpers, but do not themselves count as actual data when structurally interpreting the document (i.e. they cannot fill containers).
 
  * [Invisible objects](#invisible-objects) provide helper functionality such as comments and byte alignment, but don't affect the document structure or data.
- * [Structural objects](#structural-objects) provide support for linkages beween parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
+ * [Structural objects](#structural-objects) provide support for linkages between parts of the document and ways to reduce redundancy, but are not themselves complete data objects.
 
 ```dogma
 intangible-object = invisible_object | structural_object;
@@ -515,7 +515,7 @@ Temporal types are represented using the [Gregorian calendar](https://en.wikiped
  * The `year` field always represents the full year (abbreviations are not allowed).
  * The `month` and `day` fields start counting at 1 (they **CANNOT** be 0).
  * The `day` field **MUST** be valid for the specified month according to the [Gregorian calendar](https://en.wikipedia.org/wiki/Gregorian_calendar#Description).
- * The `day` field **CAN** go up to 29 in Feburary when accommodating a [leap year](https://en.wikipedia.org/wiki/Leap_year).
+ * The `day` field **CAN** go up to 29 in February when accommodating a [leap year](https://en.wikipedia.org/wiki/Leap_year).
  * The `hour`, `minute`, `second`, and `subsecond` fields start counting at 0.
  * The `hour` field represents the [24h clock](https://en.wikipedia.org/wiki/24-hour_clock) hour value (there is no AM or PM).
  * The `second` field **CAN** go up to 60 when accommodating a [leap second](https://en.wikipedia.org/wiki/Leap_second).
@@ -608,7 +608,7 @@ Time zone data can be denoted in the following ways:
 
 #### Area/Location
 
-Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minumum length of 1 character and a maximum length of 127 **bytes** (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
+Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minimum length of 1 character and a maximum length of 127 **bytes** (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
 
 **Note**: Some older IANA time zones (mostly deprecated ones) don't follow the `Area/Location` format (for example `MST`, `PST8PDT`). These **MUST** be supported.
 
@@ -690,7 +690,7 @@ UTC offsets **SHOULD NOT** be used for future or periodic/repeating time values 
 String Types
 ------------
 
-String types contain [UTF-8 encoded](https://en.wikipedia.org/wiki/UTF-8) string data. All [Unicode](https://en.wikipedia.org/wiki/Unicode) codepoints except for surrogates and those marked permanently as noncharacters are allowed:
+String types contain [UTF-8 encoded](https://en.wikipedia.org/wiki/UTF-8) string data. All [Unicode](https://en.wikipedia.org/wiki/Unicode) codepoints except for surrogates and those marked permanently as non-characters are allowed:
 
 ```dogma
 string_type = char_string*;
@@ -709,7 +709,7 @@ The following types use string-style encoding and follow string encoding rules:
 
 ### NUL Character
 
-The NUL character (U+0000) is allowed in string types, but because it is problematic on so many platforms, the folllowing special rules apply:
+The NUL character (U+0000) is allowed in string types, but because it is problematic on so many platforms, the following special rules apply:
 
  * On platforms that **do not** support NUL in strings (for example in C strings), decoders **MUST** stuff all NULs encountered in string data (convert every instance of [`00`] to [`c0 80`]).
  * On all platforms, encoders **MUST NOT** output stuffed NULs in string data (they **MUST** convert every instance of [`c0 80`] to [`00`] in string data before output).
@@ -797,7 +797,7 @@ If a container is ordered, the order in which objects are placed in the containe
 
 #### Duplicates
 
-For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list. Note that due to proccessing cost, containers within a list are never considered equivalent for the purpose of duplicate checking.
+For list-like containers, a duplicate means any object that is [equivalent](#equivalence) to another object already present in the list. Note that due to processing cost, containers within a list are never considered equivalent for the purpose of duplicate checking.
 
 For map-like containers, a duplicate means any key-value pair whose key is [equivalent](#equivalence) to another key already present in the map, regardless of what that key's associated value is.
 
@@ -865,7 +865,7 @@ c1
     1 = "alpha"
     2 = "beta"
     "a map" = {"one"=1 "two"=2}
-    2000-01-01 = "New millenium"
+    2000-01-01 = "New millennium"
 }
 ```
 
@@ -1234,7 +1234,7 @@ For our binary encoding scheme, we could write the two float32 values directly:
     |---------| |---------|
        real      imaginary
 
-**Note**: It's a good idea to store multibyte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
+**Note**: It's a good idea to store multi-byte primitive binary types in little endian byte order since that's what all modern CPUs use natively.
 
 In this example, we'll assign the custom type code 99 to our complex number type (assume that we've stated this in our schema). Therefore, a complex number such as 2.94 + 3i would be represented as follows:
 
@@ -1408,7 +1408,7 @@ Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 A record type provides instructions for a decoder to build [records](#record) from, defining what keys will be present for any records that use it.
 
-Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure). A record type occuring anywhere else in the document is an [error condition](#error-processing).
+Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure). A record type occurring anywhere else in the document is an [error condition](#error-processing).
 
 A record type contains a unique (to the current document) type [identifier](#identifier), followed by a series of keys that will be present in any records created from it.
 
@@ -1618,7 +1618,7 @@ Error Processing
 
 Any error encountered when encoding or decoding a Concise Encoding document **MUST** halt processing and issue diagnostic information about what went wrong.
 
-**Note**: A decoder **MUST NOT** destroy or withhold from the application the already successfully decoded objects from before the error occurreed. It is up to the application to decide what to do with the already-decoded objects (e.g. an application running over an unreliable communications medium might elect to keep the partial data if there's enough of it to be actionable).
+**Note**: A decoder **MUST NOT** destroy or withhold from the application the already successfully decoded objects from before the error occurred. It is up to the application to decide what to do with the already-decoded objects (e.g. an application running over an unreliable communications medium might elect to keep the partial data if there's enough of it to be actionable).
 
 Example error types:
 
@@ -1661,7 +1661,7 @@ Any part of your system that allows data loss is a potential security hole, beca
 
 As a contrived example, consider a fictional system where the access control subsystem running on platform A leaves bad characters as-is or replaces them with u+fffd, and the storage subsystem running on platform B truncates bad characters. If an attacker is able to send a "change user's group" command with a group of `admin\U+D800` (which would pass access control validation because `admin\U+D800` != `admin`), he could set up an admin user because the storage subsystem truncates bad characters and stores the group `admin\U+D800` as `admin`. The next time that user is loaded, it will be in group `admin`.
 
-Numbers could also suffer data loss depending on how the decoded values are stored internally. For example, attempting to load the value 0x123456789 into a 32-bit unsigned integer would in many languages silently overflow to a result of 0x23456789. Similarly, the value 0x87654321 (2271560481) stored in a 32-bit ieee754 binary float field would be silently truncated to 2271560448, losing precision and changing the effective value because it only has 24 bits available for the siginificand.
+Numbers could also suffer data loss depending on how the decoded values are stored internally. For example, attempting to load the value 0x123456789 into a 32-bit unsigned integer would in many languages silently overflow to a result of 0x23456789. Similarly, the value 0x87654321 (2271560481) stored in a 32-bit ieee754 binary float field would be silently truncated to 2271560448, losing precision and changing the effective value because it only has 24 bits available for the significand.
 
 #### Default Type Conversions
 

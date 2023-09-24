@@ -690,7 +690,7 @@ array_bit_chunk_last = uleb128(uany(var(count, ~)) & u1(0))
 mult_8(v)            = [v%8 = 0: v;];
 ```
 
-For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1c 7a`] with a length of `15`. The encoded value can be directly read on little endian architectures into the multibyte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
+For example, the bit array `{0,0,1,1,1,0,0,0,0,1,0,1,1,1,1}` would encode to [`1c 7a`] with a length of `15`. The encoded value can be directly read on little endian architectures into the multi-byte unsigned integer value `0b111101000011100` (`0x7a1c`), such that the least significant bit of the unsigned integer representation is the first element of the array.
 
 **Example**:
 
@@ -755,14 +755,14 @@ custom_type_code = uleb(~);
 
 **Note**: Custom data in [text form](ce-structure.md#custom-type-forms) **MUST** be converted to binary form before being encoded into CBE, as CBE does **not** support the text form.
 
-**Example**: a fictional "complex number" cutom type with real and imaginary components represented using float32, assigned to custom type code 1
+**Example**: a fictional "complex number" custom type with real and imaginary components represented using float32, assigned to custom type code 1
 
       {
           real:      float32 = 2.94 (40 3c 28 f6)
           imaginary: float32 = 3.0  (40 40 00 00)
       }
 
-Encoded as a custom type (note: the multibyte values are encoded in little endian byte order):
+Encoded as a custom type (note: the multi-byte values are encoded in little endian byte order):
 
      *1 *2 *3 *4          *5
     [92 01 10 f6 28 3c 40 00 00 40 40]
@@ -808,7 +808,7 @@ end_container = u8(0x9b);
 
 **Example**:
 
-    [99 81 61 01 81 62 02 9b] = A map containg the key-value pairs ("a" = 1) ("b" = 2)
+    [99 81 61 01 81 62 02 9b] = A map containing the key-value pairs ("a" = 1) ("b" = 2)
 
 
 ### Record
@@ -1017,7 +1017,7 @@ Specialized applications **MAY** wish to preserve more numeric type information 
 Alignment
 ---------
 
-Applications might require data to be aligned in some cases for optimal decoding performance. For example, some processors might not be able to read unaligned multibyte data types without special (costly) intervention. An encoder could in theory be tuned to insert [padding](#padding) when encoding certain data, trading document size for encoding/decoding efficiency:
+Applications might require data to be aligned in some cases for optimal decoding performance. For example, some processors might not be able to read unaligned multi-byte data types without special (costly) intervention. An encoder could in theory be tuned to insert [padding](#padding) when encoding certain data, trading document size for encoding/decoding efficiency:
 
 |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
 | -- | -- | -- | -- | -- | -- | -- | -- |

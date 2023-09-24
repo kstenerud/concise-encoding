@@ -1320,21 +1320,21 @@ comment_single_line = "//" & (char_cte* ! LINE_END) & LINE_END;
 
 #### Multiline Comment
 
-A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start subcomments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is peformed.
+A multiline comment (aka block comment) begins at the sequence `/*` and is terminated by the sequence `*/`. Multiline comments support nesting, meaning that further `/*` sequences inside the comment will start sub-comments that **MUST** also be terminated by their own `*/` sequence. No processing of the comment contents other than detecting comment begin and comment end is performed.
 
 ```dogma
 comment_multi_line = "/*" & ((char_cte* ! "/*") | comment_multi_line) & "*/";
 ```
 
-**Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by pre-emptively escaping all occurrences of `/*` and `*/` in string types:
+**Note**: Commenting out strings containing `/*` or `*/` could potentially cause parse errors because the parser won't have any contextual information about the sequences, and will simply treat them as "comment begin" and "comment end". This edge case could be mitigated by preemptively escaping all occurrences of `/*` and `*/` in string types:
 
 ```cte
 c1
 {
-    // Pre-emptively escape the "/" to avoid a false nested comment end
+    // Preemptively escape the "/" to avoid a false nested comment end
     "comment end" = "*\/"
 
-    // Pre-emptively escape the "*" to avoid a false nested comment begin
+    // Preemptively escape the "*" to avoid a false nested comment begin
     "comment begin" = "/\*"
 
 /*
