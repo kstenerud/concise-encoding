@@ -140,7 +140,6 @@ custom_type            = array_stringform(custom_type_code) | array(custom_type_
 custom_type_code       = digit_dec+;
 array_stringform(type) = '@' & type & string;
 array(type, elem_type) = '@' & type & '[' & items(elem_type, WSL) & ']';
-items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
 
 list                   = '[' & items(data_object, WSLC) & ']';
 map                    = '{' & items(key_value, WSLC) & '}';
@@ -156,6 +155,8 @@ identifier             = char_identifier_first & char_identifier_next*;
 
 comment_single_line    = "//" & (char_cte* ! LINE_END) & LINE_END;
 comment_multi_line     = "/*" & ((char_cte* ! "/*") | comment_multi_line) & "*/";
+
+items(type, separator) = separator* & (type & (separator+ & type)* & separator*)?;
 
 hex_byte               = digit_hex{2};
 digits_bin             = digit_bin & ('_'? & digit_bin)*;
@@ -200,12 +201,9 @@ SP                     = '\[20]';
 
 # https://www.rfc-editor.org/rfc/rfc2045#section-5.1
 char_media_first       = 'a'~'z' | 'A'~'Z';
-char_media_next        = ('!' ~ '~') ! ( '(' | ')' | '<' | '>'
-                                       | '@' | ',' | ';' | ':'
-                                       | '\\' | '"' | '/' | '['
-                                       | ']' | '?' | '='
-                                       ) # tspecials in RFC 2045
-                       ;
+char_media_next        = ('!' ~ '~') ! rfc2045_tspecials;
+rfc2045_tspecials      = '(' | ')' | '<' | '>' | '@' | ',' | ';' | ':' | '\\' | '"' | '/' | '[' | ']' | '?' | '=';
+
 char_rid               = """https://www.rfc-editor.org/rfc/rfc3987""";
 char_sentinel          = unicode(L,M,N,P,S);
 char_identifier_first  = unicode(L,N) | '_';

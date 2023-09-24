@@ -117,8 +117,6 @@ Contents
     - [Comment Equivalence](#comment-equivalence)
     - [Padding Equivalence](#padding-equivalence)
   - [Error Processing](#error-processing)
-    - [Structural Errors](#structural-errors)
-    - [Data Errors](#data-errors)
   - [Security and Limits](#security-and-limits)
     - [Attack Vectors](#attack-vectors)
       - [Induced Data Loss](#induced-data-loss)
@@ -700,7 +698,7 @@ string_type = char_string*;
 char_string = unicode(C,L,M,N,P,S,Z);
 ```
 
-String types **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. A string type containing invalid or incomplete UTF-8 sequences **MUST** be treated as a [data error](#data-errors).
+String types **MUST** always resolve to complete, valid UTF-8 sequences when fully decoded. Furthermore, all codepoints **MUST** be encoded in the shortest possible UTF-8 encoding (with the sole exception of allowing [`c0 80`] for the NUL codepoint in some cases - [see below](#nul-character)).
 
 The following types use string-style encoding and follow string encoding rules:
 
@@ -712,12 +710,10 @@ The following types use string-style encoding and follow string encoding rules:
 
 ### NUL Character
 
-The NUL character (U+0000) is allowed in string types, but because it is problematic on so many platforms, there is a special rule:
+The NUL character (U+0000) is allowed in string types, but because it is problematic on so many platforms, the folllowing special rules apply:
 
- * On platforms that **do not** support NUL in strings, decoders **MUST** convert received NUL characters in string types to the UTF-8 equivalent [`c0 80`].
- * On platforms that **do** support NUL in strings, decoders **MUST** provide an **OPTION** to convert received NUL characters in string types to the UTF-8 equivalent [`c0 80`], which **MUST** default to **enabled**.
-
-This ensures a default of uniform behavior across all platforms that sidesteps the NUL-termination problem.
+ * On platforms that **do not** support NUL in strings (for example in C strings), decoders **MUST** stuff all NULs encountered in string data (convert every instance of [`00`] to [`c0 80`]).
+ * On all platforms, encoders **MUST NOT** output stuffed NULs in string data (they **MUST** convert every instance of [`c0 80`] to [`00`] in string data before output).
 
 
 ### String
@@ -808,8 +804,6 @@ For map-like containers, a duplicate means any key-value pair whose key is [equi
 
 An implementation **MUST** disregard the type and size of integers and floats when comparing numeric types. If they can be converted to one another without data loss, they are potential duplicates. For example, the 16-bit integer value `2000`, the 64-bit integer value `2000`, and the 32-bit float value `2000.0` are all considered duplicates. The string value `"2000"`, however, is _not_ a duplicate because it's not a number (it's a string).
 
-If a container disallows duplicates, duplicate entries are [data errors](#data-errors).
-
 Ordering and duplication policies in [lists](#list) and [maps](#map) **CAN** be set by a schema, per-instance and globally.
 
 
@@ -840,7 +834,7 @@ c1
 
 A map associates key objects with value objects. Every key **MUST** be a [keyable type](#keyable-types), and keys do not have to all be the same type. Values **CAN** be any [concrete object](#concrete-objects) (including other containers), and do not have to be all the same type.
 
-Map entries are stored as key-value pairs. A key without a paired value is a [structural error](#structural-errors).
+Map entries are stored as key-value pairs. Every key in the map **MUST** have a matching value.
 
 ```dogma
 map = (keyable-type & concrete-object)*;
@@ -899,8 +893,8 @@ record = identifier & concrete_object*;
 ```
 
  * Records are always [ordered, and **CAN** contain duplicates](#container-properties).
- * A record that references an undefined [record type](#record-type) identifier is a [structural error](#structural-errors).
- * The record **MUST** define the same number of values as there are keys in the [record type](#record-type). A mismatch is a [structural error](#structural-errors).
+ * A record that references an undefined [record type](#record-type) identifier is an [error condition](#error-processing).
+ * The record **MUST** define the same number of values as there are keys in the [record type](#record-type). A mismatch is an [error condition](#error-processing).
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -1035,7 +1029,7 @@ An edge describes a relationship between vertices in a graph. It is composed of 
  * A **description**, which describes the relationship (edge) between the source and destination. This implementation-dependent object can contain information such as weight, directionality, or other application-specific data. If the edge has no properties, use [null](#null).
  * A **destination**, which is the second vertex of the edge being described. This **MUST NOT** be [null](#null) or a [reference](#local-reference) to null.
 
-If any of these parts are missing, it is a [structural error](#structural-errors).
+If any of these parts are missing, it is an [error condition](#error-processing).
 
 ```dogma
 edge        = source & description & destination;
@@ -1135,11 +1129,11 @@ media = media_type & byte*;
 
 The media object's internal encoding is not the concern of a Concise Encoding codec; CE merely sees the data as a sequence of bytes along with an associated media type.
 
-The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is a [data error](#data-errors).
+The media type **MUST** be validated according to the rules of [rfc6838](https://www.rfc-editor.org/rfc/rfc6838.html#section-4.2). An invalid media type is an [error condition](#error-processing).
 
 **Notes**:
 
- * An _unrecognized_ media type is **not** a decoding error; it is the application layer's job to decide such things.
+ * An _unrecognized_ media type is **not** an [error condition](#error-processing); it is the application layer's job to decide such things.
  * [Multipart types](https://www.iana.org/assignments/media-types/media-types.xhtml#multipart) are **not** supported.
 
 **Example (in [CTE](cte-specification.md))**:
@@ -1198,7 +1192,7 @@ Custom Types
 
 There are some situations where a custom data type is preferable to the standard types. The data might not otherwise be representable, or it might be too bulky using standard types, or you might want the data to map directly to/from memory structs for performance reasons.
 
-Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** decode the custom type's envelope (yielding encoded bytes or encoded string data), and then report it as a [data error](#data-errors).
+Adding custom types restricts interoperability to only those implementations that understand the types, and **SHOULD** only be used as a last resort. An implementation that encounters a custom type it doesn't know how to decode **MUST** treat it as an [error condition](#error-processing).
 
 **Note**: Although custom types are encoded into bytes or string data, the interpretation of their contents is user-defined, and very likely won't represent an array or string value at all.
 
@@ -1268,7 +1262,7 @@ Pseudo-Objects
 
 Pseudo-objects are not [data objects](#data-objects) themselves, but rather are stand-ins for [data objects](#data-objects).
 
-Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside the contents of an [array](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types) (for example, `@u8x[11 22 $myref 44]` is a [structural error](#structural-errors)).
+Pseudo-objects **CAN** be placed anywhere a [data object](#data-objects) can be placed, except inside the contents of an [array](#array-types) or other types that use array-style encoding such as [media](#media) and [custom binary](#custom-types) (for example, `@u8x[11 22 $myref 44]` is an [error condition](#error-processing).
 
 
 ### Reference
@@ -1288,14 +1282,14 @@ local_reference = identifier;
 
  * Recursive references (reference causing a cyclic graph) are supported only if the implementation has been [configured to accept them](#recursive-references).
  * Forward references (reference to an object marked later in the document) are supported.
- * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid or undefined marker ID is a [structural error](#structural-errors).
+ * A local reference **MUST** point to a valid [marked object](#marker) that exists in the current document. A reference with an invalid or undefined marker ID is an [error condition](#error-processing).
  * A local reference used as a map key **MUST** refer to a marked [keyable object](#keyable-types).
 
 ##### Recursive References
 
 Because cyclic graphs are potential denial-of-service attack vectors to a system unprepared to handle such data, implementations **MUST** provide a configuration **OPTION** to enable recursive references, and this option **MUST** default to disabled.
 
-When support is disabled, a recursive local reference is a [structural error](#structural-errors).
+When support is disabled, a recursive local reference is an [error condition](#error-processing).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1329,7 +1323,7 @@ A remote reference refers to an object in another document. It acts like a [reso
    - A [marked object](#marker) inside of another Concise Encoding document, using the fragment section to specify the [marker identifier](#marker) of the object in the document being referenced.
  * A remote reference **MUST NOT** be used as a map key because there's no way to know if it refers to a keyable type without actually following the reference (which would slow down evaluation and poses a security risk).
  * Because remote links pose security risks, implementations **MUST NOT** follow remote references unless explicitly configured to do so. If an implementation provides a configuration option to follow remote references, it **MUST** default to disabled.
- * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or valid [marker identifier](#marker) inside the document is a [structural error](#structural-errors).
+ * If automatic remote reference following is enabled, a remote reference that doesn't resolve to a valid Concise Encoding document or valid [marker identifier](#marker) inside the document is an [error condition](#error-processing).
 
 **Examples (in [CTE](cte-specification.md))**:
 
@@ -1415,7 +1409,7 @@ Structural objects do not represent data, and **CANNOT** be [marked](#marker).
 
 A record type provides instructions for a decoder to build [records](#record) from, defining what keys will be present for any records that use it.
 
-Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure). A record type occuring anywhere else in the document is a [structural error](#structural-errors).
+Record Types **CAN ONLY** occur at the top level of the document between the [version specifier](#version-header) and the [top-level object](#document-structure). A record type occuring anywhere else in the document is an [error condition](#error-processing).
 
 A record type contains a unique (to the current document) type [identifier](#identifier), followed by a series of keys that will be present in any records created from it.
 
@@ -1438,9 +1432,9 @@ A marker assigns a unique (to the current document) marker [identifier](#identif
 marked-object = identifier & concrete_object;
 ```
 
-A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are [structural errors](#structural-errors)).
+A marker **CAN ONLY** be attached to a [data object](#data-objects) (e.g. `&my_marker1:&my_marker2:"abc"` and `&my_marker1:$my_marker2` are [error conditions](#error-processing)).
 
-Other objects **CANNOT** be placed between a marker and the object it marks, regardless of type (e.g. `&my_id:/*comment*/123456` is a [structural error](#structural-errors)).
+Other objects **CANNOT** be placed between a marker and the object it marks, regardless of type (e.g. `&my_id:/*comment*/123456` is an [error condition](#error-processing)).
 
 **Example (in [CTE](cte-specification.md))**:
 
@@ -1459,7 +1453,9 @@ The string `"Remember this string"` is marked with the ID `remember_me`, and the
 
 Identifiers provide the linkage mechanism between objects.
 
-Identifiers are always an integral part of another type, and thus **CANNOT** exist on their own, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is a [structural error](#structural-errors)).
+Identifiers are always an integral part of another type, and thus **CANNOT** exist on their own, and **CANNOT** be preceded by [pseudo-objects](#pseudo-objects) or [invisible objects](#invisible-objects) (e.g. `&/*comment*/mymarker:"Marked string"` is an [error condition](#error-processing)).
+
+Implementations **MUST** provide a configuration **OPTION** to set the maximum length allowed for an identifier, and it **MUST** default to 1000 bytes.
 
 #### Identifier Rules
 
@@ -1516,7 +1512,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 Implementations **MUST** provide a configuration **OPTION** for each configurable lossy conversion that can occur on its platform, and each option **MUST** default to disabled.
 
-Disallowed or disabled lossy conversions are [data errors](#data-errors).
+Disallowed or disabled lossy conversions are [error conditions](#error-processing).
 
 #### Binary and Decimal Float Conversions
 
@@ -1637,29 +1633,19 @@ Padding is always ignored when testing for equivalence.
 Error Processing
 ----------------
 
-Errors are an inevitable part of the decoding process. This section lays out how to handle errors. There are two major kinds of decoding errors:
+Any error encountered when encoding or decoding a Concise Encoding document **MUST** halt processing and issue diagnostic information about what went wrong. All data successfully processed before the error occurred **MUST** be made available to the application so that the application can decide what to do with it (an application might wish to keep the partial data, or discard it).
 
-### Structural Errors
-
-Structural errors are the kinds of errors that imply or cause a malformed document structure, affect lookups, or hit a limit that stops the object from being ingested. This could be due to things such as:
+Example error types:
 
  * Improper document structure (mismatched container start/end, etc).
  * Incorrect data types for the current context (map keys, etc).
  * Malformed identifiers.
  * Failed reference lookup.
  * Failed [global limit checks](#user-controllable-limits).
-
-A decoder **MUST** stop processing and issue a diagnostic when a structural error occurs.
-
-### Data Errors
-
-Data errors affect the reliability of a particular object, but don't compromise confidence in the decoder's ability to continue decoding the rest of the document. Some examples are:
-
  * Failed string-like object validation.
  * Failed value constraint validation.
  * Unrecognized custom data.
-
-Implementations **MUST** allow the user or schema to decide what to do when a data error occurs, with a default of halting processing and issuing a diagnostic.
+ * Premature end-of-file (incomplete document).
 
 
 
@@ -1754,11 +1740,9 @@ To mitigate these kinds of security issues, Concise Encoding codecs have the fol
 
 All decoded values **MUST** be validated for the following before being passed to the application:
 
-| Validation Type                            | Error Type                       |
-| ------------------------------------------ | -------------------------------- |
-| [Global limits](#user-controllable-limits) | [Structural](#structural-errors) |
-| Content rules (based on type)              | [Data](#data-errors)             |
-| Schema rules (if any)                      | Depends on the rule              |
+* [Global limits](#user-controllable-limits)
+* Content rules (based on type)
+* Schema rules (if any)
 
 #### User-Controllable Limits
 
@@ -1768,15 +1752,15 @@ A codec **MUST** provide at least the following **OPTIONS** to allow the user to
 | ------------------------------------ | ---------------------------------------- |
 | Max document size                    | In bytes                                 |
 | Max array size                       | Per array, in bytes                      |
+| Max [identifier](#identifier) length | In bytes                                 |
 | Max object count                     |                                          |
 | Max container depth                  | 0 = [top-level object](#document-structure) cannot contain other objects, 1 = [top-level object](#document-structure) can contain objects (which cannot themselves contain other objects), ... |
-| Max year digits                      |                                          |
 | Max integer digits                   |                                          |
 | Max float coefficient digits         |                                          |
 | Max decimal float exponent digits    | Max binary float exponent digits = `max_decimal_digits × 10 ÷ 3` rounded down. |
+| Max year digits                      |                                          |
 | Max marker count                     |                                          |
 | Max reference count                  |                                          |
-| Max [identifier](#identifier) length | In bytes                                 |
 
 **Notes**:
 
@@ -1824,58 +1808,61 @@ The following options **MUST** be present in a Concise Encoding codec:
 
 | Option                                | Default    | Section                                             |
 | ------------------------------------- | ---------- | --------------------------------------------------- |
-| Convert NUL to [`c0 80`]              | enabled    | [NUL](#nul-character)                               |
-| Follow remote references              | disabled   | [Remote Reference](#remote-reference)               |
+| Allow recursive references            | forbidden  | [Recursive References](#recursive-references)       |
+| Keep partial document after error     | disabled   | [Truncated Document](#truncated-document)           |
+
+The following lossy conversion options **MUST** be present in a Concise Encoding codec:
+
+| Option                                | Default    | Section                                             |
+| ------------------------------------- | ---------- | --------------------------------------------------- |
 | Lossy binary decimal float conversion | forbidden  | [Lossy Conversions](#lossy-conversions)             |
 | Lossy conversion to smaller float     | forbidden  | [Lossy Conversions](#lossy-conversions)             |
-| Recursive references                  | forbidden  | [Recursive References](#recursive-references)       |
 | Subsecond truncation                  | forbidden  | [Lossy Conversions](#lossy-conversions)             |
-| Terminate truncated documents         | disabled   | [Truncated Document](#truncated-document)           |
 | Time zone to time offset conversion   | forbidden  | [Lossy Conversions](#lossy-conversions)             |
-| Data error response                   | terminate  | [Error Processing](#error-processing)               |
-| Default Resource Identifier Kind      | IRI        | [Resource Identifier](#resource-identifier)    |
-| CTE: Binary float output format       | base 16    | [Binary Float](cte-specification.md#floating-point) |
 
 
 ### Mandatory [User-controllable limits](#user-controllable-limits)
 
-The following options **MUST** be present in a Concise Encoding codec, but their defaults will need to be revisited from time to time based on the capabilities of machines of the era:
+The following options **MUST** be present in a Concise Encoding codec, and their defaults will need to be revisited from time to time based on the capabilities of machines of the era:
 
-| Option                            | Recommended Default |
-| --------------------------------- | ------------------- |
-| Max array size                    | 1 GB                |
-| Max container depth               | 1000                |
-| Max decimal float exponent digits | 5                   |
-| Max document size                 | 5 GB                |
-| Max float coefficient digits      | 100                 |
-| Max integer digits                | 100                 |
-| Max marker count                  | 10,000              |
-| Max object count                  | 1,000,000           |
-| Max reference count               | 10,000              |
-| Max year digits                   | 11                  |
+| Option                            | Recommended Default (in 2020) |
+| --------------------------------- | ----------------------------- |
+| Max document size                 | 5 GB (5 * 1024 * 1024 * 1024) |
+| Max array size                    | 1 GB (1 * 1024 * 1024 * 1024) |
+| Max identifier length             | 1000                          |
+| Max object count                  | 1,000,000                     |
+| Max container depth               | 1000                          |
+| Max integer digits                | 100                           |
+| Max float coefficient digits      | 100                           |
+| Max decimal float exponent digits | 5                             |
+| Max year digits                   | 11                            |
+| Max marker count                  | 10,000                        |
+| Max reference count               | 10,000                        |
 
 
 ### Recommended Options
 
-The following options are recommended, but not required:
+The following [CTE](cte-specification.md) options are recommended, but not required:
 
-| Option                                | Default   | Section                                            |
-| ------------------------------------- | --------- | -------------------------------------------------- |
-| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)            |
-| CTE: Output numeric whitespace        | disabled  | [Integer](cte-specification.md#numeric-whitespace) |
-| CTE: Unsigned integer array format    | `x`       | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
+| Option                                | Default   | Section                                             |
+| ------------------------------------- | --------- | --------------------------------------------------- |
+| CTE: Integer output format            | base 10   | [Integer](cte-specification.md#integer)             |
+| CTE: Binary float output format       | base 16   | [Binary Float](cte-specification.md#floating-point) |
+| CTE: Array: integer output format     | base 10   | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
+| CTE: Array: float output format       | base 16   | [Primitive type array encoding](cte-specification.md#primitive-type-array-encoding) |
 
 
 ### Schema Options
 
-The following options **CAN** be set globally and on a per-object basis by a schema (if the schema language supports it):
+The following options **CAN** be set globally and on a per-object basis by a schema (if the schema technology can support it):
 
-| Option                                | Default   | Section                                            |
-| ------------------------------------- | --------- | -------------------------------------------------- |
-| List Ordering                         | ordered   | [List](#container-properties)                      |
-| List Duplicates                       | allowed   | [List](#container-properties)                      |
-| Map Ordering                          | unordered | [Map](#container-properties)                       |
-| Map Key Duplicates                    | forbidden | [Map](#container-properties)                       |
+| Option                                | Default   | Section                       |
+| ------------------------------------- | --------- | ----------------------------- |
+| List Ordering                         | ordered   | [List](#container-properties) |
+| List Duplicates                       | allowed   | [List](#container-properties) |
+| Map Ordering                          | unordered | [Map](#container-properties)  |
+| Map Key Duplicates                    | forbidden | [Map](#container-properties)  |
+| Record Type Duplicates                | forbidden | [Record Type](#record-type)   |
 
 
 

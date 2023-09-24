@@ -363,7 +363,7 @@ float_special = (neg? & "inf") | "nan" | "snan";
 exponent_hex  = ('p' | 'P') & neg? & digits_dec; # hex float exponent is in decimal, not hex.
 ```
 
-To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is a [data error](ce-structure.md#data-errors).
+To maintain compatibility with [CBE](cbe-specification.md), values in base-16 notation **MUST NOT** exceed the range of ieee754 64-bit binary float. A value outside of this range is an [error condition](ce-structure.md#error-processing).
 
 **Examples**:
 
@@ -734,13 +734,13 @@ The above string is interpreted as:
 
 A Unicode codepoint escape sequence represents a single Unicode character as a hexadecimal codepoint.
 
-The escape sequence begins with a backslash (`\`) character, followed by an opening square brace (`[`), followed by hexadecimal digits representing the codepoint, and is finally terminated by a closing square brace (`]`). **OPTIONAL** leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`).
+The escape sequence begins with a backslash (`\`) character, followed by an opening square brace (`[`), followed by hexadecimal digits representing the codepoint, and is finally terminated by a closing square brace (`]`). **OPTIONAL** leading zeroes are allowed for stylistic purposes (e.g. `\[0020]`), but encoders **MUST** by default not output leading zeroes.
 
 ```dogma
 escape_codepoint = '\\[' & digit_hex+ & ']';
 ```
 
-**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\[10000000000000020]` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is a [data error](ce-structure#data-errors).
+**Warning**: Decoders **MUST NOT** allow codepoints to overflow (e.g. `\[10000000000000020]` overflowing a uint32 or uint64 accumulator to produce codepoint 0x20). An out-of-range codepoint is an [error condition](ce-structure.md#error-processing).
 
 **Examples**:
 
@@ -774,7 +774,7 @@ char_cte        = unicode(Cf,L,M,N,P,S,Zs) | WSL;
 
  * Verbatim sequence sentinels are **case sensitive**.
  * TAB (`u+0009`) **MUST NOT** be used as an end-of-sequence sentinel terminator because any editor that converts tabs to spaces would effectively alter the verbatim contents (only the first space would terminate the sentinel; the other spaces would become part of the verbatim data).
- * A malformed sentinel terminator is a [structural error](ce-structure.md#structural-errors).
+ * A malformed sentinel terminator is an [error condition](ce-structure.md#error-processing).
 
 **Example**:
 
@@ -934,7 +934,7 @@ The following array types are available:
 
 Array type designators are [case-insensitive](#letter-case).
 
-An invalid array type field is a [structural error](ce-structure#structural-errors).
+An invalid array type field is an [error condition](ce-structure.md#error-processing).
 
 For array types that support multiple bases, elements **MAY** be represented in different bases by applying a base prefix (`0b` for base 2, `0o` for base 8, `0x` for base 16) to an element (provided the element type supports it).
 
@@ -1109,7 +1109,7 @@ c1
 
 A map begins with an opening curly brace `{`, contains [structural whitespace](#structural-whitespace) separated key-value pairs, and finishes with a closing curly brace `}`.
 
-Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is a [structural error](ce-structure.md#structural-errors).
+Map entries are split into key-value pairs using the equals `=` character and **OPTIONAL** [structural whitespace](#structural-whitespace). Key-value pairs **MUST** be separated from each other using [structural whitespace](#structural-whitespace). A key without a paired value is an [error condition](ce-structure.md#error-processing).
 
 ```dogma
 map       = '{' & items(key_value, WSLC) & '}';
@@ -1473,9 +1473,9 @@ C1
 
 However, the following would be invalid:
 
- * `4:00:00/ASIA/TOKYO` ([data error](ce-structure.md#data-errors): time zones are case sensitive)
- * `[ &a:"marked text" $A ]` ([structural error](ce-structure.md#structural-errors): identifiers are case sensitive)
- * `"\.ZZZ terminated by zzz"` ([structural error](ce-structure.md#structural-errors): verbatim sentinels are case sensitive)
+ * `4:00:00/ASIA/TOKYO` (time zones are case sensitive)
+ * `[ &a:"marked text" $A ]` (identifiers are case sensitive)
+ * `"\.ZZZ terminated by zzz"` (verbatim sentinels are case sensitive)
 
 And the following would likely fail at the application layer (but _not_ in the CTE decoder):
 
@@ -1514,18 +1514,18 @@ Examples:
  * Between the [version header](#version-header) and the first object.
  * Between the end-of-string sentinel and the beginning of the data in a [verbatim sequence](#verbatim-sequence).
  * Between a primitive type array element type specifier and the array contents, and between array elements.
- * Between values in a [list](#list) (`["one""two"]` is a [structural error](ce-structure.md#structural-errors)).
- * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is a [structural error](ce-structure.md#structural-errors)).
+ * Between values in a [list](#list) (`["one""two"]` is an [error condition](ce-structure.md#error-processing)).
+ * Between key-value pairs in a [map](#map) (`{1="one"2="two"}` is an [error condition](ce-structure.md#error-processing)).
 
 
 **Whitespace MUST NOT occur**:
 
  * Before the [version header](#version-header).
- * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are [structural errors](ce-structure.md#structural-errors)).
- * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are [structural errors](ce-structure.md#structural-errors)).
- * In time values (`2018-07-01-10 :53:22.001481/Z` is a [structural error](ce-structure.md#structural-errors)).
- * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are [structural errors](ce-structure.md#structural-errors)). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
- * Anywhere between a [record type](#record-type) or [record](#record) initiator and its opening character (`@ my_record<>`, `@my_record <>`, `@ my_record{}`,  and `@my_record {}` are [structural errors](ce-structure.md#structural-errors)).
+ * Between a prefix character and its payload (`& 1234`, `$ abc`, `@ "mydoc.cbe"` are [error conditions](ce-structure.md#error-processing)).
+ * Between a [marker](#marker) identifier and the object it marks (`&123: xyz` and `&123 :xyz` are [error conditions](ce-structure.md#error-processing)).
+ * In time values (`2018-07-01-10 :53:22.001481/Z` is an [error condition](ce-structure.md#error-processing)).
+ * In numeric values (`0x3 f`, `9. 41`, `3 000`, `9.3 e+3`, `- 1.0` are [error conditions](ce-structure.md#error-processing)). Use the [numeric whitespace](#numeric-whitespace) character (`_`) instead (where it's valid to do so).
+ * Anywhere between a [record type](#record-type) or [record](#record) initiator and its opening character (`@ my_record<>`, `@my_record <>`, `@ my_record{}`,  and `@my_record {}` are [error conditions](ce-structure.md#error-processing)).
 
 
 

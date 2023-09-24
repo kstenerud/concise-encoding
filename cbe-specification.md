@@ -677,7 +677,7 @@ resource_id = u8(0x91) & string_chunk;
 
 #### Bit Array
 
-Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of the encoded array). Array chunks **MUST** have a length such that `length % 8 == 0` (failure to do so is a [structural error](ce-structure#structural-errors)), except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
+Bit array elements are stored in little endian bit order (the first element is stored in the least significant bit of the first byte of the encoded array). Array chunks **MUST** have a length such that `length % 8 == 0` (failure to do so is an [error condition](ce-structure.md#error-processing)), except for the last [chunk](#bit-array-chunks) which can have any length. Unused trailing (upper) bits in the last [chunk](#bit-array-chunks) **MUST** be cleared to 0 by an encoder, and **MUST** be discarded by a decoder.
 
 ```dogma
 array_bit            = u8(0x94) & array_bit_chunk* array_bit_chunk_last;
@@ -879,7 +879,7 @@ null = u8(0x7d);
 
 ### RESERVED
 
-This type is reserved for future expansion of the format, and **MUST NOT** be used. If a decoder encounters a reserved type code, it is a [structural error](ce-structure.md#structural-errors).
+This type is reserved for future expansion of the format, and **MUST NOT** be used. If a decoder encounters a reserved type code, it is an [error condition](ce-structure.md#error-processing).
 
 
 
