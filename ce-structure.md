@@ -104,7 +104,6 @@ Contents
     - [Lossy Conversions](#lossy-conversions)
       - [Binary and Decimal Float Conversions](#binary-and-decimal-float-conversions)
     - [Problematic Values](#problematic-values)
-  - [Truncated Document](#truncated-document)
   - [Equivalence](#equivalence)
     - [Boolean Equivalence](#boolean-equivalence)
     - [Integer and Float Equivalence](#integer-and-float-equivalence)
@@ -1554,22 +1553,6 @@ It's best to think ahead about types and values that might be problematic on the
  * Platforms might not provide some of the less common data types such as [edge](#edge), and [node](#node). Generic types for these could be provided by the codec.
  * The destination structure might not support [references](#reference). In such a case, duplicating the data might be enough (taking care not to exceed the [global object limit](#user-controllable-limits)).
  * Applications **SHOULD** always decide upon a common configuration across all codecs in all platforms they use so that they conform to the same [limits](#security-and-limits).
-
-
-
-Truncated Document
-------------------
-
-When dealing with an unreliable data channel, it is sometimes desirable to keep a partial document rather than suffer total data loss.
-
-A codec **MUST** provide an **OPTION** to artificially complete a truncated [CBE](cbe-specification.md) document, and this option **MUST** default to disabled.
-
-**To artificially complete a truncated document**:
-
- * Incomplete objects that are not containers **MUST** be discarded.
- * Any still-open containers **MUST** be artificially closed by inserting appropriate "end of container" events until the top-level object is closed.
-
-The artificialy completed document is returned to the caller along with an indication that the document has been truncated.
 
 
 
