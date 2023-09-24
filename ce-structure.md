@@ -1633,7 +1633,9 @@ Padding is always ignored when testing for equivalence.
 Error Processing
 ----------------
 
-Any error encountered when encoding or decoding a Concise Encoding document **MUST** halt processing and issue diagnostic information about what went wrong. All data successfully processed before the error occurred **MUST** be made available to the application so that the application can decide what to do with it (an application might wish to keep the partial data, or discard it).
+Any error encountered when encoding or decoding a Concise Encoding document **MUST** halt processing and issue diagnostic information about what went wrong.
+
+**Note**: A decoder **MUST NOT** destroy or withhold from the application the already successfully decoded objects from before the error occurreed. It is up to the application to decide what to do with the already-decoded objects (e.g. an application running over an unreliable communications medium might elect to keep the partial data if there's enough of it to be actionable).
 
 Example error types:
 
