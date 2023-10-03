@@ -30,6 +30,7 @@ Contents
   - [What is Concise Text Encoding?](#what-is-concise-text-encoding)
   - [Text Format](#text-format)
     - [Character Safety](#character-safety)
+    - [Text Safety Warning](#text-safety-warning)
     - [Whitespace](#whitespace)
     - [Line Endings](#line-endings)
     - [Human Editability](#human-editability)
@@ -180,6 +181,15 @@ Here is (as of 2023) a complete list of lookalike Unicode characters. This list 
 | --------- | ---------------------------------------------------------------------- |
 | `"` | [02ba, 02dd, 02ee, 02f6, 05f2, 05f4, 1cd3, 201c, 201d, 201f, 2033, 2034, 2036, 2037, 2057, 3003, ff02](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%22&r=None) |
 | `\` | [2216, 27cd, 29f5, 29f9, 2f02, 3035, 31d4, 4e36, fe68, ff3c, 1d20f, 1d23b](https://util.unicode.org/UnicodeJsps/confusables.jsp?a=%5C&r=None) |
+
+
+### Text Safety Warning
+
+Despite the above character safety requirements and other mitigations inherent in the CTE format, the complexity of Unicode makes it impossible for a text format to be as safe as a binary format.
+
+[CBE](cbe-specitifaction.md) documents **SHOULD** always be preferred to CTE documents, except in cases where a human will be reading or writing the data.
+
+Avoid ingesting CTE documents from untrusted sources (or at the very least, round-trip them to CBE and back to CTE and verify what comes out). There will always be ways to craft text documents that look legitimate to the human eye but actually contain something else.
 
 
 ### Whitespace
