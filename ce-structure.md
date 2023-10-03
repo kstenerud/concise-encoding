@@ -608,7 +608,7 @@ Time zone data can be denoted in the following ways:
 
 #### Area/Location
 
-Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minimum length of 1 character and a maximum length of 127 **bytes** (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
+Area/location is the more human-readable method, but might not be precise enough for certain applications. Time zones are partitioned into areas containing locations, and are written in the form `Area/Location`. These areas and locations are specified in the [IANA time zone database](https://www.iana.org/time-zones). Area/Location timezones have a minimum length of 1 byte and a maximum length of 127 bytes (not characters). They are also case-sensitive because they tend to be implemented that way on most platforms.
 
 **Note**: Some older IANA time zones (mostly deprecated ones) don't follow the `Area/Location` format (for example `MST`, `PST8PDT`). These **MUST** be supported.
 
@@ -1458,7 +1458,7 @@ Implementations **MUST** provide a configuration **OPTION** to set the maximum l
 
 #### Identifier Rules
 
- * It **MUST** be a valid UTF-8 string containing only characters of Unicode categories Cf, L, M, N, or characters '_', '.', or '-'.
+ * It **MUST** be a valid UTF-8 string containing only codepoints of Unicode categories Cf, L, M, N, or codepoints '_', '.', or '-'.
  * It **MUST** begin with either a letter, number, or an underscore '_' (and therefore **CANNOT** be empty).
  * Comparisons are **case sensitive**.
  * Identifier definitions **MUST** be unique to an identifier type in the current document. So for example the [marker](#marker) ID "a" will not clash with the [record type](#record-type) ID "a", but a document **CANNOT** contain two [markers](#marker) with ID "a" or two [record types](#record-type) with ID "a".
@@ -1499,7 +1499,7 @@ If, after decoding and storing a value, it is no longer possible to encode it ba
 
 **Lossy conversions that MUST NOT be allowed at all**:
 
- * String character substitution or omission
+ * String character/codepoint substitution or omission
  * Truncation from storing in a type that cannot hold all of the data (except where decided based on configuration - see below)
 
 **Lossy conversions that MUST be decided based on configuration**:
