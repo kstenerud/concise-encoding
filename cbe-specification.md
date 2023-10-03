@@ -581,7 +581,7 @@ array_chunk_header    = uleb128(uany(var(count, ~)) & u1(var(continuation, ~)));
 
 ##### String Type Array Chunks
 
-To ensure compatibility across all platforms, array chunks for string data (UTF-8) **MUST** always end on a character boundary (do not split multibyte characters between chunks).
+To ensure compatibility across all platforms, array chunks for string data (UTF-8) **MUST** always end on a codepoint boundary (do not split multi-byte codepoints between chunks).
 
 ##### Zero Chunk
 
